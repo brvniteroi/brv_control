@@ -45,7 +45,11 @@ export function useLinhaDoTempo(dia: string) {
     'tasks',
     `dia:${dia}`,
     () => listarAtividadesDoDia(inicio, fim),
-    (t) => !!t.scheduled_start && !!t.scheduled_end && t.scheduled_start < fim && t.scheduled_end > inicio,
+    (t) =>
+      !!t.scheduled_start &&
+      !!t.scheduled_end &&
+      Date.parse(t.scheduled_start) < Date.parse(fim) &&
+      Date.parse(t.scheduled_end) > Date.parse(inicio),
   );
 
   const semHorario = useRealtimeTable<Task>(

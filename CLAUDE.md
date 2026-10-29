@@ -33,16 +33,30 @@ O usuário fala português; código, comentários e mensagens de commit também 
 
 ## Estado atual (2026-10-29)
 Feito:
-- Estrutura do app, layout, menu e rotas. Todas as páginas em `src/pages/` ainda são
-  placeholders (`EmConstrucao`).
+- Estrutura do app, layout, menu e rotas. Páginas ainda placeholders (`EmConstrucao`): Dashboard,
+  Equipamentos, Estoque, Linha do Tempo, Ordens de Serviço.
 - Projeto Supabase criado, schema aplicado e RLS conferido (anon recebe 401).
+- Login (`AuthContext`, `Login.tsx`) e rotas protegidas (`ProtectedRoute`, bloqueia `active = FALSE`).
+- Clientes (`pages/Clientes.tsx`, `components/clientes/ClienteDetalhes.tsx`, `services/clientes.ts`):
+  lista paginada no servidor (50 por página), salvar via RPC `salvar_cliente` (cliente + endereço +
+  contatos em uma transação), contato principal controlado por trigger (que também copia
+  telefone/e-mail para `customers`), CPF/CNPJ (inclusive alfanumérico) validado em `utils/documento.ts`.
+  Vários endereços por cliente (`EnderecosAdicionais.tsx`; um é o principal, os demais aparecem na escolha do
+  endereço ao criar a OS via `service_orders.address_id`). Migrations de clientes já aplicadas:
+  `20261029120000_clientes_salvar.sql`; **a rodar**: `20261029130000_enderecos_cliente.sql`.
+- Mapa Google no cadastro do cliente (`MapaEnderecos.tsx`, `services/googleMaps.ts`): as coordenadas são
+  geocodificadas ao salvar cada endereço. Precisa de `VITE_GOOGLE_MAPS_API_KEY` (opcional; sem ela o mapa fica
+  desligado). A página Mapa (técnicos + atividades do dia) vem depois de OS e do app de campo.
 - Repositório: https://github.com/brvniteroi/brv_control (privado).
+- Divisão de trabalho: o Gemini cuida do visual; o trabalho técnico é feito pelo Claude.
+- Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto
+  (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
 
 Pendente, nesta ordem:
 1. Painel Supabase: desligar "Allow new users to sign up" (Authentication > Sign In /
    Providers) e configurar Site URL / Redirect URLs (`http://localhost:5173/**`).
 2. Criar o usuário admin em Authentication > Users e promovê-lo:
    `UPDATE public.profiles SET active = TRUE, role = 'admin', full_name = '...' WHERE email = '...';`
-3. Tela de login + proteção das rotas (nenhum código chama `supabase.auth` ainda; sem isso
-   o RLS devolve tudo vazio). Bloquear quem tem `profiles.active = FALSE`.
-4. Depois: telas de Clientes, OS e Linha do Tempo (drag and drop com `@hello-pangea/dnd`).
+3. Rodar a migration de clientes e testar o fluxo (criar, editar, contatos, arquivar).
+4. Etiquetas de cliente (hoje só em memória, sem tabela), coordenadas do endereço (geocodificação).
+5. Telas de Equipamentos, OS e Linha do Tempo (drag and drop com `@hello-pangea/dnd`).

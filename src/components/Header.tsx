@@ -1,6 +1,8 @@
-import { Menu, LogOut, User } from 'lucide-react';
+import { useState } from 'react';
+import { Menu, LogOut, User, KeyRound } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import type { ProfileRole } from '../types/fsm';
+import AlterarSenhaModal from './AlterarSenhaModal';
 
 interface HeaderProps {
   onAbrirMenu: () => void;
@@ -20,6 +22,7 @@ const papelCor: Record<ProfileRole, string> = {
 
 export default function Header({ onAbrirMenu }: HeaderProps) {
   const { profile, user, signOut } = useAuth();
+  const [alterandoSenha, setAlterandoSenha] = useState(false);
 
   const nomeExibicao = profile?.full_name || user?.email?.split('@')[0] || 'Usuário';
   const papel = profile?.role || 'tecnico';
@@ -57,6 +60,16 @@ export default function Header({ onAbrirMenu }: HeaderProps) {
 
         <button
           type="button"
+          onClick={() => setAlterandoSenha(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+          title="Alterar minha senha"
+        >
+          <KeyRound size={14} />
+          <span className="hidden sm:inline">Senha</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => signOut()}
           className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 hover:text-red-600"
           title="Sair da conta"
@@ -65,6 +78,7 @@ export default function Header({ onAbrirMenu }: HeaderProps) {
           <span className="hidden sm:inline">Sair</span>
         </button>
       </div>
+      {alterandoSenha && <AlterarSenhaModal onFechar={() => setAlterandoSenha(false)} />}
     </header>
   );
 }

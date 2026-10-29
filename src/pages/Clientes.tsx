@@ -16,6 +16,7 @@ import {
 } from '../services/clientes';
 import type { Customer } from '../types/fsm';
 import ClienteDetalhes from '../components/clientes/ClienteDetalhes';
+import { formatarTelefone } from '../utils/telefone';
 
 export default function Clientes() {
   const [clientes, setClientes] = useState<Customer[]>([]);
@@ -247,7 +248,7 @@ export default function Clientes() {
                         {cli.phone && (
                           <div className="flex items-center gap-1.5 text-slate-800">
                             <Phone size={13} className="text-blue-500" />
-                            <span>{cli.phone}</span>
+                            <span>{formatarTelefone(cli.phone)}</span>
                           </div>
                         )}
                         {cli.email && (

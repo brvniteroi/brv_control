@@ -23,6 +23,7 @@ import type { CustomerAddress, CustomerContact, PersonType } from '../../types/f
 import EnderecosAdicionais from './EnderecosAdicionais';
 import AtendimentosCliente from './AtendimentosCliente';
 import MapaEnderecos from './MapaEnderecos';
+import { formatarTelefone } from '../../utils/telefone';
 import { geocodificar, textoEndereco } from '../../services/googleMaps';
 import { documentoValido, formatarDocumento, limparDocumento } from '../../utils/documento';
 
@@ -873,7 +874,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: Client
                         </div>
                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                           <span>🇧🇷</span>
-                          <span>{contato.phone || 'Sem número'}</span>
+                          <span>{contato.phone ? formatarTelefone(contato.phone) : 'Sem número'}</span>
                         </div>
                         {contato.name && contato.name !== nome && (
                           <div className="mt-1 text-xs text-slate-500">
@@ -965,7 +966,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: Client
                   type="text"
                   required
                   value={contatoTelefone}
-                  onChange={(e) => setContatoTelefone(e.target.value)}
+                  onChange={(e) => setContatoTelefone(formatarTelefone(e.target.value))}
                   placeholder="(21) 99999-9999"
                   className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />

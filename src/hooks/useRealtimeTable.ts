@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 
@@ -35,6 +35,7 @@ export function useRealtimeTable<T extends { id: string }>(
   // As funções mudam a cada render; o canal só é recriado quando a chave muda
   const carregarRef = useRef(carregar);
   const manterRef = useRef(manter);
+  const recarregarRef = useRef<() => Promise<void>>(async () => {});
   useEffect(() => {
     carregarRef.current = carregar;
     manterRef.current = manter;
@@ -57,6 +58,8 @@ export function useRealtimeTable<T extends { id: string }>(
         if (ativo) setCarregando(false);
       }
     };
+
+    recarregarRef.current = recarregar;
 
     const aplicar = (evento: RealtimePostgresChangesPayload<T>) => {
       if (evento.eventType === 'DELETE') {
@@ -90,5 +93,8 @@ export function useRealtimeTable<T extends { id: string }>(
     };
   }, [tabela, chave]);
 
-  return { linhas, setLinhas, carregando, erro };
+    /** Recarrega do banco (botão "Atualizar"). */
+  const recarregar = useCallback(() => recarregarRef.current(), []);
+
+  return { linhas, setLinhas, carregando, erro, recarregar };
 }

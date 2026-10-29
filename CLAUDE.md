@@ -50,6 +50,12 @@ Feito:
 - Ordens de Serviço (`pages/OrdensServico.tsx`, `components/ordens/`, `services/ordens.ts`): lista paginada com busca e
   filtros, criar/editar OS, atividades (técnico, data, status) e galeria de fotos. O status da OS ainda é manual (não deriva
   das atividades). Depois de importar OS, rodar o `setval` da numeração (já vai no fim do `os.sql` gerado).
+- Equipe (`pages/Equipe.tsx`, `components/equipe/`, `services/equipe.ts`): aba Colaboradores (técnicos etc., cor, login ligado)
+  e aba Usuários (só admin: criar com senha temporária, papel, bloquear, redefinir senha). Criar usuário e redefinir senha
+  rodam na Edge Function `supabase/functions/gerenciar-usuario` (usa a chave de admin do Supabase, só no servidor);
+  **precisa ser publicada** no painel do Supabase. Migration `20261029150000_equipe.sql` (**a rodar**) impede ficar sem admin.
+- Qualquer usuário troca a própria senha pelo botão "Senha" do cabeçalho (`AlterarSenhaModal.tsx`, confere a senha atual).
+  Telefones usam máscara (`utils/telefone.ts`).
 - Tipos de OS editáveis (`service_types`; `service_orders.service_type_id` substitui o antigo `type` fixo). Migration
   `20261029140000_tipos_os_e_importacao.sql` (**a rodar**) também prepara importação: `field_control_id` em tasks e
   attachments, anexos com `storage = 'fieldcontrol'` (link do S3 do Field Control, sem tamanho).

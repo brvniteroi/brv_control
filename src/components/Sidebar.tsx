@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  CalendarRange, ClipboardList, LayoutDashboard, Package, Snowflake, Users, X, LogOut,
+  CalendarRange, ClipboardList, LayoutDashboard, Package, Snowflake, UserCog, Users, X, LogOut,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
@@ -18,6 +18,7 @@ const MENU: ItemMenu[] = [
   { rota: '/clientes', rotulo: 'Clientes', icone: Users },
   { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
   { rota: '/estoque', rotulo: 'Estoque', icone: Package },
+  { rota: '/equipe', rotulo: 'Equipe', icone: UserCog },
 ];
 
 interface SidebarProps {

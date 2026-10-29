@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
 import LinhaDoTempo from './pages/LinhaDoTempo';
+import Equipe from './pages/Equipe';
 import OrdensServico from './pages/OrdensServico';
 import Estoque from './pages/Estoque';
 import Equipamentos from './pages/Equipamentos';
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="ordens-de-servico" element={<OrdensServico />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="equipamentos" element={<Equipamentos />} />
+            <Route path="equipe" element={<Equipe />} />
           </Route>
         </Route>
 

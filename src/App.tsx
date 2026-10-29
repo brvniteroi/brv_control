@@ -10,6 +10,7 @@ import Equipe from './pages/Equipe';
 import OrdensServico from './pages/OrdensServico';
 import Estoque from './pages/Estoque';
 import Equipamentos from './pages/Equipamentos';
+import Formularios from './pages/Formularios';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="ordens-de-servico" element={<OrdensServico />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="equipamentos" element={<Equipamentos />} />
+            <Route path="formularios" element={<Formularios />} />
             <Route path="equipe" element={<Equipe />} />
           </Route>
         </Route>

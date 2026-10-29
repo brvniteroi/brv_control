@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Check, ClipboardList, X } from 'lucide-react';
 import {
   buscarOrdem,
@@ -20,6 +20,7 @@ import { PRIORIDADES, STATUS_OS, formatarDataHora } from '../../utils/ordens';
 import AnexosOS from './AnexosOS';
 import AtividadesOS from './AtividadesOS';
 import SeletorCliente from './SeletorCliente';
+import FormulariosDaOrdem from '../formularios/FormulariosDaOrdem';
 
 interface OrdemDetalhesProps {
   ordemId: string | 'nova';
@@ -57,6 +58,14 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
   const [descricao, setDescricao] = useState('');
   const [notasInternas, setNotasInternas] = useState('');
   const [motivoCancelamento, setMotivoCancelamento] = useState('');
+
+  const tecnicosPorTask = useMemo(() => {
+    const mapa: Record<string, string> = {};
+    for (const t of ordem?.tasks || []) {
+      if (t.employee?.name) mapa[t.id] = t.employee.name;
+    }
+    return mapa;
+  }, [ordem?.tasks]);
 
   const preencher = useCallback((o: OrdemDetalhe) => {
     setOrdem(o);
@@ -329,11 +338,18 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
             <>
               <AtividadesOS
                 ordemId={ordem.id}
+                clienteId={ordem.customer_id}
                 tituloPadrao={tipoAtual?.name ?? ordem.service_type?.name ?? 'Atividade'}
                 duracaoPadrao={tipoAtual?.default_duration_minutes ?? 60}
                 atividades={ordem.tasks}
                 tecnicos={tecnicos}
                 onAlterado={recarregar}
+              />
+              <FormulariosDaOrdem
+                ordemId={ordem.id}
+                ordemNumero={ordem.number}
+                clienteNome={ordem.customer?.name}
+                tecnicosNomesPorTask={tecnicosPorTask}
               />
               <AnexosOS anexos={ordem.attachments} />
             </>

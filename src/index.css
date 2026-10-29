@@ -17,3 +17,10 @@
 body {
   @apply bg-brv-bg text-slate-800 antialiased;
 }
+
+/* Impressao de formularios: some com o app (menu, telas) e imprime so o portal no body */
+@media print {
+  body > #root {
+    display: none !important;
+  }
+}

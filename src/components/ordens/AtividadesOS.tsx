@@ -13,9 +13,11 @@ import {
   infoStatusAtividade,
   paraCamposDataHora,
 } from '../../utils/ordens';
+import FormulariosAtividade from '../formularios/FormulariosAtividade';
 
 interface AtividadesOSProps {
   ordemId: string;
+  clienteId?: string;
   /** Nome do tipo da OS, sugerido como título da atividade. */
   tituloPadrao: string;
   duracaoPadrao: number;
@@ -40,6 +42,7 @@ const INPUT =
 
 export default function AtividadesOS({
   ordemId,
+  clienteId,
   tituloPadrao,
   duracaoPadrao,
   atividades,
@@ -213,6 +216,8 @@ export default function AtividadesOS({
                     </button>
                   </div>
                 </div>
+
+                <FormulariosAtividade taskId={a.id} clienteId={clienteId} />
               </li>
             );
           })}

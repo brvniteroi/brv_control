@@ -1,6 +1,15 @@
 import { NavLink } from 'react-router-dom';
 import {
-  CalendarRange, ClipboardList, LayoutDashboard, Package, Snowflake, UserCog, Users, X, LogOut,
+  CalendarRange,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Snowflake,
+  UserCog,
+  Users,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
@@ -9,6 +18,7 @@ interface ItemMenu {
   rota: string;
   rotulo: string;
   icone: LucideIcon;
+  apenasEscritorio?: boolean;
 }
 
 const MENU: ItemMenu[] = [
@@ -18,6 +28,7 @@ const MENU: ItemMenu[] = [
   { rota: '/clientes', rotulo: 'Clientes', icone: Users },
   { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
   { rota: '/estoque', rotulo: 'Estoque', icone: Package },
+  { rota: '/formularios', rotulo: 'Modelos de Formulários', icone: FileText, apenasEscritorio: true },
   { rota: '/equipe', rotulo: 'Equipe', icone: UserCog },
 ];
 
@@ -27,7 +38,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ aberta, onFechar }: SidebarProps) {
-  const { signOut } = useAuth();
+  const { profile, signOut } = useAuth();
+  const podeGerenciarFormularios = profile?.role === 'admin' || profile?.role === 'escritorio';
+  const itensVisiveis = MENU.filter(
+    (item) => !item.apenasEscritorio || podeGerenciarFormularios,
+  );
 
   return (
     <>
@@ -54,7 +69,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-2">
-          {MENU.map(({ rota, rotulo, icone: Icone }) => (
+          {itensVisiveis.map(({ rota, rotulo, icone: Icone }) => (
             <NavLink
               key={rota}
               to={rota}

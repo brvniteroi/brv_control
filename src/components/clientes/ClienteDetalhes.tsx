@@ -31,6 +31,8 @@ interface ClienteDetalhesProps {
   clienteId: string | 'novo';
   onFechar: () => void;
   onSalvo: (id: string) => void;
+  /** Nome já preenchido ao criar (ex.: o que foi digitado numa busca). */
+  nomeInicial?: string;
 }
 
 type AbaAtiva = 'geral' | 'atendimento' | 'modelos';
@@ -46,7 +48,7 @@ const ABAS: AbaItem[] = [
   { id: 'modelos', rotulo: 'Modelos' },
 ];
 
-export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: ClienteDetalhesProps) {
+export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInicial }: ClienteDetalhesProps) {
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('geral');
   const [carregando, setCarregando] = useState(clienteId !== 'novo');
   const [salvando, setSalvando] = useState(false);
@@ -54,7 +56,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: Client
   const [sucesso, setSucesso] = useState(false);
 
   // Dados do formulário
-  const [nome, setNome] = useState('');
+  const [nome, setNome] = useState(nomeInicial ?? '');
   const [nomeFantasia, setNomeFantasia] = useState('');
   const [tipoPessoa, setTipoPessoa] = useState<PersonType>('PF');
   const [documento, setDocumento] = useState('');

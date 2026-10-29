@@ -1,6 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Loader2, Search, X } from 'lucide-react';
-import { listarOrdens, listarTipos, salvarAtividade, type OrdemResumo } from '../../services/ordens';
+import { Loader2, Search, UserPlus, X } from 'lucide-react';
+import { listarOrdens, listarTipos, salvarAtividade, salvarOrdem, type OrdemResumo } from '../../services/ordens';
+import { buscarClientePorId, listarClientes } from '../../services/clientes';
+import ClienteDetalhes from '../clientes/ClienteDetalhes';
+import type { Customer, ServiceType } from '../../types/fsm';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { deCamposDataHora } from '../../utils/ordens';
 import { DURACAO_PADRAO_MIN } from './janela';
@@ -19,8 +22,17 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
   const [termo, setTermo] = useState('');
   const [encontradas, setResultados] = useState<OrdemResumo[]>([]);
   const [buscando, setBuscando] = useState(false);
+  const [clientesAchados, setClientesAchados] = useState<Customer[]>([]);
   const [ordem, setOrdem] = useState<OrdemResumo | null>(null);
-  const buscaValida = !ordem && termo.trim().length >= 2;
+  /** Sem OS: cliente que ganha uma OS nova ao salvar a atividade. */
+  const [semOs, setSemOs] = useState<{ id: string; nome: string } | null>(null);
+  const [tipos, setTipos] = useState<ServiceType[]>([]);
+  const [tipoId, setTipoId] = useState('');
+  // Tela completa de cadastro de cliente aberta por cima do modal
+  const [cadastrando, setCadastrando] = useState(false);
+  const [clienteCriadoId, setClienteCriadoId] = useState<string | null>(null);
+  const escolhido = !!ordem || !!semOs;
+  const buscaValida = !escolhido && termo.trim().length >= 2;
   const resultados = buscaValida ? encontradas : [];
   const [duracoes, setDuracoes] = useState<Record<string, number>>({});
 
@@ -34,24 +46,29 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
 
   useEffect(() => {
     listarTipos()
-      .then((tipos) =>
-        setDuracoes(Object.fromEntries(tipos.filter((t) => t.default_duration_minutes).map((t) => [t.id, t.default_duration_minutes!]))),
-      )
+      .then((lista) => {
+        setTipos(lista);
+        setDuracoes(Object.fromEntries(lista.filter((t) => t.default_duration_minutes).map((t) => [t.id, t.default_duration_minutes!])));
+      })
       .catch(() => {}); // sem a duração padrão, vale 60 min
   }, []);
 
   // Busca de OS (só as que ainda estão em andamento)
   useEffect(() => {
-    if (ordem || termo.trim().length < 2) return;
+    if (escolhido || termo.trim().length < 2) return;
     let ativo = true;
     const timer = setTimeout(() => {
       setBuscando(true);
-      listarOrdens({ termo: termo.trim(), status: '', tipoId: '' }, 0)
-        .then((r) => {
-          if (ativo) setResultados(r.itens.filter((o) => o.status !== 'concluida' && o.status !== 'cancelada').slice(0, 8));
+      Promise.all([listarOrdens({ termo: termo.trim(), status: '', tipoId: '' }, 0), listarClientes(termo.trim(), 'ativos', 0)])
+        .then(([r, c]) => {
+          if (!ativo) return;
+          setResultados(r.itens.filter((o) => o.status !== 'concluida' && o.status !== 'cancelada').slice(0, 8));
+          setClientesAchados(c.itens.slice(0, 5));
         })
         .catch(() => {
-          if (ativo) setResultados([]);
+          if (!ativo) return;
+          setResultados([]);
+          setClientesAchados([]);
         })
         .finally(() => {
           if (ativo) setBuscando(false);
@@ -61,7 +78,7 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
       ativo = false;
       clearTimeout(timer);
     };
-  }, [termo, ordem]);
+  }, [termo, escolhido]);
 
   const escolherOrdem = (o: OrdemResumo) => {
     setOrdem(o);
@@ -69,10 +86,31 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
     setDuracao(String((o.service_type && duracoes[o.service_type.id]) || DURACAO_PADRAO_MIN));
   };
 
+  const escolherSemOs = (id: string, nome: string) => {
+    setSemOs({ id, nome });
+    setTipoId('');
+  };
+
+  const fecharCadastro = async () => {
+    setCadastrando(false);
+    if (!clienteCriadoId) return;
+    const c = await buscarClientePorId(clienteCriadoId);
+    if (c) escolherSemOs(c.id, c.name);
+    setClienteCriadoId(null);
+  };
+
+  const escolherTipo = (id: string) => {
+    setTipoId(id);
+    setTitulo((t) => t || tipos.find((x) => x.id === id)?.name || '');
+    const dur = duracoes[id];
+    if (dur) setDuracao(String(dur));
+  };
+
   const salvar = async (e: FormEvent) => {
     e.preventDefault();
     setErro(null);
-    if (!ordem) return setErro('Escolha a OS desta atividade.');
+    if (!ordem && !semOs) return setErro('Escolha a OS ou o cliente desta atividade.');
+    if (semOs && !tipoId) return setErro('Escolha o tipo de serviço da nova OS.');
     if (!titulo.trim()) return setErro('Informe o título da atividade.');
     const minutos = Number(duracao);
     if (hora && (!tecnicoId || !data)) return setErro('Para marcar horário, escolha o técnico e a data.');
@@ -83,8 +121,22 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
 
     setSalvando(true);
     try {
+      let ordemId = ordem?.id;
+      if (!ordemId && semOs) {
+        ordemId = await salvarOrdem({
+          customer_id: semOs.id,
+          address_id: null,
+          service_type_id: tipoId,
+          status: 'aberta',
+          priority: 'normal',
+          description: '',
+          internal_notes: '',
+          due_date: '',
+          cancel_reason: '',
+        });
+      }
       await salvarAtividade({
-        service_order_id: ordem.id,
+        service_order_id: ordemId!,
         employee_id: tecnicoId || null,
         title: titulo,
         description: '',
@@ -102,6 +154,11 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {cadastrando && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-slate-50">
+          <ClienteDetalhes clienteId="novo" nomeInicial={termo.trim()} onFechar={fecharCadastro} onSalvo={setClienteCriadoId} />
+        </div>
+      )}
       <form onSubmit={salvar} className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-2xl">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">Nova atividade</h2>
@@ -113,8 +170,28 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
         {erro && <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{erro}</div>}
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700">Ordem de serviço *</label>
-          {ordem ? (
+          <label className="block text-xs font-semibold text-slate-700">Ordem de serviço ou cliente *</label>
+          {semOs ? (
+            <div className="mt-1.5 space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="min-w-0 truncate">
+                  Cliente: <b>{semOs.nome}</b> · será criada uma nova OS
+                </span>
+                <button type="button" onClick={() => setSemOs(null)} className="ml-2 shrink-0 text-xs font-semibold text-blue-600 hover:underline">
+                  Trocar
+                </button>
+              </div>
+              <div>
+                <label htmlFor="na-tipo" className="block text-xs font-semibold text-slate-700">Tipo de serviço *</label>
+                <select id="na-tipo" value={tipoId} onChange={(e) => escolherTipo(e.target.value)} className={`${CAMPO} mt-1.5 bg-white`}>
+                  <option value="">Selecione</option>
+                  {tipos.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ) : ordem ? (
             <div className="mt-1.5 flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm">
               <span className="min-w-0 truncate">
                 <b>OS {ordem.number}</b> · {ordem.customer?.name}
@@ -140,8 +217,8 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
                       <Loader2 size={13} className="animate-spin" /> Buscando...
                     </li>
                   )}
-                  {!buscando && resultados.length === 0 && (
-                    <li className="px-3 py-2 text-xs text-slate-500">Nenhuma OS em andamento encontrada.</li>
+                  {!buscando && resultados.length === 0 && clientesAchados.length === 0 && (
+                    <li className="px-3 py-2 text-xs text-slate-500">Nenhuma OS em andamento nem cliente encontrado.</li>
                   )}
                   {resultados.map((o) => (
                     <li key={o.id}>
@@ -151,6 +228,25 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
                       </button>
                     </li>
                   ))}
+                  {!buscando &&
+                    clientesAchados.map((c) => (
+                      <li key={c.id}>
+                        <button type="button" onClick={() => escolherSemOs(c.id, c.name)} className="block w-full px-3 py-2 text-left hover:bg-slate-50">
+                          <span className="text-xs text-slate-500">Nova OS para</span> <b>{c.name}</b>
+                        </button>
+                      </li>
+                    ))}
+                  {!buscando && (
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => setCadastrando(true)}
+                        className="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-left font-semibold text-blue-600 hover:bg-blue-50"
+                      >
+                        <UserPlus size={14} /> Cadastrar "{termo.trim()}" como novo cliente (cadastro completo)
+                      </button>
+                    </li>
+                  )}
                 </ul>
               )}
             </div>

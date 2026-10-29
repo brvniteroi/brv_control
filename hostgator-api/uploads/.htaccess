@@ -1,0 +1,17 @@
+# Pasta de fotos: nada aqui é executado, só servido como imagem.
+# (Não usar "php_flag engine off": dá erro 500 quando o PHP roda como FPM/CGI.)
+Options -Indexes -ExecCGI
+
+<FilesMatch ".*">
+  Require all denied
+</FilesMatch>
+<FilesMatch "\.(jpg|png|webp)$">
+  Require all granted
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Content-Security-Policy "default-src 'none'"
+  # Nome do arquivo é único e nunca é sobrescrito: pode cachear para sempre
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

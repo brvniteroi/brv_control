@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.env
+.env.local
+.env.*.local
+supabase/.temp/
+
+# Configuração e fotos do servidor HostGator nunca vão para o git
+hostgator-api/config.php
+hostgator-api/uploads/*
+!hostgator-api/uploads/.htaccess

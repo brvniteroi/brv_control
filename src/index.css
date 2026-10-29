@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* Identidade visual (mesma do Field Control, para a equipe não estranhar) */
+@theme {
+  --color-brv-navy: #0B1E3F;
+  --color-brv-navy-light: #15305C;
+  --color-brv-bg: #F4F6F8;
+
+  /* Cards de OS / atividades na linha do tempo */
+  --color-status-agendada: #2563EB;   /* azul */
+  --color-status-execucao: #EA580C;   /* laranja */
+  --color-status-concluida: #16A34A;  /* verde */
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  @apply bg-brv-bg text-slate-800 antialiased;
+}

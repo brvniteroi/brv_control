@@ -1,0 +1,19 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Força HTTPS (o token de sessão nunca deve trafegar em texto puro)
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Repassa o header Authorization para o PHP (alguns servidores o removem)
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+# Bloqueia acesso direto à configuração
+<FilesMatch "^config(\.example)?\.php$">
+  Require all denied
+</FilesMatch>

@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
 import LinhaDoTempo from './pages/LinhaDoTempo';
@@ -9,16 +12,23 @@ import Equipamentos from './pages/Equipamentos';
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="clientes" element={<Clientes />} />
-        <Route path="linha-do-tempo" element={<LinhaDoTempo />} />
-        <Route path="ordens-de-servico" element={<OrdensServico />} />
-        <Route path="estoque" element={<Estoque />} />
-        <Route path="equipamentos" element={<Equipamentos />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="clientes" element={<Clientes />} />
+            <Route path="linha-do-tempo" element={<LinhaDoTempo />} />
+            <Route path="ordens-de-servico" element={<OrdensServico />} />
+            <Route path="estoque" element={<Estoque />} />
+            <Route path="equipamentos" element={<Equipamentos />} />
+          </Route>
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </AuthProvider>
   );
 }

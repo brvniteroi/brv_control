@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import {
-  CalendarRange, ClipboardList, LayoutDashboard, Package, Snowflake, Users, X,
+  CalendarRange, ClipboardList, LayoutDashboard, Package, Snowflake, Users, X, LogOut,
   type LucideIcon,
 } from 'lucide-react';
+import { useAuth } from '../contexts/useAuth';
 
 interface ItemMenu {
   rota: string;
@@ -25,6 +26,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ aberta, onFechar }: SidebarProps) {
+  const { signOut } = useAuth();
+
   return (
     <>
       {/* Fundo escuro atrás do menu no celular */}
@@ -38,9 +41,12 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
         }`}
       >
         <div className="flex h-16 items-center justify-between px-5">
-          <span className="text-lg font-bold tracking-wide">
-            BRV <span className="font-light text-sky-300">Control</span>
-          </span>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-brv.webp" alt="Logo BRV" className="h-7 w-auto object-contain" />
+            <span className="text-lg font-bold tracking-wide">
+              BRV <span className="font-light text-sky-300">Control</span>
+            </span>
+          </div>
           <button type="button" onClick={onFechar} className="md:hidden" aria-label="Fechar menu">
             <X size={20} />
           </button>
@@ -67,7 +73,20 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
           ))}
         </nav>
 
-        <div className="px-5 py-4 text-xs text-slate-400">BRV Niterói</div>
+        <div className="border-t border-white/10 p-3">
+          <button
+            type="button"
+            onClick={() => {
+              onFechar();
+              signOut();
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-slate-400 hover:bg-white/5 hover:text-red-400 transition"
+          >
+            <LogOut size={16} />
+            Sair da conta
+          </button>
+          <div className="mt-1 px-3 text-[11px] text-slate-500">BRV Niterói</div>
+        </div>
       </aside>
     </>
   );

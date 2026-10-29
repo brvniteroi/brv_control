@@ -10,3 +10,7 @@ supabase/.temp/
 hostgator-api/config.php
 hostgator-api/uploads/*
 !hostgator-api/uploads/.htaccess
+
+# Amostras e dumps do Field Control: dados reais de clientes (LGPD), nunca vão para o git
+scripts/field-control/amostra/
+scripts/field-control/dados/

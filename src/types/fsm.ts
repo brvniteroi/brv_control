@@ -102,15 +102,15 @@ export interface Equipment {
   updated_at: string;
 }
 
-export type ServiceOrderType =
-  | 'instalacao'
-  | 'manutencao_preventiva'
-  | 'manutencao_corretiva'
-  | 'visita_tecnica'
-  | 'orcamento'
-  | 'pmoc'
-  | 'eletrica'
-  | 'outros';
+export interface ServiceType {
+  id: string;
+  name: string;
+  default_duration_minutes: number | null;
+  active: boolean;
+  field_control_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export type ServiceOrderStatus =
   | 'aberta'
@@ -128,7 +128,7 @@ export interface ServiceOrder {
   customer_id: string;
   address_id: string | null;
   contact_id: string | null;
-  type: ServiceOrderType;
+  service_type_id: string;
   status: ServiceOrderStatus;
   priority: ServiceOrderPriority;
   description: string | null;
@@ -176,6 +176,7 @@ export interface Task {
   checkout_lat: number | null;
   checkout_lng: number | null;
   technician_notes: string | null;
+  field_control_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -195,16 +196,18 @@ export interface Attachment {
   service_order_id: string | null;
   task_id: string | null;
   equipment_id: string | null;
-  storage: 'hostgator' | 'supabase';
+  /** 'fieldcontrol' = arquivo ainda no S3 do Field Control (importado), sem mime/tamanho */
+  storage: 'hostgator' | 'supabase' | 'fieldcontrol';
   storage_path: string;
   public_url: string;
   file_name: string | null;
-  mime_type: AttachmentMime;
-  size_bytes: number;
+  mime_type: AttachmentMime | null;
+  size_bytes: number | null;
   width: number | null;
   height: number | null;
   category: AttachmentCategory;
   caption: string | null;
+  field_control_id: string | null;
   uploaded_by: string | null;
   created_at: string;
 }

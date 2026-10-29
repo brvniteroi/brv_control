@@ -1,0 +1,8 @@
+{
+  "comentario": "Colaboradores do Field Control que são a mesma pessoa. 'duplicado' é absorvido por 'principal' (atividades e OS passam a apontar para o principal). 'email' e 'ativo' são opcionais e valem para o cadastro final.",
+  "mesmaPessoa": [
+    { "duplicado": "Braulio Valente", "principal": "Braulio Rodrigues Valente" },
+    { "duplicado": "Iam Betine", "principal": "Iam Betine Silvério", "email": null },
+    { "duplicado": "Emerson da Silva", "principal": "Emerson Torres" }
+  ]
+}

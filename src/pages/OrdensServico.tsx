@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ClipboardList, Plus, Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import OrdemDetalhes from '../components/ordens/OrdemDetalhes';
 import {
   ORDENS_POR_PAGINA,
@@ -30,7 +31,9 @@ export default function OrdensServico() {
   const [erro, setErro] = useState<string | null>(null);
   const [filtros, setFiltros] = useState<FiltrosOrdens>({ termo: '', status: '', tipoId: '' });
   const [tipos, setTipos] = useState<ServiceType[]>([]);
-  const [selecionada, setSelecionada] = useState<string | 'nova' | null>(null);
+  // /ordens-de-servico?os=<id> abre a OS direto (usado pela aba Atendimento do cliente)
+  const [params, setParams] = useSearchParams();
+  const [selecionada, setSelecionada] = useState<string | 'nova' | null>(params.get('os'));
   const ultimaRequisicao = useRef(0);
 
   useEffect(() => {
@@ -70,7 +73,10 @@ export default function OrdensServico() {
     return (
       <OrdemDetalhes
         ordemId={selecionada}
-        onFechar={() => setSelecionada(null)}
+        onFechar={() => {
+          setSelecionada(null);
+          if (params.has('os')) setParams({}, { replace: true });
+        }}
         onSalvo={(id) => {
           setSelecionada(id);
           carregar();

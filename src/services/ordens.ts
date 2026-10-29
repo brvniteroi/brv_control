@@ -206,3 +206,17 @@ export async function removerAtividade(id: string): Promise<void> {
   const { error } = await supabase.from('tasks').delete().eq('id', id);
   if (error) throw new Error(traduzirErro(error.message));
 }
+
+/** OS de um cliente (da mais nova para a mais antiga), para a aba Atendimento do cadastro. */
+export async function listarOrdensDoCliente(customerId: string): Promise<OrdemResumo[]> {
+  const { data, error } = await supabase
+    .from('service_orders')
+    .select(
+      '*, customer:customers(id, name), service_type:service_types(id, name), tasks(id, status, scheduled_start, employee:employees(id, name))',
+    )
+    .eq('customer_id', customerId)
+    .order('number', { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return (data ?? []) as unknown as OrdemResumo[];
+}

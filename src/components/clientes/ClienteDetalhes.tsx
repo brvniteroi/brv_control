@@ -21,6 +21,7 @@ import {
 } from '../../services/clientes';
 import type { CustomerAddress, CustomerContact, PersonType } from '../../types/fsm';
 import EnderecosAdicionais from './EnderecosAdicionais';
+import AtendimentosCliente from './AtendimentosCliente';
 import MapaEnderecos from './MapaEnderecos';
 import { geocodificar, textoEndereco } from '../../services/googleMaps';
 import { documentoValido, formatarDocumento, limparDocumento } from '../../utils/documento';
@@ -31,21 +32,17 @@ interface ClienteDetalhesProps {
   onSalvo: (id: string) => void;
 }
 
-type AbaAtiva = 'geral' | 'atendimento' | 'modelos' | 'anexos' | 'customizados' | 'historico';
+type AbaAtiva = 'geral' | 'atendimento' | 'modelos';
 
 interface AbaItem {
   id: AbaAtiva;
   rotulo: string;
-  badge?: number;
 }
 
 const ABAS: AbaItem[] = [
   { id: 'geral', rotulo: 'Geral' },
   { id: 'atendimento', rotulo: 'Atendimento' },
   { id: 'modelos', rotulo: 'Modelos' },
-  { id: 'anexos', rotulo: 'Anexos', badge: 0 },
-  { id: 'customizados', rotulo: 'Campos customizados' },
-  { id: 'historico', rotulo: 'Histórico' },
 ];
 
 export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: ClienteDetalhesProps) {
@@ -477,7 +474,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: Client
         </div>
       </div>
 
-      {/* 2. Barra de Abas - Geral, Atendimento, Modelos, Anexos, Campos customizados, Histórico */}
+      {/* 2. Barra de Abas - Anexos, Campos customizados e Histórico voltam quando houver o recurso por trás */}
       <div className="border-b border-slate-200 bg-white px-6">
         <nav className="flex space-x-8">
           {ABAS.map((aba) => {
@@ -491,14 +488,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: Client
                   ativa ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <span className="flex items-center gap-1.5">
-                  {aba.rotulo}
-                  {aba.badge !== undefined && (
-                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
-                      {aba.badge}
-                    </span>
-                  )}
-                </span>
+                {aba.rotulo}
                 {ativa && (
                   <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full bg-blue-600" />
                 )}
@@ -906,47 +896,13 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo }: Client
       )}
 
       {/* Conteúdo das outras abas */}
-      {abaAtiva === 'atendimento' && (
-        <div className="mx-6 mt-6 rounded-2xl border border-slate-200 bg-white p-8 text-center">
-          <h3 className="text-base font-bold text-slate-800">Histórico de Atendimentos</h3>
-          <p className="mt-2 text-xs text-slate-500">
-            Ordens de serviço e atividades vinculadas a este cliente aparecerão aqui.
-          </p>
-        </div>
-      )}
+      {abaAtiva === 'atendimento' && <AtendimentosCliente clienteId={clienteId} />}
 
       {abaAtiva === 'modelos' && (
         <div className="mx-6 mt-6 rounded-2xl border border-slate-200 bg-white p-8 text-center">
           <h3 className="text-base font-bold text-slate-800">Equipamentos Instalados</h3>
           <p className="mt-2 text-xs text-slate-500">
             Aparelhos de ar-condicionado e ativos cadastrados neste cliente.
-          </p>
-        </div>
-      )}
-
-      {abaAtiva === 'anexos' && (
-        <div className="mx-6 mt-6 rounded-2xl border border-slate-200 bg-white p-8 text-center">
-          <h3 className="text-base font-bold text-slate-800">Anexos e Documentos</h3>
-          <p className="mt-2 text-xs text-slate-500">
-            Fotos de campo e documentos armazenados com segurança.
-          </p>
-        </div>
-      )}
-
-      {abaAtiva === 'customizados' && (
-        <div className="mx-6 mt-6 rounded-2xl border border-slate-200 bg-white p-8 text-center">
-          <h3 className="text-base font-bold text-slate-800">Campos Customizados</h3>
-          <p className="mt-2 text-xs text-slate-500">
-            Campos personalizados e configurações específicas.
-          </p>
-        </div>
-      )}
-
-      {abaAtiva === 'historico' && (
-        <div className="mx-6 mt-6 rounded-2xl border border-slate-200 bg-white p-8 text-center">
-          <h3 className="text-base font-bold text-slate-800">Registro de Atividades</h3>
-          <p className="mt-2 text-xs text-slate-500">
-            Log de alterações e auditoria de ações realizadas neste cliente.
           </p>
         </div>
       )}

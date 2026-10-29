@@ -47,6 +47,14 @@ Feito:
 - Mapa Google no cadastro do cliente (`MapaEnderecos.tsx`, `services/googleMaps.ts`): as coordenadas são
   geocodificadas ao salvar cada endereço. Precisa de `VITE_GOOGLE_MAPS_API_KEY` (opcional; sem ela o mapa fica
   desligado). A página Mapa (técnicos + atividades do dia) vem depois de OS e do app de campo.
+- Ordens de Serviço (`pages/OrdensServico.tsx`, `components/ordens/`, `services/ordens.ts`): lista paginada com busca e
+  filtros, criar/editar OS, atividades (técnico, data, status) e galeria de fotos. O status da OS ainda é manual (não deriva
+  das atividades). Depois de importar OS, rodar o `setval` da numeração (já vai no fim do `os.sql` gerado).
+- Tipos de OS editáveis (`service_types`; `service_orders.service_type_id` substitui o antigo `type` fixo). Migration
+  `20261029140000_tipos_os_e_importacao.sql` (**a rodar**) também prepara importação: `field_control_id` em tasks e
+  attachments, anexos com `storage = 'fieldcontrol'` (link do S3 do Field Control, sem tamanho).
+- Importação do Field Control: scripts em `scripts/field-control/` (baixar-amostra, gerar-sql-clientes, gerar-sql-os).
+  Amostra de 3 clientes já importada (clientes, endereços, contatos). Dados baixados ficam em `amostra/` (gitignored).
 - Repositório: https://github.com/brvniteroi/brv_control (privado).
 - Divisão de trabalho: o Gemini cuida do visual; o trabalho técnico é feito pelo Claude.
 - Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto

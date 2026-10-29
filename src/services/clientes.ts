@@ -47,7 +47,7 @@ export interface SalvarClienteInput {
 }
 
 /** Remove o que tem significado na sintaxe do filtro `.or()` do PostgREST. */
-function termoSeguro(termo: string): string {
+export function termoSeguro(termo: string): string {
   return termo.replace(/[,()"'\\%_*:]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 

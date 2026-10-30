@@ -35,6 +35,19 @@ interface Formulario {
   duracao: string;
   descricao: string;
   relato: string;
+  /** Início e término reais (check-in/check-out), no formato do input datetime-local */
+  inicioReal: string;
+  fimReal: string;
+}
+
+function paraCampoDataHora(iso: string | null): string {
+  const { data, hora } = paraCamposDataHora(iso);
+  return data ? `${data}T${hora}` : '';
+}
+
+function deCampoDataHora(valor: string): string | null {
+  const [data, hora] = valor.split('T');
+  return deCamposDataHora(data ?? '', hora ?? '');
 }
 
 const INPUT =
@@ -70,6 +83,8 @@ export default function AtividadesOS({
       duracao: String(duracaoPadrao),
       descricao: '',
       relato: '',
+      inicioReal: '',
+      fimReal: '',
     });
     setAberto(true);
   };
@@ -91,6 +106,8 @@ export default function AtividadesOS({
       duracao: String(minutos),
       descricao: a.description ?? '',
       relato: a.technician_notes ?? '',
+      inicioReal: paraCampoDataHora(a.started_at),
+      fimReal: paraCampoDataHora(a.finished_at),
     });
     setAberto(true);
   };
@@ -110,6 +127,22 @@ export default function AtividadesOS({
     // Técnico + data definidos: a atividade deixa de ser "pendente" e entra na agenda
     let status = form.status;
     if (status === 'pendente' && form.tecnicoId && inicio) status = 'agendada';
+    const inicioReal = deCampoDataHora(form.inicioReal);
+    const fimReal = deCampoDataHora(form.fimReal);
+    if (fimReal && !inicioReal) {
+      setErro('Informe também o início real.');
+      return;
+    }
+    if (inicioReal && fimReal && fimReal < inicioReal) {
+      setErro('O término real deve ser depois do início real.');
+      return;
+    }
+    // Horário real informado: a atividade já aconteceu (ou está acontecendo)
+    if (status !== 'cancelada') {
+      if (fimReal) status = 'concluida';
+      else if (inicioReal && ['pendente', 'agendada', 'em_deslocamento'].includes(status)) status = 'em_execucao';
+    }
+
     if (status === 'agendada' && (!form.tecnicoId || !inicio)) {
       setErro('Para agendar, escolha o técnico e a data/hora de início.');
       return;
@@ -119,6 +152,8 @@ export default function AtividadesOS({
     setErro(null);
     try {
       await salvarAtividade({
+        started_at: inicioReal,
+        finished_at: fimReal,
         id: editandoId ?? undefined,
         service_order_id: ordemId,
         employee_id: form.tecnicoId || null,
@@ -192,6 +227,7 @@ export default function AtividadesOS({
                         <User size={12} /> {a.employee?.name ?? 'Sem técnico'}
                       </span>
                       <span>{a.scheduled_start ? formatarDataHora(a.scheduled_start) : 'Sem data'}</span>
+                      {a.started_at && <span>Iniciada em {formatarDataHora(a.started_at)}</span>}
                       {a.finished_at && <span>Concluída em {formatarDataHora(a.finished_at)}</span>}
                     </div>
                     {a.technician_notes && (
@@ -282,6 +318,35 @@ export default function AtividadesOS({
                   <label htmlFor="at-dur" className="block text-xs font-medium text-slate-700">Duração (min)</label>
                   <input id="at-dur" type="number" min={1} value={form.duracao} onChange={(e) => campo('duracao', e.target.value)} className={INPUT} />
                 </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+                <span className="block text-xs font-semibold text-slate-700">Execução (horário real)</span>
+                <div className="mt-1 grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="at-inicio-real" className="block text-xs font-medium text-slate-700">Início</label>
+                    <input
+                      id="at-inicio-real"
+                      type="datetime-local"
+                      value={form.inicioReal}
+                      onChange={(e) => campo('inicioReal', e.target.value)}
+                      className={INPUT}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="at-fim-real" className="block text-xs font-medium text-slate-700">Término</label>
+                    <input
+                      id="at-fim-real"
+                      type="datetime-local"
+                      value={form.fimReal}
+                      onChange={(e) => campo('fimReal', e.target.value)}
+                      className={INPUT}
+                    />
+                  </div>
+                </div>
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  Com o término preenchido, a atividade é salva como concluída.
+                </p>
               </div>
 
               <div>

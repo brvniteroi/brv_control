@@ -24,8 +24,13 @@ export interface AtividadeResumo {
   id: string;
   status: TaskStatus;
   scheduled_start: string | null;
+  finished_at: string | null;
+  /** Relato do técnico, mostrado ao passar o mouse na lista de OS */
+  technician_notes: string | null;
   employee: { id: string; name: string } | null;
 }
+
+const CAMPOS_ATIVIDADE_RESUMO = 'tasks(id, status, scheduled_start, finished_at, technician_notes, employee:employees(id, name))';
 
 export interface OrdemResumo extends ServiceOrder {
   customer: { id: string; name: string } | null;
@@ -52,10 +57,9 @@ export interface PaginaOrdens {
 export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<PaginaOrdens> {
   let query = supabase
     .from('service_orders')
-    .select(
-      '*, customer:customers(id, name), service_type:service_types(id, name), tasks(id, status, scheduled_start, employee:employees(id, name))',
-      { count: 'exact' },
-    )
+    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}`, {
+      count: 'exact',
+    })
     .order('number', { ascending: false })
     .range(pagina * ORDENS_POR_PAGINA, (pagina + 1) * ORDENS_POR_PAGINA - 1);
 
@@ -140,7 +144,7 @@ export interface SalvarOrdemInput {
 function traduzirErro(mensagem: string): string {
   if (mensagem.includes('tasks_scheduled_needs_slot')) return 'Atividade agendada precisa de técnico e data/hora de início.';
   if (mensagem.includes('tasks_schedule_valid')) return 'O horário de término deve ser depois do início.';
-  if (mensagem.includes('tasks_execution_valid')) return 'A atividade não pode ter término sem início.';
+  if (mensagem.includes('tasks_execution_valid')) return 'O término real precisa de início e deve ser depois dele.';
   if (mensagem.includes('service_orders_address_fk')) return 'O endereço escolhido não pertence a este cliente.';
   if (mensagem.includes('service_orders_number_key')) return 'Já existe uma OS com este número.';
   return mensagem;
@@ -166,6 +170,7 @@ export async function salvarOrdem(d: SalvarOrdemInput): Promise<string> {
   if (d.id) {
     const { error } = await supabase.from('service_orders').update(campos).eq('id', d.id);
     if (error) throw new Error(traduzirErro(error.message));
+    if (d.status === 'concluida') await concluirAtividadesAbertas(d.id);
     return d.id;
   }
   const { data, error } = await supabase.from('service_orders').insert(campos).select('id').single();
@@ -183,6 +188,40 @@ export interface SalvarAtividadeInput {
   scheduled_start: string | null;
   scheduled_end: string | null;
   technician_notes: string;
+  /** Início/término reais (digitados no painel); `undefined` = não mexe. Concluída sem eles: carimba. */
+  started_at?: string | null;
+  finished_at?: string | null;
+}
+
+/**
+ * Check-in/check-out de uma atividade concluída pelo escritório: mantém o que o técnico registrou;
+ * sem registro, usa o início agendado (se já passou) e a hora atual.
+ */
+function carimbosConclusao(
+  t: { scheduled_start: string | null; started_at?: string | null; finished_at?: string | null },
+  agora: string,
+): { started_at: string; finished_at: string } {
+  const fim = t.finished_at ?? agora;
+  const inicio = t.started_at ?? (t.scheduled_start && t.scheduled_start <= fim ? t.scheduled_start : fim);
+  return { started_at: inicio, finished_at: fim };
+}
+
+/** OS concluída: as atividades ainda abertas são concluídas junto (senão continuam "em execução" na linha do tempo). */
+async function concluirAtividadesAbertas(ordemId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('id, scheduled_start, started_at, finished_at')
+    .eq('service_order_id', ordemId)
+    .not('status', 'in', '(concluida,cancelada)');
+  if (error) throw new Error(traduzirErro(error.message));
+  const agora = new Date().toISOString();
+  for (const t of data ?? []) {
+    const { error: erro } = await supabase
+      .from('tasks')
+      .update({ status: 'concluida', ...carimbosConclusao(t, agora) })
+      .eq('id', t.id);
+    if (erro) throw new Error(`OS salva, mas não foi possível concluir uma atividade: ${traduzirErro(erro.message)}`);
+  }
 }
 
 export async function salvarAtividade(d: SalvarAtividadeInput): Promise<void> {
@@ -195,6 +234,10 @@ export async function salvarAtividade(d: SalvarAtividadeInput): Promise<void> {
     scheduled_start: d.scheduled_start,
     scheduled_end: d.scheduled_end,
     technician_notes: d.technician_notes.trim() || null,
+    ...(d.started_at !== undefined && { started_at: d.started_at }),
+    ...(d.finished_at !== undefined && { finished_at: d.finished_at }),
+    // Concluída sem início/término informados: completa com o agendado e a hora atual
+    ...(d.status === 'concluida' && carimbosConclusao(d, new Date().toISOString())),
   };
   const { error } = d.id
     ? await supabase.from('tasks').update(campos).eq('id', d.id)
@@ -211,9 +254,7 @@ export async function removerAtividade(id: string): Promise<void> {
 export async function listarOrdensDoCliente(customerId: string): Promise<OrdemResumo[]> {
   const { data, error } = await supabase
     .from('service_orders')
-    .select(
-      '*, customer:customers(id, name), service_type:service_types(id, name), tasks(id, status, scheduled_start, employee:employees(id, name))',
-    )
+    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}`)
     .eq('customer_id', customerId)
     .order('number', { ascending: false })
     .limit(200);

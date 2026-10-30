@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ClipboardList, Plus, Search } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { ClipboardList, MessageSquareText, Plus, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import OrdemDetalhes from '../components/ordens/OrdemDetalhes';
 import {
@@ -23,6 +23,50 @@ function resumoAtividades(o: OrdemResumo) {
   return { tecnicos: nomes.join(', '), agendamento: datas.length ? datas[datas.length - 1] : null };
 }
 
+/** Atividades com relato do técnico, da mais antiga para a mais recente. */
+function relatos(o: OrdemResumo) {
+  return o.tasks
+    .filter((t) => t.technician_notes?.trim())
+    .sort((a, b) => (a.finished_at ?? a.scheduled_start ?? '').localeCompare(b.finished_at ?? b.scheduled_start ?? ''));
+}
+
+interface DicaRelato {
+  ordem: OrdemResumo;
+  x: number;
+  y: number;
+}
+
+const LARGURA_DICA_PX = 360;
+
+/** Cartão que segue o mouse com o relato do técnico. Fixo na tela para não ser cortado pela rolagem da tabela. */
+function CartaoRelato({ dica }: { dica: DicaRelato }) {
+  const acima = dica.y > window.innerHeight / 2;
+  const esquerda = Math.max(8, Math.min(dica.x + 16, window.innerWidth - LARGURA_DICA_PX - 8));
+  return (
+    <div
+      className="pointer-events-none fixed z-50 max-h-80 overflow-hidden rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg"
+      style={{
+        left: esquerda,
+        width: LARGURA_DICA_PX,
+        ...(acima ? { bottom: window.innerHeight - dica.y + 12 } : { top: dica.y + 16 }),
+      }}
+    >
+      <div className="mb-2 font-bold text-slate-800">Relato do técnico · OS {dica.ordem.number}</div>
+      <div className="space-y-2.5">
+        {relatos(dica.ordem).map((t) => (
+          <div key={t.id}>
+            <div className="text-[11px] font-semibold text-slate-500">
+              {t.employee?.name ?? 'Sem técnico'}
+              {t.finished_at ? ` · ${formatarDataHora(t.finished_at)}` : ''}
+            </div>
+            <p className="mt-0.5 line-clamp-6 whitespace-pre-line text-slate-700">{t.technician_notes}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function OrdensServico() {
   const [ordens, setOrdens] = useState<OrdemResumo[]>([]);
   const [total, setTotal] = useState(0);
@@ -35,6 +79,7 @@ export default function OrdensServico() {
   const [params, setParams] = useSearchParams();
   const [selecionada, setSelecionada] = useState<string | 'nova' | null>(params.get('os'));
   const ultimaRequisicao = useRef(0);
+  const [dica, setDica] = useState<DicaRelato | null>(null);
 
   useEffect(() => {
     listarTipos().then(setTipos).catch((e: unknown) => console.error('Erro ao listar tipos:', e));
@@ -188,10 +233,20 @@ export default function OrdensServico() {
                 {ordens.map((o) => {
                   const info = infoStatusOS(o.status);
                   const { tecnicos, agendamento } = resumoAtividades(o);
+                  const temRelato = relatos(o).length > 0;
+                  const moverDica = temRelato
+                    ? (e: ReactMouseEvent) => setDica({ ordem: o, x: e.clientX, y: e.clientY })
+                    : undefined;
                   return (
                     <tr
                       key={o.id}
-                      onClick={() => setSelecionada(o.id)}
+                      onClick={() => {
+                        setDica(null);
+                        setSelecionada(o.id);
+                      }}
+                      onMouseEnter={moverDica}
+                      onMouseMove={moverDica}
+                      onMouseLeave={temRelato ? () => setDica(null) : undefined}
                       className="cursor-pointer transition hover:bg-slate-50/80"
                     >
                       <td className="px-5 py-4 font-mono font-bold text-slate-900">{o.number}</td>
@@ -201,9 +256,14 @@ export default function OrdensServico() {
                       </td>
                       <td className="px-5 py-4">{o.service_type?.name ?? '—'}</td>
                       <td className="px-5 py-4">
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>
-                          {info.rotulo}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>
+                            {info.rotulo}
+                          </span>
+                          {temRelato && (
+                            <MessageSquareText size={14} className="shrink-0 text-slate-400" aria-label="Tem relato do técnico" />
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-4">{tecnicos || <span className="text-slate-400">A distribuir</span>}</td>
                       <td className="px-5 py-4">{agendamento ? formatarDataHora(agendamento) : <span className="text-slate-400">—</span>}</td>
@@ -240,6 +300,8 @@ export default function OrdensServico() {
           </div>
         </div>
       )}
+
+      {dica && <CartaoRelato dica={dica} />}
     </div>
   );
 }

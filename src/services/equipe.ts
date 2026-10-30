@@ -117,7 +117,30 @@ export interface CriarUsuarioInput {
 
 export const criarUsuario = (d: CriarUsuarioInput) => chamarFuncao({ acao: 'criar', ...d });
 
-export const redefinirSenha = (usuarioId: string, senha: string) =>
+export const criarAcessoPortal = (d: { customer_id: string; email: string; nome: string; senha: string }) =>
+  chamarFuncao({ acao: 'criar_acesso_cliente', ...d });
+
+export interface AcessoPortal {
+  profile_id: string;
+  email: string;
+  nome: string;
+  active: boolean;
+}
+
+export async function listarAcessosPortal(customerId: string): Promise<AcessoPortal[]> {
+  const { data, error } = await supabase
+    .from('customer_users')
+    .select('profile_id, profile:profiles(email, full_name, active)')
+    .eq('customer_id', customerId)
+    .order('created_at');
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => {
+    const p = r.profile as unknown as { email: string; full_name: string; active: boolean } | null;
+    return { profile_id: r.profile_id, email: p?.email ?? '', nome: p?.full_name ?? '', active: p?.active ?? false };
+  });
+}
+
+export const redefinirSenha =(usuarioId: string, senha: string) =>
   chamarFuncao({ acao: 'redefinir_senha', usuario_id: usuarioId, senha });
 
 /** Senha temporária legível (sem caracteres ambíguos como 0/O e 1/l). */

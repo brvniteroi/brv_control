@@ -21,6 +21,7 @@ import {
 } from '../../services/clientes';
 import type { CustomerAddress, CustomerContact, PersonType } from '../../types/fsm';
 import EnderecosAdicionais from './EnderecosAdicionais';
+import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
 import MapaEnderecos from './MapaEnderecos';
 import { formatarTelefone } from '../../utils/telefone';
@@ -892,6 +893,14 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                     </div>
                   ))}
                 </div>
+              )}
+
+              {clienteId !== 'novo' && (
+                <AcessoPortal
+                  clienteId={clienteId}
+                  clienteNome={nome}
+                  emailSugerido={contatos.find((c) => c.is_primary)?.email ?? contatos.find((c) => c.email)?.email ?? ''}
+                />
               )}
             </div>
           </div>

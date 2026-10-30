@@ -80,6 +80,45 @@ Deno.serve(async (req) => {
       return responder(200, { ok: true, id });
     }
 
+    // Login do Portal do Cliente: cria o usuário, marca o perfil como 'cliente' e liga ao cadastro
+    if (corpo.acao === 'criar_acesso_cliente') {
+      const email = String(corpo.email ?? '').trim().toLowerCase();
+      const nome = String(corpo.nome ?? '').trim();
+      const senha = String(corpo.senha ?? '');
+      if (!EMAIL.test(email)) return responder(400, { erro: 'E-mail inválido.' });
+      if (!nome) return responder(400, { erro: 'Informe o nome.' });
+      if (senha.length < 8) return responder(400, { erro: 'A senha precisa ter pelo menos 8 caracteres.' });
+      const { data: cliente } = await admin.from('customers').select('id').eq('id', corpo.customer_id).maybeSingle();
+      if (!cliente) return responder(400, { erro: 'Cliente não encontrado.' });
+
+      const { data: criado, error: erroCriar } = await admin.auth.admin.createUser({
+        email,
+        password: senha,
+        email_confirm: true,
+        user_metadata: { full_name: nome },
+      });
+      if (erroCriar || !criado.user) {
+        const jaExiste = /already|registered|exists/i.test(erroCriar?.message ?? '');
+        return responder(jaExiste ? 409 : 400, {
+          erro: jaExiste ? 'Já existe um usuário com este e-mail.' : (erroCriar?.message ?? 'Não foi possível criar o usuário.'),
+        });
+      }
+      const id = criado.user.id;
+
+      const { error: erroPerfil } = await admin
+        .from('profiles')
+        .update({ role: 'cliente', active: true, full_name: nome })
+        .eq('id', id);
+      const { error: erroVinculo } = erroPerfil
+        ? { error: null }
+        : await admin.from('customer_users').insert({ profile_id: id, customer_id: cliente.id });
+      if (erroPerfil || erroVinculo) {
+        await admin.auth.admin.deleteUser(id); // não deixa um login órfão para trás
+        return responder(500, { erro: `Não foi possível liberar o acesso: ${(erroPerfil ?? erroVinculo)?.message}` });
+      }
+      return responder(200, { ok: true, id });
+    }
+
     if (corpo.acao === 'redefinir_senha') {
       const senha = String(corpo.senha ?? '');
       if (!corpo.usuario_id) return responder(400, { erro: 'Usuário não informado.' });

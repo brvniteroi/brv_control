@@ -12,12 +12,20 @@ import OrdensServico from './pages/OrdensServico';
 import Estoque from './pages/Estoque';
 import Equipamentos from './pages/Equipamentos';
 import Formularios from './pages/Formularios';
+import PortalRoute from './components/portal/PortalRoute';
+import PortalLogin from './pages/portal/PortalLogin';
+import PortalHome from './pages/portal/PortalHome';
 
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+
+        <Route path="/portal/login" element={<PortalLogin />} />
+        <Route path="/portal" element={<PortalRoute />}>
+          <Route index element={<PortalHome />} />
+        </Route>
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>

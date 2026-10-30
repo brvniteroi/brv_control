@@ -60,6 +60,11 @@ Feito:
   `20261029140000_tipos_os_e_importacao.sql` (**a rodar**) também prepara importação: `field_control_id` em tasks e
   attachments, anexos com `storage = 'fieldcontrol'` (link do S3 do Field Control, sem tamanho).
 - Formulários de campo (orçamento, carga de gás; PMOC depois): migration `20261029160000_formularios.sql` (**a rodar**; já cadastra 3 modelos do Field Control), `services/formularios.ts`, `utils/formularios.ts`, `types/formularios.ts`. Telas com o Gemini: briefing em `docs/gemini/formularios.md`. O técnico preenche no celular; a resposta guarda cópia das perguntas.
+- Portal do Cliente (`/portal`, login em `/portal/login`; `pages/portal/`, `components/portal/`, `services/portal.ts`): perfil `cliente`
+  ligado a um cliente em `customer_users`. Sem política RLS nas tabelas operacionais: tudo por funções `portal_*` (security definer)
+  que filtram pelo cliente do login; só laudos preenchidos e fotos de OS concluídas têm política de leitura. Chamado = OS `aberta`
+  (`portal_abrir_chamado`). Laudo "PDF" = `VisualizarFormulario` + imprimir/salvar como PDF. Migration `20261030100000_portal_cliente.sql`
+  (**a rodar**). Liberar um cliente: criar o usuário no Auth e `SELECT public.liberar_portal_cliente('email', '<id do cliente>');`.
 - Importação do Field Control: scripts em `scripts/field-control/` (baixar-amostra, gerar-sql-clientes, gerar-sql-os).
   Amostra de 3 clientes já importada (clientes, endereços, contatos). Dados baixados ficam em `amostra/` (gitignored).
 - Repositório: https://github.com/brvniteroi/brv_control (privado).

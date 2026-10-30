@@ -1,7 +1,7 @@
 // Tipos do banco. Espelham supabase/migrations: ao mudar uma coluna lá,
 // atualize aqui (ou gere com `supabase gen types typescript`).
 
-export type ProfileRole = 'admin' | 'escritorio' | 'tecnico';
+export type ProfileRole = 'admin' | 'escritorio' | 'tecnico' | 'cliente';
 
 export interface Profile {
   id: string;

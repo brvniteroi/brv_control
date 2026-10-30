@@ -88,5 +88,8 @@ export default function ProtectedRoute() {
     );
   }
 
+  // Cliente final não usa o sistema da equipe: vai para o portal
+  if (profile?.role === 'cliente') return <Navigate to="/portal" replace />;
+
   return <Outlet />;
 }

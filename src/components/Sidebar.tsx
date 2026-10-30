@@ -66,7 +66,7 @@ const classeLink = ({ isActive }: { isActive: boolean }) =>
 export default function Sidebar({ aberta, onFechar }: SidebarProps) {
   const { profile, signOut } = useAuth();
   const { pathname } = useLocation();
-  const [gruposFechados, setGruposFechados] = useState<Record<string, boolean>>({});
+  const [gruposAbertos, setGruposAbertos] = useState<Record<string, boolean>>({});
   const podeGerenciarFormularios = profile?.role === 'admin' || profile?.role === 'escritorio';
   const visivel = (item: ItemMenu) => !item.apenasEscritorio || podeGerenciarFormularios;
 
@@ -111,13 +111,13 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
             if (filhos.length === 0) return null;
             const GrupoIcone = entrada.icone;
             const temAtivo = filhos.some((f) => pathname.startsWith(f.rota));
-            // Aberto por padrão; só recolhe quando não se está numa tela do grupo
-            const aberto = temAtivo || !gruposFechados[entrada.rotulo];
+            // Recolhido por padrão; abre ao clicar ou quando se está numa tela do grupo
+            const aberto = temAtivo || !!gruposAbertos[entrada.rotulo];
             return (
               <div key={entrada.rotulo}>
                 <button
                   type="button"
-                  onClick={() => setGruposFechados((g) => ({ ...g, [entrada.rotulo]: aberto }))}
+                  onClick={() => setGruposAbertos((g) => ({ ...g, [entrada.rotulo]: !aberto }))}
                   aria-expanded={aberto}
                   className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
                 >

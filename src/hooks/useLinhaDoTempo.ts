@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   agendarAtividade,
-  buscarOrdensLinha,
   desagendarAtividade,
   listarAtividadesDoDia,
   listarAtividadesSemHorario,
@@ -11,6 +10,7 @@ import {
 } from '../services/linhaDoTempo';
 import type { Task } from '../types/fsm';
 import { atividadesEmConflito, limitesDoDia, podeMover } from '../utils/linhaDoTempo';
+import { useOrdensDasAtividades } from './useOrdensDasAtividades';
 import { useRealtimeTable } from './useRealtimeTable';
 
 export interface AtividadeLinha extends Task {
@@ -28,7 +28,6 @@ export function useLinhaDoTempo(dia: string) {
 
   const [tecnicos, setTecnicos] = useState<TecnicoLinha[]>([]);
   const [erroTecnicos, setErroTecnicos] = useState<string | null>(null);
-  const [ordens, setOrdens] = useState<Record<string, OrdemLinha>>({});
   const [erroAcao, setErroAcao] = useState<string | null>(null);
 
   const carregarTecnicos = useCallback(() => {
@@ -59,20 +58,8 @@ export function useLinhaDoTempo(dia: string) {
     (t) => t.scheduled_start === null && t.status !== 'concluida' && t.status !== 'cancelada',
   );
 
-  // Dados das OS (número, cliente...) vêm separados: o Realtime só entrega a linha de `tasks`.
-  const buscando = useRef(new Set<string>());
-  useEffect(() => {
-    const faltam = [...doDia.linhas, ...semHorario.linhas]
-      .map((t) => t.service_order_id)
-      .filter((id) => !ordens[id] && !buscando.current.has(id));
-    const ids = [...new Set(faltam)];
-    if (ids.length === 0) return;
-    ids.forEach((id) => buscando.current.add(id));
-    buscarOrdensLinha(ids)
-      .then((lista) => setOrdens((atual) => ({ ...atual, ...Object.fromEntries(lista.map((o) => [o.id, o])) })))
-      .catch((e) => setErroAcao(e instanceof Error ? e.message : String(e)))
-      .finally(() => ids.forEach((id) => buscando.current.delete(id)));
-  }, [doDia.linhas, semHorario.linhas, ordens]);
+  const todas = useMemo(() => [...doDia.linhas, ...semHorario.linhas], [doDia.linhas, semHorario.linhas]);
+  const ordens = useOrdensDasAtividades(todas, setErroAcao);
 
   const atividades = useMemo<AtividadeLinha[]>(
     () => doDia.linhas.map((t) => ({ ...t, ordem: ordens[t.service_order_id] ?? null })),

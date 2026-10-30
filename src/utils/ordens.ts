@@ -26,7 +26,18 @@ export const STATUS_ATIVIDADE: { valor: TaskStatus; rotulo: string; classe: stri
   { valor: 'cancelada', rotulo: 'Cancelada', classe: 'bg-red-50 text-red-700 border-red-100' },
 ];
 
-export const infoStatusOS = (s: ServiceOrderStatus) => STATUS_OS.find((x) => x.valor === s) ?? STATUS_OS[0];
+/** Cor sólida do bloco da atividade (linha do tempo e calendário), texto em branco. */
+export const COR_STATUS_ATIVIDADE: Record<TaskStatus, string> = {
+  pendente: 'bg-slate-500 border-slate-700',
+  agendada: 'bg-blue-600 border-blue-800',
+  em_deslocamento: 'bg-indigo-600 border-indigo-800',
+  em_execucao: 'bg-orange-600 border-orange-800',
+  pausada: 'bg-pink-600 border-pink-800',
+  concluida: 'bg-green-600 border-green-800',
+  cancelada: 'bg-red-300 border-red-400 opacity-60',
+};
+
+export const infoStatusOS =(s: ServiceOrderStatus) => STATUS_OS.find((x) => x.valor === s) ?? STATUS_OS[0];
 export const infoStatusAtividade = (s: TaskStatus) => STATUS_ATIVIDADE.find((x) => x.valor === s) ?? STATUS_ATIVIDADE[0];
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });

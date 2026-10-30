@@ -32,7 +32,7 @@ export async function listarTecnicosLinha(): Promise<TecnicoLinha[]> {
   return data ?? [];
 }
 
-/** Atividades com horário que tocam o intervalo [inicio, fim) (ISO). */
+/** Atividades com horário que tocam o intervalo [inicio, fim) (ISO): um dia ou o mês do calendário. */
 export async function listarAtividadesDoDia(inicio: string, fim: string): Promise<Task[]> {
   const { data, error } = await supabase
     .from('tasks')
@@ -57,9 +57,24 @@ export async function listarAtividadesSemHorario(): Promise<Task[]> {
   return (data ?? []) as Task[];
 }
 
+/** Todos os colaboradores (inclusive inativos), para nome e cor de quem aparece no calendário. */
+export async function listarColaboradoresCores(): Promise<(TecnicoLinha & Pick<Employee, 'active' | 'role'>)[]> {
+  const { data, error } = await supabase.from('employees').select('id, name, timeline_color, active, role').order('name');
+  if (error) throw new Error(`Não foi possível carregar os colaboradores: ${error.message}`);
+  return data ?? [];
+}
+
+/** Ids por requisição: muitos ids no `in(...)` estouram o tamanho da URL. */
+const LOTE_IDS = 100;
+
 /** Dados de OS (número, cliente, tipo, local) para um conjunto de ids. */
 export async function buscarOrdensLinha(ids: string[]): Promise<OrdemLinha[]> {
   if (ids.length === 0) return [];
+  if (ids.length > LOTE_IDS) {
+    const lotes: string[][] = [];
+    for (let i = 0; i < ids.length; i += LOTE_IDS) lotes.push(ids.slice(i, i + LOTE_IDS));
+    return (await Promise.all(lotes.map(buscarOrdensLinha))).flat();
+  }
   const { data, error } = await supabase
     .from('service_orders')
     .select(

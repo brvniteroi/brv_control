@@ -202,7 +202,7 @@ function carimbosConclusao(
   agora: string,
 ): { started_at: string; finished_at: string } {
   const fim = t.finished_at ?? agora;
-  const inicio = t.started_at ?? (t.scheduled_start && t.scheduled_start <= fim ? t.scheduled_start : fim);
+  const inicio = t.started_at ?? (t.scheduled_start && Date.parse(t.scheduled_start) <= Date.parse(fim) ? t.scheduled_start : fim);
   return { started_at: inicio, finished_at: fim };
 }
 

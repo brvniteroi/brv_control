@@ -3,21 +3,12 @@ import { AlertTriangle, Flame } from 'lucide-react';
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { formatarHora, minutosDoDia, podeMover } from '../../utils/linhaDoTempo';
+import { COR_STATUS_ATIVIDADE as COR_STATUS } from '../../utils/ordens';
 import { COLUNA_TECNICOS_PX, type JanelaTempo } from './janela';
 import type { EspecArrasto, PreviaArrasto } from './useArrasto';
 
 const ALTURA_LINHA_PX = 64;
 const ID_OUTROS = '__outros';
-
-const COR_STATUS: Record<AtividadeLinha['status'], string> = {
-  pendente: 'bg-slate-500 border-slate-700',
-  agendada: 'bg-blue-600 border-blue-800',
-  em_deslocamento: 'bg-indigo-600 border-indigo-800',
-  em_execucao: 'bg-orange-600 border-orange-800',
-  pausada: 'bg-pink-600 border-pink-800',
-  concluida: 'bg-green-600 border-green-800',
-  cancelada: 'bg-red-300 border-red-400 opacity-60',
-};
 
 interface BarraProps {
   atividade: AtividadeLinha;

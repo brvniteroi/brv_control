@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
+  CalendarDays,
   CalendarRange,
   ClipboardList,
   FileText,
@@ -24,6 +25,7 @@ interface ItemMenu {
 const MENU: ItemMenu[] = [
   { rota: '/', rotulo: 'Dashboard', icone: LayoutDashboard },
   { rota: '/linha-do-tempo', rotulo: 'Linha do Tempo', icone: CalendarRange, apenasEscritorio: true },
+  { rota: '/calendario', rotulo: 'Calendário', icone: CalendarDays, apenasEscritorio: true },
   { rota: '/ordens-de-servico', rotulo: 'Ordens de Serviço', icone: ClipboardList },
   { rota: '/clientes', rotulo: 'Clientes', icone: Users },
   { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },

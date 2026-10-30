@@ -12,6 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import AreaTrabalho from '../components/linhaDoTempo/AreaTrabalho';
 import NovaAtividadeModal from '../components/linhaDoTempo/NovaAtividadeModal';
 import OrdemDetalhes from '../components/ordens/OrdemDetalhes';
@@ -53,7 +54,12 @@ export default function LinhaDoTempo() {
 }
 
 function LinhaDoTempoEscritorio() {
-  const [dia, setDia] = useState(() => dataLocal());
+  // /linha-do-tempo?dia=YYYY-MM-DD abre no dia (usado pelo calendário)
+  const [params] = useSearchParams();
+  const [dia, setDia] = useState(() => {
+    const pedido = params.get('dia');
+    return pedido && /^\d{4}-\d{2}-\d{2}$/.test(pedido) ? pedido : dataLocal();
+  });
   const [zoom, setZoom] = useState(() => lerNumero(CHAVE_ZOOM, 1));
   const [painelAberto, setPainelAberto] = useState(() => localStorage.getItem(CHAVE_PAINEL) === '1');
   const [tecnicosFiltro, setTecnicosFiltro] = useState<string[]>([]);

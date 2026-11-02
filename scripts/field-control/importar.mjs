@@ -292,14 +292,20 @@ for (const t of atividadesFC) {
   tarefasPorOS.set(t.order.id, lista);
 }
 /** Mesma regra do trigger tasks_atualiza_status_os; sem atividade ou todas canceladas: cancelada (antiga) ou agendada. */
-function statusOS(o, tarefas) {
+function statusOS(o, todas) {
+  // Só as atividades que entram no banco (em aberto sem técnico ou data fica de fora, ver etapa 6)
+  const tarefas = todas.filter((t) => {
+    const { st } = situacaoTarefa(t);
+    return st === 'concluida' || st === 'cancelada' || (t.employee?.id && t.scheduling?.date);
+  });
   const sts = tarefas.map((t) => situacaoTarefa(t).st);
   if (sts.some((s) => s === 'em_deslocamento' || s === 'em_execucao')) return { status: 'em_andamento' };
   if (sts.includes('agendada')) return { status: 'agendada' };
   if (sts.includes('concluida')) return { status: 'concluida' };
   if (sts.length > 0 && tarefas.every((t) => t.status === 'canceled')) return { status: 'cancelada', motivo: 'Cancelada no Field Control' };
   if (o.createdAt.slice(0, 10) < CORTE_ABERTAS) return { status: 'cancelada', motivo: sts.length ? MOTIVO_ESQUECIDA : 'Sem atividade no Field Control' };
-  return { status: 'agendada' };
+  // Recente sem atividade: no Field a atividade foi arquivada (tirada da agenda) ou ficou sem técnico/data
+  return { status: 'cancelada', motivo: sts.length ? MOTIVO_ESQUECIDA : 'Atividade arquivada no Field Control' };
 }
 /** Fim da atividade encerrada (reportada às vezes vem sem completedAt). */
 const fimDaTarefa = (t) => t.completedAt ?? t.startedAt ?? t.updatedAt ?? t.createdAt;

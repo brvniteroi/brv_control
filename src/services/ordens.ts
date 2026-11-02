@@ -16,9 +16,18 @@ import { ordenarEtiquetas } from './etiquetas';
 
 export const ORDENS_POR_PAGINA = 50;
 
+/** Situação da lista: um status ou um dos grupos do Dashboard (abertas = agendada + em andamento). */
+export type FiltroSituacao = ServiceOrderStatus | '' | 'abertas' | 'atrasadas' | 'urgentes';
+
+export const FILTROS_SITUACAO_EXTRAS: { valor: FiltroSituacao; rotulo: string }[] = [
+  { valor: 'abertas', rotulo: 'Em aberto (agendadas e em andamento)' },
+  { valor: 'atrasadas', rotulo: 'Atrasadas (prazo vencido)' },
+  { valor: 'urgentes', rotulo: 'Urgentes / alta (em aberto)' },
+];
+
 export interface FiltrosOrdens {
   termo: string;
-  status: ServiceOrderStatus | '';
+  status: FiltroSituacao;
   tipoId: string;
   /** Só OS com esta etiqueta (vazio = todas). */
   etiquetaId?: string;
@@ -83,7 +92,15 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
     .order('number', { ascending: false })
     .range(pagina * ORDENS_POR_PAGINA, (pagina + 1) * ORDENS_POR_PAGINA - 1);
 
-  if (f.status) query = query.eq('status', f.status);
+  // Mesmas regras dos cards do Dashboard (services/dashboard.ts)
+  const abertas: ServiceOrderStatus[] = ['agendada', 'em_andamento'];
+  if (f.status === 'abertas') query = query.in('status', abertas);
+  else if (f.status === 'atrasadas') {
+    const d = new Date();
+    const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    query = query.in('status', abertas).lt('due_date', hoje);
+  } else if (f.status === 'urgentes') query = query.in('status', abertas).in('priority', ['alta', 'urgente']);
+  else if (f.status) query = query.eq('status', f.status);
   if (f.tipoId) query = query.eq('service_type_id', f.tipoId);
   if (f.etiquetaId) query = query.eq('filtro.tag_id', f.etiquetaId);
 

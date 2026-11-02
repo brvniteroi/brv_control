@@ -32,7 +32,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
         {/* Card 1: Total em Aberto */}
         <button
           type="button"
-          onClick={() => navigate('/ordens-de-servico')}
+          onClick={() => navigate('/ordens-de-servico?situacao=abertas')}
           className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xs transition hover:border-blue-300 hover:shadow-sm"
         >
           <div className="flex items-center justify-between">
@@ -52,7 +52,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
         {/* Card 2: Em Andamento */}
         <button
           type="button"
-          onClick={() => navigate('/ordens-de-servico')}
+          onClick={() => navigate('/ordens-de-servico?situacao=em_andamento')}
           className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xs transition hover:border-amber-300 hover:shadow-sm"
         >
           <div className="flex items-center justify-between">
@@ -72,7 +72,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
         {/* Card 3: Atrasadas (destaque vermelho se > 0) */}
         <button
           type="button"
-          onClick={() => navigate('/ordens-de-servico')}
+          onClick={() => navigate('/ordens-de-servico?situacao=atrasadas')}
           className={`group flex flex-col justify-between rounded-2xl border p-4 text-left shadow-xs transition hover:shadow-sm ${
             temAtrasadas
               ? 'border-rose-200 bg-rose-50/40 hover:border-rose-300'
@@ -116,7 +116,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
         {/* Card 4: Urgentes (destaque âmbar se > 0) */}
         <button
           type="button"
-          onClick={() => navigate('/ordens-de-servico')}
+          onClick={() => navigate('/ordens-de-servico?situacao=urgentes')}
           className={`group flex flex-col justify-between rounded-2xl border p-4 text-left shadow-xs transition hover:shadow-sm ${
             temUrgentes
               ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'

@@ -3,14 +3,16 @@ import { ClipboardList, MessageSquareText, Plus, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import OrdemDetalhes from '../components/ordens/OrdemDetalhes';
 import {
+  FILTROS_SITUACAO_EXTRAS,
   ORDENS_POR_PAGINA,
   listarOrdens,
   listarTipos,
+  type FiltroSituacao,
   type FiltrosOrdens,
   type OrdemResumo,
 } from '../services/ordens';
 import { listarEtiquetas } from '../services/etiquetas';
-import type { ServiceOrderStatus, ServiceType, Tag } from '../types/fsm';
+import type { ServiceType, Tag } from '../types/fsm';
 import { STATUS_OS, formatarData, formatarDataHora, infoStatusOS } from '../utils/ordens';
 import EtiquetaChip from '../components/etiquetas/EtiquetaChip';
 
@@ -75,11 +77,16 @@ export default function OrdensServico() {
   const [pagina, setPagina] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [filtros, setFiltros] = useState<FiltrosOrdens>({ termo: '', status: '', tipoId: '', etiquetaId: '' });
+  // /ordens-de-servico?os=<id> abre a OS direto (usado pela aba Atendimento do cliente);
+  // ?situacao=abertas|atrasadas|urgentes|<status> já abre filtrada (cards do Dashboard)
+  const [params, setParams] = useSearchParams();
+  const [filtros, setFiltros] = useState<FiltrosOrdens>(() => {
+    const pedida = params.get('situacao') ?? '';
+    const valida = [...FILTROS_SITUACAO_EXTRAS, ...STATUS_OS].some((s) => s.valor === pedida);
+    return { termo: '', status: valida ? (pedida as FiltroSituacao) : '', tipoId: '', etiquetaId: '' };
+  });
   const [tipos, setTipos] = useState<ServiceType[]>([]);
   const [etiquetas, setEtiquetas] = useState<Tag[]>([]);
-  // /ordens-de-servico?os=<id> abre a OS direto (usado pela aba Atendimento do cliente)
-  const [params, setParams] = useSearchParams();
   const [selecionada, setSelecionada] = useState<string | 'nova' | null>(params.get('os'));
   const ultimaRequisicao = useRef(0);
   const [dica, setDica] = useState<DicaRelato | null>(null);
@@ -172,11 +179,14 @@ export default function OrdensServico() {
         <select
           aria-label="Filtrar por situação"
           value={filtros.status}
-          onChange={(e) => mudarFiltro({ status: e.target.value as ServiceOrderStatus | '' })}
+          onChange={(e) => mudarFiltro({ status: e.target.value as FiltroSituacao })}
           className={SELECT}
         >
           <option value="">Todas as situações</option>
           {STATUS_OS.map((s) => (
+            <option key={s.valor} value={s.valor}>{s.rotulo}</option>
+          ))}
+          {FILTROS_SITUACAO_EXTRAS.map((s) => (
             <option key={s.valor} value={s.valor}>{s.rotulo}</option>
           ))}
         </select>

@@ -66,15 +66,10 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
           {conflito && <AlertTriangle size={12} className="shrink-0 text-yellow-300" />}
           {o?.priority === 'urgente' && <Flame size={12} className="shrink-0 text-yellow-300" />}
           <span className="truncate">{o ? (o.customer?.name ?? a.title) : a.title}</span>
-          {largura <= 90 && <EtiquetasNoBloco etiquetas={o?.etiquetas} modo="ponto" />}
         </div>
-        {largura > 90 && (
-          <div className="flex min-w-0 items-center gap-1 text-[11px] text-white/85">
-            <EtiquetasNoBloco etiquetas={o?.etiquetas} />
-            <span className="truncate">{detalhes || a.title}</span>
-          </div>
-        )}
+        {largura > 90 && <div className="truncate text-[11px] text-white/85">{detalhes || a.title}</div>}
       </div>
+      <EtiquetasNoBloco etiquetas={o?.etiquetas} />
       {movel && (
         <>
           <div

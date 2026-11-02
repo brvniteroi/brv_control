@@ -266,7 +266,21 @@ const clienteId = SIMULAR ? new Map() : await mapa('customers');
 
 // ---------- 5. OS ----------
 console.log('5. OS');
-const STATUS_TAREFA = { pending: 'agendada', scheduled: 'agendada', 'on-route': 'em_deslocamento', 'in-progress': 'em_execucao', reported: 'em_execucao', done: 'concluida', canceled: 'cancelada' };
+const STATUS_TAREFA = { pending: 'agendada', scheduled: 'agendada', 'on-route': 'em_deslocamento', 'in-progress': 'em_execucao', done: 'concluida', canceled: 'cancelada' };
+// Em aberto no Field com data anterior a isto = esquecida: entra cancelada (decidido com o usuário em 2026-11-02)
+const CORTE_ABERTAS = '2026-10-01';
+const MOTIVO_ESQUECIDA = 'Em aberto no Field Control (não concluída)';
+/**
+ * Situação no BRV Control e observação extra. "reported" = o técnico encerrou relatando um impedimento
+ * (o motivo vem em statusDescription): entra concluída, com o relato nas observações.
+ */
+function situacaoTarefa(t) {
+  if (t.status === 'reported') return { st: 'concluida', nota: 'Relatada no Field Control (encerrada sem concluir o serviço)' };
+  const st = STATUS_TAREFA[t.status] ?? 'agendada';
+  const data = t.scheduling?.date ?? t.createdAt?.slice(0, 10);
+  if (st !== 'concluida' && st !== 'cancelada' && data && data < CORTE_ABERTAS) return { st: 'cancelada', nota: MOTIVO_ESQUECIDA };
+  return { st, nota: null };
+}
 const tarefasPorOS = new Map();
 for (const t of atividadesFC) {
   if (t.archived) continue;
@@ -274,14 +288,18 @@ for (const t of atividadesFC) {
   lista.push(t);
   tarefasPorOS.set(t.order.id, lista);
 }
-function statusOS(tarefas) {
-  if (tarefas.length === 0) return 'agendada';
-  const tem = (s) => tarefas.some((t) => t.status === s);
-  if (tem('in-progress') || tem('reported') || tem('on-route')) return 'em_andamento';
-  if (tem('scheduled') || tem('pending')) return 'agendada';
-  if (tarefas.every((t) => t.status === 'canceled')) return 'cancelada';
-  return 'concluida';
+/** Mesma regra do trigger tasks_atualiza_status_os; sem atividade ou todas canceladas: cancelada (antiga) ou agendada. */
+function statusOS(o, tarefas) {
+  const sts = tarefas.map((t) => situacaoTarefa(t).st);
+  if (sts.some((s) => s === 'em_deslocamento' || s === 'em_execucao')) return { status: 'em_andamento' };
+  if (sts.includes('agendada')) return { status: 'agendada' };
+  if (sts.includes('concluida')) return { status: 'concluida' };
+  if (sts.length > 0 && tarefas.every((t) => t.status === 'canceled')) return { status: 'cancelada', motivo: 'Cancelada no Field Control' };
+  if (o.createdAt.slice(0, 10) < CORTE_ABERTAS) return { status: 'cancelada', motivo: sts.length ? MOTIVO_ESQUECIDA : 'Sem atividade no Field Control' };
+  return { status: 'agendada' };
 }
+/** Fim da atividade encerrada (reportada às vezes vem sem completedAt). */
+const fimDaTarefa = (t) => t.completedAt ?? t.startedAt ?? t.updatedAt ?? t.createdAt;
 const tipoId = SIMULAR ? new Map() : await mapa('service_types');
 const tipoPorNome = new Map(tiposFC.map((s) => [s.id, semAcento(s.name)]));
 const tipoIdPorNome = new Map();
@@ -297,7 +315,7 @@ const tipoFCDaOS = new Map(ordensFC.map((o) => [o.id, o.service?.id]));
   const linhas = [];
   for (const o of [...ordensFC].sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))) {
     const tarefas = tarefasPorOS.get(o.id) ?? [];
-    const status = statusOS(tarefas);
+    const { status, motivo } = statusOS(o, tarefas);
     const cliente = clienteId.get(o.customer.id);
     const loc = o.location?.id ?? localPrincipal.get(o.customer.id);
     const end = enderecoId.get(loc) ?? enderecoId.get(`${o.customer.id}#endereco`);
@@ -312,9 +330,12 @@ const tipoFCDaOS = new Map(ordensFC.map((o) => [o.id, o.service?.id]));
       internal_notes: /^\d+$/.test(o.identifier) ? null : `Nº no Field Control: ${o.identifier}`,
       opened_at: o.createdAt,
       due_date: o.deadlineAt ? o.deadlineAt.slice(0, 10) : null,
-      completed_at: status === 'concluida' ? (tarefas.map((t) => t.completedAt).filter(Boolean).sort().at(-1) ?? o.updatedAt ?? o.createdAt) : null,
+      completed_at:
+        status === 'concluida'
+          ? (tarefas.filter((t) => situacaoTarefa(t).st === 'concluida').map(fimDaTarefa).filter(Boolean).sort().at(-1) ?? o.updatedAt ?? o.createdAt)
+          : null,
       cancelled_at: status === 'cancelada' ? (o.updatedAt ?? o.createdAt) : null,
-      cancel_reason: status === 'cancelada' ? 'Cancelada no Field Control' : null,
+      cancel_reason: status === 'cancelada' ? motivo : null,
       field_control_id: o.id,
       created_at: o.createdAt,
     });
@@ -345,7 +366,7 @@ const colabId = SIMULAR ? new Map() : await mapa('employees');
   let ignoradas = 0;
   for (const [fcOS, tarefas] of tarefasPorOS) {
     for (const t of tarefas) {
-      const st = STATUS_TAREFA[t.status] ?? 'agendada';
+      const { st, nota } = situacaoTarefa(t);
       const emp = t.employee?.id ? colabId.get(canon(t.employee.id)) : null;
       const data = t.scheduling?.date ?? null;
       // Atividade em aberto sem técnico ou data não entra (regra do sistema)
@@ -356,8 +377,8 @@ const colabId = SIMULAR ? new Map() : await mapa('employees');
       const duracao = Math.max(1, Number(t.duration) || 60);
       // Horário de Brasília (sem horário de verão desde 2019; antes disso a diferença é de 1 h no máximo)
       const inicio = data ? new Date(`${data}T${t.scheduling?.time ?? '08:00:00'}-03:00`) : null;
-      let iniciou = t.startedAt ?? t.completedAt ?? null;
-      const terminou = t.completedAt ?? null;
+      const terminou = st === 'concluida' ? fimDaTarefa(t) : (t.completedAt ?? null);
+      let iniciou = t.startedAt ?? terminou ?? null;
       if (iniciou && terminou && terminou < iniciou) iniciou = terminou;
       linhas.push({
         service_order_id: osId.get(fcOS),
@@ -374,7 +395,7 @@ const colabId = SIMULAR ? new Map() : await mapa('employees');
         checkin_lng: t.startCoords?.longitude ?? null,
         checkout_lat: t.completeCoords?.latitude ?? null,
         checkout_lng: t.completeCoords?.longitude ?? null,
-        technician_notes: limpo(t.statusDescription),
+        technician_notes: [nota, limpo(t.statusDescription)].filter(Boolean).join(': ') || null,
         field_control_id: t.id,
         created_at: t.createdAt,
       });

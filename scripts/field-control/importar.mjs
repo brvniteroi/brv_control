@@ -89,8 +89,10 @@ console.log(`Backup: ${PASTA}${SIMULAR ? '  (SIMULAÇÃO: nada será gravado)' :
 const tiposFC = await json('tipos_os.json');
 const colaboradoresFC = await json('colaboradores.json');
 const clientesFC = await json('clientes.json');
-const ordensFC = await json('ordens.json');
-const atividadesFC = await json('atividades.json');
+// As 6 OS sem número no Field (testes da implantação, 2018) ficam de fora: apagadas em 2026-11-02 a pedido do usuário
+const ordensFC = (await json('ordens.json')).filter((o) => /^\d+$/.test(o.identifier));
+const idsOrdens = new Set(ordensFC.map((o) => o.id));
+const atividadesFC = (await json('atividades.json')).filter((t) => idsOrdens.has(t.order?.id));
 const detalhesCliente = new Map((await ndjson('clientes_detalhes.ndjson')).map((l) => [l.id, l]));
 // Uma OS pode ter sido rebaixada (FC_REFAZER_DESDE): vale a última linha
 const anexosPorOS = [...new Map((await ndjson('anexos.ndjson')).map((l) => [l.id, l])).values()];

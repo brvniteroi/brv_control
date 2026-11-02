@@ -100,9 +100,10 @@ Pendente, nesta ordem:
    `api/uploads/fc/`), `limpar-testes.sql` (colar no SQL Editor) e `importar.mjs` (grava direto com a service_role, que fica
    só no `.env` local; `--simular` só confere). Migration `20261102100000_importacao_field.sql` (aplicada).
    **Importação feita em 2026-11-02** (banco limpo antes; OS em aberto no Field com data < 2026-10-01 entram canceladas,
-   "reported" entra concluída com o relato). Próxima OS nova: 17265. Falta a atualização final perto do dia 18 (baixar de
-   novo as listas e rodar o importador); se a equipe criar OS no Field e no BRV Control ao mesmo tempo, os números colidem.
-   Comentários e assinaturas do Field ainda não são importados (só baixados).
+   "reported" entra concluída com o relato). Próxima OS nova: 17265. **Virada feita em 2026-11-02**: o Field não é mais usado
+   (última mudança nele em 2026-10-30, antes das listas baixadas), então não há atualização final de OS/atividades.
+   Não rodar o importador de novo sobre OS já em uso (ele sobrescreve o que o escritório mudou). Falta só importar
+   comentários e assinaturas do Field (baixando em `comentarios.ndjson` / `assinaturas.ndjson`).
 2. Estoque fica para o futuro (há outro sistema de estoque/vendas).
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",

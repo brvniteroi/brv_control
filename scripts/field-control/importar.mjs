@@ -348,6 +348,7 @@ const tipoFCDaOS = new Map(ordensFC.map((o) => [o.id, o.service?.id]));
       status,
       description: limpo(o.description),
       internal_notes: nota,
+      field_control_created_by: limpo(o.createdBy?.name) === 'Jessica Moura' ? 'Jéssica Moura' : limpo(o.createdBy?.name),
       opened_at: o.createdAt,
       due_date: o.deadlineAt ? o.deadlineAt.slice(0, 10) : null,
       completed_at:

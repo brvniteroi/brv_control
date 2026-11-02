@@ -230,6 +230,8 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
             {ordem && (
               <span className="text-xs italic text-slate-500">
                 Aberta em {formatarDataHora(ordem.opened_at)}
+                {(ordem.criador?.full_name || ordem.field_control_created_by) &&
+                  ` por ${ordem.criador?.full_name || ordem.field_control_created_by}`}
                 {ordem.field_control_id ? ' · importada do Field Control' : ''}
               </span>
             )}

@@ -62,6 +62,8 @@ export interface OrdemDetalhe extends ServiceOrder {
   tasks: AtividadeDetalhe[];
   attachments: Attachment[];
   etiquetas: Tag[];
+  /** Login que criou a OS no BRV Control. */
+  criador: { full_name: string | null } | null;
 }
 
 export interface PaginaOrdens {
@@ -109,7 +111,7 @@ export async function buscarOrdem(id: string): Promise<OrdemDetalhe | null> {
   const { data, error } = await supabase
     .from('service_orders')
     .select(
-      `*, customer:customers(id, name), service_type:service_types(id, name), tasks(*, employee:employees(id, name)), attachments(*), ${CAMPOS_ETIQUETAS}`,
+      `*, customer:customers(id, name), service_type:service_types(id, name), tasks(*, employee:employees(id, name)), attachments(*), criador:profiles!created_by(full_name), ${CAMPOS_ETIQUETAS}`,
     )
     .eq('id', id)
     .maybeSingle();

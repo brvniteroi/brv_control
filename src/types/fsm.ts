@@ -141,6 +141,8 @@ export interface ServiceOrder {
   cancel_reason: string | null;
   created_by: string | null;
   field_control_id: string | null;
+  /** Nome de quem criou a OS no Field Control (só nas importadas). */
+  field_control_created_by: string | null;
   created_at: string;
   updated_at: string;
 }

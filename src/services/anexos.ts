@@ -75,7 +75,11 @@ export interface DestinoAnexo {
 export async function anexarFoto(arquivo: File, destino: DestinoAnexo): Promise<Attachment> {
   const compactada = await compactarImagem(arquivo);
   const enviado = await enviarParaHostgator(compactada);
+  return registrarAnexo(enviado, destino);
+}
 
+/** Grava em public.attachments um arquivo que já está na HostGator. */
+export async function registrarAnexo(enviado: UploadResult, destino: DestinoAnexo): Promise<Attachment> {
   const { data, error } = await supabase
     .from('attachments')
     .insert({

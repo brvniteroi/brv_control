@@ -17,6 +17,8 @@ O usuário fala português; código, comentários e mensagens de commit também 
 ## Banco de dados
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
+- O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
+  `supabase/migrations/` até 2026-11-01 já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -33,38 +35,48 @@ O usuário fala português; código, comentários e mensagens de commit também 
 
 ## Estado atual (2026-10-29)
 Feito:
-- Estrutura do app, layout, menu e rotas. Páginas ainda placeholders (`EmConstrucao`): Dashboard,
-  Equipamentos, Estoque, Linha do Tempo, Ordens de Serviço.
+- Estrutura do app, layout, menu e rotas. Única página ainda placeholder (`EmConstrucao`): Estoque.
+  Menu com grupos recolhíveis (`Sidebar.tsx`): Serviços (linha do tempo, calendário, OS) e Cadastros (clientes, equipamentos,
+  tipos de serviço `pages/TiposServico.tsx`, etiquetas `pages/Etiquetas.tsx`, modelos de formulários).
 - Projeto Supabase criado, schema aplicado e RLS conferido (anon recebe 401).
 - Login (`AuthContext`, `Login.tsx`) e rotas protegidas (`ProtectedRoute`, bloqueia `active = FALSE`).
 - Clientes (`pages/Clientes.tsx`, `components/clientes/ClienteDetalhes.tsx`, `services/clientes.ts`):
   lista paginada no servidor (50 por página), salvar via RPC `salvar_cliente` (cliente + endereço +
   contatos em uma transação), contato principal controlado por trigger (que também copia
   telefone/e-mail para `customers`), CPF/CNPJ (inclusive alfanumérico) validado em `utils/documento.ts`.
+  Busca de cliente ignora acento: coluna gerada `customers.busca` (nome, fantasia, e-mail via `public.sem_acento`) +
+  `semAcento()` no termo; migration `20261101130000_busca_sem_acento.sql` (aplicada).
   Vários endereços por cliente (`EnderecosAdicionais.tsx`; um é o principal, os demais aparecem na escolha do
-  endereço ao criar a OS via `service_orders.address_id`). Migrations de clientes já aplicadas:
-  `20261029120000_clientes_salvar.sql`; **a rodar**: `20261029130000_enderecos_cliente.sql`.
+  endereço ao criar a OS via `service_orders.address_id`). Migrations de clientes:
+  `20261029120000_clientes_salvar.sql`, `20261029130000_enderecos_cliente.sql`.
 - Mapa Google no cadastro do cliente (`MapaEnderecos.tsx`, `services/googleMaps.ts`): as coordenadas são
   geocodificadas ao salvar cada endereço. Precisa de `VITE_GOOGLE_MAPS_API_KEY` (opcional; sem ela o mapa fica
   desligado). A página Mapa (técnicos + atividades do dia) vem depois de OS e do app de campo.
 - Ordens de Serviço (`pages/OrdensServico.tsx`, `components/ordens/`, `services/ordens.ts`): lista paginada com busca e
   filtros, criar/editar OS, atividades (técnico, data, status) e galeria de fotos. O status da OS ainda é manual (não deriva
-  das atividades). Depois de importar OS, rodar o `setval` da numeração (já vai no fim do `os.sql` gerado).
+  das atividades) e só pode ser `agendada`, `em_andamento`, `concluida` ou `cancelada` (migration
+  `20261101110000_status_os.sql`, aplicada: converte aberta→agendada e pausada→em_andamento; chamado do portal nasce agendada). Depois de importar OS, rodar o `setval` da numeração (já vai no fim do `os.sql` gerado).
+  Nova atividade (linha do tempo/calendário, `NovaAtividadeModal.tsx`): cliente com mais de um endereço ativo escolhe o
+  endereço da OS nova; duração prevista é obrigatória e livre, guardada em `tasks.estimated_minutes`. Migration
+  `20261101100000_duracao_atividade.sql` (aplicada).
+  Atividade não tem `pendente` nem `pausada` e não existe mais fila "A agendar": toda atividade nasce `agendada` com técnico,
+  data e hora (só concluída/cancelada importada pode ficar sem). Migration `20261101120000_status_atividade.sql` (aplicada;
+  apagou as atividades pendentes/pausadas e as em aberto sem técnico ou horário).
 - Equipe (`pages/Equipe.tsx`, `components/equipe/`, `services/equipe.ts`): aba Colaboradores (técnicos etc., cor, login ligado)
   e aba Usuários (só admin: criar com senha temporária, papel, bloquear, redefinir senha). Criar usuário e redefinir senha
   rodam na Edge Function `supabase/functions/gerenciar-usuario` (usa a chave de admin do Supabase, só no servidor);
-  **precisa ser publicada** no painel do Supabase. Migration `20261029150000_equipe.sql` (**a rodar**) impede ficar sem admin.
+  já publicada e testada (2026-11-01). Migration `20261029150000_equipe.sql` impede ficar sem admin.
 - Qualquer usuário troca a própria senha pelo botão "Senha" do cabeçalho (`AlterarSenhaModal.tsx`, confere a senha atual).
   Telefones usam máscara (`utils/telefone.ts`).
 - Tipos de OS editáveis (`service_types`; `service_orders.service_type_id` substitui o antigo `type` fixo). Migration
-  `20261029140000_tipos_os_e_importacao.sql` (**a rodar**) também prepara importação: `field_control_id` em tasks e
+  `20261029140000_tipos_os_e_importacao.sql` também prepara importação: `field_control_id` em tasks e
   attachments, anexos com `storage = 'fieldcontrol'` (link do S3 do Field Control, sem tamanho).
-- Formulários de campo (orçamento, carga de gás; PMOC depois): migration `20261029160000_formularios.sql` (**a rodar**; já cadastra 3 modelos do Field Control), `services/formularios.ts`, `utils/formularios.ts`, `types/formularios.ts`. Telas com o Gemini: briefing em `docs/gemini/formularios.md`. O técnico preenche no celular; a resposta guarda cópia das perguntas.
+- Formulários de campo (orçamento, carga de gás; PMOC depois): migration `20261029160000_formularios.sql` (já cadastra 3 modelos do Field Control), `services/formularios.ts`, `utils/formularios.ts`, `types/formularios.ts`. Telas com o Gemini: briefing em `docs/gemini/formularios.md`. O técnico preenche no celular; a resposta guarda cópia das perguntas.
 - Portal do Cliente (`/portal`, login em `/portal/login`; `pages/portal/`, `components/portal/`, `services/portal.ts`): perfil `cliente`
   ligado a um cliente em `customer_users`. Sem política RLS nas tabelas operacionais: tudo por funções `portal_*` (security definer)
-  que filtram pelo cliente do login; só laudos preenchidos e fotos de OS concluídas têm política de leitura. Chamado = OS `aberta`
-  (`portal_abrir_chamado`). Laudo "PDF" = `VisualizarFormulario` + imprimir/salvar como PDF. Migration `20261030100000_portal_cliente.sql`
-  (**a rodar**). Liberar um cliente: criar o usuário no Auth e `SELECT public.liberar_portal_cliente('email', '<id do cliente>');`.
+  que filtram pelo cliente do login; só laudos preenchidos e fotos de OS concluídas têm política de leitura. Chamado = OS `agendada`
+  (`portal_abrir_chamado`). Laudo "PDF" = `VisualizarFormulario` + imprimir/salvar como PDF. Migration `20261030100000_portal_cliente.sql`.
+  Liberar um cliente: criar o usuário no Auth e `SELECT public.liberar_portal_cliente('email', '<id do cliente>');`.
 - Importação do Field Control: scripts em `scripts/field-control/` (baixar-amostra, gerar-sql-clientes, gerar-sql-os).
   Amostra de 3 clientes já importada (clientes, endereços, contatos). Dados baixados ficam em `amostra/` (gitignored).
 - Repositório: https://github.com/brvniteroi/brv_control (privado).
@@ -73,10 +85,22 @@ Feito:
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
 
 Pendente, nesta ordem:
-1. Painel Supabase: desligar "Allow new users to sign up" (Authentication > Sign In /
-   Providers) e configurar Site URL / Redirect URLs (`http://localhost:5173/**`).
-2. Criar o usuário admin em Authentication > Users e promovê-lo:
-   `UPDATE public.profiles SET active = TRUE, role = 'admin', full_name = '...' WHERE email = '...';`
-3. Rodar a migration de clientes e testar o fluxo (criar, editar, contatos, arquivar).
-4. Etiquetas de cliente (hoje só em memória, sem tabela), coordenadas do endereço (geocodificação).
-5. Telas de Equipamentos, OS e Linha do Tempo (drag and drop com `@hello-pangea/dnd`).
+1. Painel Supabase (confirmar): "Allow new users to sign up" desligado (Authentication > Sign In /
+   Providers) e Site URL / Redirect URLs (`http://localhost:5173/**`).
+2. Testar etiquetas de OS e o app de campo com um login de técnico (migration `20261101140000_etiquetas_os.sql`
+   **a colar no Supabase**; sem ela a lista de OS, a linha do tempo e o calendário falham).
+3. Página Mapa. Estoque fica para o futuro (há outro sistema de estoque/vendas).
+
+Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
+"Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no
+calendário (atualizam por Realtime). Excluir do catálogo: só admin.
+
+App do técnico (`/campo`, `components/campo/`, `pages/campo/`, `services/campo.ts`): agenda só do dia, detalhes (só Google Maps; sem
+telefone/contatos do cliente), a caminho / iniciar (GPS) / concluir (relato, GPS, assinatura), fotos e formulários. Sair/iniciar só na
+primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em `services/campo.ts`). O banco também garante (migration `20261101150000_protecao_campo.sql`, **a colar
+no Supabase**): técnico não lê `customers` nem `customer_contacts` (nome vem de `campo_clientes()`), e o trigger
+`tasks_protege_agenda` barra sair de `agendada` fora de hoje ou com a anterior não concluída. Técnico logado é mandado para `/campo`.
+Sem sinal: ações e fotos vão para a fila no IndexedDB (`services/filaCampo.ts`) e sobem quando a rede volta; a agenda usa cache
+local. Formulários só online. Instalável (`public/manifest.webmanifest`, `public/sw.js`, registrado só no build).
+
+Usuários: admin criado; Adriana Lobo (operadora, papel `escritorio`, colaboradora "Supervisor") criada em 2026-11-01.

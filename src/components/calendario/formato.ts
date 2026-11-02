@@ -1,6 +1,7 @@
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { infoStatusAtividade } from '../../utils/ordens';
+import { dicaEtiquetas } from '../../services/etiquetas';
 
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
@@ -17,6 +18,7 @@ export function dicaAtividade(a: AtividadeLinha, tecnico: TecnicoLinha | undefin
     [o ? `OS ${o.number}` : null, o?.service_type?.name, o?.local].filter(Boolean).join(' · '),
     `Técnico: ${tecnico?.name ?? 'a distribuir'}`,
     `Situação: ${infoStatusAtividade(a.status).rotulo}`,
+    dicaEtiquetas(o?.etiquetas),
   ]
     .filter(Boolean)
     .join('\n');

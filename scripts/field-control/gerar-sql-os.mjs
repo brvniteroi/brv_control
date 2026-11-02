@@ -61,17 +61,15 @@ END $$;`);
 await writeFile(path.join(PASTA, 'colaboradores_fundir.sql'), fundir.join('\n') + '\n');
 
 // ---------- 2) OS, atividades e anexos ----------
-const STATUS_TAREFA = { pending: 'pendente', scheduled: 'agendada', 'in-progress': 'em_execucao', done: 'concluida', canceled: 'cancelada', reported: 'pausada' };
+const STATUS_TAREFA = { pending: 'agendada', scheduled: 'agendada', 'in-progress': 'em_execucao', done: 'concluida', canceled: 'cancelada', reported: 'em_execucao' };
 const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
 
 function statusOS(tarefas) {
   const ativas = tarefas.filter((t) => !t.archived);
-  if (ativas.length === 0) return 'aberta';
+  if (ativas.length === 0) return 'agendada';
   const tem = (s) => ativas.some((t) => t.status === s);
-  if (tem('in-progress')) return 'em_andamento';
-  if (tem('reported')) return 'pausada';
-  if (tem('scheduled')) return 'agendada';
-  if (tem('pending')) return 'aberta';
+  if (tem('in-progress') || tem('reported')) return 'em_andamento';
+  if (tem('scheduled') || tem('pending')) return 'agendada';
   if (ativas.every((t) => t.status === 'canceled')) return 'cancelada';
   return 'concluida';
 }
@@ -106,8 +104,9 @@ ON CONFLICT (field_control_id) DO UPDATE SET status = EXCLUDED.status, descripti
       const emp = t.employee?.id ? canon(t.employee.id) : null;
       const data = t.scheduling?.date ?? null;
       const hora = t.scheduling?.time ?? '08:00:00'; // atividade só com data: começa às 08:00
-      let st = STATUS_TAREFA[t.status] ?? 'pendente';
-      if (st === 'agendada' && (!emp || !data)) st = 'pendente'; // exigido pela constraint tasks_scheduled_needs_slot
+      const st = STATUS_TAREFA[t.status] ?? 'agendada';
+      // Atividade em aberto sem técnico ou data não entra (constraint tasks_scheduled_needs_slot)
+      if (st !== 'concluida' && st !== 'cancelada' && (!emp || !data)) continue;
       const inicio = data ? `('${data} ${hora}'::timestamp AT TIME ZONE 'America/Sao_Paulo')` : 'NULL';
       const fim = data ? `(('${data} ${hora}'::timestamp AT TIME ZONE 'America/Sao_Paulo') + interval '${Math.max(1, Number(t.duration) || 60)} minutes')` : 'NULL';
       // O banco exige início para ter fim

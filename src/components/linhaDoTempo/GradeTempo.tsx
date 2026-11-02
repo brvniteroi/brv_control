@@ -2,6 +2,8 @@ import { memo, useMemo, type PointerEvent as ReactPointerEvent, type RefObject }
 import { AlertTriangle, Flame } from 'lucide-react';
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
+import { dicaEtiquetas } from '../../services/etiquetas';
+import EtiquetasNoBloco from '../etiquetas/EtiquetasNoBloco';
 import { formatarHora, minutosDoDia, podeMover } from '../../utils/linhaDoTempo';
 import { COR_STATUS_ATIVIDADE as COR_STATUS } from '../../utils/ordens';
 import { COLUNA_TECNICOS_PX, type JanelaTempo } from './janela';
@@ -29,7 +31,6 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
   const o = a.ordem;
   const spec = (modo: EspecArrasto['modo']): EspecArrasto => ({
     id: a.id,
-    origem: 'grade',
     modo,
     inicioMin: inicioReal,
     fimMin: fimReal,
@@ -42,6 +43,7 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
     `${formatarHora(inicioReal)} – ${formatarHora(fimReal)}`,
     o?.customer?.name,
     detalhes,
+    dicaEtiquetas(o?.etiquetas),
     conflito ? 'Conflito de horário com outra atividade do técnico' : null,
     movel ? null : 'Atividade já iniciada: não pode ser movida aqui',
   ]
@@ -64,8 +66,14 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
           {conflito && <AlertTriangle size={12} className="shrink-0 text-yellow-300" />}
           {o?.priority === 'urgente' && <Flame size={12} className="shrink-0 text-yellow-300" />}
           <span className="truncate">{o ? (o.customer?.name ?? a.title) : a.title}</span>
+          {largura <= 90 && <EtiquetasNoBloco etiquetas={o?.etiquetas} modo="ponto" />}
         </div>
-        {largura > 90 && <div className="truncate text-[11px] text-white/85">{detalhes || a.title}</div>}
+        {largura > 90 && (
+          <div className="flex min-w-0 items-center gap-1 text-[11px] text-white/85">
+            <EtiquetasNoBloco etiquetas={o?.etiquetas} />
+            <span className="truncate">{detalhes || a.title}</span>
+          </div>
+        )}
       </div>
       {movel && (
         <>
@@ -217,7 +225,7 @@ export default function GradeTempo({
                     janelaInicioMin={janela.inicioMin}
                     pxPorMin={pxPorMin}
                     conflito={conflitos.has(a.id)}
-                    esmaecida={previa?.id === a.id && previa.origem === 'grade'}
+                    esmaecida={previa?.id === a.id}
                     aoIniciar={aoIniciarArrasto}
                   />
                 ))}

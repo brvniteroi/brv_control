@@ -77,7 +77,7 @@ export default function AtividadesOS({
     setForm({
       titulo: tituloPadrao,
       tecnicoId: '',
-      status: 'pendente',
+      status: 'agendada',
       data: '',
       hora: '',
       duracao: String(duracaoPadrao),
@@ -94,7 +94,7 @@ export default function AtividadesOS({
     const minutos =
       a.scheduled_start && a.scheduled_end
         ? Math.round((new Date(a.scheduled_end).getTime() - new Date(a.scheduled_start).getTime()) / 60000)
-        : duracaoPadrao;
+        : (a.estimated_minutes ?? duracaoPadrao);
     setEditandoId(a.id);
     setErro(null);
     setForm({
@@ -124,9 +124,7 @@ export default function AtividadesOS({
     const minutos = Math.max(1, Number(form.duracao) || duracaoPadrao);
     const fim = inicio ? new Date(new Date(inicio).getTime() + minutos * 60000).toISOString() : null;
 
-    // Técnico + data definidos: a atividade deixa de ser "pendente" e entra na agenda
     let status = form.status;
-    if (status === 'pendente' && form.tecnicoId && inicio) status = 'agendada';
     const inicioReal = deCampoDataHora(form.inicioReal);
     const fimReal = deCampoDataHora(form.fimReal);
     if (fimReal && !inicioReal) {
@@ -140,11 +138,12 @@ export default function AtividadesOS({
     // Horário real informado: a atividade já aconteceu (ou está acontecendo)
     if (status !== 'cancelada') {
       if (fimReal) status = 'concluida';
-      else if (inicioReal && ['pendente', 'agendada', 'em_deslocamento'].includes(status)) status = 'em_execucao';
+      else if (inicioReal && ['agendada', 'em_deslocamento'].includes(status)) status = 'em_execucao';
     }
 
-    if (status === 'agendada' && (!form.tecnicoId || !inicio)) {
-      setErro('Para agendar, escolha o técnico e a data/hora de início.');
+    // Só concluída/cancelada (vinda da importação) pode ficar sem técnico ou horário
+    if (status !== 'concluida' && status !== 'cancelada' && (!form.tecnicoId || !inicio)) {
+      setErro('Escolha o técnico, a data e a hora de início.');
       return;
     }
 
@@ -162,6 +161,7 @@ export default function AtividadesOS({
         status,
         scheduled_start: inicio,
         scheduled_end: fim,
+        estimated_minutes: minutos,
         technician_notes: form.relato,
       });
       setAberto(false);
@@ -284,9 +284,9 @@ export default function AtividadesOS({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="at-tec" className="block text-xs font-medium text-slate-700">Técnico</label>
+                  <label htmlFor="at-tec" className="block text-xs font-medium text-slate-700">Técnico *</label>
                   <select id="at-tec" value={form.tecnicoId} onChange={(e) => campo('tecnicoId', e.target.value)} className={INPUT}>
-                    <option value="">A distribuir</option>
+                    <option value="">Selecione</option>
                     {opcoesTecnicos.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}
@@ -307,11 +307,11 @@ export default function AtividadesOS({
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="at-data" className="block text-xs font-medium text-slate-700">Data</label>
+                  <label htmlFor="at-data" className="block text-xs font-medium text-slate-700">Data *</label>
                   <input id="at-data" type="date" value={form.data} onChange={(e) => campo('data', e.target.value)} className={INPUT} />
                 </div>
                 <div>
-                  <label htmlFor="at-hora" className="block text-xs font-medium text-slate-700">Hora</label>
+                  <label htmlFor="at-hora" className="block text-xs font-medium text-slate-700">Hora *</label>
                   <input id="at-hora" type="time" value={form.hora} onChange={(e) => campo('hora', e.target.value)} className={INPUT} />
                 </div>
                 <div>

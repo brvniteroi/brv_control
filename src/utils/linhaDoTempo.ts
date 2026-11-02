@@ -46,7 +46,7 @@ export function formatarHora(minutos: number): string {
 
 /** Só atividades ainda não iniciadas podem ser movidas na linha do tempo. */
 export function podeMover(t: Pick<Task, 'status'>): boolean {
-  return t.status === 'pendente' || t.status === 'agendada';
+  return t.status === 'agendada';
 }
 
 type Agendada = Pick<Task, 'id' | 'employee_id' | 'status' | 'scheduled_start' | 'scheduled_end'>;

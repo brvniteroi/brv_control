@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Check, ClipboardList, X } from 'lucide-react';
+import { Check, ClipboardList, Tag as IconeEtiqueta, X } from 'lucide-react';
 import {
   buscarOrdem,
   listarEnderecosDoCliente,
@@ -15,8 +15,12 @@ import type {
   ServiceOrderPriority,
   ServiceOrderStatus,
   ServiceType,
+  Tag,
 } from '../../types/fsm';
-import { PRIORIDADES, STATUS_OS, formatarDataHora } from '../../utils/ordens';
+import { definirEtiquetasOrdem } from '../../services/etiquetas';
+import EtiquetaChip from '../etiquetas/EtiquetaChip';
+import SeletorEtiquetas from '../etiquetas/SeletorEtiquetas';
+import { PRIORIDADES, STATUS_OS, formatarDataHora, rotuloEndereco } from '../../utils/ordens';
 import AnexosOS from './AnexosOS';
 import AtividadesOS from './AtividadesOS';
 import SeletorCliente from './SeletorCliente';
@@ -30,12 +34,6 @@ interface OrdemDetalhesProps {
 
 const INPUT =
   'mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
-
-function rotuloEndereco(e: CustomerAddress): string {
-  const apelido = e.label && e.label !== 'Principal' ? `${e.label} — ` : '';
-  const via = [e.street, e.number].filter(Boolean).join(', ');
-  return `${apelido}${via}${e.district ? ` · ${e.district}` : ''}${e.is_primary ? ' (principal)' : ''}${e.active ? '' : ' (inativo)'}`;
-}
 
 export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetalhesProps) {
   const nova = ordemId === 'nova';
@@ -52,12 +50,15 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
   const [cliente, setCliente] = useState<{ id: string; name: string } | null>(null);
   const [enderecoId, setEnderecoId] = useState('');
   const [tipoId, setTipoId] = useState('');
-  const [status, setStatus] = useState<ServiceOrderStatus>('aberta');
+  const [status, setStatus] = useState<ServiceOrderStatus>('agendada');
   const [prioridade, setPrioridade] = useState<ServiceOrderPriority>('normal');
   const [prazo, setPrazo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [notasInternas, setNotasInternas] = useState('');
   const [motivoCancelamento, setMotivoCancelamento] = useState('');
+  // OS existente grava na hora; OS nova grava junto com o primeiro "Salvar"
+  const [etiquetas, setEtiquetas] = useState<Tag[]>([]);
+  const [seletorEtiquetasAberto, setSeletorEtiquetasAberto] = useState(false);
 
   const tecnicosPorTask = useMemo(() => {
     const mapa: Record<string, string> = {};
@@ -78,6 +79,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
     setDescricao(o.description ?? '');
     setNotasInternas(o.internal_notes ?? '');
     setMotivoCancelamento(o.cancel_reason ?? '');
+    setEtiquetas(o.etiquetas);
   }, []);
 
   // Tipos e técnicos: uma vez
@@ -143,6 +145,21 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
     if (o) setOrdem(o);
   };
 
+  const aplicarEtiquetas = async (novas: Tag[]) => {
+    if (!nova) await definirEtiquetasOrdem(ordemId, novas.map((t) => t.id));
+    setEtiquetas(novas);
+    setSeletorEtiquetasAberto(false);
+  };
+
+  const removerEtiqueta = async (id: string) => {
+    setErro(null);
+    try {
+      await aplicarEtiquetas(etiquetas.filter((t) => t.id !== id));
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não foi possível remover a etiqueta.');
+    }
+  };
+
   const escolherCliente = (c: Customer | null) => {
     setCliente(c ? { id: c.id, name: c.name } : null);
     setEnderecoId('');
@@ -172,6 +189,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
         completed_at: ordem?.completed_at,
         cancelled_at: ordem?.cancelled_at,
       });
+      if (nova && etiquetas.length > 0) await definirEtiquetasOrdem(id, etiquetas.map((t) => t.id));
       setSucesso(true);
       setTimeout(() => setSucesso(false), 2500);
       if (!nova) await recarregar();
@@ -251,6 +269,23 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
 
       <div className="mx-auto mt-6 max-w-5xl space-y-6 px-6">
         <form onSubmit={handleSalvar} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+          <div>
+            <span className="block text-xs font-medium text-slate-700">Etiquetas</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              {etiquetas.map((t) => (
+                <EtiquetaChip key={t.id} etiqueta={t} onRemover={() => removerEtiqueta(t.id)} />
+              ))}
+              <button
+                type="button"
+                onClick={() => setSeletorEtiquetasAberto(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-blue-400 bg-white px-3 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50"
+              >
+                <IconeEtiqueta size={13} />
+                {etiquetas.length ? 'Alterar' : 'Adicionar etiqueta'}
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <span className="block text-xs font-medium text-slate-700">Cliente *</span>
@@ -356,6 +391,15 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
           )
         )}
       </div>
+
+      {seletorEtiquetasAberto && (
+        <SeletorEtiquetas
+          titulo={nova ? 'Etiquetas da nova OS' : `Etiquetas da OS ${ordem?.number ?? ''}`}
+          selecionadas={etiquetas}
+          onConfirmar={aplicarEtiquetas}
+          onFechar={() => setSeletorEtiquetasAberto(false)}
+        />
+      )}
     </div>
   );
 }

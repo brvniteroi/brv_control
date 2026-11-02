@@ -1,10 +1,15 @@
-import type { ServiceOrderPriority, ServiceOrderStatus, TaskStatus } from '../types/fsm';
+import type { CustomerAddress, ServiceOrderPriority, ServiceOrderStatus, TaskStatus } from '../types/fsm';
+
+/** Texto do endereço na escolha de local da OS. */
+export function rotuloEndereco(e: CustomerAddress): string {
+  const apelido = e.label && e.label !== 'Principal' ? `${e.label} — ` : '';
+  const via = [e.street, e.number].filter(Boolean).join(', ');
+  return `${apelido}${via}${e.district ? ` · ${e.district}` : ''}${e.is_primary ? ' (principal)' : ''}${e.active ? '' : ' (inativo)'}`;
+}
 
 export const STATUS_OS: { valor: ServiceOrderStatus; rotulo: string; classe: string }[] = [
-  { valor: 'aberta', rotulo: 'Aberta', classe: 'bg-slate-100 text-slate-700 border-slate-200' },
   { valor: 'agendada', rotulo: 'Agendada', classe: 'bg-blue-50 text-blue-700 border-blue-100' },
   { valor: 'em_andamento', rotulo: 'Em andamento', classe: 'bg-amber-50 text-amber-700 border-amber-100' },
-  { valor: 'pausada', rotulo: 'Pausada', classe: 'bg-pink-50 text-pink-700 border-pink-100' },
   { valor: 'concluida', rotulo: 'Concluída', classe: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
   { valor: 'cancelada', rotulo: 'Cancelada', classe: 'bg-red-50 text-red-700 border-red-100' },
 ];
@@ -17,22 +22,18 @@ export const PRIORIDADES: { valor: ServiceOrderPriority; rotulo: string }[] = [
 ];
 
 export const STATUS_ATIVIDADE: { valor: TaskStatus; rotulo: string; classe: string }[] = [
-  { valor: 'pendente', rotulo: 'Pendente', classe: 'bg-slate-100 text-slate-700 border-slate-200' },
   { valor: 'agendada', rotulo: 'Agendada', classe: 'bg-blue-50 text-blue-700 border-blue-100' },
   { valor: 'em_deslocamento', rotulo: 'Em deslocamento', classe: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
   { valor: 'em_execucao', rotulo: 'Em execução', classe: 'bg-amber-50 text-amber-700 border-amber-100' },
-  { valor: 'pausada', rotulo: 'Pausada', classe: 'bg-pink-50 text-pink-700 border-pink-100' },
   { valor: 'concluida', rotulo: 'Concluída', classe: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
   { valor: 'cancelada', rotulo: 'Cancelada', classe: 'bg-red-50 text-red-700 border-red-100' },
 ];
 
 /** Cor sólida do bloco da atividade (linha do tempo e calendário), texto em branco. */
 export const COR_STATUS_ATIVIDADE: Record<TaskStatus, string> = {
-  pendente: 'bg-slate-500 border-slate-700',
   agendada: 'bg-blue-600 border-blue-800',
   em_deslocamento: 'bg-indigo-600 border-indigo-800',
   em_execucao: 'bg-orange-600 border-orange-800',
-  pausada: 'bg-pink-600 border-pink-800',
   concluida: 'bg-green-600 border-green-800',
   cancelada: 'bg-red-300 border-red-400 opacity-60',
 };

@@ -12,9 +12,14 @@ import OrdensServico from './pages/OrdensServico';
 import Estoque from './pages/Estoque';
 import Equipamentos from './pages/Equipamentos';
 import Formularios from './pages/Formularios';
+import TiposServico from './pages/TiposServico';
+import Etiquetas from './pages/Etiquetas';
 import PortalRoute from './components/portal/PortalRoute';
 import PortalLogin from './pages/portal/PortalLogin';
 import PortalHome from './pages/portal/PortalHome';
+import CampoLayout from './components/campo/CampoLayout';
+import CampoAgenda from './pages/campo/CampoAgenda';
+import CampoAtividade from './pages/campo/CampoAtividade';
 
 export default function App() {
   return (
@@ -28,6 +33,12 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          {/* App do técnico (celular) */}
+          <Route path="campo" element={<CampoLayout />}>
+            <Route index element={<CampoAgenda />} />
+            <Route path="atividade/:id" element={<CampoAtividade />} />
+          </Route>
+
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="clientes" element={<Clientes />} />
@@ -37,6 +48,8 @@ export default function App() {
             <Route path="estoque" element={<Estoque />} />
             <Route path="equipamentos" element={<Equipamentos />} />
             <Route path="formularios" element={<Formularios />} />
+            <Route path="tipos-de-servico" element={<TiposServico />} />
+            <Route path="etiquetas" element={<Etiquetas />} />
             <Route path="equipe" element={<Equipe />} />
           </Route>
         </Route>

@@ -53,7 +53,7 @@ export function useCalendario(mes: string) {
     () => listarAtividadesDoDia(inicio, fim),
     (t) => !!t.scheduled_start && Date.parse(t.scheduled_start) >= Date.parse(inicio) && Date.parse(t.scheduled_start) < Date.parse(fim),
   );
-  const ordens = useOrdensDasAtividades(doMes.linhas, setErroOrdens);
+  const { ordens, recarregarOrdens } = useOrdensDasAtividades(doMes.linhas, setErroOrdens);
 
   /** Atividades por dia (YYYY-MM-DD do início, fuso local), em ordem de horário. */
   const porDia = useMemo(() => {
@@ -79,6 +79,7 @@ export function useCalendario(mes: string) {
     recarregar: () => {
       carregarColaboradores();
       setErroOrdens(null);
+      recarregarOrdens();
       void doMes.recarregar();
     },
   };

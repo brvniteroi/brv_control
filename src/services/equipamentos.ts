@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { termoSeguro } from './clientes';
+import { semAcento, termoSeguro } from './clientes';
 import type { Equipment } from '../types/fsm';
 
 export const EQUIPAMENTOS_POR_PAGINA = 50;
@@ -100,7 +100,7 @@ export async function definirEquipamentoAtivo(id: string, ativo: boolean): Promi
 export async function buscarClientesParaSeletor(termo: string): Promise<{ id: string; name: string }[]> {
   let query = supabase.from('customers').select('id, name').eq('active', true).order('name').limit(20);
   const limpo = termoSeguro(termo);
-  if (limpo) query = query.ilike('name', `%${limpo}%`);
+  if (limpo) query = query.ilike('busca', `%${semAcento(limpo)}%`);
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];

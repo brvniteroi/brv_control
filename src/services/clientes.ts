@@ -51,6 +51,11 @@ export function termoSeguro(termo: string): string {
   return termo.replace(/[,()"'\\%_*:]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+/** Termo sem acento e em minúsculas, para comparar com a coluna `customers.busca`. */
+export function semAcento(termo: string): string {
+  return termo.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+}
+
 export async function listarClientes(
   termo: string,
   filtro: FiltroStatusCliente,
@@ -69,9 +74,7 @@ export async function listarClientes(
   const limpo = termoSeguro(termo);
   if (limpo) {
     const condicoes = [
-      `name.ilike.%${limpo}%`,
-      `trade_name.ilike.%${limpo}%`,
-      `email.ilike.%${limpo}%`,
+      `busca.ilike.%${semAcento(limpo)}%`, // nome, nome fantasia e e-mail
       `phone.ilike.%${limpo}%`,
       `document.ilike.%${limpo}%`,
     ];

@@ -3,6 +3,7 @@ import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { COR_STATUS_ATIVIDADE } from '../../utils/ordens';
 import { dicaAtividade, horaDe } from './formato';
+import EtiquetasNoBloco from '../etiquetas/EtiquetasNoBloco';
 
 const DIAS_SEMANA = ['Dom.', 'Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.'];
 /** Atividades visíveis por dia; o resto fica no "Ver mais". */
@@ -85,6 +86,7 @@ export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbr
                       <span className="min-w-0 flex-1 truncate">
                         {horaDe(a.scheduled_start)} - {a.ordem?.customer?.name ?? a.title}
                       </span>
+                      <EtiquetasNoBloco etiquetas={a.ordem?.etiquetas} modo="ponto" />
                       <Avatar tecnico={tecnico} />
                     </button>
                   );

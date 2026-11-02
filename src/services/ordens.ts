@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { termoSeguro } from './clientes';
+import { semAcento, termoSeguro } from './clientes';
 import type {
   Attachment,
   CustomerAddress,
@@ -8,9 +8,11 @@ import type {
   ServiceOrderPriority,
   ServiceOrderStatus,
   ServiceType,
+  Tag,
   Task,
   TaskStatus,
 } from '../types/fsm';
+import { ordenarEtiquetas } from './etiquetas';
 
 export const ORDENS_POR_PAGINA = 50;
 
@@ -18,6 +20,8 @@ export interface FiltrosOrdens {
   termo: string;
   status: ServiceOrderStatus | '';
   tipoId: string;
+  /** Só OS com esta etiqueta (vazio = todas). */
+  etiquetaId?: string;
 }
 
 export interface AtividadeResumo {
@@ -31,11 +35,21 @@ export interface AtividadeResumo {
 }
 
 const CAMPOS_ATIVIDADE_RESUMO = 'tasks(id, status, scheduled_start, finished_at, technician_notes, employee:employees(id, name))';
+const CAMPOS_ETIQUETAS = 'etiquetas:tags(id, name, color)';
 
 export interface OrdemResumo extends ServiceOrder {
   customer: { id: string; name: string } | null;
   service_type: { id: string; name: string } | null;
   tasks: AtividadeResumo[];
+  etiquetas: Tag[];
+}
+
+/** Etiquetas em ordem alfabética e sem o embed usado só para filtrar. */
+function normalizarResumo(dados: unknown[] | null): OrdemResumo[] {
+  return ((dados ?? []) as (OrdemResumo & { filtro?: unknown })[]).map(({ filtro: _filtro, ...o }) => ({
+    ...o,
+    etiquetas: ordenarEtiquetas(o.etiquetas),
+  }));
 }
 
 export interface AtividadeDetalhe extends Task {
@@ -47,6 +61,7 @@ export interface OrdemDetalhe extends ServiceOrder {
   service_type: { id: string; name: string } | null;
   tasks: AtividadeDetalhe[];
   attachments: Attachment[];
+  etiquetas: Tag[];
 }
 
 export interface PaginaOrdens {
@@ -55,16 +70,20 @@ export interface PaginaOrdens {
 }
 
 export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<PaginaOrdens> {
+  // Com filtro de etiqueta, o !inner deixa só as OS que a têm (as exibidas vêm do outro embed, completas)
+  const filtroEtiqueta = f.etiquetaId ? ', filtro:service_order_tags!inner(tag_id)' : '';
   let query = supabase
     .from('service_orders')
-    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}`, {
-      count: 'exact',
-    })
+    .select(
+      `*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}${filtroEtiqueta}`,
+      { count: 'exact' },
+    )
     .order('number', { ascending: false })
     .range(pagina * ORDENS_POR_PAGINA, (pagina + 1) * ORDENS_POR_PAGINA - 1);
 
   if (f.status) query = query.eq('status', f.status);
   if (f.tipoId) query = query.eq('service_type_id', f.tipoId);
+  if (f.etiquetaId) query = query.eq('filtro.tag_id', f.etiquetaId);
 
   const termo = termoSeguro(f.termo);
   if (termo) {
@@ -74,7 +93,7 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
     const { data: clientes, error: erroClientes } = await supabase
       .from('customers')
       .select('id')
-      .ilike('name', `%${termo}%`)
+      .ilike('busca', `%${semAcento(termo)}%`)
       .limit(100);
     if (erroClientes) throw erroClientes;
     if (clientes && clientes.length > 0) condicoes.push(`customer_id.in.(${clientes.map((c) => c.id).join(',')})`);
@@ -83,14 +102,14 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { itens: (data ?? []) as unknown as OrdemResumo[], total: count ?? 0 };
+  return { itens: normalizarResumo(data), total: count ?? 0 };
 }
 
 export async function buscarOrdem(id: string): Promise<OrdemDetalhe | null> {
   const { data, error } = await supabase
     .from('service_orders')
     .select(
-      '*, customer:customers(id, name), service_type:service_types(id, name), tasks(*, employee:employees(id, name)), attachments(*)',
+      `*, customer:customers(id, name), service_type:service_types(id, name), tasks(*, employee:employees(id, name)), attachments(*), ${CAMPOS_ETIQUETAS}`,
     )
     .eq('id', id)
     .maybeSingle();
@@ -99,6 +118,7 @@ export async function buscarOrdem(id: string): Promise<OrdemDetalhe | null> {
   const ordem = data as unknown as OrdemDetalhe;
   ordem.tasks = [...ordem.tasks].sort((a, b) => (a.scheduled_start ?? a.created_at).localeCompare(b.scheduled_start ?? b.created_at));
   ordem.attachments = [...ordem.attachments].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  ordem.etiquetas = ordenarEtiquetas(ordem.etiquetas);
   return ordem;
 }
 
@@ -142,7 +162,7 @@ export interface SalvarOrdemInput {
 }
 
 function traduzirErro(mensagem: string): string {
-  if (mensagem.includes('tasks_scheduled_needs_slot')) return 'Atividade agendada precisa de técnico e data/hora de início.';
+  if (mensagem.includes('tasks_scheduled_needs_slot')) return 'A atividade precisa de técnico e data/hora de início.';
   if (mensagem.includes('tasks_schedule_valid')) return 'O horário de término deve ser depois do início.';
   if (mensagem.includes('tasks_execution_valid')) return 'O término real precisa de início e deve ser depois dele.';
   if (mensagem.includes('service_orders_address_fk')) return 'O endereço escolhido não pertence a este cliente.';
@@ -187,6 +207,8 @@ export interface SalvarAtividadeInput {
   status: TaskStatus;
   scheduled_start: string | null;
   scheduled_end: string | null;
+  /** Duração prevista; `undefined` = não mexe */
+  estimated_minutes?: number | null;
   technician_notes: string;
   /** Início/término reais (digitados no painel); `undefined` = não mexe. Concluída sem eles: carimba. */
   started_at?: string | null;
@@ -234,6 +256,7 @@ export async function salvarAtividade(d: SalvarAtividadeInput): Promise<void> {
     scheduled_start: d.scheduled_start,
     scheduled_end: d.scheduled_end,
     technician_notes: d.technician_notes.trim() || null,
+    ...(d.estimated_minutes !== undefined && { estimated_minutes: d.estimated_minutes }),
     ...(d.started_at !== undefined && { started_at: d.started_at }),
     ...(d.finished_at !== undefined && { finished_at: d.finished_at }),
     // Concluída sem início/término informados: completa com o agendado e a hora atual
@@ -254,10 +277,10 @@ export async function removerAtividade(id: string): Promise<void> {
 export async function listarOrdensDoCliente(customerId: string): Promise<OrdemResumo[]> {
   const { data, error } = await supabase
     .from('service_orders')
-    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}`)
+    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}`)
     .eq('customer_id', customerId)
     .order('number', { ascending: false })
     .limit(200);
   if (error) throw error;
-  return (data ?? []) as unknown as OrdemResumo[];
+  return normalizarResumo(data);
 }

@@ -9,8 +9,10 @@ import {
   type FiltrosOrdens,
   type OrdemResumo,
 } from '../services/ordens';
-import type { ServiceOrderStatus, ServiceType } from '../types/fsm';
+import { listarEtiquetas } from '../services/etiquetas';
+import type { ServiceOrderStatus, ServiceType, Tag } from '../types/fsm';
 import { STATUS_OS, formatarData, formatarDataHora, infoStatusOS } from '../utils/ordens';
+import EtiquetaChip from '../components/etiquetas/EtiquetaChip';
 
 const SELECT =
   'rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
@@ -73,8 +75,9 @@ export default function OrdensServico() {
   const [pagina, setPagina] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [filtros, setFiltros] = useState<FiltrosOrdens>({ termo: '', status: '', tipoId: '' });
+  const [filtros, setFiltros] = useState<FiltrosOrdens>({ termo: '', status: '', tipoId: '', etiquetaId: '' });
   const [tipos, setTipos] = useState<ServiceType[]>([]);
+  const [etiquetas, setEtiquetas] = useState<Tag[]>([]);
   // /ordens-de-servico?os=<id> abre a OS direto (usado pela aba Atendimento do cliente)
   const [params, setParams] = useSearchParams();
   const [selecionada, setSelecionada] = useState<string | 'nova' | null>(params.get('os'));
@@ -84,6 +87,12 @@ export default function OrdensServico() {
   useEffect(() => {
     listarTipos().then(setTipos).catch((e: unknown) => console.error('Erro ao listar tipos:', e));
   }, []);
+
+  // Recarrega ao voltar da OS (pode ter criado etiqueta nova)
+  useEffect(() => {
+    if (selecionada) return;
+    listarEtiquetas().then(setEtiquetas).catch((e: unknown) => console.error('Erro ao listar etiquetas:', e));
+  }, [selecionada]);
 
   const carregar = useCallback(async () => {
     const requisicao = ++ultimaRequisicao.current;
@@ -182,6 +191,19 @@ export default function OrdensServico() {
             <option key={t.id} value={t.id}>{t.name}{t.active ? '' : ' (arquivado)'}</option>
           ))}
         </select>
+        {etiquetas.length > 0 && (
+          <select
+            aria-label="Filtrar por etiqueta"
+            value={filtros.etiquetaId}
+            onChange={(e) => mudarFiltro({ etiquetaId: e.target.value })}
+            className={SELECT}
+          >
+            <option value="">Todas as etiquetas</option>
+            {etiquetas.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {erro ? (
@@ -209,7 +231,7 @@ export default function OrdensServico() {
           </div>
           <h3 className="mt-4 text-base font-bold text-slate-800">Nenhuma OS encontrada</h3>
           <p className="mt-1 max-w-sm text-xs text-slate-500">
-            {filtros.termo || filtros.status || filtros.tipoId
+            {filtros.termo || filtros.status || filtros.tipoId || filtros.etiquetaId
               ? 'Nenhuma OS corresponde aos filtros escolhidos.'
               : 'Crie a primeira ordem de serviço para começar.'}
           </p>
@@ -264,6 +286,11 @@ export default function OrdensServico() {
                             <MessageSquareText size={14} className="shrink-0 text-slate-400" aria-label="Tem relato do técnico" />
                           )}
                         </div>
+                        {o.etiquetas.length > 0 && (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {o.etiquetas.map((t) => <EtiquetaChip key={t.id} etiqueta={t} pequena />)}
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-4">{tecnicos || <span className="text-slate-400">A distribuir</span>}</td>
                       <td className="px-5 py-4">{agendamento ? formatarDataHora(agendamento) : <span className="text-slate-400">—</span>}</td>

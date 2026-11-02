@@ -3,8 +3,10 @@ import type {
   Employee,
   ServiceOrderPriority,
   ServiceOrderStatus,
+  Tag,
   Task,
 } from '../types/fsm';
+import { ordenarEtiquetas } from './etiquetas';
 
 export type TecnicoLinha = Pick<Employee, 'id' | 'name' | 'timeline_color'>;
 
@@ -18,6 +20,8 @@ export interface OrdemLinha {
   service_type: { id: string; name: string; default_duration_minutes: number | null } | null;
   /** Bairro e cidade do endereço do atendimento. */
   local: string | null;
+  /** Etiquetas da OS (ex.: "Aguardando pagamento"), em ordem alfabética. */
+  etiquetas: Tag[];
 }
 
 /** Técnicos ativos (os que aparecem como linhas da linha do tempo). */
@@ -44,19 +48,6 @@ export async function listarAtividadesDoDia(inicio: string, fim: string): Promis
   return (data ?? []) as Task[];
 }
 
-/** Atividades ainda sem horário (fila de "a agendar"): pendentes de OS que não está encerrada. */
-export async function listarAtividadesSemHorario(): Promise<Task[]> {
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .is('scheduled_start', null)
-    .not('status', 'in', '(concluida,cancelada)')
-    .order('created_at')
-    .limit(200);
-  if (error) throw new Error(`Não foi possível carregar as atividades a agendar: ${error.message}`);
-  return (data ?? []) as Task[];
-}
-
 /** Todos os colaboradores (inclusive inativos), para nome e cor de quem aparece no calendário. */
 export async function listarColaboradoresCores(): Promise<(TecnicoLinha & Pick<Employee, 'active' | 'role'>)[]> {
   const { data, error } = await supabase.from('employees').select('id, name, timeline_color, active, role').order('name');
@@ -78,7 +69,7 @@ export async function buscarOrdensLinha(ids: string[]): Promise<OrdemLinha[]> {
   const { data, error } = await supabase
     .from('service_orders')
     .select(
-      'id, number, status, priority, address_id, customer:customers(id, name), service_type:service_types(id, name, default_duration_minutes)',
+      'id, number, status, priority, address_id, customer:customers(id, name), service_type:service_types(id, name, default_duration_minutes), etiquetas:tags(id, name, color)',
     )
     .in('id', ids);
   if (error) throw new Error(`Não foi possível carregar as OS: ${error.message}`);
@@ -100,11 +91,12 @@ export async function buscarOrdensLinha(ids: string[]): Promise<OrdemLinha[]> {
   return ordens.map(({ address_id, ...o }) => ({
     ...o,
     local: (address_id && locais.get(address_id)) || null,
+    etiquetas: ordenarEtiquetas(o.etiquetas),
   }));
 }
 
 function traduzirErro(mensagem: string): string {
-  if (mensagem.includes('tasks_scheduled_needs_slot')) return 'Atividade agendada precisa de técnico e horário.';
+  if (mensagem.includes('tasks_scheduled_needs_slot')) return 'A atividade precisa de técnico e horário.';
   if (mensagem.includes('tasks_schedule_valid')) return 'O horário de término deve ser depois do início.';
   if (mensagem.includes('row-level security') || mensagem.includes('permission')) {
     return 'Você não tem permissão para reagendar esta atividade.';
@@ -113,8 +105,7 @@ function traduzirErro(mensagem: string): string {
 }
 
 /**
- * Agenda ou reagenda: define técnico e horário. Atividade `pendente` vira `agendada`.
- * Só deve ser chamada para atividades que `podeMover` (pendente/agendada).
+ * Reagenda: muda técnico e horário. Só deve ser chamada para atividades que `podeMover` (agendada).
  */
 export async function agendarAtividade(
   id: string,
@@ -122,23 +113,12 @@ export async function agendarAtividade(
 ): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
-    .update({ ...d, status: 'agendada' })
+    .update({
+      ...d,
+      estimated_minutes: Math.max(1, Math.round((Date.parse(d.scheduled_end) - Date.parse(d.scheduled_start)) / 60000)),
+    })
     .eq('id', id)
-    .in('status', ['pendente', 'agendada']) // não mexe em atividade que o técnico já iniciou
-    .select()
-    .maybeSingle();
-  if (error) throw new Error(traduzirErro(error.message));
-  if (!data) throw new Error('Esta atividade já foi iniciada ou alterada por outra pessoa. Atualize a tela.');
-  return data as Task;
-}
-
-/** Devolve a atividade para a fila "a agendar" (sem horário, status pendente). */
-export async function desagendarAtividade(id: string): Promise<Task> {
-  const { data, error } = await supabase
-    .from('tasks')
-    .update({ scheduled_start: null, scheduled_end: null, status: 'pendente' })
-    .eq('id', id)
-    .in('status', ['pendente', 'agendada'])
+    .eq('status', 'agendada') // não mexe em atividade que o técnico já iniciou
     .select()
     .maybeSingle();
   if (error) throw new Error(traduzirErro(error.message));

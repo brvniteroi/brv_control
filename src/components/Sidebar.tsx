@@ -6,10 +6,13 @@ import {
   ChevronDown,
   ClipboardList,
   FileText,
+  FolderOpen,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Package,
   Snowflake,
+  Tag,
   UserCog,
   Users,
   Wrench,
@@ -46,10 +49,18 @@ const MENU: EntradaMenu[] = [
       { rota: '/ordens-de-servico', rotulo: 'Ordens de Serviço', icone: ClipboardList },
     ],
   },
-  { rota: '/clientes', rotulo: 'Clientes', icone: Users },
-  { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
+  {
+    rotulo: 'Cadastros',
+    icone: FolderOpen,
+    itens: [
+      { rota: '/clientes', rotulo: 'Clientes', icone: Users },
+      { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
+      { rota: '/tipos-de-servico', rotulo: 'Tipos de Serviço', icone: ListChecks, apenasEscritorio: true },
+      { rota: '/etiquetas', rotulo: 'Etiquetas', icone: Tag, apenasEscritorio: true },
+      { rota: '/formularios', rotulo: 'Modelos de Formulários', icone: FileText, apenasEscritorio: true },
+    ],
+  },
   { rota: '/estoque', rotulo: 'Estoque', icone: Package },
-  { rota: '/formularios', rotulo: 'Modelos de Formulários', icone: FileText, apenasEscritorio: true },
   { rota: '/equipe', rotulo: 'Equipe', icone: UserCog },
 ];
 
@@ -111,8 +122,8 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
             if (filhos.length === 0) return null;
             const GrupoIcone = entrada.icone;
             const temAtivo = filhos.some((f) => pathname.startsWith(f.rota));
-            // Recolhido por padrão; abre ao clicar ou quando se está numa tela do grupo
-            const aberto = temAtivo || !!gruposAbertos[entrada.rotulo];
+            // Recolhido por padrão e aberto quando se está numa tela do grupo; o clique sempre manda
+            const aberto = gruposAbertos[entrada.rotulo] ?? temAtivo;
             return (
               <div key={entrada.rotulo}>
                 <button

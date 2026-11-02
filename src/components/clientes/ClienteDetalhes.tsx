@@ -7,7 +7,6 @@ import {
   MapPin,
   Pencil,
   Phone,
-  Plus,
   Trash2,
   User,
   X,
@@ -107,10 +106,6 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
   const [contatoWhatsapp, setContatoWhatsapp] = useState(true);
   const [contatoPrincipal, setContatoPrincipal] = useState(false);
 
-  // Etiquetas
-  const [etiquetas, setEtiquetas] = useState<string[]>([]);
-  const [modalEtiquetaAberto, setModalEtiquetaAberto] = useState(false);
-  const [novaEtiqueta, setNovaEtiqueta] = useState('');
 
   useEffect(() => {
     if (clienteId === 'novo') {
@@ -382,18 +377,6 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
     }
   };
 
-  const handleAdicionarEtiqueta = () => {
-    if (novaEtiqueta.trim() && !etiquetas.includes(novaEtiqueta.trim())) {
-      setEtiquetas([...etiquetas, novaEtiqueta.trim()]);
-      setNovaEtiqueta('');
-      setModalEtiquetaAberto(false);
-    }
-  };
-
-  const handleRemoverEtiqueta = (tag: string) => {
-    setEtiquetas(etiquetas.filter((t) => t !== tag));
-  };
-
   if (carregando) {
     return (
       <div className="flex h-96 w-full items-center justify-center">
@@ -534,36 +517,6 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                     <p className="mt-1.5 text-xs text-slate-400">
                       Imagens de no máximo 2 MB de tamanho.
                     </p>
-                  </div>
-                </div>
-
-                {/* Etiquetas */}
-                <div className="mt-6">
-                  <span className="block text-xs font-semibold text-slate-600">Etiquetas</span>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {etiquetas.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoverEtiqueta(tag)}
-                          className="hover:text-red-500"
-                        >
-                          <X size={12} />
-                        </button>
-                      </span>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setModalEtiquetaAberto(true)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-blue-400 bg-white px-3.5 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50"
-                    >
-                      <Plus size={14} />
-                      Adicionar etiquetas
-                    </button>
                   </div>
                 </div>
 
@@ -1026,39 +979,6 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Adicionar Etiqueta */}
-      {modalEtiquetaAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-            <h3 className="text-sm font-bold text-slate-800">Nova Etiqueta</h3>
-            <input
-              type="text"
-              autoFocus
-              value={novaEtiqueta}
-              onChange={(e) => setNovaEtiqueta(e.target.value)}
-              placeholder="Ex: Contrato PMOC, VIP, Residencial"
-              className="mt-3 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setModalEtiquetaAberto(false)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleAdicionarEtiqueta}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-              >
-                Adicionar
-              </button>
-            </div>
           </div>
         </div>
       )}

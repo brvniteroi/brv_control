@@ -31,6 +31,13 @@ export interface Customer {
   updated_at: string;
 }
 
+/** Etiqueta de OS (catálogo `tags`, ligada pelos `service_order_tags`). Ex.: "Aguardando pagamento". */
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface CustomerContact {
   id: string;
   customer_id: string;
@@ -112,13 +119,7 @@ export interface ServiceType {
   updated_at: string;
 }
 
-export type ServiceOrderStatus =
-  | 'aberta'
-  | 'agendada'
-  | 'em_andamento'
-  | 'pausada'
-  | 'concluida'
-  | 'cancelada';
+export type ServiceOrderStatus = 'agendada' | 'em_andamento' | 'concluida' | 'cancelada';
 
 export type ServiceOrderPriority = 'baixa' | 'normal' | 'alta' | 'urgente';
 
@@ -151,14 +152,7 @@ export interface ServiceOrderEquipment {
   created_at: string;
 }
 
-export type TaskStatus =
-  | 'pendente'
-  | 'agendada'
-  | 'em_deslocamento'
-  | 'em_execucao'
-  | 'pausada'
-  | 'concluida'
-  | 'cancelada';
+export type TaskStatus = 'agendada' | 'em_deslocamento' | 'em_execucao' | 'concluida' | 'cancelada';
 
 export interface Task {
   id: string;
@@ -169,6 +163,8 @@ export interface Task {
   status: TaskStatus;
   scheduled_start: string | null;
   scheduled_end: string | null;
+  /** Duração prevista em minutos */
+  estimated_minutes: number | null;
   started_at: string | null;
   finished_at: string | null;
   checkin_lat: number | null;

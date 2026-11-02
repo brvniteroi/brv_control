@@ -4,10 +4,9 @@ import { PASSO_MINUTOS, arredondarMinutos, isoDoDia, minutosDoDia } from '../../
 
 export type ModoArrasto = 'mover' | 'inicio' | 'fim';
 
-/** O que está sendo arrastado e de onde veio (minutos desde 00:00 do dia mostrado). */
+/** O que está sendo arrastado (minutos desde 00:00 do dia mostrado). */
 export interface EspecArrasto {
   id: string;
-  origem: 'grade' | 'fila';
   modo: ModoArrasto;
   inicioMin: number;
   fimMin: number;
@@ -18,32 +17,23 @@ export interface EspecArrasto {
 
 export interface PreviaArrasto {
   id: string;
-  origem: 'grade' | 'fila';
   modo: ModoArrasto;
   /** Técnico da linha sob o ponteiro (null = fora das linhas, soltar não faz nada). */
   employeeId: string | null;
   inicioMin: number;
   fimMin: number;
-  /** Ponteiro sobre o painel "A agendar" (soltar devolve a atividade à fila). */
-  sobPainel: boolean;
   conflito: boolean;
-  x: number;
-  y: number;
 }
 
 interface Opcoes {
   dia: string;
   pxPorMin: number;
-  /** Minuto (desde 00:00) em que a régua começa. */
-  janelaInicioMin: number;
   atividades: AtividadeLinha[];
   lanes: () => { id: string; rect: DOMRect }[];
-  painel: () => DOMRect | null;
   scroller: () => HTMLElement | null;
   larguraColunaTecnicos: number;
   aoClicar: (atividade: string) => void;
   agendar: (id: string, d: { employee_id: string; scheduled_start: string; scheduled_end: string }) => Promise<void>;
-  desagendar: (id: string) => Promise<void>;
 }
 
 const LIMITE_ARRASTO_PX = 5;
@@ -53,9 +43,9 @@ const BORDA_AUTOSCROLL_PX = 48;
 const limitar = (v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max));
 
 /**
- * Arrastar para mover/redimensionar atividades da grade e agendar as da fila "A agendar".
+ * Arrastar para mover/redimensionar atividades da grade.
  * Usa eventos de ponteiro na janela inteira (o arrasto não se perde ao sair do elemento),
- * encaixa em passos de 15 min e só chama `agendar`/`desagendar` ao soltar.
+ * encaixa em passos de 15 min e só chama `agendar` ao soltar.
  * Esc cancela. Movimento menor que 5 px é clique.
  */
 export function useArrasto(opcoes: Opcoes) {
@@ -99,22 +89,10 @@ export function useArrasto(opcoes: Opcoes) {
       let inicioMin = spec.inicioMin;
       let fimMin = spec.fimMin;
       let employeeId = spec.employeeId;
-      let sobPainel = false;
 
       if (spec.modo === 'mover') {
         employeeId = laneId;
-        const painel = o.painel();
-        sobPainel =
-          spec.origem === 'grade' &&
-          !!painel &&
-          ev.clientX >= painel.left && ev.clientX <= painel.right &&
-          ev.clientY >= painel.top && ev.clientY <= painel.bottom;
-
-        const ini =
-          spec.origem === 'grade'
-            ? arredondarMinutos(spec.inicioMin + deltaMin)
-            : arredondarMinutos(o.janelaInicioMin + (ev.clientX - (lanes[0]?.rect.left ?? 0)) / o.pxPorMin);
-        inicioMin = limitar(ini, 0, 1440 - duracao);
+        inicioMin = limitar(arredondarMinutos(spec.inicioMin + deltaMin), 0, 1440 - duracao);
         fimMin = inicioMin + duracao;
       } else if (spec.modo === 'inicio') {
         inicioMin = limitar(arredondarMinutos(spec.inicioMin + deltaMin), 0, spec.fimMin - PASSO_MINUTOS);
@@ -124,14 +102,13 @@ export function useArrasto(opcoes: Opcoes) {
 
       const conflito =
         !!employeeId &&
-        !sobPainel &&
         o.atividades.some((a) => {
           if (a.id === spec.id || a.employee_id !== employeeId || a.status === 'cancelada') return false;
           if (!a.scheduled_start || !a.scheduled_end) return false;
           return inicioMin < minutosDoDia(a.scheduled_end, o.dia) && fimMin > minutosDoDia(a.scheduled_start, o.dia);
         });
 
-      return { id: spec.id, origem: spec.origem, modo: spec.modo, employeeId, inicioMin, fimMin, sobPainel, conflito, x: ev.clientX, y: ev.clientY };
+      return { id: spec.id, modo: spec.modo, employeeId, inicioMin, fimMin, conflito };
     };
 
     const autorolar = (ev: PointerEvent) => {
@@ -163,18 +140,13 @@ export function useArrasto(opcoes: Opcoes) {
       const o = opc.current;
 
       if (!ativo) {
-        if (!cancelar && spec.origem === 'grade') o.aoClicar(spec.id);
+        if (!cancelar) o.aoClicar(spec.id);
         return;
       }
       if (cancelar || !ultima) return;
 
-      if (ultima.sobPainel) {
-        o.desagendar(spec.id).catch(() => {}); // o hook já guarda a mensagem de erro
-        return;
-      }
       if (!ultima.employeeId) return; // soltou fora das linhas
       const inalterado =
-        spec.origem === 'grade' &&
         ultima.employeeId === spec.employeeId &&
         ultima.inicioMin === spec.inicioMin &&
         ultima.fimMin === spec.fimMin;
@@ -183,7 +155,7 @@ export function useArrasto(opcoes: Opcoes) {
         employee_id: ultima.employeeId,
         scheduled_start: isoDoDia(o.dia, ultima.inicioMin),
         scheduled_end: isoDoDia(o.dia, ultima.fimMin),
-      }).catch(() => {});
+      }).catch(() => {}); // o hook já guarda a mensagem de erro
     };
 
     const aoSoltar = () => encerrar(false);

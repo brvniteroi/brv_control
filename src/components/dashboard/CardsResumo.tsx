@@ -15,21 +15,15 @@ interface CardsResumoProps {
 export default function CardsResumo({ resumo }: CardsResumoProps) {
   const navigate = useNavigate();
 
-  const totalAbertas =
-    resumo.porStatus.aberta +
-    resumo.porStatus.agendada +
-    resumo.porStatus.em_andamento +
-    resumo.porStatus.pausada;
+  const totalAbertas = resumo.porStatus.agendada + resumo.porStatus.em_andamento;
 
   const temAtrasadas = resumo.atrasadas > 0;
   const temUrgentes = resumo.urgentes > 0;
 
   // Percentuais para a barra de proporção das OS ativas
-  const pctAberta = totalAbertas > 0 ? (resumo.porStatus.aberta / totalAbertas) * 100 : 0;
   const pctAgendada = totalAbertas > 0 ? (resumo.porStatus.agendada / totalAbertas) * 100 : 0;
   const pctEmAndamento =
     totalAbertas > 0 ? (resumo.porStatus.em_andamento / totalAbertas) * 100 : 0;
-  const pctPausada = totalAbertas > 0 ? (resumo.porStatus.pausada / totalAbertas) * 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -175,13 +169,6 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
 
           {/* Barra proporcional */}
           <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
-            {pctAberta > 0 && (
-              <div
-                style={{ width: `${pctAberta}%` }}
-                className="bg-slate-400 transition-all duration-300"
-                title={`Abertas: ${resumo.porStatus.aberta}`}
-              />
-            )}
             {pctAgendada > 0 && (
               <div
                 style={{ width: `${pctAgendada}%` }}
@@ -196,21 +183,10 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
                 title={`Em andamento: ${resumo.porStatus.em_andamento}`}
               />
             )}
-            {pctPausada > 0 && (
-              <div
-                style={{ width: `${pctPausada}%` }}
-                className="bg-pink-500 transition-all duration-300"
-                title={`Pausadas: ${resumo.porStatus.pausada}`}
-              />
-            )}
           </div>
 
           {/* Legenda compacta */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-slate-400" />
-              Abertas: <strong className="text-slate-700">{resumo.porStatus.aberta}</strong>
-            </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-blue-500" />
               Agendadas: <strong className="text-slate-700">{resumo.porStatus.agendada}</strong>
@@ -220,12 +196,6 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
               Em andamento:{' '}
               <strong className="text-slate-700">{resumo.porStatus.em_andamento}</strong>
             </span>
-            {resumo.porStatus.pausada > 0 && (
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-pink-500" />
-                Pausadas: <strong className="text-slate-700">{resumo.porStatus.pausada}</strong>
-              </span>
-            )}
           </div>
         </div>
 

@@ -91,5 +91,10 @@ export default function ProtectedRoute() {
   // Cliente final não usa o sistema da equipe: vai para o portal
   if (profile?.role === 'cliente') return <Navigate to="/portal" replace />;
 
+  // Técnico usa só o app de campo
+  if (profile?.role === 'tecnico' && !location.pathname.startsWith('/campo')) {
+    return <Navigate to="/campo" replace />;
+  }
+
   return <Outlet />;
 }

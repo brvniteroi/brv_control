@@ -4,6 +4,7 @@ import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { infoStatusAtividade } from '../../utils/ordens';
 import { horaDe } from './formato';
 import { Avatar } from './GradeMes';
+import EtiquetaChip from '../etiquetas/EtiquetaChip';
 
 interface Props {
   dia: string;
@@ -63,6 +64,11 @@ export default function DiaCalendarioModal({
                         <span className="block truncate text-[11px] text-slate-500">
                           {[o ? `OS ${o.number}` : null, o?.service_type?.name, o?.local].filter(Boolean).join(' · ')}
                         </span>
+                        {o && o.etiquetas.length > 0 && (
+                          <span className="mt-1 flex flex-wrap gap-1">
+                            {o.etiquetas.map((t) => <EtiquetaChip key={t.id} etiqueta={t} pequena />)}
+                          </span>
+                        )}
                       </span>
                       <span className="hidden items-center gap-1.5 text-[11px] text-slate-600 sm:flex">
                         <Avatar tecnico={tecnico} />

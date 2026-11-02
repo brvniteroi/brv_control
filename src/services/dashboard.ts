@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { ServiceOrderPriority, ServiceOrderStatus, TaskStatus } from '../types/fsm';
 
-const STATUS_ABERTOS: ServiceOrderStatus[] = ['aberta', 'agendada', 'em_andamento', 'pausada'];
+const STATUS_ABERTOS: ServiceOrderStatus[] = ['agendada', 'em_andamento'];
 
 export interface ResumoOrdens {
   /** Quantidade de OS por status (todos os status, zerados quando não há). */

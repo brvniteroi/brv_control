@@ -4,7 +4,6 @@ import {
   CalendarRange,
   ChevronLeft,
   ChevronRight,
-  ListTodo,
   Loader2,
   Lock,
   Plus,
@@ -23,7 +22,6 @@ import { infoStatusAtividade } from '../utils/ordens';
 
 const ZOOMS_PX_POR_HORA = [56, 88, 140];
 const CHAVE_ZOOM = 'brv:linha-do-tempo:zoom';
-const CHAVE_PAINEL = 'brv:linha-do-tempo:painel-v2';
 
 const BOTAO =
   'inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:opacity-50';
@@ -61,7 +59,6 @@ function LinhaDoTempoEscritorio() {
     return pedido && /^\d{4}-\d{2}-\d{2}$/.test(pedido) ? pedido : dataLocal();
   });
   const [zoom, setZoom] = useState(() => lerNumero(CHAVE_ZOOM, 1));
-  const [painelAberto, setPainelAberto] = useState(() => localStorage.getItem(CHAVE_PAINEL) === '1');
   const [tecnicosFiltro, setTecnicosFiltro] = useState<string[]>([]);
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
@@ -73,7 +70,6 @@ function LinhaDoTempoEscritorio() {
   const { limparErroAcao } = t;
 
   useEffect(() => localStorage.setItem(CHAVE_ZOOM, String(zoom)), [zoom]);
-  useEffect(() => localStorage.setItem(CHAVE_PAINEL, painelAberto ? '1' : '0'), [painelAberto]);
 
   // Relógio da linha do "agora"
   useEffect(() => {
@@ -202,9 +198,6 @@ function LinhaDoTempoEscritorio() {
           <button type="button" onClick={t.recarregar} disabled={t.carregando} className={BOTAO}>
             {t.carregando ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Atualizar
           </button>
-          <button type="button" onClick={() => setPainelAberto((a) => !a)} className={`${BOTAO} hidden md:inline-flex`}>
-            <ListTodo size={14} /> A agendar{t.aAgendar.length > 0 ? ` (${t.aAgendar.length})` : ''}
-          </button>
           <button type="button" onClick={() => setNovaAberta(true)} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700">
             <Plus size={14} /> Nova atividade
           </button>
@@ -238,14 +231,11 @@ function LinhaDoTempoEscritorio() {
                 dia={dia}
                 tecnicos={tecnicosVisiveis}
                 atividades={atividadesVisiveis}
-                aAgendar={t.aAgendar}
                 conflitos={t.conflitos}
                 pxPorHora={ZOOMS_PX_POR_HORA[zoom]}
-                painelAberto={painelAberto}
                 agoraMin={agoraMin}
                 aoAbrirOrdem={setOrdemAberta}
                 agendar={async (id, d) => t.agendar(id, d)}
-                desagendar={t.desagendar}
               />
             )}
             {!t.carregando && atividadesVisiveis.length === 0 && (

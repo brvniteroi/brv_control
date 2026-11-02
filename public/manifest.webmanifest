@@ -1,0 +1,16 @@
+{
+  "name": "BRV Campo",
+  "short_name": "BRV Campo",
+  "description": "Agenda e execução das atividades dos técnicos da BRV Niterói",
+  "lang": "pt-BR",
+  "start_url": "/campo",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1F5F9",
+  "theme_color": "#0B1E3F",
+  "icons": [
+    { "src": "/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

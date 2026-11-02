@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   agendarAtividade,
-  desagendarAtividade,
   listarAtividadesDoDia,
-  listarAtividadesSemHorario,
   listarTecnicosLinha,
   type OrdemLinha,
   type TecnicoLinha,
@@ -20,7 +18,7 @@ export interface AtividadeLinha extends Task {
 
 /**
  * Tudo que a tela da Linha do tempo precisa para um dia (`dia` = YYYY-MM-DD, fuso local):
- * técnicos, atividades do dia, fila "a agendar", conflitos de horário e ações de mover.
+ * técnicos, atividades do dia, conflitos de horário e a ação de mover.
  * Mantém tudo em tempo real (Realtime) e faz atualização otimista ao arrastar.
  */
 export function useLinhaDoTempo(dia: string) {
@@ -51,100 +49,56 @@ export function useLinhaDoTempo(dia: string) {
       Date.parse(t.scheduled_end) > Date.parse(inicio),
   );
 
-  const semHorario = useRealtimeTable<Task>(
-    'tasks',
-    'sem-horario',
-    listarAtividadesSemHorario,
-    (t) => t.scheduled_start === null && t.status !== 'concluida' && t.status !== 'cancelada',
-  );
-
-  const todas = useMemo(() => [...doDia.linhas, ...semHorario.linhas], [doDia.linhas, semHorario.linhas]);
-  const ordens = useOrdensDasAtividades(todas, setErroAcao);
+  const { ordens, recarregarOrdens } = useOrdensDasAtividades(doDia.linhas, setErroAcao);
 
   const atividades = useMemo<AtividadeLinha[]>(
     () => doDia.linhas.map((t) => ({ ...t, ordem: ordens[t.service_order_id] ?? null })),
     [doDia.linhas, ordens],
   );
-  const aAgendar = useMemo<AtividadeLinha[]>(
-    () => semHorario.linhas.map((t) => ({ ...t, ordem: ordens[t.service_order_id] ?? null })),
-    [semHorario.linhas, ordens],
-  );
   const conflitos = useMemo(() => atividadesEmConflito(doDia.linhas), [doDia.linhas]);
 
   /**
-   * Põe a atividade (da grade ou da fila "a agendar") num técnico e horário.
+   * Muda o técnico e o horário da atividade.
    * Atualiza a tela na hora e desfaz se o banco recusar; nesse caso lança Error em português.
    */
   const agendar = useCallback(
     async (id: string, d: { employee_id: string; scheduled_start: string; scheduled_end: string }) => {
       setErroAcao(null);
-      const original = [...doDia.linhas, ...semHorario.linhas].find((t) => t.id === id);
+      const original = doDia.linhas.find((t) => t.id === id);
       if (!original || !podeMover(original)) throw new Error('Esta atividade não pode ser movida.');
-      const otimista: Task = { ...original, ...d, status: 'agendada' };
+      const otimista: Task = { ...original, ...d };
 
-      doDia.setLinhas((atual) =>
-        atual.some((t) => t.id === id) ? atual.map((t) => (t.id === id ? otimista : t)) : [...atual, otimista],
-      );
-      semHorario.setLinhas((atual) => atual.filter((t) => t.id !== id));
+      doDia.setLinhas((atual) => atual.map((t) => (t.id === id ? otimista : t)));
       try {
         const salvo = await agendarAtividade(id, d);
         doDia.setLinhas((atual) => atual.map((t) => (t.id === id ? salvo : t)));
       } catch (e) {
-        doDia.setLinhas((atual) =>
-          original.scheduled_start ? atual.map((t) => (t.id === id ? original : t)) : atual.filter((t) => t.id !== id),
-        );
-        if (!original.scheduled_start) semHorario.setLinhas((atual) => [...atual, original]);
+        doDia.setLinhas((atual) => atual.map((t) => (t.id === id ? original : t)));
         const mensagem = e instanceof Error ? e.message : String(e);
         setErroAcao(mensagem);
         throw new Error(mensagem);
       }
     },
-    [doDia, semHorario],
-  );
-
-  /** Tira a atividade da grade e devolve para a fila "a agendar". */
-  const desagendar = useCallback(
-    async (id: string) => {
-      setErroAcao(null);
-      const original = doDia.linhas.find((t) => t.id === id);
-      if (!original || !podeMover(original)) throw new Error('Esta atividade não pode ser movida.');
-      doDia.setLinhas((atual) => atual.filter((t) => t.id !== id));
-      semHorario.setLinhas((atual) => [
-        ...atual,
-        { ...original, scheduled_start: null, scheduled_end: null, status: 'pendente' },
-      ]);
-      try {
-        await desagendarAtividade(id);
-      } catch (e) {
-        doDia.setLinhas((atual) => [...atual, original]);
-        semHorario.setLinhas((atual) => atual.filter((t) => t.id !== id));
-        const mensagem = e instanceof Error ? e.message : String(e);
-        setErroAcao(mensagem);
-        throw new Error(mensagem);
-      }
-    },
-    [doDia, semHorario],
+    [doDia],
   );
 
   return {
     tecnicos,
     atividades,
-    aAgendar,
     /** Ids das atividades que se sobrepõem a outra do mesmo técnico. */
     conflitos,
-    carregando: doDia.carregando || semHorario.carregando,
+    carregando: doDia.carregando,
     /** Falha ao carregar (mostrar com "Tentar de novo" = `recarregar`). */
-    erro: doDia.erro ?? semHorario.erro ?? erroTecnicos,
-    /** Falha de uma ação (mover/agendar); a tela já voltou ao estado anterior. */
+    erro: doDia.erro ?? erroTecnicos,
+    /** Falha de uma ação (mover); a tela já voltou ao estado anterior. */
     erroAcao,
     limparErroAcao: () => setErroAcao(null),
     agendar,
-    desagendar,
     /** Botão "Atualizar": recarrega tudo do banco. */
     recarregar: () => {
       carregarTecnicos();
+      recarregarOrdens();
       void doDia.recarregar();
-      void semHorario.recarregar();
     },
   };
 }

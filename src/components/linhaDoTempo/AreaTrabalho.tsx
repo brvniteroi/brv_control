@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import GradeTempo from './GradeTempo';
@@ -28,9 +28,22 @@ export default function AreaTrabalho({ dia, tecnicos, atividades, conflitos, pxP
 
   const janela = useMemo(() => calcularJanela(atividades, dia), [atividades, dia]);
 
+  // Tela larga: as horas esticam até ocupar a largura toda (o zoom escolhido é o mínimo)
+  const [larguraVisivel, setLarguraVisivel] = useState(0);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(() => setLarguraVisivel(el.clientWidth));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  const horasNaJanela = (janela.fimMin - janela.inicioMin) / 60;
+  const pxParaCaber = larguraVisivel > 0 ? Math.floor((larguraVisivel - COLUNA_TECNICOS_PX) / horasNaJanela) : 0;
+  const pxEfetivo = Math.max(pxPorHora, pxParaCaber);
+
   const { previa, iniciar } = useArrasto({
     dia,
-    pxPorMin: pxPorHora / 60,
+    pxPorMin: pxEfetivo / 60,
     atividades,
     lanes: () => [...lanesRef.current].map(([id, el]) => ({ id, rect: el.getBoundingClientRect() })),
     scroller: () => scrollerRef.current,
@@ -50,7 +63,7 @@ export default function AreaTrabalho({ dia, tecnicos, atividades, conflitos, pxP
         atividades={atividades}
         conflitos={conflitos}
         janela={janela}
-        pxPorHora={pxPorHora}
+        pxPorHora={pxEfetivo}
         previa={previa}
         agoraMin={agoraMin}
         scrollerRef={scrollerRef}

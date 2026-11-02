@@ -11,6 +11,8 @@ import type { EspecArrasto, PreviaArrasto } from './useArrasto';
 
 const ALTURA_LINHA_PX = 64;
 const ID_OUTROS = '__outros';
+/** Hora com pelo menos essa largura ganha a divisão e o rótulo de :30. */
+const MEIA_HORA_A_PARTIR_PX = 100;
 
 interface BarraProps {
   atividade: AtividadeLinha;
@@ -141,10 +143,17 @@ export default function GradeTempo({
     return lista;
   }, [tecnicos, atividades]);
 
-  const fundoHoras = {
-    backgroundImage: 'linear-gradient(to right, #E2E8F0 1px, transparent 1px)',
-    backgroundSize: `${pxPorHora}px 100%`,
-  };
+  // Com espaço (tela larga ou zoom), marca também as meias horas
+  const meiaHora = pxPorHora >= MEIA_HORA_A_PARTIR_PX;
+  const fundoHoras = meiaHora
+    ? {
+        backgroundImage: 'linear-gradient(to right, #E2E8F0 1px, transparent 1px), linear-gradient(to right, #F1F5F9 1px, transparent 1px)',
+        backgroundSize: `${pxPorHora}px 100%, ${pxPorHora / 2}px 100%`,
+      }
+    : {
+        backgroundImage: 'linear-gradient(to right, #E2E8F0 1px, transparent 1px)',
+        backgroundSize: `${pxPorHora}px 100%`,
+      };
 
   return (
     <div ref={scrollerRef} className="relative min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
@@ -161,10 +170,15 @@ export default function GradeTempo({
             {horas.map((h) => (
               <div
                 key={h}
-                className="shrink-0 border-l border-slate-200 px-1.5 py-2 text-xs font-semibold text-slate-500 first:border-l-0"
+                className="flex shrink-0 border-l border-slate-200 text-xs font-semibold text-slate-500 first:border-l-0"
                 style={{ width: pxPorHora }}
               >
-                {String(h).padStart(2, '0')}:00
+                <span className="flex-1 px-1.5 py-2">{String(h).padStart(2, '0')}:00</span>
+                {meiaHora && (
+                  <span className="flex-1 border-l border-slate-100 px-1.5 py-2 font-medium text-slate-400">
+                    {String(h).padStart(2, '0')}:30
+                  </span>
+                )}
               </div>
             ))}
           </div>

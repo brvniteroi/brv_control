@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ListChecks,
   LogOut,
+  Map as MapaIcone,
   Package,
   Snowflake,
   Tag,
@@ -46,6 +47,7 @@ const MENU: EntradaMenu[] = [
     itens: [
       { rota: '/linha-do-tempo', rotulo: 'Linha do Tempo', icone: CalendarRange, apenasEscritorio: true },
       { rota: '/calendario', rotulo: 'Calendário', icone: CalendarDays, apenasEscritorio: true },
+      { rota: '/mapa', rotulo: 'Mapa', icone: MapaIcone, apenasEscritorio: true },
       { rota: '/ordens-de-servico', rotulo: 'Ordens de Serviço', icone: ClipboardList },
     ],
   },

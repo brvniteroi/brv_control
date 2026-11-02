@@ -20,6 +20,8 @@ export interface OrdemLinha {
   service_type: { id: string; name: string; default_duration_minutes: number | null } | null;
   /** Bairro e cidade do endereço do atendimento. */
   local: string | null;
+  /** Endereço do atendimento (o da OS ou, sem ele, o principal do cliente), com coordenadas para o mapa. */
+  endereco: { texto: string; lat: number | null; lng: number | null } | null;
   /** Etiquetas da OS (ex.: "Aguardando pagamento"), em ordem alfabética. */
   etiquetas: Tag[];
 }
@@ -73,26 +75,52 @@ export async function buscarOrdensLinha(ids: string[]): Promise<OrdemLinha[]> {
     )
     .in('id', ids);
   if (error) throw new Error(`Não foi possível carregar as OS: ${error.message}`);
-  const ordens = (data ?? []) as unknown as (Omit<OrdemLinha, 'local'> & { address_id: string | null })[];
+  const ordens = (data ?? []) as unknown as (Omit<OrdemLinha, 'local' | 'endereco'> & { address_id: string | null })[];
 
+  // Endereço da OS; sem ele, o principal do cliente
   const idsEndereco = [...new Set(ordens.map((o) => o.address_id).filter((x): x is string => !!x))];
-  const locais = new Map<string, string>();
-  if (idsEndereco.length > 0) {
-    const { data: enderecos, error: erroEnd } = await supabase
-      .from('customer_addresses')
-      .select('id, district, city')
-      .in('id', idsEndereco);
-    if (erroEnd) throw new Error(`Não foi possível carregar os endereços: ${erroEnd.message}`);
-    for (const e of enderecos ?? []) {
-      locais.set(e.id, [e.district, e.city].filter(Boolean).join(', '));
-    }
-  }
+  const idsClienteSemEndereco = [
+    ...new Set(ordens.flatMap((o) => (!o.address_id && o.customer ? [o.customer.id] : []))),
+  ];
+  const [porId, principais] = await Promise.all([
+    idsEndereco.length > 0
+      ? supabase.from('customer_addresses').select(CAMPOS_ENDERECO).in('id', idsEndereco)
+      : { data: [], error: null },
+    idsClienteSemEndereco.length > 0
+      ? supabase.from('customer_addresses').select(CAMPOS_ENDERECO).in('customer_id', idsClienteSemEndereco).eq('is_primary', true)
+      : { data: [], error: null },
+  ]);
+  const erroEnd = porId.error ?? principais.error;
+  if (erroEnd) throw new Error(`Não foi possível carregar os endereços: ${erroEnd.message}`);
+  const enderecos = new Map<string, EnderecoBruto>((porId.data as EnderecoBruto[]).map((e) => [e.id, e]));
+  const principalDoCliente = new Map<string, EnderecoBruto>((principais.data as EnderecoBruto[]).map((e) => [e.customer_id, e]));
 
-  return ordens.map(({ address_id, ...o }) => ({
-    ...o,
-    local: (address_id && locais.get(address_id)) || null,
-    etiquetas: ordenarEtiquetas(o.etiquetas),
-  }));
+  return ordens.map(({ address_id, ...o }) => {
+    const e = (address_id && enderecos.get(address_id)) || (o.customer && principalDoCliente.get(o.customer.id)) || null;
+    return {
+      ...o,
+      local: (address_id && e && [e.district, e.city].filter(Boolean).join(', ')) || null,
+      endereco: e && {
+        texto: [[e.street, e.number].filter(Boolean).join(', '), e.district, e.city].filter(Boolean).join(' - '),
+        lat: e.latitude,
+        lng: e.longitude,
+      },
+      etiquetas: ordenarEtiquetas(o.etiquetas),
+    };
+  });
+}
+
+const CAMPOS_ENDERECO = 'id, customer_id, street, number, district, city, latitude, longitude';
+
+interface EnderecoBruto {
+  id: string;
+  customer_id: string;
+  street: string;
+  number: string | null;
+  district: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 function traduzirErro(mensagem: string): string {

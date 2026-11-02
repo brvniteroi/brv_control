@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
 import LinhaDoTempo from './pages/LinhaDoTempo';
 import Calendario from './pages/Calendario';
+import Mapa from './pages/Mapa';
 import Equipe from './pages/Equipe';
 import OrdensServico from './pages/OrdensServico';
 import Estoque from './pages/Estoque';
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="clientes" element={<Clientes />} />
             <Route path="linha-do-tempo" element={<LinhaDoTempo />} />
             <Route path="calendario" element={<Calendario />} />
+            <Route path="mapa" element={<Mapa />} />
             <Route path="ordens-de-servico" element={<OrdensServico />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="equipamentos" element={<Equipamentos />} />

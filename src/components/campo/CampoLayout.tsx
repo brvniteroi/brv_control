@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { AlertTriangle, CloudOff, CloudUpload, KeyRound, LogOut, RefreshCw } from 'lucide-react';
+import { AlertTriangle, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
 import { meuColaborador, type MeuColaborador } from '../../services/campo';
 import { iniciarFila, processarFila } from '../../services/filaCampo';
-import { useFilaCampo, useOnline } from '../../hooks/useCampo';
+import { useFilaCampo, useOnline, useRastreioCampo } from '../../hooks/useCampo';
 import AlterarSenhaModal from '../AlterarSenhaModal';
 import type { ContextoCampo } from './contextoCampo';
 
@@ -42,6 +42,9 @@ export default function CampoLayout() {
       // Sem sinal: com o colaborador guardado segue normal; sem ele, o aviso abaixo aparece
       .catch((e: unknown) => setErro(e instanceof Error ? e.message : 'Sem conexão.'));
   }, [profile]);
+
+  // Posição para a página Mapa do escritório (só técnico com colaborador ligado)
+  const gpsNegado = useRastreioCampo(profile?.role === 'tecnico' && !!colaborador);
 
   const comErro = fila.filter((i) => i.erro).length;
 
@@ -109,6 +112,13 @@ export default function CampoLayout() {
                 <RefreshCw size={12} /> Enviar agora
               </button>
             )}
+          </div>
+        )}
+
+        {gpsNegado && (
+          <div className="flex items-center justify-center gap-2 bg-slate-700 px-4 py-1.5 text-xs font-semibold">
+            <MapPinOff size={14} />
+            <span>Localização bloqueada. Libere nas configurações do navegador para o escritório te ver no mapa.</span>
           </div>
         )}
       </header>

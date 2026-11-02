@@ -54,7 +54,12 @@ Feito:
   `20261029120000_clientes_salvar.sql`, `20261029130000_enderecos_cliente.sql`.
 - Mapa Google no cadastro do cliente (`MapaEnderecos.tsx`, `services/googleMaps.ts`): as coordenadas são
   geocodificadas ao salvar cada endereço. Precisa de `VITE_GOOGLE_MAPS_API_KEY` (opcional; sem ela o mapa fica
-  desligado). A página Mapa (técnicos + atividades do dia) vem depois de OS e do app de campo.
+  desligado).
+- Página Mapa (`pages/Mapa.tsx`, `components/mapa/MapaOperacao.tsx`, só escritório): atendimentos do dia no endereço da OS
+  (alfinete na cor do status, contorno na cor do técnico, número = ordem do dia) e a última posição de cada técnico.
+  O app de campo envia a posição enquanto está aberto (`useRastreioCampo` em `hooks/useCampo.ts`, no máximo 1 por minuto)
+  pela RPC `registrar_posicao` para `technician_locations` (só a última, sem histórico; Realtime). Navegador não rastreia com
+  a tela apagada: posição com mais de 15 min aparece apagada. Migration `20261102120000_mapa_tecnicos.sql`.
 - Ordens de Serviço (`pages/OrdensServico.tsx`, `components/ordens/`, `services/ordens.ts`): lista paginada com busca e
   filtros, criar/editar OS, atividades (técnico, data, status) e galeria de fotos. O status da OS ainda é manual (não deriva
   das atividades) e só pode ser `agendada`, `em_andamento`, `concluida` ou `cancelada` (migration
@@ -94,7 +99,7 @@ Pendente, nesta ordem:
    `api/uploads/fc/`), `limpar-testes.sql` (colar no SQL Editor) e `importar.mjs` (grava direto com a service_role, que fica
    só no `.env` local; `--simular` só confere). Migration `20261102100000_importacao_field.sql` (aplicada).
    Depois, uma atualização final perto do dia 18 (baixar de novo as listas e rodar o importador).
-2. Página Mapa. Estoque fica para o futuro (há outro sistema de estoque/vendas).
+2. Estoque fica para o futuro (há outro sistema de estoque/vendas).
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no

@@ -5,7 +5,8 @@ Options -Indexes -ExecCGI
 <FilesMatch ".*">
   Require all denied
 </FilesMatch>
-<FilesMatch "\.(jpg|png|webp)$">
+# jpeg, mp4 e mov: fotos e vídeos importados do Field Control
+<FilesMatch "\.(jpg|jpeg|png|webp|mp4|mov)$">
   Require all granted
 </FilesMatch>
 

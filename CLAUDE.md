@@ -88,11 +88,13 @@ Feito:
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
 
 Pendente, nesta ordem:
-1. Painel Supabase (confirmar): "Allow new users to sign up" desligado (Authentication > Sign In /
-   Providers) e Site URL / Redirect URLs (`http://localhost:5173/**`).
-2. Testar etiquetas de OS e o app de campo com um login de técnico (migration `20261101140000_etiquetas_os.sql`
-   **a colar no Supabase**; sem ela a lista de OS, a linha do tempo e o calendário falham).
-3. Página Mapa. Estoque fica para o futuro (há outro sistema de estoque/vendas).
+1. Importar a base do Field Control antes de 2026-11-18 (vencimento da assinatura). Backup completo baixado em
+   `scripts/field-control/dados/` (gitignored) por `baixar-tudo.mjs` e `baixar-fotos.mjs`: 17.256 OS, 17.292 atividades,
+   4.636 clientes, 68.540 fotos (14 GB; 54 não existem mais no S3 do Field). Importação: `enviar-fotos.mjs` (FTPS para
+   `api/uploads/fc/`), `limpar-testes.sql` (colar no SQL Editor) e `importar.mjs` (grava direto com a service_role, que fica
+   só no `.env` local; `--simular` só confere). Migration `20261102100000_importacao_field.sql` (aplicada).
+   Depois, uma atualização final perto do dia 18 (baixar de novo as listas e rodar o importador).
+2. Página Mapa. Estoque fica para o futuro (há outro sistema de estoque/vendas).
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no
@@ -101,8 +103,7 @@ calendário (atualizam por Realtime). Excluir do catálogo: só admin.
 App do técnico (`/campo`, `components/campo/`, `pages/campo/`, `services/campo.ts`): agenda só do dia, detalhes (só Google Maps; sem
 telefone/contatos do cliente), a caminho / iniciar (GPS) / observações durante a execução (salvas em `technician_notes`, viram o relato) / concluir (relato e GPS; assinatura removida em 2026-11-01), fotos e formulários.
 Foto que não sobe (HostGator fora do ar) não trava a fila: a conclusão e as demais ações seguem. Sair/iniciar só na
-primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em `services/campo.ts`). O banco também garante (migration `20261101150000_protecao_campo.sql`, **a colar
-no Supabase**): técnico não lê `customers` nem `customer_contacts` (nome vem de `campo_clientes()`), e o trigger
+primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em `services/campo.ts`). Testado no celular com login de técnico (2026-11-02). O banco também garante (migration `20261101150000_protecao_campo.sql`, aplicada): técnico não lê `customers` nem `customer_contacts` (nome vem de `campo_clientes()`), e o trigger
 `tasks_protege_agenda` barra sair de `agendada` fora de hoje ou com a anterior não concluída. Técnico logado é mandado para `/campo`.
 Sem sinal: ações e fotos vão para a fila no IndexedDB (`services/filaCampo.ts`) e sobem quando a rede volta; a agenda usa cache
 local. Formulários só online. Instalável (`public/manifest.webmanifest`, `public/sw.js`, registrado só no build).

@@ -177,7 +177,8 @@ export interface Task {
   updated_at: string;
 }
 
-export type AttachmentMime = 'image/jpeg' | 'image/png' | 'image/webp';
+/** Vídeos só vêm da importação do Field Control (o app de campo envia só fotos). */
+export type AttachmentMime = 'image/jpeg' | 'image/png' | 'image/webp' | 'video/mp4' | 'video/quicktime';
 
 export type AttachmentCategory =
   | 'antes'

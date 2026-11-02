@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { AlertTriangle, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw } from 'lucide-react';
+import { AlertTriangle, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw, Star } from 'lucide-react';
+import { minhasAvaliacoes, type MinhasAvaliacoes } from '../../services/avaliacoes';
+import MinhasAvaliacoesModal from './MinhasAvaliacoesModal';
 import { useAuth } from '../../contexts/useAuth';
 import { meuColaborador, type MeuColaborador } from '../../services/campo';
 import { iniciarFila, processarFila } from '../../services/filaCampo';
@@ -9,6 +11,8 @@ import AlterarSenhaModal from '../AlterarSenhaModal';
 import type { ContextoCampo } from './contextoCampo';
 
 const CHAVE_COLABORADOR = 'brv:campo:colaborador';
+/** Período das avaliações mostradas na estrela do cabeçalho. */
+const DIAS_AVALIACOES = 30;
 
 /** Casca do app do técnico (/campo): cabeçalho com situação do envio e o colaborador do login. */
 export default function CampoLayout() {
@@ -44,7 +48,24 @@ export default function CampoLayout() {
   }, [profile]);
 
   // Posição para a página Mapa do escritório (só técnico com colaborador ligado)
-  const gpsNegado = useRastreioCampo(profile?.role === 'tecnico' && !!colaborador);
+  const ehTecnico = profile?.role === 'tecnico' && !!colaborador;
+  const gpsNegado = useRastreioCampo(ehTecnico);
+
+  // Avaliações dos clientes nos últimos 30 dias (estrela no cabeçalho); sem sinal, a estrela some
+  const [avaliacoes, setAvaliacoes] = useState<MinhasAvaliacoes | null>(null);
+  const [avaliacoesAbertas, setAvaliacoesAbertas] = useState(false);
+  useEffect(() => {
+    if (!ehTecnico || !online) return;
+    let ativo = true;
+    minhasAvaliacoes(DIAS_AVALIACOES)
+      .then((d) => ativo && setAvaliacoes(d))
+      .catch(() => {
+        /* fica sem a estrela */
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [ehTecnico, online]);
 
   const comErro = fila.filter((i) => i.erro).length;
 
@@ -86,6 +107,19 @@ export default function CampoLayout() {
               <div className="truncate text-[11px] text-blue-200">{colaborador?.name ?? profile?.full_name}</div>
             </div>
           </Link>
+          {avaliacoes && (
+            <button
+              type="button"
+              onClick={() => setAvaliacoesAbertas(true)}
+              className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold text-amber-300 hover:bg-white/10"
+              aria-label={`Minhas avaliações dos últimos ${DIAS_AVALIACOES} dias`}
+            >
+              <Star size={17} className="fill-amber-300" />
+              {avaliacoes.media !== null
+                ? avaliacoes.media.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                : '—'}
+            </button>
+          )}
           <button type="button" onClick={() => setSenhaAberta(true)} className="rounded-lg p-2 text-blue-100 hover:bg-white/10" aria-label="Trocar senha">
             <KeyRound size={18} />
           </button>
@@ -126,6 +160,9 @@ export default function CampoLayout() {
       <main className="mx-auto max-w-2xl px-3 pb-24 pt-3">{corpo}</main>
 
       {senhaAberta && <AlterarSenhaModal onFechar={() => setSenhaAberta(false)} />}
+      {avaliacoesAbertas && avaliacoes && (
+        <MinhasAvaliacoesModal dados={avaliacoes} dias={DIAS_AVALIACOES} onFechar={() => setAvaliacoesAbertas(false)} />
+      )}
     </div>
   );
 }

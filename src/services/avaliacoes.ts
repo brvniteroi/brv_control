@@ -53,6 +53,22 @@ export async function whatsappDoCliente(clienteId: string): Promise<string | nul
   return null;
 }
 
+// ---------- App do técnico ----------
+
+export interface MinhasAvaliacoes {
+  media: number | null;
+  quantidade: number;
+  itens: { estrelas: number; comentario: string | null; data: string; os: number }[];
+}
+
+/** Avaliações que o técnico do login recebeu nos últimos `dias`. */
+export async function minhasAvaliacoes(dias = 30): Promise<MinhasAvaliacoes> {
+  const { data, error } = await supabase.rpc('minhas_avaliacoes', { p_dias: dias });
+  if (error) throw new Error(error.message);
+  const r = data as MinhasAvaliacoes;
+  return { ...r, media: r.media === null ? null : Number(r.media) };
+}
+
 // ---------- Página pública (/avaliar/:token, sem login) ----------
 
 export interface DadosAvaliacao {

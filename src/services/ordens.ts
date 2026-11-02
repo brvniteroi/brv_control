@@ -45,12 +45,15 @@ export interface AtividadeResumo {
 
 const CAMPOS_ATIVIDADE_RESUMO = 'tasks(id, status, scheduled_start, finished_at, technician_notes, employee:employees(id, name))';
 const CAMPOS_ETIQUETAS = 'etiquetas:tags(id, name, color)';
+/** Estrelas dadas pelo cliente (as do Field podem ser várias por OS, uma por atividade). */
+const CAMPOS_AVALIACAO = 'avaliacoes:ratings(stars)';
 
 export interface OrdemResumo extends ServiceOrder {
   customer: { id: string; name: string } | null;
   service_type: { id: string; name: string } | null;
   tasks: AtividadeResumo[];
   etiquetas: Tag[];
+  avaliacoes: { stars: number }[];
 }
 
 /** Etiquetas em ordem alfabética e sem o embed usado só para filtrar. */
@@ -58,6 +61,7 @@ function normalizarResumo(dados: unknown[] | null): OrdemResumo[] {
   return ((dados ?? []) as (OrdemResumo & { filtro?: unknown })[]).map(({ filtro: _filtro, ...o }) => ({
     ...o,
     etiquetas: ordenarEtiquetas(o.etiquetas),
+    avaliacoes: o.avaliacoes ?? [],
   }));
 }
 
@@ -86,7 +90,7 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
   let query = supabase
     .from('service_orders')
     .select(
-      `*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}${filtroEtiqueta}`,
+      `*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}, ${CAMPOS_AVALIACAO}${filtroEtiqueta}`,
       { count: 'exact' },
     )
     .order('number', { ascending: false })
@@ -296,7 +300,7 @@ export async function removerAtividade(id: string): Promise<void> {
 export async function listarOrdensDoCliente(customerId: string): Promise<OrdemResumo[]> {
   const { data, error } = await supabase
     .from('service_orders')
-    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}`)
+    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}, ${CAMPOS_AVALIACAO}`)
     .eq('customer_id', customerId)
     .order('number', { ascending: false })
     .limit(200);

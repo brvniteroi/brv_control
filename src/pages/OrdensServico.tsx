@@ -15,6 +15,7 @@ import { listarEtiquetas } from '../services/etiquetas';
 import type { ServiceType, Tag } from '../types/fsm';
 import { STATUS_OS, formatarData, formatarDataHora, infoStatusOS } from '../utils/ordens';
 import EtiquetaChip from '../components/etiquetas/EtiquetaChip';
+import Estrelas from '../components/avaliacoes/Estrelas';
 
 const SELECT =
   'rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
@@ -254,6 +255,7 @@ export default function OrdensServico() {
                 <tr className="border-b border-slate-100 bg-slate-50/70 font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-5 py-3.5">Nº</th>
                   <th className="px-5 py-3.5">Cliente</th>
+                  <th className="px-5 py-3.5">Avaliação</th>
                   <th className="px-5 py-3.5">Tipo</th>
                   <th className="px-5 py-3.5">Situação</th>
                   <th className="px-5 py-3.5">Técnico</th>
@@ -285,6 +287,15 @@ export default function OrdensServico() {
                       <td className="max-w-64 px-5 py-4">
                         <div className="truncate text-sm font-semibold text-slate-900">{o.customer?.name ?? '—'}</div>
                         {o.description && <div className="truncate text-[11px] text-slate-400">{o.description}</div>}
+                      </td>
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        {o.avaliacoes.length > 0 ? (
+                          <span title={`${o.avaliacoes.length > 1 ? `Média de ${o.avaliacoes.length} avaliações` : 'Avaliação do cliente'}`}>
+                            <Estrelas nota={o.avaliacoes.reduce((s, a) => s + a.stars, 0) / o.avaliacoes.length} tamanho={13} />
+                          </span>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </td>
                       <td className="px-5 py-4">{o.service_type?.name ?? '—'}</td>
                       <td className="px-5 py-4">

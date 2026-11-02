@@ -91,7 +91,7 @@ export default function Login() {
             {/* Box azul padrão Field Control com a logo da BRV */}
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#1E50D8] to-[#3B82F6] p-2.5 shadow-[0_4px_16px_rgba(30,80,216,0.3)]">
               <img
-                src="/logo-brv.webp"
+                src="/logobrvcontrol.png"
                 alt="Logo BRV"
                 className="h-full w-full object-contain drop-shadow-sm"
               />

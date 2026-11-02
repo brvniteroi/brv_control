@@ -39,7 +39,7 @@ export default function PortalLogin() {
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 p-1.5">
-            <img src="/logo-brv.webp" alt="BRV" className="h-full w-full object-contain" />
+            <img src="/logobrvcontrol.png" alt="BRV" className="h-full w-full object-contain" />
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-900">Portal do Cliente</h1>

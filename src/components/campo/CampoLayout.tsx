@@ -77,9 +77,9 @@ export default function CampoLayout() {
       <header className="sticky top-0 z-30 bg-[#0B1E3F] text-white shadow-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
           <Link to="/campo" className="flex min-w-0 flex-1 items-center gap-2.5">
-            <img src="/logo-brv.webp" alt="" className="h-8 w-8 rounded-lg bg-white object-contain p-0.5" />
+            <img src="/logobrvcontrol.png" alt="" className="h-8 w-8 rounded-lg bg-white object-contain p-0.5" />
             <div className="min-w-0">
-              <div className="text-sm font-bold leading-tight">BRV Campo</div>
+              <div className="text-sm font-bold leading-tight">BRV Control</div>
               <div className="truncate text-[11px] text-blue-200">{colaborador?.name ?? profile?.full_name}</div>
             </div>
           </Link>

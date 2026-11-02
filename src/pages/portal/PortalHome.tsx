@@ -33,7 +33,7 @@ export default function PortalHome() {
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 p-1.5">
-              <img src="/logo-brv.webp" alt="BRV" className="h-full w-full object-contain" />
+              <img src="/logobrvcontrol.png" alt="BRV" className="h-full w-full object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-slate-900">Portal do Cliente</h1>

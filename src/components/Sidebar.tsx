@@ -95,7 +95,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
       >
         <div className="flex h-16 items-center justify-between px-5">
           <div className="flex items-center gap-2.5">
-            <img src="/logo-brv.webp" alt="Logo BRV" className="h-7 w-auto object-contain" />
+            <img src="/logobrvcontrol.png" alt="Logo BRV" className="h-7 w-auto object-contain" />
             <span className="text-lg font-bold tracking-wide">
               BRV <span className="font-light text-sky-300">Control</span>
             </span>

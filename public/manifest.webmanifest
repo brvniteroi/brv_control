@@ -1,6 +1,6 @@
 {
-  "name": "BRV Campo",
-  "short_name": "BRV Campo",
+  "name": "BRV Control",
+  "short_name": "BRV Control",
   "description": "Agenda e execução das atividades dos técnicos da BRV Niterói",
   "lang": "pt-BR",
   "start_url": "/campo",

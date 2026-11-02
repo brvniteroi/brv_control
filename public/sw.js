@@ -1,7 +1,7 @@
 // Service worker do BRV Control: guarda o "esqueleto" do app para ele abrir sem sinal.
 // Dados (Supabase) e fotos (/api/) não passam por aqui: quem cuida deles offline é
 // o cache da agenda e a fila de envio do app de campo (src/services/filaCampo.ts).
-const CACHE = 'brv-app-v1';
+const CACHE = 'brv-app-v2';
 
 // Guarda o index.html e os arquivos do build que ele cita (JS/CSS com hash no nome)
 async function guardarEsqueleto() {
@@ -10,7 +10,7 @@ async function guardarEsqueleto() {
   const html = await resp.clone().text();
   await c.put('/', resp);
   const arquivos = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1]);
-  await c.addAll([...new Set([...arquivos, '/manifest.webmanifest', '/logo-brv.webp'])]);
+  await c.addAll([...new Set([...arquivos, '/manifest.webmanifest', '/logobrvcontrol.png'])]);
 }
 
 self.addEventListener('install', (e) => {

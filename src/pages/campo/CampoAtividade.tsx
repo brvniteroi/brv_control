@@ -50,6 +50,8 @@ export default function CampoAtividade() {
   const [erro, setErro] = useState<string | null>(null);
   const [acao, setAcao] = useState<string | null>(null);
   const [concluindo, setConcluindo] = useState(false);
+  // Observações digitadas e ainda não salvas: vão para o relato ao concluir
+  const [rascunhoObs, setRascunhoObs] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     carregarMinhaAgenda(colaborador.id).then(
@@ -227,6 +229,17 @@ export default function CampoAtividade() {
         )}
       </Cartao>
 
+      {/* Observações durante o serviço: mesmo campo do relato final (o escritório já vê na OS) */}
+      {a.status === 'em_execucao' && (
+        <Cartao titulo="Observações">
+          <ObservacoesExecucao
+            salvo={a.technician_notes ?? ''}
+            onAlterar={setRascunhoObs}
+            onSalvar={(texto) => enfileirarAtividade(a.id, { technician_notes: texto.trim() || null })}
+          />
+        </Cartao>
+      )}
+
       {/* O que fazer */}
       {(ordem?.description || a.description) && (
         <Cartao titulo="Serviço solicitado">
@@ -304,9 +317,59 @@ export default function CampoAtividade() {
       </Cartao>
 
       {concluindo && (
-        <ConcluirAtividadeModal relatoInicial={a.technician_notes ?? ''} onConfirmar={concluir} onFechar={() => setConcluindo(false)} />
+        <ConcluirAtividadeModal relatoInicial={rascunhoObs ?? a.technician_notes ?? ''} onConfirmar={concluir} onFechar={() => setConcluindo(false)} />
       )}
     </div>
+  );
+}
+
+/** Rascunho local; "Salvar" manda pela fila (funciona sem sinal). */
+function ObservacoesExecucao({
+  salvo,
+  onAlterar,
+  onSalvar,
+}: {
+  salvo: string;
+  onAlterar: (texto: string) => void;
+  onSalvar: (texto: string) => Promise<void>;
+}) {
+  const [texto, setTexto] = useState(salvo);
+  const [salvando, setSalvando] = useState(false);
+  const alterado = texto.trim() !== salvo.trim();
+
+  const salvar = async () => {
+    setSalvando(true);
+    try {
+      await onSalvar(texto);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <>
+      <textarea
+        rows={4}
+        value={texto}
+        onChange={(e) => {
+          setTexto(e.target.value);
+          onAlterar(e.target.value);
+        }}
+        placeholder="Anote o que encontrou, peças necessárias, pendências..."
+        className="block w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+      />
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <span className="text-[11px] text-slate-400">{alterado ? 'Alterações não salvas' : salvo ? 'Salvo' : ''}</span>
+        <button
+          type="button"
+          onClick={salvar}
+          disabled={!alterado || salvando}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white active:bg-blue-700 disabled:opacity-50"
+        >
+          {salvando && <Loader2 size={14} className="animate-spin" />} Salvar observações
+        </button>
+      </div>
+    </>
   );
 }
 

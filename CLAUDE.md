@@ -99,7 +99,7 @@ Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `compon
 calendário (atualizam por Realtime). Excluir do catálogo: só admin.
 
 App do técnico (`/campo`, `components/campo/`, `pages/campo/`, `services/campo.ts`): agenda só do dia, detalhes (só Google Maps; sem
-telefone/contatos do cliente), a caminho / iniciar (GPS) / concluir (relato e GPS; assinatura removida em 2026-11-01), fotos e formulários.
+telefone/contatos do cliente), a caminho / iniciar (GPS) / observações durante a execução (salvas em `technician_notes`, viram o relato) / concluir (relato e GPS; assinatura removida em 2026-11-01), fotos e formulários.
 Foto que não sobe (HostGator fora do ar) não trava a fila: a conclusão e as demais ações seguem. Sair/iniciar só na
 primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em `services/campo.ts`). O banco também garante (migration `20261101150000_protecao_campo.sql`, **a colar
 no Supabase**): técnico não lê `customers` nem `customer_contacts` (nome vem de `campo_clientes()`), e o trigger

@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
-import CampoAssinatura from '../formularios/CampoAssinatura';
 
 export interface DadosConclusao {
   relato: string;
-  assinatura: Blob | null;
-  assinadoPor: string;
 }
 
 interface ConcluirAtividadeModalProps {
@@ -14,11 +11,9 @@ interface ConcluirAtividadeModalProps {
   onFechar: () => void;
 }
 
-/** Relato do técnico + assinatura do cliente (opcional) antes de concluir. */
+/** Relato do técnico antes de concluir. */
 export default function ConcluirAtividadeModal({ relatoInicial, onConfirmar, onFechar }: ConcluirAtividadeModalProps) {
   const [relato, setRelato] = useState(relatoInicial);
-  const [assinatura, setAssinatura] = useState<Blob | null>(null);
-  const [assinadoPor, setAssinadoPor] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -27,14 +22,10 @@ export default function ConcluirAtividadeModal({ relatoInicial, onConfirmar, onF
       setErro('Descreva o que foi feito.');
       return;
     }
-    if (assinatura && !assinadoPor.trim()) {
-      setErro('Informe o nome de quem assinou.');
-      return;
-    }
     setSalvando(true);
     setErro(null);
     try {
-      await onConfirmar({ relato: relato.trim(), assinatura, assinadoPor: assinadoPor.trim() });
+      await onConfirmar({ relato: relato.trim() });
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível concluir.');
       setSalvando(false);
@@ -60,22 +51,6 @@ export default function ConcluirAtividadeModal({ relatoInicial, onConfirmar, onF
           placeholder="Serviço realizado, peças trocadas, observações para o escritório..."
           className="mt-1.5 block w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
         />
-
-        <div className="mt-4">
-          <span className="block text-xs font-semibold text-slate-700">Assinatura do cliente (opcional)</span>
-          <div className="mt-1.5">
-            <CampoAssinatura onAssinaturaAlterada={setAssinatura} />
-          </div>
-          {assinatura && (
-            <input
-              type="text"
-              value={assinadoPor}
-              onChange={(e) => setAssinadoPor(e.target.value)}
-              placeholder="Nome de quem assinou"
-              className="mt-2 block w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
-            />
-          )}
-        </div>
 
         {erro && <p className="mt-3 text-xs text-red-600">{erro}</p>}
 

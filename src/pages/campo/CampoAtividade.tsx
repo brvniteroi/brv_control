@@ -26,7 +26,7 @@ import {
   textoEnderecoCampo,
   type AtividadeCampo,
 } from '../../services/campo';
-import { comPendentes, enfileirarAtividade, enfileirarFoto } from '../../services/filaCampo';
+import { comPendentes, enfileirarAtividade } from '../../services/filaCampo';
 import { useContextoCampo } from '../../components/campo/contextoCampo';
 import { useFilaCampo, useOnline } from '../../hooks/useCampo';
 import FotosAtividade from '../../components/campo/FotosAtividade';
@@ -146,16 +146,9 @@ export default function CampoAtividade() {
       });
     });
 
-  const concluir = async ({ relato, assinatura, assinadoPor }: DadosConclusao) => {
+  const concluir = async ({ relato }: DadosConclusao) => {
     const pos = await obterPosicao();
     const agora = agoraISO();
-    if (assinatura && ordem) {
-      await enfileirarFoto(a.id, ordem.id, assinatura, {
-        categoria: 'assinatura',
-        legenda: `Assinado por ${assinadoPor}`,
-        nome: 'assinatura.png',
-      });
-    }
     await enfileirarAtividade(a.id, {
       status: 'concluida',
       // Concluir sem ter iniciado: o banco exige início para ter fim

@@ -189,9 +189,18 @@ export async function processarFila(forcar = false): Promise<void> {
         await enviar(item);
         await remover(item.id);
       } catch (e) {
-        if (ehErroDeRede(e)) break; // sem sinal: tenta tudo de novo mais tarde
+        const erro = e instanceof Error ? e.message : String(e);
+        if (ehErroDeRede(e)) {
+          // Foto vai para outro servidor (HostGator): se só ele falhar, a conclusão e as
+          // demais ações não podem ficar presas atrás dela. Não conta tentativa (pode ser sinal).
+          if (item.tipo === 'foto' && navigator.onLine) {
+            await gravar({ ...item, erro });
+            continue;
+          }
+          break; // sem sinal: tenta tudo de novo mais tarde
+        }
         if (item.tipo === 'atividade') tarefasComFalha.add(item.taskId);
-        await gravar({ ...item, tentativas: item.tentativas + 1, erro: e instanceof Error ? e.message : String(e) });
+        await gravar({ ...item, tentativas: item.tentativas + 1, erro });
       }
     }
   } finally {

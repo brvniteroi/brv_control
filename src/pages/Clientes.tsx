@@ -12,14 +12,15 @@ import {
 import {
   CLIENTES_POR_PAGINA,
   listarClientes,
+  type ClienteLista,
   type FiltroStatusCliente,
 } from '../services/clientes';
-import type { Customer } from '../types/fsm';
+import { formatarData } from '../utils/ordens';
 import ClienteDetalhes from '../components/clientes/ClienteDetalhes';
 import { formatarTelefone } from '../utils/telefone';
 
 export default function Clientes() {
-  const [clientes, setClientes] = useState<Customer[]>([]);
+  const [clientes, setClientes] = useState<ClienteLista[]>([]);
   const [total, setTotal] = useState(0);
   const [pagina, setPagina] = useState(0);
   const [carregando, setCarregando] = useState(true);
@@ -207,6 +208,8 @@ export default function Clientes() {
                   <th className="px-5 py-3.5">Cliente</th>
                   <th className="px-5 py-3.5">Documento</th>
                   <th className="px-5 py-3.5">Contato</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Cadastro</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Último atendimento</th>
                   <th className="px-5 py-3.5">Status</th>
                   <th className="px-5 py-3.5 text-right">Ação</th>
                 </tr>
@@ -258,6 +261,12 @@ export default function Clientes() {
                         )}
                         {!cli.phone && !cli.email && <span className="text-slate-400">—</span>}
                       </div>
+                    </td>
+
+                    {/* Cadastro e último atendimento */}
+                    <td className="px-5 py-4 whitespace-nowrap text-slate-600">{formatarData(cli.created_at)}</td>
+                    <td className="px-5 py-4 whitespace-nowrap text-slate-600">
+                      {cli.ultimo_atendimento ? formatarData(cli.ultimo_atendimento) : <span className="text-slate-400">—</span>}
                     </td>
 
                     {/* Status */}

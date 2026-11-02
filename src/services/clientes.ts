@@ -10,8 +10,13 @@ export type FiltroStatusCliente = 'ativos' | 'arquivados' | 'todos';
 
 export const CLIENTES_POR_PAGINA = 50;
 
+export interface ClienteLista extends Customer {
+  /** Conclusão da OS concluída mais recente (null = nunca atendido). */
+  ultimo_atendimento: string | null;
+}
+
 export interface PaginaClientes {
-  itens: Customer[];
+  itens: ClienteLista[];
   total: number;
 }
 
@@ -86,7 +91,19 @@ export async function listarClientes(
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { itens: (data ?? []) as Customer[], total: count ?? 0 };
+  const clientes = (data ?? []) as Customer[];
+
+  // Último atendimento só dos clientes desta página; se falhar, a lista aparece sem a coluna
+  const ultimos = new Map<string, string | null>();
+  if (clientes.length > 0) {
+    const { data: datas, error: erroDatas } = await supabase
+      .from('clientes_ultimo_atendimento')
+      .select('customer_id, ultimo_atendimento')
+      .in('customer_id', clientes.map((c) => c.id));
+    if (erroDatas) console.error('Último atendimento:', erroDatas.message);
+    for (const d of datas ?? []) ultimos.set(d.customer_id, d.ultimo_atendimento);
+  }
+  return { itens: clientes.map((c) => ({ ...c, ultimo_atendimento: ultimos.get(c.id) ?? null })), total: count ?? 0 };
 }
 
 export async function buscarClientePorId(id: string): Promise<ClienteCompleto | null> {

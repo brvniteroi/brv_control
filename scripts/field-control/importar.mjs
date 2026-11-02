@@ -92,9 +92,10 @@ const clientesFC = await json('clientes.json');
 const ordensFC = await json('ordens.json');
 const atividadesFC = await json('atividades.json');
 const detalhesCliente = new Map((await ndjson('clientes_detalhes.ndjson')).map((l) => [l.id, l]));
-const anexosPorOS = await ndjson('anexos.ndjson');
+// Uma OS pode ter sido rebaixada (FC_REFAZER_DESDE): vale a última linha
+const anexosPorOS = [...new Map((await ndjson('anexos.ndjson')).map((l) => [l.id, l])).values()];
 const fotosBaixadas = new Map((await ndjson('fotos.ndjson')).map((f) => [f.anexo, f]));
-const formulariosFC = (await ndjson('formularios_detalhes.ndjson')).map((l) => l.resposta).filter(Boolean);
+const formulariosFC = [...new Map((await ndjson('formularios_detalhes.ndjson')).map((l) => [l.id, l])).values()].map((l) => l.resposta).filter(Boolean);
 
 const semDetalhe = clientesFC.filter((c) => !detalhesCliente.has(c.id)).length;
 if (semDetalhe) console.log(`Aviso: ${semDetalhe} clientes ainda sem endereços/contatos baixados (etapa "clientes"); usando o endereço e o contato principais.\n`);
@@ -310,16 +311,33 @@ const nomeTipo = new Map(tiposFC.map((s) => [s.id, limpo(s.name)]));
 const localPrincipal = new Map(clientesFC.map((c) => [c.id, c.primaryLocation?.id]));
 const tipoFCDaOS = new Map(ordensFC.map((o) => [o.id, o.service?.id]));
 {
-  const numericas = ordensFC.filter((o) => /^\d+$/.test(o.identifier));
-  let proximo = Math.max(...numericas.map((o) => Number(o.identifier))) + 1;
+  // Numeração: OS já importada mantém o número; OS nova usa o número do Field se estiver livre
+  // (o BRV Control pode já ter usado: rodada depois da virada); senão ganha o próximo livre, com o nº do Field anotado.
+  const jaNoBanco = SIMULAR ? [] : await todos('service_orders', 'number, field_control_id, internal_notes');
+  const doBanco = new Map(jaNoBanco.filter((e) => e.field_control_id).map((e) => [e.field_control_id, e]));
+  const usados = new Set(jaNoBanco.map((e) => Number(e.number)));
+  const ehNumero = (o) => /^\d+$/.test(o.identifier);
+  const numeroDe = new Map();
+  for (const o of ordensFC) if (doBanco.has(o.id)) numeroDe.set(o.id, { numero: Number(doBanco.get(o.id).number), nota: doBanco.get(o.id).internal_notes });
+  const ordenadas = [...ordensFC].sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+  for (const o of ordenadas) {
+    if (numeroDe.has(o.id) || !ehNumero(o) || usados.has(Number(o.identifier))) continue;
+    numeroDe.set(o.id, { numero: Number(o.identifier), nota: null });
+    usados.add(Number(o.identifier));
+  }
+  let proximo = Math.max(0, ...usados, ...ordensFC.filter(ehNumero).map((o) => Number(o.identifier))) + 1;
+  for (const o of ordenadas) {
+    if (!numeroDe.has(o.id)) numeroDe.set(o.id, { numero: proximo++, nota: `Nº no Field Control: ${o.identifier}` });
+  }
+
   const linhas = [];
-  for (const o of [...ordensFC].sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))) {
+  for (const o of ordenadas) {
     const tarefas = tarefasPorOS.get(o.id) ?? [];
     const { status, motivo } = statusOS(o, tarefas);
     const cliente = clienteId.get(o.customer.id);
     const loc = o.location?.id ?? localPrincipal.get(o.customer.id);
     const end = enderecoId.get(loc) ?? enderecoId.get(`${o.customer.id}#endereco`);
-    const numero = /^\d+$/.test(o.identifier) ? Number(o.identifier) : proximo++;
+    const { numero, nota } = numeroDe.get(o.id);
     linhas.push({
       number: numero,
       customer_id: cliente,
@@ -327,7 +345,7 @@ const tipoFCDaOS = new Map(ordensFC.map((o) => [o.id, o.service?.id]));
       service_type_id: tipoDaOS(o.service?.id),
       status,
       description: limpo(o.description),
-      internal_notes: /^\d+$/.test(o.identifier) ? null : `Nº no Field Control: ${o.identifier}`,
+      internal_notes: nota,
       opened_at: o.createdAt,
       due_date: o.deadlineAt ? o.deadlineAt.slice(0, 10) : null,
       completed_at:

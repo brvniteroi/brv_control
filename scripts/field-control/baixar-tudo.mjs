@@ -3,6 +3,8 @@
 //
 // Uso:  node --env-file=.env scripts/field-control/baixar-tudo.mjs [etapa]
 //   sem etapa = todas, em ordem. Etapas: listas, anexos, formularios, clientes, comentarios, assinaturas
+//   Itens já baixados são pulados. FC_REFAZER_DESDE=AAAA-MM-DD baixa de novo os anexos/comentários/assinaturas
+//   das OS mexidas desde essa data (criadas, ou com atividade agendada/concluída) — para a atualização final.
 // Pasta: scripts/field-control/dados/ (ou FC_PASTA no .env). Dados reais de clientes: nunca vão para o git.
 //
 // Conforme a documentação (API_field_control.docx): 1 requisição por segundo, no máximo 100 itens
@@ -126,7 +128,8 @@ const LISTAS = [
 
 async function etapaListas() {
   for (const [nome, caminho] of LISTAS) {
-    if (existsSync(arq(`${nome}.json`))) {
+    // Na atualização (FC_REFAZER_DESDE) as listas vêm de novo, inteiras; o arquivo só é trocado no fim
+    if (existsSync(arq(`${nome}.json`)) && !process.env.FC_REFAZER_DESDE) {
       console.log(`${nome}: já baixado`);
       continue;
     }
@@ -144,6 +147,19 @@ async function etapaListas() {
 
 // ---------- Etapas por item (uma requisição paginada por OS ou cliente) ----------
 // Resultado em NDJSON (uma linha por OS/cliente), gravado na hora: interrompeu, continua.
+/** Ids das OS criadas ou com atividade agendada/iniciada/concluída a partir de `desde` (AAAA-MM-DD). */
+async function ordensMexidasDesde(desde) {
+  if (!desde) return new Set();
+  const ler = async (nome) => (existsSync(arq(nome)) ? JSON.parse(await readFile(arq(nome), 'utf8')) : []);
+  const ids = new Set((await ler('ordens.json')).filter((o) => (o.createdAt ?? '') >= desde || (o.updatedAt ?? '') >= desde).map((o) => o.id));
+  for (const t of await ler('atividades.json')) {
+    const datas = [t.scheduling?.date, t.startedAt, t.completedAt, t.updatedAt, t.createdAt];
+    if (t.order?.id && datas.some((d) => (d ?? '') >= desde)) ids.add(t.order.id);
+  }
+  console.log(`  ${ids.size} OS mexidas desde ${desde}: baixadas de novo`);
+  return ids;
+}
+
 async function porItem({ etapa, fonte, arquivo, caminhos, unico = false }) {
   if (!existsSync(arq(`${fonte}.json`))) {
     console.log(`${etapa}: falta ${fonte}.json (rode a etapa "listas" antes)`);
@@ -151,6 +167,8 @@ async function porItem({ etapa, fonte, arquivo, caminhos, unico = false }) {
   }
   const todos = JSON.parse(await readFile(arq(`${fonte}.json`), 'utf8'));
   const feitos = new Set((await lerNdjson(arquivo)).map((l) => l.id));
+  const refazer = fonte === 'ordens' ? await ordensMexidasDesde(process.env.FC_REFAZER_DESDE) : new Set();
+  for (const id of refazer) feitos.delete(id);
   const faltam = todos.filter((x) => !feitos.has(x.id));
   console.log(`${etapa}: ${feitos.size} já feitos, ${faltam.length} a fazer`);
   const inicio = Date.now();

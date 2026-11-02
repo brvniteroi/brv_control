@@ -41,7 +41,9 @@ const seguro = (id) => createHash('sha1').update(id).digest('hex').slice(0, 16);
 const fila = [];
 for (const { id: os, anexos } of linhas) {
   for (const a of anexos ?? []) {
+    // A mesma OS pode aparecer de novo no anexos.ndjson (rebaixada com FC_REFAZER_DESDE)
     if (!a.path || feitos.has(a.id)) continue;
+    feitos.add(a.id);
     const ext = (a.path.split('?')[0].split('.').pop() || 'bin').toLowerCase().slice(0, 5);
     fila.push({ os, anexo: a.id, url: a.path, rel: path.join('fotos', seguro(os), `${seguro(a.id)}.${ext}`) });
   }

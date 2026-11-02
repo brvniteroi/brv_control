@@ -99,7 +99,10 @@ Pendente, nesta ordem:
    4.636 clientes, 68.540 fotos (14 GB; 54 não existem mais no S3 do Field). Importação: `enviar-fotos.mjs` (FTPS para
    `api/uploads/fc/`), `limpar-testes.sql` (colar no SQL Editor) e `importar.mjs` (grava direto com a service_role, que fica
    só no `.env` local; `--simular` só confere). Migration `20261102100000_importacao_field.sql` (aplicada).
-   Depois, uma atualização final perto do dia 18 (baixar de novo as listas e rodar o importador).
+   **Importação feita em 2026-11-02** (banco limpo antes; OS em aberto no Field com data < 2026-10-01 entram canceladas,
+   "reported" entra concluída com o relato). Próxima OS nova: 17265. Falta a atualização final perto do dia 18 (baixar de
+   novo as listas e rodar o importador); se a equipe criar OS no Field e no BRV Control ao mesmo tempo, os números colidem.
+   Comentários e assinaturas do Field ainda não são importados (só baixados).
 2. Estoque fica para o futuro (há outro sistema de estoque/vendas).
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",

@@ -34,8 +34,22 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_UPLOAD_URL: ${{ secrets.VITE_UPLOAD_URL }}
+          # Upload de fotos publicado junto com o app (passo abaixo): mesmo domínio, sem CORS
+          VITE_UPLOAD_URL: /api/upload.php
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+
+      # As fotos ficam em api/uploads/ no servidor. O FTP-Deploy só apaga o que ele mesmo enviou,
+      # então as fotos já gravadas lá não são removidas a cada deploy.
+      - name: Incluir o upload de fotos (dist/api)
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          APP_URL: https://control.brvniteroi.com.br
+        run: |
+          mkdir -p dist/api/uploads
+          cp hostgator-api/upload.php hostgator-api/.htaccess dist/api/
+          cp hostgator-api/uploads/.htaccess dist/api/uploads/
+          node scripts/gerar-config-upload.mjs > dist/api/config.php
 
       - name: Publicar dist/ na HostGator (FTPS)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

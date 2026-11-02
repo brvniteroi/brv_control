@@ -12,6 +12,9 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Fotos ficam na HostGator, não no Supabase Storage: `hostgator-api/upload.php` valida o
   token de sessão do Supabase, grava o arquivo e devolve a URL; o app registra os
   metadados em `public.attachments` (`src/services/anexos.ts`)
+- Deploy: push na `main` → GitHub Actions (`.github/workflows/deploy.yml`) compila e envia por FTPS para
+  https://control.brvniteroi.com.br. O upload vai junto em `/api/` (fotos em `/api/uploads/AAAA/MM/`); o `config.php`
+  é gerado no deploy a partir dos secrets (`scripts/gerar-config-upload.mjs`)
 - Comandos: `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint` (oxlint)
 
 ## Banco de dados

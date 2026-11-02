@@ -1,5 +1,5 @@
 // Service worker do BRV Control: guarda o "esqueleto" do app para ele abrir sem sinal.
-// Dados (Supabase) e fotos (HostGator) não passam por aqui: quem cuida deles offline é
+// Dados (Supabase) e fotos (/api/) não passam por aqui: quem cuida deles offline é
 // o cache da agenda e a fila de envio do app de campo (src/services/filaCampo.ts).
 const CACHE = 'brv-app-v1';
 
@@ -29,7 +29,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
+  // Fotos e upload (api/) não entram no cache do aparelho
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
   // Páginas: tenta a rede (versão nova); sem sinal, usa o index.html guardado
   if (req.mode === 'navigate') {

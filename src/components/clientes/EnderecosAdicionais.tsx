@@ -145,11 +145,13 @@ export default function EnderecosAdicionais({ clienteId, enderecos, onAlterado }
         state: form.estado.trim() || 'RJ',
         zip_code: form.cep,
       };
-      // Coordenadas para o mapa; se o endereço mudou e não foi localizado, as antigas são apagadas
+      // Coordenadas para o mapa: só busca se o endereço mudou ou ainda não tem posição (não desfaz o
+      // alfinete corrigido à mão); se mudou e não foi localizado, as antigas são apagadas
       const original = enderecos.find((e) => e.id === editandoId);
-      const achadas = await geocodificar(dados);
-      const coordenadas =
-        achadas ?? (!original || textoEndereco(dados) !== textoEndereco(original) ? { latitude: null, longitude: null } : {});
+      const mudou = !original || textoEndereco(dados) !== textoEndereco(original);
+      const semPosicao = !original || original.latitude === null || original.longitude === null;
+      const achadas = mudou || semPosicao ? await geocodificar(dados) : null;
+      const coordenadas = achadas ?? (mudou ? { latitude: null, longitude: null } : {});
 
       await salvarEnderecoCliente(
         clienteId,

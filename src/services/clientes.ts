@@ -210,6 +210,15 @@ export async function definirEnderecoPrincipal(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Posição corrigida à mão no mapa (alfinete arrastado). Fica até o endereço ser alterado. */
+export async function ajustarPosicaoEndereco(id: string, latitude: number, longitude: number): Promise<void> {
+  const { error } = await supabase
+    .from('customer_addresses')
+    .update({ latitude: Number(latitude.toFixed(6)), longitude: Number(longitude.toFixed(6)) })
+    .eq('id', id);
+  if (error) throw new Error(`Não foi possível salvar a nova posição: ${error.message}`);
+}
+
 export async function alternarEnderecoAtivo(id: string, ativo: boolean): Promise<void> {
   const { error } = await supabase.from('customer_addresses').update({ active: ativo }).eq('id', id);
   if (error) throw error;

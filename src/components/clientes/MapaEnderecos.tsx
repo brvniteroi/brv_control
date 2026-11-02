@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Map as MapaIcone } from 'lucide-react';
+import { Map as MapaIcone, Move } from 'lucide-react';
 import { carregarMapa, mapasConfigurados } from '../../services/googleMaps';
 import type { CustomerAddress } from '../../types/fsm';
 
 interface MapaEnderecosProps {
   enderecos: CustomerAddress[];
+  /** Com ela, o alfinete pode ser arrastado para corrigir a posição (lança Error se não salvar). */
+  onMover?: (endereco: CustomerAddress, latitude: number, longitude: number) => Promise<void>;
 }
 
 function rotulo(e: CustomerAddress): string {
@@ -12,11 +14,24 @@ function rotulo(e: CustomerAddress): string {
   return `${apelido}${e.active ? '' : ' (inativo)'}`;
 }
 
-export default function MapaEnderecos({ enderecos }: MapaEnderecosProps) {
+export default function MapaEnderecos({ enderecos, onMover }: MapaEnderecosProps) {
   const container = useRef<HTMLDivElement>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
+  const onMoverRef = useRef(onMover);
+  useEffect(() => {
+    onMoverRef.current = onMover;
+  });
+  const podeMover = !!onMover;
 
   const localizados = enderecos.filter((e) => e.latitude !== null && e.longitude !== null);
+
+  // O aviso de "posição salva" some sozinho
+  useEffect(() => {
+    if (!aviso) return;
+    const timer = setTimeout(() => setAviso(null), 4000);
+    return () => clearTimeout(timer);
+  }, [aviso]);
 
   useEffect(() => {
     const pontos = enderecos.filter((e) => e.latitude !== null && e.longitude !== null);
@@ -42,8 +57,9 @@ export default function MapaEnderecos({ enderecos }: MapaEnderecosProps) {
           const marcador = new google.maps.Marker({
             map: mapa,
             position: posicao,
-            title: rotulo(e),
+            title: podeMover ? `${rotulo(e)} (arraste para corrigir)` : rotulo(e),
             opacity: e.active ? 1 : 0.5,
+            draggable: podeMover,
           });
           marcador.addListener('click', () => {
             const caixa = document.createElement('div');
@@ -54,6 +70,24 @@ export default function MapaEnderecos({ enderecos }: MapaEnderecosProps) {
             caixa.append(titulo, linha);
             janela.setContent(caixa);
             janela.open({ map: mapa, anchor: marcador });
+          });
+
+          // Solta o alfinete: grava a nova posição; se falhar, volta para onde estava
+          let ultima = posicao;
+          marcador.addListener('dragend', () => {
+            const nova = marcador.getPosition();
+            const salvar = onMoverRef.current;
+            if (!nova || !salvar) return;
+            janela.close();
+            salvar(e, nova.lat(), nova.lng())
+              .then(() => {
+                ultima = { lat: nova.lat(), lng: nova.lng() };
+                setAviso({ tipo: 'ok', texto: `Posição de "${rotulo(e)}" salva.` });
+              })
+              .catch((err: unknown) => {
+                marcador.setPosition(ultima);
+                setAviso({ tipo: 'erro', texto: err instanceof Error ? err.message : 'Não foi possível salvar a posição.' });
+              });
           });
           limites.extend(posicao);
         }
@@ -69,7 +103,7 @@ export default function MapaEnderecos({ enderecos }: MapaEnderecosProps) {
     return () => {
       cancelado = true;
     };
-  }, [enderecos]);
+  }, [enderecos, podeMover]);
 
   const semCoordenadas = enderecos.length - localizados.length;
 
@@ -92,7 +126,21 @@ export default function MapaEnderecos({ enderecos }: MapaEnderecosProps) {
         </p>
       ) : (
         <>
-          <div ref={container} className="mt-4 h-72 w-full overflow-hidden rounded-xl bg-slate-100" />
+          {podeMover && (
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500">
+              <Move size={12} /> Posição errada? Arraste o alfinete até o lugar certo; ela é salva ao soltar.
+            </p>
+          )}
+          <div ref={container} className="mt-3 h-72 w-full overflow-hidden rounded-xl bg-slate-100" />
+          {aviso && (
+            <p
+              className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${
+                aviso.tipo === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'border border-red-200 bg-red-50 text-red-700'
+              }`}
+            >
+              {aviso.texto}
+            </p>
+          )}
           {semCoordenadas > 0 && (
             <p className="mt-2 text-[11px] text-slate-400">
               {semCoordenadas} {semCoordenadas === 1 ? 'endereço' : 'endereços'} sem localização no mapa.

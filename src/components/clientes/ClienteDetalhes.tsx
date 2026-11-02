@@ -17,6 +17,7 @@ import {
   alternarStatusCliente,
   adicionarContato,
   removerContato,
+  ajustarPosicaoEndereco,
 } from '../../services/clientes';
 import type { CustomerAddress, CustomerContact, PersonType } from '../../types/fsm';
 import EnderecosAdicionais from './EnderecosAdicionais';
@@ -82,10 +83,13 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
   const enderecoPrincipalId = useRef<string | null>(null);
   // Texto do endereço principal como está salvo: indica se ele mudou (coordenadas antigas deixam de valer)
   const enderecoPrincipalTexto = useRef<string | null>(null);
+  // Já tem posição no mapa (talvez corrigida à mão): só é buscada de novo se o endereço mudar
+  const enderecoPrincipalLocalizado = useRef(false);
 
   const preencherEndereco = (endereco: CustomerAddress) => {
     enderecoPrincipalId.current = endereco.id;
     enderecoPrincipalTexto.current = textoEndereco(endereco);
+    enderecoPrincipalLocalizado.current = endereco.latitude !== null && endereco.longitude !== null;
     setCep(endereco.zip_code || '');
     setRua(endereco.street || '');
     setNumero(endereco.number || '');
@@ -158,6 +162,11 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
     if (!cliente) return;
     const principal = cliente.addresses.find((e) => e.is_primary);
     if (principal && principal.id !== enderecoPrincipalId.current) preencherEndereco(principal);
+    else if (principal) {
+      // Mesmo endereço: só atualiza o que está salvo (o formulário fica como está)
+      enderecoPrincipalTexto.current = textoEndereco(principal);
+      enderecoPrincipalLocalizado.current = principal.latitude !== null && principal.longitude !== null;
+    }
     setEnderecosExtras(cliente.addresses.filter((e) => !e.is_primary));
     setTodosEnderecos(cliente.addresses);
   };
@@ -226,15 +235,17 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
 
     setSalvando(true);
     try {
-      // Coordenadas do endereço principal para o mapa. Se o endereço mudou e não foi
-      // possível localizá-lo, as antigas são apagadas (apontariam para o lugar errado).
+      // Coordenadas do endereço principal para o mapa: só busca se o endereço mudou ou ainda não tem
+      // posição (não desfaz o alfinete corrigido à mão). Se mudou e não foi localizado, as antigas são
+      // apagadas (apontariam para o lugar errado).
       let coordenadas: { latitude: number | null; longitude: number | null } | undefined;
       if (rua.trim()) {
         const dadosEndereco = { street: rua, number: numero, district: bairro, city: cidade, state: estado, zip_code: cep };
-        const achadas = await geocodificar(dadosEndereco);
-        if (achadas) coordenadas = achadas;
-        else if (textoEndereco(dadosEndereco) !== enderecoPrincipalTexto.current) {
-          coordenadas = { latitude: null, longitude: null };
+        const mudou = textoEndereco(dadosEndereco) !== enderecoPrincipalTexto.current;
+        if (mudou || !enderecoPrincipalLocalizado.current) {
+          const achadas = await geocodificar(dadosEndereco);
+          if (achadas) coordenadas = achadas;
+          else if (mudou) coordenadas = { latitude: null, longitude: null };
         }
       }
 
@@ -754,7 +765,11 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                 onAlterado={recarregarEnderecos}
               />
 
-              <MapaEnderecos enderecos={todosEnderecos} />
+              <MapaEnderecos
+                enderecos={todosEnderecos}
+                // A tela não é recarregada (o mapa ficaria no lugar): o alfinete já está na posição nova
+                onMover={clienteId === 'novo' ? undefined : (e, lat, lng) => ajustarPosicaoEndereco(e.id, lat, lng)}
+              />
             </div>
 
             {/* Coluna Direita: Contatos (4 cols) - Idêntico ao Field Control */}

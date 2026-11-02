@@ -23,6 +23,7 @@ import type { CustomerAddress, CustomerContact, PersonType } from '../../types/f
 import EnderecosAdicionais from './EnderecosAdicionais';
 import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
+import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
 import MapaEnderecos from './MapaEnderecos';
 import { formatarTelefone } from '../../utils/telefone';
 import { geocodificar, textoEndereco } from '../../services/googleMaps';
@@ -876,7 +877,12 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
       )}
 
       {/* Conteúdo das outras abas */}
-      {abaAtiva === 'atendimento' && <AtendimentosCliente clienteId={clienteId} />}
+      {abaAtiva === 'atendimento' && (
+        <>
+          <AtendimentosCliente clienteId={clienteId} />
+          {clienteId !== 'novo' && <AvaliacoesCliente clienteId={clienteId} />}
+        </>
+      )}
 
       {abaAtiva === 'modelos' && (
         <div className="mx-6 mt-6 rounded-2xl border border-slate-200 bg-white p-8 text-center">

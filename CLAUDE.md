@@ -25,7 +25,8 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
-- RLS ativo em todas as tabelas; `anon` não tem acesso a nada. Técnico só altera execução
+- RLS ativo em todas as tabelas; `anon` não tem acesso a nada, exceto as funções `avaliacao_ver`/`avaliacao_enviar`
+  (página pública `/avaliar/<token>`, só enxergam a OS do token). Técnico só altera execução
   da atividade (trigger `tasks_protege_agenda`).
 - Realtime em `service_orders`, `tasks`, `attachments`; consumir via
   `src/hooks/useRealtimeTable.ts` (com RLS, o `old` de UPDATE/DELETE traz só o id).
@@ -117,5 +118,11 @@ primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em
 `tasks_protege_agenda` barra sair de `agendada` fora de hoje ou com a anterior não concluída. Técnico logado é mandado para `/campo`.
 Sem sinal: ações e fotos vão para a fila no IndexedDB (`services/filaCampo.ts`) e sobem quando a rede volta; a agenda usa cache
 local. Formulários só online. Instalável (`public/manifest.webmanifest`, `public/sw.js`, registrado só no build).
+
+Avaliações do cliente (`ratings`, migration `20261102160000_avaliacoes.sql`, `services/avaliacoes.ts`, `components/avaliacoes/`):
+uma por OS. Com a OS concluída, o escritório clica "Enviar avaliação pelo WhatsApp" na OS (gera o token em
+`service_orders.rating_token`, abre o wa.me com o celular do cliente); o cliente avalia em `/avaliar/<token>` (`pages/Avaliar.tsx`,
+sem login). Não há botão no app do técnico (decisão do usuário). Histórico do Field (uma por atividade) importado por
+`scripts/field-control/importar-avaliacoes.mjs`. Aparecem na OS, na aba Atendimento do cliente e com a média por técnico em Equipe.
 
 Usuários: admin criado; Adriana Lobo (operadora, papel `escritorio`, colaboradora "Supervisor") criada em 2026-11-01.

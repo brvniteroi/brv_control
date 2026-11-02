@@ -16,6 +16,7 @@ import Formularios from './pages/Formularios';
 import TiposServico from './pages/TiposServico';
 import Etiquetas from './pages/Etiquetas';
 import PortalRoute from './components/portal/PortalRoute';
+import Avaliar from './pages/Avaliar';
 import PortalLogin from './pages/portal/PortalLogin';
 import PortalHome from './pages/portal/PortalHome';
 import CampoLayout from './components/campo/CampoLayout';
@@ -29,6 +30,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/portal/login" element={<PortalLogin />} />
+        {/* Avaliação do atendimento: pública, o cliente abre pelo link do WhatsApp */}
+        <Route path="/avaliar/:token" element={<Avaliar />} />
         <Route path="/portal" element={<PortalRoute />}>
           <Route index element={<PortalHome />} />
         </Route>

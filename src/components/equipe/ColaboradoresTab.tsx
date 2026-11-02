@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, Star, X } from 'lucide-react';
+import { mediasPorTecnico } from '../../services/avaliacoes';
 import {
   listarColaboradores,
   listarPerfis,
@@ -44,6 +45,7 @@ const NOVO: Formulario = {
 export default function ColaboradoresTab() {
   const [lista, setLista] = useState<ColaboradorComLogin[]>([]);
   const [perfis, setPerfis] = useState<PerfilComColaborador[]>([]);
+  const [medias, setMedias] = useState<Map<string, { media: number; quantidade: number }>>(new Map());
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<'ativos' | 'inativos' | 'todos'>('ativos');
@@ -53,9 +55,15 @@ export default function ColaboradoresTab() {
 
   const carregar = useCallback(async () => {
     try {
-      const [c, p] = await Promise.all([listarColaboradores(), listarPerfis().catch(() => [])]);
+      const [c, p, m] = await Promise.all([
+        listarColaboradores(),
+        listarPerfis().catch(() => []),
+        // Sem as avaliações a lista aparece mesmo assim
+        mediasPorTecnico().catch(() => new Map<string, { media: number; quantidade: number }>()),
+      ]);
       setLista(c);
       setPerfis(p);
+      setMedias(m);
       setErro(null);
     } catch (e) {
       console.error('Erro ao listar colaboradores:', e);
@@ -152,6 +160,7 @@ export default function ColaboradoresTab() {
                 <tr className="border-b border-slate-100 bg-slate-50/70 font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-5 py-3.5">Colaborador</th>
                   <th className="px-5 py-3.5">Função</th>
+                  <th className="px-5 py-3.5">Avaliação</th>
                   <th className="px-5 py-3.5">Contato</th>
                   <th className="px-5 py-3.5">Login</th>
                   <th className="px-5 py-3.5">Situação</th>
@@ -160,7 +169,7 @@ export default function ColaboradoresTab() {
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {visiveis.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-slate-400">Nenhum colaborador neste filtro.</td>
+                    <td colSpan={6} className="px-5 py-8 text-center text-slate-400">Nenhum colaborador neste filtro.</td>
                   </tr>
                 )}
                 {visiveis.map((c) => (
@@ -172,6 +181,17 @@ export default function ColaboradoresTab() {
                       </div>
                     </td>
                     <td className="px-5 py-4">{FUNCOES_COLABORADOR.find((f) => f.valor === c.role)?.rotulo ?? c.role}</td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      {medias.get(c.id) ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Star size={13} className="fill-amber-400 text-amber-400" />
+                          <b className="text-slate-800">{medias.get(c.id)!.media.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</b>
+                          <span className="text-[11px] text-slate-400">({medias.get(c.id)!.quantidade})</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="px-5 py-4">
                       <div>{c.phone ? formatarTelefone(c.phone) : <span className="text-slate-400">—</span>}</div>
                       {c.email && <div className="text-[11px] text-slate-400">{c.email}</div>}

@@ -113,6 +113,12 @@ Pendente, nesta ordem:
    assinaturas do Field: `importar-extras.mjs` (baixa as 304 assinaturas para `dados/assinaturas/`, envia por FTPS e
    registra como anexo `assinatura`; comentários vão para `service_order_comments`, migration
    `20261103100000_comentarios_os.sql`). Comentários aparecem na OS (`ComentariosOS.tsx`, só o escritório; também para novos).
+   Endereços do Field: o importador lê o endereço de cada localização (`/customers/<id>/locations`), que às vezes difere do resumo no
+   cadastro do cliente; o número costuma vir vazio com "casa N" no complemento. `importar-complemento.mjs` preenche complemento vazio a
+   partir do Field (nunca sobrescreve). `ajustar-numero-endereco.mjs` (2026-11-03) guarda o endereço como veio em
+   `customer_address_field_original` (migration `20261103120000_endereco_original_field.sql`, só o escritório lê; mostrado em
+   `EnderecosOriginaisField.tsx` no cadastro do cliente, "Endereço antigo no Field") e passa "casa N"/só número do complemento para o
+   Número (40 casos; os outros ~380 endereços sem número ficam como estão).
 2. Depois de 18/11: avaliação automática pela WhatsApp Cloud API da Meta (ao concluir a OS; tentar coexistência no
    número atual do escritório) e app Android com GPS em segundo plano (Capacitor). Detalhes na memória do projeto.
 3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,

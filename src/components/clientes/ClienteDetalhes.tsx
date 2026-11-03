@@ -21,6 +21,7 @@ import {
 } from '../../services/clientes';
 import type { CustomerAddress, CustomerContact, PersonType } from '../../types/fsm';
 import EnderecosAdicionais from './EnderecosAdicionais';
+import EnderecosOriginaisField from './EnderecosOriginaisField';
 import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
 import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
@@ -765,6 +766,8 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                 enderecos={enderecosExtras}
                 onAlterado={recarregarEnderecos}
               />
+
+              {clienteId !== 'novo' && <EnderecosOriginaisField enderecos={todosEnderecos} />}
 
               <MapaEnderecos
                 enderecos={todosEnderecos}

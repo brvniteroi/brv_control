@@ -254,3 +254,14 @@ export async function removerEndereco(id: string): Promise<'removido' | 'desativ
   }
   throw error;
 }
+
+/** Endereço como veio do Field Control (cópia fixa; só o escritório lê). Chave: id do endereço. */
+export async function enderecosOriginaisField(enderecoIds: string[]): Promise<Map<string, string>> {
+  if (enderecoIds.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from('customer_address_field_original')
+    .select('address_id, original')
+    .in('address_id', enderecoIds);
+  if (error) throw new Error(error.message);
+  return new Map((data ?? []).map((r) => [r.address_id as string, r.original as string]));
+}

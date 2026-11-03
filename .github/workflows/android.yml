@@ -1,0 +1,82 @@
+name: APK do app de campo (Android)
+
+# Gera o APK assinado e publica em https://control.brvniteroi.com.br/app/brv-control.apk.
+# Manual: GitHub > Actions > "APK do app de campo (Android)" > Run workflow.
+# O APK é só um casco que abre control.brvniteroi.com.br/campo: ajustes de tela chegam pelo deploy normal,
+# sem gerar APK novo. Gere um APK novo só quando mudar algo nativo (GPS, notificação, ícone, plugins).
+#
+# Secrets necessários (Settings > Secrets and variables > Actions):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD  (assinatura)
+#   GOOGLE_SERVICES_JSON_BASE64  (google-services.json do Firebase, em base64; sem ele o APK sai sem notificações)
+#   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD  (os mesmos do deploy do site)
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: android
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      - name: Firebase (google-services.json)
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
+          else
+            echo "::warning::Sem GOOGLE_SERVICES_JSON_BASE64: o APK sai sem notificações push."
+          fi
+
+      - name: Chave de assinatura
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::Falta o secret ANDROID_KEYSTORE_BASE64 (chave de assinatura do APK)."
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/brv-control.jks"
+
+      - run: npx cap sync android
+
+      - name: Compilar o APK assinado
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/brv-control.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -PversionCodeApp=${{ github.run_number }} -PversionNameApp=1.0.${{ github.run_number }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brv-control-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Publicar na HostGator (FTPS)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: node scripts/publicar-apk.mjs android/app/build/outputs/apk/release/app-release.apk

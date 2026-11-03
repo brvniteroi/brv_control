@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { assinarFila, itensFila } from '../services/filaCampo';
 import { distanciaMetros, enviarPosicao, enviarPresenca, type Posicao } from '../services/campo';
+import { BackgroundGeolocation, ehApp } from '../services/nativo';
 
 /** Itens ainda não enviados da fila do app de campo (atualiza sozinho). */
 export function useFilaCampo() {
@@ -21,12 +22,12 @@ export function useOnline() {
   return useSyncExternalStore(assinarConexao, () => navigator.onLine);
 }
 
-/** Sinal de vida a cada minuto, só com o app visível e com internet (alimenta o "online" do escritório). */
+/** Sinal de vida a cada minuto, com internet (no navegador só com o app visível; alimenta o "online" do escritório). */
 export function usePresencaCampo(ativo: boolean) {
   useEffect(() => {
     if (!ativo) return;
     const enviar = () => {
-      if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+      if ((!ehApp && document.visibilityState !== 'visible') || !navigator.onLine) return;
       enviarPresenca().catch(() => {
         /* tenta de novo no próximo minuto */
       });
@@ -60,14 +61,14 @@ export function useRastreioCampo(ativo: boolean): boolean {
   const [negado, setNegado] = useState(false);
 
   useEffect(() => {
-    if (!ativo || !('geolocation' in navigator)) return;
+    if (!ativo || (!ehApp && !('geolocation' in navigator))) return;
     let ultimo: (Posicao & { em: number }) | null = null;
     let enviando = false;
 
-    const aoLer = (p: GeolocationPosition) => {
+    const receber = (lat: number, lng: number, precisao: number) => {
       setNegado(false);
       const agora = Date.now();
-      const atual = { lat: Number(p.coords.latitude.toFixed(6)), lng: Number(p.coords.longitude.toFixed(6)) };
+      const atual = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
       if (ultimo) {
         const decorrido = agora - ultimo.em;
         if (decorrido < INTERVALO_MS) return;
@@ -75,7 +76,7 @@ export function useRastreioCampo(ativo: boolean): boolean {
       }
       if (enviando || !navigator.onLine) return;
       enviando = true;
-      enviarPosicao(atual, p.coords.accuracy)
+      enviarPosicao(atual, precisao)
         .then(() => {
           ultimo = { ...atual, em: agora };
         })
@@ -86,6 +87,37 @@ export function useRastreioCampo(ativo: boolean): boolean {
           enviando = false;
         });
     };
+    const aoLer = (p: GeolocationPosition) => receber(p.coords.latitude, p.coords.longitude, p.coords.accuracy);
+
+    // No APK: GPS em segundo plano (serviço em primeiro plano com notificação fixa), mesmo com a tela apagada
+    if (ehApp) {
+      let idVigia: string | undefined;
+      let cancelado = false;
+      BackgroundGeolocation.addWatcher(
+        {
+          backgroundTitle: 'BRV Control',
+          backgroundMessage: 'Compartilhando sua posição com o escritório durante o atendimento.',
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: 10,
+        },
+        (local, erro) => {
+          if (erro) {
+            if (erro.code === 'NOT_AUTHORIZED') setNegado(true);
+            return;
+          }
+          if (local) receber(local.latitude, local.longitude, local.accuracy);
+        },
+      ).then((id) => {
+        if (cancelado) void BackgroundGeolocation.removeWatcher({ id });
+        else idVigia = id;
+      });
+      return () => {
+        cancelado = true;
+        if (idVigia) void BackgroundGeolocation.removeWatcher({ id: idVigia });
+      };
+    }
+
     const aoErro = (e: GeolocationPositionError) => {
       if (e.code === e.PERMISSION_DENIED) setNegado(true);
     };

@@ -130,7 +130,7 @@ Pendente, nesta ordem:
    também ficam guardadas por `guardar-observacoes-field.mjs` em `customer_field_original` (migration `20261103130000_cliente_original_field.sql`,
    só o escritório lê) e aparecem no mesmo bloco; `customers.notes` continua sendo o campo editável.
 2. Depois de 18/11: avaliação automática pela WhatsApp Cloud API da Meta (ao concluir a OS; tentar coexistência no
-   número atual do escritório) e app Android com GPS em segundo plano (Capacitor). Detalhes na memória do projeto.
+   número atual do escritório). O app Android (APK) está em andamento, ver "APK do app de campo" abaixo. Detalhes na memória do projeto.
 3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,
    com limpeza) → orçamentos com aprovação do cliente → vendas e financeiro (PIX/boleto) → NF-e/NFS-e via API → estoque.
    Empresa no Simples Nacional (CSOSN 102). Análise do CSV e decisões na memória do projeto.
@@ -153,6 +153,19 @@ evento `push` no `public/sw.js`). Chaves VAPID geradas por `scripts/configurar-p
 o Chrome em bateria "Sem restrições" e "Início automático".
 Sem sinal: ações e fotos vão para a fila no IndexedDB (`services/filaCampo.ts`) e sobem quando a rede volta; a agenda usa cache
 local. Formulários só online. Instalável (`public/manifest.webmanifest`, `public/sw.js`, registrado só no build).
+
+APK do app de campo (Android, Capacitor 8; `android/`, `capacitor.config.ts`, `src/services/nativo.ts`): casco fino que abre
+https://control.brvniteroi.com.br/campo (`server.url`), então ajuste de tela chega pelo deploy normal, sem APK novo; `android-web/` guarda só a tela
+"Sem conexão" (`errorPath`). Visual do app não mudou (só ícone e splash com o logo, gerados por `@capacitor/assets` a partir de `assets/`).
+Só gerar APK novo quando mexer no nativo (plugins, GPS, push, ícone). No APK (`ehApp`): GPS em segundo plano pelo plugin
+`@capacitor-community/background-geolocation` (serviço em primeiro plano, notificação fixa; `useRastreioCampo` em `hooks/useCampo.ts`) e push nativo
+pelo Firebase (`services/push.ts`; o Web Push não funciona no WebView): token em `push_fcm_tokens` (migration `20261103150000_push_fcm.sql`, **a colar no
+SQL Editor**) e a Edge Function `notificar-tecnico` envia também por FCM (segredo `FIREBASE_SERVICE_ACCOUNT`; **republicar a função**). No navegador/PWA nada mudou.
+Build e publicação: GitHub Actions manual `.github/workflows/android.yml` compila o APK assinado e `scripts/publicar-apk.mjs` envia por FTPS para
+https://control.brvniteroi.com.br/app/brv-control.apk (link para o pessoal baixar; Android pede liberar "fontes desconhecidas"). Secrets do workflow:
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `GOOGLE_SERVICES_JSON_BASE64` (Firebase) e os FTP_* do deploy.
+A chave de assinatura fica em `android-assinatura/` (gitignored): **guardar cópia fora do computador**; sem ela não dá para atualizar o app já instalado
+(teria que desinstalar em cada celular). `applicationId`: `br.com.brvniteroi.control`. Build local: JDK 21 + Android SDK (instalados em `C:Usersrvandroid-build`).
 
 Avaliações do cliente (`ratings`, migration `20261102160000_avaliacoes.sql`, `services/avaliacoes.ts`, `components/avaliacoes/`):
 uma por OS. Com a OS concluída, o escritório clica "Enviar avaliação pelo WhatsApp" na OS (gera o token em

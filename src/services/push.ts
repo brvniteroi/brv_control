@@ -2,8 +2,77 @@
 // `notificar-tecnico`; aqui só a inscrição do aparelho. Ver migration 20261103110000_notificacoes_push.sql.
 // Só funciona no build (o service worker não é registrado no `npm run dev`).
 import { supabase } from './supabase';
+import { ehApp } from './nativo';
 
 export type EstadoPush = 'sem_suporte' | 'negado' | 'desligado' | 'ligado';
+
+// ---- APK (Capacitor): push nativo pelo Firebase (FCM); o Web Push não funciona no WebView ----
+
+const CHAVE_TOKEN_FCM = 'brv_fcm_token';
+let ouvintesNativos = false;
+
+async function pushNativo() {
+  return (await import('@capacitor/push-notifications')).PushNotifications;
+}
+
+async function salvarTokenFcm(token: string): Promise<void> {
+  localStorage.setItem(CHAVE_TOKEN_FCM, token);
+  const { error } = await supabase.rpc('registrar_push_fcm', { p_token: token, p_user_agent: navigator.userAgent });
+  if (error) throw new Error(error.message);
+}
+
+/** Registra os ouvintes uma vez: token novo do Firebase e toque na notificação (abre a atividade). */
+async function iniciarOuvintesNativos(): Promise<void> {
+  if (ouvintesNativos) return;
+  ouvintesNativos = true;
+  const push = await pushNativo();
+  await push.addListener('registration', (t) => {
+    salvarTokenFcm(t.value).catch(() => {
+      /* sem sinal: confirma na próxima abertura */
+    });
+  });
+  await push.addListener('pushNotificationActionPerformed', (a) => {
+    const url = (a.notification.data as { url?: string } | undefined)?.url;
+    if (url && url.startsWith('/campo')) window.location.assign(url);
+  });
+}
+
+/** Registra no Firebase e espera o token (máx. 15 s). */
+async function registrarNativo(): Promise<string> {
+  const push = await pushNativo();
+  await iniciarOuvintesNativos();
+  return new Promise<string>((resolve, reject) => {
+    const limite = setTimeout(() => reject(new Error('O Firebase não respondeu. Tente de novo com internet.')), 15000);
+    void push.addListener('registration', (t) => {
+      clearTimeout(limite);
+      resolve(t.value);
+    });
+    void push.addListener('registrationError', (e) => {
+      clearTimeout(limite);
+      reject(new Error(e.error || 'Não foi possível registrar as notificações.'));
+    });
+    void push.register();
+  });
+}
+
+async function estadoPushNativo(): Promise<EstadoPush> {
+  const push = await pushNativo();
+  const { receive } = await push.checkPermissions();
+  if (receive === 'denied') return 'negado';
+  if (receive !== 'granted') return 'desligado';
+  await iniciarOuvintesNativos();
+  await push.register(); // confirma o token no servidor (o ouvinte 'registration' salva)
+  return 'ligado';
+}
+
+async function ativarPushNativo(): Promise<EstadoPush> {
+  const push = await pushNativo();
+  const { receive } = await push.requestPermissions();
+  if (receive === 'denied') return 'negado';
+  if (receive !== 'granted') return 'desligado';
+  await salvarTokenFcm(await registrarNativo());
+  return 'ligado';
+}
 
 function suportaPush(): boolean {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -37,6 +106,7 @@ async function salvarInscricao(sub: PushSubscription): Promise<void> {
  * login passa a avisar o novo técnico).
  */
 export async function estadoPush(): Promise<EstadoPush> {
+  if (ehApp) return estadoPushNativo();
   const reg = await registroSW();
   if (!reg) return 'sem_suporte';
   if (Notification.permission === 'denied') return 'negado';
@@ -50,6 +120,7 @@ export async function estadoPush(): Promise<EstadoPush> {
 
 /** Pede a permissão e inscreve o aparelho. Precisa ser chamada no toque de um botão. */
 export async function ativarPush(): Promise<EstadoPush> {
+  if (ehApp) return ativarPushNativo();
   const reg = await registroSW();
   if (!reg) return 'sem_suporte';
   const permissao = await Notification.requestPermission();
@@ -70,6 +141,11 @@ export async function ativarPush(): Promise<EstadoPush> {
 /** Ao sair: este aparelho deixa de receber os avisos deste login. */
 export async function desligarPushDoLogin(): Promise<void> {
   try {
+    if (ehApp) {
+      const token = localStorage.getItem(CHAVE_TOKEN_FCM);
+      if (token) await supabase.rpc('remover_push_fcm', { p_token: token });
+      return;
+    }
     const sub = await (await registroSW())?.pushManager.getSubscription();
     if (sub) await supabase.rpc('remover_push', { p_endpoint: sub.endpoint });
   } catch {

@@ -17,3 +17,8 @@ scripts/field-control/dados/
 
 # Exportações do SicWeb (dados reais da empresa)
 scripts/sicweb/dados/
+
+# APK do app de campo: a chave de assinatura NUNCA vai para o git (perdê-la impede atualizar o app já instalado)
+android-assinatura/
+android/local.properties
+android/app/google-services.json

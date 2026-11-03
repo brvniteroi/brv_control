@@ -5,6 +5,8 @@
 // Publicar: Supabase > Edge Functions > Deploy a new function > nome `notificar-tecnico` (colar este
 // arquivo) e DESLIGAR "Verify JWT" (o banco não manda login; quem protege é o segredo).
 // SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já existem no ambiente das funções.
+// APK Android: além do Web Push, envia pelo Firebase (FCM) para public.push_fcm_tokens. Precisa do segredo
+// FIREBASE_SERVICE_ACCOUNT (JSON da conta de serviço do projeto Firebase) em Edge Functions > Secrets.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
@@ -12,6 +14,54 @@ const EVENTOS = ['nova', 'horario', 'removida', 'cancelada'] as const;
 type Evento = (typeof EVENTOS)[number];
 
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+
+// ---- Firebase Cloud Messaging (API HTTP v1) ----
+
+interface ContaServico {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+}
+
+const b64url = (dados: ArrayBuffer | string) => {
+  const bytes = typeof dados === 'string' ? new TextEncoder().encode(dados) : new Uint8Array(dados);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+/** Token de acesso do Google (OAuth2 com JWT assinado pela conta de serviço). */
+async function tokenFirebase(conta: ContaServico): Promise<string> {
+  const agora = Math.floor(Date.now() / 1000);
+  const cabecalho = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const corpo = b64url(
+    JSON.stringify({
+      iss: conta.client_email,
+      scope: 'https://www.googleapis.com/auth/firebase.messaging',
+      aud: 'https://oauth2.googleapis.com/token',
+      iat: agora,
+      exp: agora + 3600,
+    }),
+  );
+  const pem = conta.private_key.replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, '');
+  const chave = await crypto.subtle.importKey(
+    'pkcs8',
+    Uint8Array.from(atob(pem), (c) => c.charCodeAt(0)),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const assinatura = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', chave, new TextEncoder().encode(`${cabecalho}.${corpo}`));
+  const jwt = `${cabecalho}.${corpo}.${b64url(assinatura)}`;
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
+  });
+  const j = await r.json();
+  if (!r.ok || !j.access_token) throw new Error(`token Firebase: ${r.status} ${JSON.stringify(j)}`);
+  return j.access_token as string;
+}
 
 Deno.serve(async (req) => {
   const responder = (status: number, corpo: unknown) =>
@@ -39,7 +89,8 @@ Deno.serve(async (req) => {
   const { data: colab } = await sb.from('employees').select('profile_id').eq('id', employee_id).maybeSingle();
   if (!colab?.profile_id) return responder(200, { enviados: 0 });
   const { data: aparelhos } = await sb.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('profile_id', colab.profile_id);
-  if (!aparelhos?.length) return responder(200, { enviados: 0 });
+  const { data: tokensFcm } = await sb.from('push_fcm_tokens').select('id, token').eq('profile_id', colab.profile_id);
+  if (!aparelhos?.length && !tokensFcm?.length) return responder(200, { enviados: 0 });
 
   // deno-lint-ignore no-explicit-any
   const o = t.ordem as any;
@@ -62,8 +113,48 @@ Deno.serve(async (req) => {
 
   webpush.setVapidDetails(cfg.vapid_subject, cfg.vapid_public, cfg.vapid_private);
   let enviados = 0;
+
+  // APK Android (Firebase)
+  const segredoFirebase = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+  if (tokensFcm?.length && segredoFirebase) {
+    try {
+      const conta = JSON.parse(segredoFirebase) as ContaServico;
+      const acesso = await tokenFirebase(conta);
+      const dados = JSON.parse(payload) as { titulo: string; corpo: string; url: string; tag: string };
+      await Promise.all(
+        tokensFcm.map(async (t) => {
+          const r = await fetch(`https://fcm.googleapis.com/v1/projects/${conta.project_id}/messages:send`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${acesso}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: {
+                token: t.token,
+                notification: { title: dados.titulo, body: dados.corpo },
+                data: { url: dados.url, tag: dados.tag },
+                android: { priority: 'HIGH', ttl: `${4 * 3600}s`, notification: { tag: dados.tag } },
+              },
+            }),
+          });
+          if (r.ok) {
+            enviados++;
+            return;
+          }
+          const erro = await r.json().catch(() => null);
+          const codigo = JSON.stringify(erro);
+          // Token vencido ou app desinstalado: remove
+          if (r.status === 404 || codigo.includes('UNREGISTERED')) await sb.from('push_fcm_tokens').delete().eq('id', t.id);
+          else console.error('fcm', r.status, codigo);
+        }),
+      );
+    } catch (e) {
+      console.error('fcm', (e as Error).message);
+    }
+  } else if (tokensFcm?.length) {
+    console.error('fcm: falta o segredo FIREBASE_SERVICE_ACCOUNT');
+  }
+
   await Promise.all(
-    aparelhos.map(async (a) => {
+    (aparelhos ?? []).map(async (a) => {
       try {
         await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload, {
           TTL: 4 * 3600,

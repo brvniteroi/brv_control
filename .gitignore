@@ -14,3 +14,6 @@ hostgator-api/uploads/*
 # Amostras e dumps do Field Control: dados reais de clientes (LGPD), nunca vão para o git
 scripts/field-control/amostra/
 scripts/field-control/dados/
+
+# Exportações do SicWeb (dados reais da empresa)
+scripts/sicweb/dados/

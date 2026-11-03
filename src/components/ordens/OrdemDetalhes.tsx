@@ -23,6 +23,7 @@ import SeletorEtiquetas from '../etiquetas/SeletorEtiquetas';
 import { PRIORIDADES, STATUS_OS, formatarDataHora, rotuloEndereco } from '../../utils/ordens';
 import AnexosOS from './AnexosOS';
 import AtividadesOS from './AtividadesOS';
+import ComentariosOS from './ComentariosOS';
 import AvaliacaoOS from '../avaliacoes/AvaliacaoOS';
 import SeletorCliente from './SeletorCliente';
 import FormulariosDaOrdem from '../formularios/FormulariosDaOrdem';
@@ -390,6 +391,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
                 tecnicosNomesPorTask={tecnicosPorTask}
               />
               <AnexosOS anexos={ordem.attachments} />
+              <ComentariosOS ordemId={ordem.id} />
               <AvaliacaoOS
                 ordemId={ordem.id}
                 numero={ordem.number}

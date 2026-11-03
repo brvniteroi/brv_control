@@ -103,9 +103,15 @@ Pendente, nesta ordem:
    **Importação feita em 2026-11-02** (banco limpo antes; OS em aberto no Field com data < 2026-10-01 entram canceladas,
    "reported" entra concluída com o relato). Próxima OS nova: 17265. **Virada feita em 2026-11-02**: o Field não é mais usado
    (última mudança nele em 2026-10-30, antes das listas baixadas), então não há atualização final de OS/atividades.
-   Não rodar o importador de novo sobre OS já em uso (ele sobrescreve o que o escritório mudou). Falta só importar
-   comentários e assinaturas do Field (baixando em `comentarios.ndjson` / `assinaturas.ndjson`).
-2. Estoque fica para o futuro (há outro sistema de estoque/vendas).
+   Não rodar o importador de novo sobre OS já em uso (ele sobrescreve o que o escritório mudou). Comentários e
+   assinaturas do Field: `importar-extras.mjs` (baixa as 304 assinaturas para `dados/assinaturas/`, envia por FTPS e
+   registra como anexo `assinatura`; comentários vão para `service_order_comments`, migration
+   `20261103100000_comentarios_os.sql`). Comentários aparecem na OS (`ComentariosOS.tsx`, só o escritório; também para novos).
+2. Depois de 18/11: avaliação automática pela WhatsApp Cloud API da Meta (ao concluir a OS; tentar coexistência no
+   número atual do escritório) e app Android com GPS em segundo plano (Capacitor). Detalhes na memória do projeto.
+3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,
+   com limpeza) → orçamentos com aprovação do cliente → vendas e financeiro (PIX/boleto) → NF-e/NFS-e via API → estoque.
+   Empresa no Simples Nacional (CSOSN 102). Análise do CSV e decisões na memória do projeto.
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no

@@ -10,6 +10,8 @@ function ehVideo(a: Attachment): boolean {
 function Miniatura({ anexo }: { anexo: Attachment }) {
   const [falhou, setFalhou] = useState(false);
   const video = ehVideo(anexo);
+  // Assinatura: imagem inteira em fundo branco (PNG transparente) e o nome de quem assinou
+  const assinatura = anexo.category === 'assinatura';
 
   return (
     <a
@@ -30,11 +32,11 @@ function Miniatura({ anexo }: { anexo: Attachment }) {
           alt={anexo.caption ?? 'Foto da OS'}
           loading="lazy"
           onError={() => setFalhou(true)}
-          className="h-full w-full object-cover transition group-hover:scale-105"
+          className={`h-full w-full transition group-hover:scale-105 ${assinatura ? 'bg-white object-contain p-2' : 'object-cover'}`}
         />
       )}
-      <span className="absolute inset-x-0 bottom-0 bg-black/50 px-1.5 py-0.5 text-[10px] text-white">
-        {formatarDataHora(anexo.created_at)}
+      <span className="absolute inset-x-0 bottom-0 truncate bg-black/50 px-1.5 py-0.5 text-[10px] text-white">
+        {assinatura ? (anexo.caption ?? 'Assinatura') : formatarDataHora(anexo.created_at)}
       </span>
     </a>
   );

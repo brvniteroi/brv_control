@@ -108,6 +108,13 @@ Feito:
 - Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
 
+**LEMBRETE (2026-11-04): retomar o APK do app de campo.** Hoje (2026-11-03) o código foi enviado e o release assinado compila local, mas falta
+o usuário fazer: (1) projeto Firebase + `google-services.json` + JSON da conta de serviço; (2) os 5 secrets do workflow `android.yml` (valores em
+`android-assinatura/`); (3) guardar cópia de `android-assinatura/` fora do PC; (4) colar a migration `20261103150000_push_fcm.sql`;
+(5) republicar a Edge Function `notificar-tecnico` + segredo `FIREBASE_SERVICE_ACCOUNT`. Depois: rodar o workflow, instalar no celular de um técnico e testar GPS
+com tela apagada, push com app fechado e o "Online" no Mapa. Até lá o pessoal usa pelo navegador. NÃO distribuir o APK sem o Firebase configurado (o
+botão de ativar notificações pode travar o app). Ao concluir, apagar este lembrete.
+
 Pendente, nesta ordem:
 1. Importar a base do Field Control antes de 2026-11-18 (vencimento da assinatura). Backup completo baixado em
    `scripts/field-control/dados/` (gitignored) por `baixar-tudo.mjs` e `baixar-fotos.mjs`: 17.256 OS, 17.292 atividades,

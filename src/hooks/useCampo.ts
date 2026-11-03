@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { assinarFila, itensFila } from '../services/filaCampo';
-import { distanciaMetros, enviarPosicao, type Posicao } from '../services/campo';
+import { distanciaMetros, enviarPosicao, enviarPresenca, type Posicao } from '../services/campo';
 
 /** Itens ainda não enviados da fila do app de campo (atualiza sozinho). */
 export function useFilaCampo() {
@@ -19,6 +19,28 @@ function assinarConexao(fn: () => void) {
 /** true quando o aparelho diz que tem rede. */
 export function useOnline() {
   return useSyncExternalStore(assinarConexao, () => navigator.onLine);
+}
+
+/** Sinal de vida a cada minuto, só com o app visível e com internet (alimenta o "online" do escritório). */
+export function usePresencaCampo(ativo: boolean) {
+  useEffect(() => {
+    if (!ativo) return;
+    const enviar = () => {
+      if (document.visibilityState !== 'visible' || !navigator.onLine) return;
+      enviarPresenca().catch(() => {
+        /* tenta de novo no próximo minuto */
+      });
+    };
+    enviar();
+    const relogio = setInterval(enviar, 60_000);
+    document.addEventListener('visibilitychange', enviar);
+    window.addEventListener('online', enviar);
+    return () => {
+      clearInterval(relogio);
+      document.removeEventListener('visibilitychange', enviar);
+      window.removeEventListener('online', enviar);
+    };
+  }, [ativo]);
 }
 
 /** No máximo um envio por minuto. */

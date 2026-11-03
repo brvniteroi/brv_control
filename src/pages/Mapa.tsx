@@ -17,6 +17,7 @@ import OrdemDetalhes from '../components/ordens/OrdemDetalhes';
 import { useAuth } from '../contexts/useAuth';
 import { useLinhaDoTempo, type AtividadeLinha } from '../hooks/useLinhaDoTempo';
 import { usePosicoesTecnicos } from '../hooks/usePosicoesTecnicos';
+import { MINUTOS_ONLINE, usePresencasTecnicos } from '../hooks/usePresencasTecnicos';
 import { mapasConfigurados } from '../services/googleMaps';
 import type { PosicaoTecnico } from '../services/mapa';
 import type { TaskStatus } from '../types/fsm';
@@ -93,6 +94,22 @@ interface GrupoTecnico {
   atividades: (AtividadeLinha & { ordemDoDia: number })[];
 }
 
+/** Bolinha verde = app aberto e com internet agora; cinza = fora do ar (mostra há quanto tempo). */
+function IndicadorOnline({ visto, agora }: { visto: string | undefined; agora: number }) {
+  const online = !!visto && agora - Date.parse(visto) < MINUTOS_ONLINE * 60000;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+        online ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+      }`}
+      title={visto ? `Último sinal do app: ${haQuanto(visto, agora)}` : 'O app ainda não deu sinal'}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+      {online ? 'Online' : visto ? `Offline · ${haQuanto(visto, agora)}` : 'Offline'}
+    </span>
+  );
+}
+
 function MapaEscritorio() {
   const [dia, setDia] = useState(() => dataLocal());
   const [tecnicoFiltro, setTecnicoFiltro] = useState('');
@@ -104,6 +121,7 @@ function MapaEscritorio() {
 
   const t = useLinhaDoTempo(dia);
   const { posicoes, erro: erroPosicoes, recarregar: recarregarPosicoes } = usePosicoesTecnicos();
+  const presencas = usePresencasTecnicos();
   const ehHoje = dia === dataLocal();
 
   // Atualiza o "há X min"
@@ -350,7 +368,10 @@ function MapaEscritorio() {
                       {iniciais(g.nome)}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-bold text-slate-800">{g.nome}</span>
+                      <span className="flex items-center gap-1.5 truncate text-xs font-bold text-slate-800">
+                        {g.nome}
+                        {g.id && ehHoje && <IndicadorOnline visto={presencas[g.id]} agora={agora} />}
+                      </span>
                       <span className="flex items-center gap-1 text-[11px] text-slate-500">
                         {!ehHoje ? (
                           `${g.atividades.length} ${g.atividades.length === 1 ? 'atendimento' : 'atendimentos'}`

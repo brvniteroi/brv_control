@@ -7,7 +7,7 @@ import MinhasAvaliacoesModal from './MinhasAvaliacoesModal';
 import { useAuth } from '../../contexts/useAuth';
 import { meuColaborador, type MeuColaborador } from '../../services/campo';
 import { iniciarFila, processarFila } from '../../services/filaCampo';
-import { useFilaCampo, useOnline, useRastreioCampo } from '../../hooks/useCampo';
+import { useFilaCampo, useOnline, usePresencaCampo, useRastreioCampo } from '../../hooks/useCampo';
 import AlterarSenhaModal from '../AlterarSenhaModal';
 import type { ContextoCampo } from './contextoCampo';
 
@@ -51,6 +51,7 @@ export default function CampoLayout() {
   // Posição para a página Mapa do escritório (só técnico com colaborador ligado)
   const ehTecnico = profile?.role === 'tecnico' && !!colaborador;
   const gpsNegado = useRastreioCampo(ehTecnico);
+  usePresencaCampo(ehTecnico);
 
   // Avaliações dos clientes nos últimos 30 dias (estrela no cabeçalho); sem sinal, a estrela some
   const [avaliacoes, setAvaliacoes] = useState<MinhasAvaliacoes | null>(null);

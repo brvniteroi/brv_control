@@ -250,6 +250,12 @@ export async function enviarPosicao(p: Posicao, precisaoM: number): Promise<void
   if (error) throw new Error(error.message);
 }
 
+/** Sinal de vida: avisa o escritório que o app está aberto e com internet. */
+export async function enviarPresenca(): Promise<void> {
+  const { error } = await supabase.rpc('registrar_presenca');
+  if (error) throw new Error(error.message);
+}
+
 export function enderecoDaAtividade(a: AtividadeCampo): EnderecoCampo | null {
   const c = a.ordem?.cliente;
   return a.ordem?.endereco ?? c?.enderecos.find((e) => e.is_primary) ?? c?.enderecos.find((e) => e.active) ?? null;

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Camera, ExternalLink, Film } from 'lucide-react';
+import { Camera, ExternalLink, Film, X } from 'lucide-react';
+import { useAuth } from '../../contexts/useAuth';
+import { excluirAnexo } from '../../services/anexos';
 import type { Attachment } from '../../types/fsm';
 import { formatarDataHora } from '../../utils/ordens';
 
@@ -7,13 +9,14 @@ function ehVideo(a: Attachment): boolean {
   return /\.(mp4|mov|webm)$/i.test(a.file_name ?? a.public_url);
 }
 
-function Miniatura({ anexo }: { anexo: Attachment }) {
+function Miniatura({ anexo, onExcluir }: { anexo: Attachment; onExcluir?: (a: Attachment) => void }) {
   const [falhou, setFalhou] = useState(false);
   const video = ehVideo(anexo);
   // Assinatura: imagem inteira em fundo branco (PNG transparente) e o nome de quem assinou
   const assinatura = anexo.category === 'assinatura';
 
   return (
+    <div className="relative">
     <a
       href={anexo.public_url}
       target="_blank"
@@ -39,10 +42,35 @@ function Miniatura({ anexo }: { anexo: Attachment }) {
         {assinatura ? (anexo.caption ?? 'Assinatura') : formatarDataHora(anexo.created_at)}
       </span>
     </a>
+    {onExcluir && (
+      <button
+        type="button"
+        onClick={() => onExcluir(anexo)}
+        title="Excluir foto"
+        aria-label="Excluir foto"
+        className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700"
+      >
+        <X size={14} />
+      </button>
+    )}
+    </div>
   );
 }
 
-export default function AnexosOS({ anexos }: { anexos: Attachment[] }) {
+export default function AnexosOS({ anexos, onAlterado }: { anexos: Attachment[]; onAlterado?: () => void | Promise<void> }) {
+  const { profile } = useAuth();
+  const ehAdmin = profile?.role === 'admin';
+
+  const excluir = async (a: Attachment) => {
+    if (!window.confirm('Excluir esta foto da OS? Não dá para desfazer.')) return;
+    try {
+      await excluirAnexo(a.id);
+      await onAlterado?.();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : 'Erro ao excluir a foto.');
+    }
+  };
+
   const importados = anexos.filter((a) => a.storage === 'fieldcontrol').length;
 
   return (
@@ -63,7 +91,7 @@ export default function AnexosOS({ anexos }: { anexos: Attachment[] }) {
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {anexos.map((a) => (
-            <Miniatura key={a.id} anexo={a} />
+            <Miniatura key={a.id} anexo={a} onExcluir={ehAdmin ? excluir : undefined} />
           ))}
         </div>
       )}

@@ -78,6 +78,16 @@ export async function anexarFoto(arquivo: File, destino: DestinoAnexo): Promise<
   return registrarAnexo(enviado, destino);
 }
 
+/**
+ * Remove o registro da foto (só admin: a RLS "Só admin exclui" barra os demais).
+ * O arquivo continua na HostGator; só deixa de aparecer na OS.
+ */
+export async function excluirAnexo(id: string): Promise<void> {
+  const { data, error } = await supabase.from('attachments').delete().eq('id', id).select('id');
+  if (error) throw new Error(`Não foi possível excluir a foto: ${error.message}`);
+  if (!data || data.length === 0) throw new Error('Sem permissão para excluir esta foto.');
+}
+
 /** Grava em public.attachments um arquivo que já está na HostGator. */
 export async function registrarAnexo(enviado: UploadResult, destino: DestinoAnexo): Promise<Attachment> {
   const { data, error } = await supabase

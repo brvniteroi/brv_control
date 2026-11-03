@@ -125,8 +125,11 @@ export default function AtividadesOS({
     const fim = inicio ? new Date(new Date(inicio).getTime() + minutos * 60000).toISOString() : null;
 
     let status = form.status;
-    const inicioReal = deCampoDataHora(form.inicioReal);
-    const fimReal = deCampoDataHora(form.fimReal);
+    // Voltar uma atividade já iniciada para "agendada" (início acidental): zera os horários reais
+    const original = atividades.find((a) => a.id === editandoId)?.status;
+    const voltandoParaAgendada = status === 'agendada' && !!original && original !== 'agendada';
+    const inicioReal = voltandoParaAgendada ? null : deCampoDataHora(form.inicioReal);
+    const fimReal = voltandoParaAgendada ? null : deCampoDataHora(form.fimReal);
     if (fimReal && !inicioReal) {
       setErro('Informe também o início real.');
       return;

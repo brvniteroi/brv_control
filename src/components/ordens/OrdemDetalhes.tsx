@@ -391,7 +391,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
                 clienteNome={ordem.customer?.name}
                 tecnicosNomesPorTask={tecnicosPorTask}
               />
-              <AnexosOS anexos={ordem.attachments} onAlterado={recarregar} />
+              <AnexosOS ordemId={ordem.id} anexos={ordem.attachments} onAlterado={recarregar} />
               <ComentariosOS ordemId={ordem.id} />
               <AvaliacaoOS
                 ordemId={ordem.id}

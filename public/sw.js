@@ -25,6 +25,44 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// Notificação push do escritório (supabase/functions/notificar-tecnico): mudança na agenda de hoje
+self.addEventListener('push', (e) => {
+  let d = {};
+  try {
+    d = e.data ? e.data.json() : {};
+  } catch {
+    /* sem conteúdo legível: aviso genérico */
+  }
+  e.waitUntil(
+    self.registration.showNotification(d.titulo || 'Sua agenda de hoje mudou', {
+      body: d.corpo || 'Abra o BRV Control para ver.',
+      icon: '/icone-192.png',
+      badge: '/icone-192.png',
+      tag: d.tag || 'agenda',
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [300, 150, 300, 150, 300],
+      data: { url: d.url || '/campo' },
+    }),
+  );
+});
+
+// Tocar na notificação: abre (ou traz para frente) o app na atividade
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL(e.notification.data?.url || '/campo', self.location.origin).href;
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => {
+      const aberta = janelas.find((j) => new URL(j.url).origin === self.location.origin);
+      if (!aberta) return self.clients.openWindow(url);
+      return aberta
+        .focus()
+        .then((j) => j.navigate(url))
+        .catch(() => self.clients.openWindow(url));
+    }),
+  );
+});
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { AlertTriangle, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw, Star } from 'lucide-react';
+import { AlertTriangle, Bell, BellOff, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw, Star } from 'lucide-react';
+import { ativarPush, desligarPushDoLogin, estadoPush, type EstadoPush } from '../../services/push';
 import { minhasAvaliacoes, type MinhasAvaliacoes } from '../../services/avaliacoes';
 import MinhasAvaliacoesModal from './MinhasAvaliacoesModal';
 import { useAuth } from '../../contexts/useAuth';
@@ -67,6 +68,36 @@ export default function CampoLayout() {
     };
   }, [ehTecnico, online]);
 
+  // Notificação push (agenda mudou com o app fechado): o técnico liga uma vez em cada celular
+  const [push, setPush] = useState<EstadoPush>('sem_suporte');
+  const [erroPush, setErroPush] = useState<string | null>(null);
+  useEffect(() => {
+    if (!ehTecnico) return;
+    let ativo = true;
+    estadoPush()
+      .then((e) => ativo && setPush(e))
+      .catch(() => {
+        /* fica sem o aviso */
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [ehTecnico]);
+
+  const ligarPush = async () => {
+    setErroPush(null);
+    try {
+      setPush(await ativarPush());
+    } catch (e) {
+      setErroPush(e instanceof Error ? e.message : 'Não foi possível ativar as notificações.');
+    }
+  };
+
+  const sair = async () => {
+    await desligarPushDoLogin();
+    await signOut();
+  };
+
   const comErro = fila.filter((i) => i.erro).length;
 
   let corpo;
@@ -123,7 +154,7 @@ export default function CampoLayout() {
           <button type="button" onClick={() => setSenhaAberta(true)} className="rounded-lg p-2 text-blue-100 hover:bg-white/10" aria-label="Trocar senha">
             <KeyRound size={18} />
           </button>
-          <button type="button" onClick={() => signOut()} className="rounded-lg p-2 text-blue-100 hover:bg-white/10" aria-label="Sair">
+          <button type="button" onClick={sair} className="rounded-lg p-2 text-blue-100 hover:bg-white/10" aria-label="Sair">
             <LogOut size={18} />
           </button>
         </div>
@@ -146,6 +177,22 @@ export default function CampoLayout() {
                 <RefreshCw size={12} /> Enviar agora
               </button>
             )}
+          </div>
+        )}
+
+        {ehTecnico && push === 'desligado' && (
+          <div className="flex items-center justify-center gap-2 bg-blue-600 px-4 py-1.5 text-xs font-semibold">
+            <Bell size={14} className="shrink-0" />
+            <span>{erroPush ?? 'Receba um aviso quando entrar serviço novo no seu dia.'}</span>
+            <button type="button" onClick={ligarPush} className="ml-1 shrink-0 rounded-md bg-white px-2 py-0.5 font-bold text-blue-700">
+              Ativar
+            </button>
+          </div>
+        )}
+        {ehTecnico && push === 'negado' && (
+          <div className="flex items-center justify-center gap-2 bg-slate-700 px-4 py-1.5 text-xs font-semibold">
+            <BellOff size={14} className="shrink-0" />
+            <span>Notificações bloqueadas. Libere em Configurações do celular &gt; Apps &gt; Chrome &gt; Notificações.</span>
           </div>
         )}
 

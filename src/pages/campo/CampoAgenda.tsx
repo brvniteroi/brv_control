@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Clock, Lock, MapPin, RefreshCw } from 'lucide-react';
+import { BellRing, ChevronRight, Clock, Lock, MapPin, RefreshCw, X } from 'lucide-react';
+import { analisarAgenda, lerDestaques, marcarVisto, tocarAlerta, type Destaque } from '../../services/avisosCampo';
 import { supabase } from '../../services/supabase';
 import {
   bloqueioDeInicio,
@@ -29,6 +30,9 @@ export default function CampoAgenda() {
   const ultima = useRef(0);
   const [hoje] = useState(() => new Date());
 
+  const [destaques, setDestaques] = useState<Record<string, Destaque>>(() => lerDestaques(colaborador.id));
+  const [avisos, setAvisos] = useState<string[]>([]);
+
   const carregar = useCallback(async () => {
     const req = ++ultima.current;
     setCarregando(true);
@@ -37,6 +41,18 @@ export default function CampoAgenda() {
       if (req !== ultima.current) return;
       setAtividades(dados);
       salvarCacheAgenda(colaborador.id, dados);
+      // O escritório mexeu na agenda de hoje: alerta e destaca
+      const m = analisarAgenda(colaborador.id, somenteDeHoje(dados));
+      setDestaques(m.destaques);
+      const linhas = [
+        ...m.novas.map((a) => `Nova atividade${horaDe(a)}: ${nomeCliente(a)}`),
+        ...m.alteradas.map((a) => `Horário alterado: ${nomeCliente(a)}${horaDe(a, 'agora às')}`),
+        ...(m.removidas ? [m.removidas === 1 ? '1 atividade saiu da sua agenda de hoje' : `${m.removidas} atividades saíram da sua agenda de hoje`] : []),
+      ];
+      if (linhas.length) {
+        setAvisos(linhas);
+        tocarAlerta();
+      }
       setCacheDe(null);
       setErro(null);
     } catch (e) {
@@ -98,6 +114,22 @@ export default function CampoAgenda() {
         </button>
       </div>
 
+      {avisos.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setAvisos([])}
+          className="flex w-full items-start gap-2.5 rounded-2xl border border-blue-300 bg-blue-600 px-4 py-3 text-left text-sm font-semibold text-white shadow-md"
+        >
+          <BellRing size={18} className="mt-0.5 shrink-0 animate-bounce" />
+          <span className="flex-1 space-y-0.5">
+            {avisos.map((l) => (
+              <span key={l} className="block">{l}</span>
+            ))}
+          </span>
+          <X size={16} className="mt-0.5 shrink-0 text-blue-200" />
+        </button>
+      )}
+
       {cacheDe && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
           Sem conexão. Mostrando a agenda carregada em {new Date(cacheDe).toLocaleString('pt-BR')}.
@@ -121,6 +153,8 @@ export default function CampoAgenda() {
                 atividade={a}
                 pendente={fila.some((i) => i.taskId === a.id)}
                 bloqueada={a.status === 'agendada' && bloqueioDeInicio(a, doDia) !== null}
+                destaque={destaques[a.id]}
+                onAbrir={() => marcarVisto(colaborador.id, a.id)}
               />
             ))}
           </div>
@@ -130,7 +164,27 @@ export default function CampoAgenda() {
   );
 }
 
-function CartaoAtividade({ atividade: a, pendente, bloqueada }: { atividade: AtividadeCampo; pendente: boolean; bloqueada: boolean }) {
+function nomeCliente(a: AtividadeCampo): string {
+  return a.ordem?.cliente?.trade_name || a.ordem?.cliente?.name || a.title;
+}
+
+function horaDe(a: AtividadeCampo, prefixo = 'às'): string {
+  return a.scheduled_start ? ` ${prefixo} ${hora.format(new Date(a.scheduled_start))}` : '';
+}
+
+function CartaoAtividade({
+  atividade: a,
+  pendente,
+  bloqueada,
+  destaque,
+  onAbrir,
+}: {
+  atividade: AtividadeCampo;
+  pendente: boolean;
+  bloqueada: boolean;
+  destaque?: Destaque;
+  onAbrir: () => void;
+}) {
   const st = infoStatusAtividade(a.status);
   const end = enderecoDaAtividade(a);
   const cliente = a.ordem?.cliente;
@@ -140,8 +194,15 @@ function CartaoAtividade({ atividade: a, pendente, bloqueada }: { atividade: Ati
   return (
     <Link
       to={`/campo/atividade/${a.id}`}
+      onClick={onAbrir}
       className={`flex items-stretch gap-3 rounded-2xl border bg-white p-3.5 shadow-xs active:bg-slate-50 ${
-        a.status === 'concluida' ? 'border-slate-200 opacity-70' : a.status === 'em_execucao' ? 'border-orange-300' : 'border-slate-200'
+        destaque
+          ? 'border-blue-400 ring-2 ring-blue-300'
+          : a.status === 'concluida'
+            ? 'border-slate-200 opacity-70'
+            : a.status === 'em_execucao'
+              ? 'border-orange-300'
+              : 'border-slate-200'
       }`}
     >
       <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-50 py-1 text-center">
@@ -152,6 +213,11 @@ function CartaoAtividade({ atividade: a, pendente, bloqueada }: { atividade: Ati
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
+          {destaque && (
+            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+              {destaque === 'nova' ? 'Nova' : 'Horário alterado'}
+            </span>
+          )}
           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${st.classe}`}>{st.rotulo}</span>
           {a.ordem && <span className="text-[11px] font-semibold text-slate-400">OS {a.ordem.number}</span>}
           {pendente && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">não enviado</span>}

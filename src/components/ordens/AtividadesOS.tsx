@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { CalendarClock, Pencil, Plus, Trash2, User, X } from 'lucide-react';
+import { CalendarClock, MessageCircle, Pencil, Plus, Trash2, User, X } from 'lucide-react';
 import {
   removerAtividade,
   salvarAtividade,
   type AtividadeDetalhe,
 } from '../../services/ordens';
+import { whatsappDoCliente } from '../../services/avaliacoes';
 import type { Employee, TaskStatus } from '../../types/fsm';
 import {
   STATUS_ATIVIDADE,
@@ -18,6 +19,7 @@ import FormulariosAtividade from '../formularios/FormulariosAtividade';
 interface AtividadesOSProps {
   ordemId: string;
   clienteId?: string;
+  clienteNome?: string | null;
   /** Nome do tipo da OS, sugerido como título da atividade. */
   tituloPadrao: string;
   duracaoPadrao: number;
@@ -50,12 +52,20 @@ function deCampoDataHora(valor: string): string | null {
   return deCamposDataHora(data ?? '', hora ?? '');
 }
 
+const FUSO = 'America/Sao_Paulo';
+
+function saudacao(): string {
+  const hora = Number(new Date().toLocaleString('pt-BR', { hour: 'numeric', hour12: false, timeZone: FUSO }));
+  return hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+}
+
 const INPUT =
   'mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
 export default function AtividadesOS({
   ordemId,
   clienteId,
+  clienteNome,
   tituloPadrao,
   duracaoPadrao,
   atividades,
@@ -177,6 +187,27 @@ export default function AtividadesOS({
     }
   };
 
+  const confirmarWhatsapp = async (a: AtividadeDetalhe) => {
+    if (!a.scheduled_start || !clienteId) return;
+    // Abre a janela já no clique (depois do await o navegador bloquearia o pop-up)
+    const janela = window.open('', '_blank');
+    try {
+      const fone = await whatsappDoCliente(clienteId);
+      const dia = new Date(a.scheduled_start).toLocaleDateString('pt-BR', { timeZone: FUSO });
+      const nome = clienteNome?.trim();
+      const texto =
+        `${saudacao()}${nome ? `, ${nome}` : ''}, estou entrando em contato para confirmar seu agendamento ` +
+        `do dia ${dia}, para o serviço ${a.title}.`;
+      const url = `https://wa.me/${fone ?? ''}?text=${encodeURIComponent(texto)}`;
+      if (janela) janela.location.replace(url);
+      else window.location.assign(url);
+      if (!fone) window.alert('O cliente não tem celular válido no cadastro: escolha o contato no WhatsApp.');
+    } catch (err) {
+      janela?.close();
+      window.alert(err instanceof Error ? err.message : 'Não foi possível abrir o WhatsApp.');
+    }
+  };
+
   const handleExcluir = async (a: AtividadeDetalhe) => {
     if (!window.confirm(`Excluir a atividade "${a.title}"?`)) return;
     try {
@@ -238,6 +269,15 @@ export default function AtividadesOS({
                     )}
                   </div>
                   <div className="flex gap-1.5">
+                    {a.status === 'agendada' && a.scheduled_start && clienteId && (
+                      <button
+                        type="button"
+                        onClick={() => confirmarWhatsapp(a)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+                      >
+                        <MessageCircle size={12} /> Confirmar pelo WhatsApp
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => abrirEdicao(a)}

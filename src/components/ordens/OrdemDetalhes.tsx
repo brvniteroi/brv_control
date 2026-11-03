@@ -378,6 +378,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
               <AtividadesOS
                 ordemId={ordem.id}
                 clienteId={ordem.customer_id}
+                clienteNome={cliente?.name}
                 tituloPadrao={tipoAtual?.name ?? ordem.service_type?.name ?? 'Atividade'}
                 duracaoPadrao={tipoAtual?.default_duration_minutes ?? 60}
                 atividades={ordem.tasks}

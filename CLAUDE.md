@@ -118,7 +118,9 @@ Pendente, nesta ordem:
    partir do Field (nunca sobrescreve). `ajustar-numero-endereco.mjs` (2026-11-03) guarda o endereço como veio em
    `customer_address_field_original` (migration `20261103120000_endereco_original_field.sql`, só o escritório lê; mostrado em
    `EnderecosOriginaisField.tsx` no cadastro do cliente, "Endereço antigo no Field") e passa "casa N"/só número do complemento para o
-   Número (40 casos; os outros ~380 endereços sem número ficam como estão).
+   Número (40 casos; os outros ~380 endereços sem número ficam como estão). As observações do cliente no Field (1.381 clientes)
+   também ficam guardadas por `guardar-observacoes-field.mjs` em `customer_field_original` (migration `20261103130000_cliente_original_field.sql`,
+   só o escritório lê) e aparecem no mesmo bloco; `customers.notes` continua sendo o campo editável.
 2. Depois de 18/11: avaliação automática pela WhatsApp Cloud API da Meta (ao concluir a OS; tentar coexistência no
    número atual do escritório) e app Android com GPS em segundo plano (Capacitor). Detalhes na memória do projeto.
 3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,

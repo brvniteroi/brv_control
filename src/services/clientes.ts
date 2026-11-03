@@ -265,3 +265,10 @@ export async function enderecosOriginaisField(enderecoIds: string[]): Promise<Ma
   if (error) throw new Error(error.message);
   return new Map((data ?? []).map((r) => [r.address_id as string, r.original as string]));
 }
+
+/** Observações do cliente como vieram do Field Control (cópia fixa; só o escritório lê). */
+export async function observacoesOriginaisField(clienteId: string): Promise<string | null> {
+  const { data, error } = await supabase.from('customer_field_original').select('notes').eq('customer_id', clienteId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data?.notes as string | undefined) ?? null;
+}

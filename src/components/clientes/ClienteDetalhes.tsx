@@ -767,7 +767,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                 onAlterado={recarregarEnderecos}
               />
 
-              {clienteId !== 'novo' && <EnderecosOriginaisField enderecos={todosEnderecos} />}
+              {clienteId !== 'novo' && <EnderecosOriginaisField clienteId={clienteId} enderecos={todosEnderecos} />}
 
               <MapaEnderecos
                 enderecos={todosEnderecos}

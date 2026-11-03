@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Map as MapaIcone, Move } from 'lucide-react';
-import { carregarMapa, mapasConfigurados } from '../../services/googleMaps';
+import { carregarMapa, ID_MAPA, lerPosicao, mapasConfigurados } from '../../services/googleMaps';
 import type { CustomerAddress } from '../../types/fsm';
 
 interface MapaEnderecosProps {
@@ -40,9 +40,10 @@ export default function MapaEnderecos({ enderecos, onMover }: MapaEnderecosProps
     const alvo = container.current;
 
     carregarMapa()
-      .then(({ Map: MapaGoogle, InfoWindow }) => {
+      .then(({ Map: MapaGoogle, InfoWindow, AdvancedMarkerElement, PinElement }) => {
         if (cancelado) return;
         const mapa = new MapaGoogle(alvo, {
+          mapId: ID_MAPA,
           center: { lat: pontos[0].latitude!, lng: pontos[0].longitude! },
           zoom: 15,
           mapTypeControl: false,
@@ -54,12 +55,13 @@ export default function MapaEnderecos({ enderecos, onMover }: MapaEnderecosProps
 
         for (const e of pontos) {
           const posicao = { lat: e.latitude!, lng: e.longitude! };
-          const marcador = new google.maps.Marker({
+          const pino = new PinElement(e.active ? {} : { background: '#94a3b8', borderColor: '#64748b', glyphColor: '#fff' });
+          const marcador = new AdvancedMarkerElement({
             map: mapa,
             position: posicao,
             title: podeMover ? `${rotulo(e)} (arraste para corrigir)` : rotulo(e),
-            opacity: e.active ? 1 : 0.5,
-            draggable: podeMover,
+            content: pino.element,
+            gmpDraggable: podeMover,
           });
           marcador.addListener('click', () => {
             const caixa = document.createElement('div');
@@ -75,17 +77,17 @@ export default function MapaEnderecos({ enderecos, onMover }: MapaEnderecosProps
           // Solta o alfinete: grava a nova posição; se falhar, volta para onde estava
           let ultima = posicao;
           marcador.addListener('dragend', () => {
-            const nova = marcador.getPosition();
+            const nova = lerPosicao(marcador.position);
             const salvar = onMoverRef.current;
             if (!nova || !salvar) return;
             janela.close();
-            salvar(e, nova.lat(), nova.lng())
+            salvar(e, nova.lat, nova.lng)
               .then(() => {
-                ultima = { lat: nova.lat(), lng: nova.lng() };
+                ultima = nova;
                 setAviso({ tipo: 'ok', texto: `Posição de "${rotulo(e)}" salva.` });
               })
               .catch((err: unknown) => {
-                marcador.setPosition(ultima);
+                marcador.position = ultima;
                 setAviso({ tipo: 'erro', texto: err instanceof Error ? err.message : 'Não foi possível salvar a posição.' });
               });
           });

@@ -13,9 +13,27 @@ function configurar() {
   configurado = true;
 }
 
+/**
+ * Marcadores avançados exigem um Map ID. Sem `VITE_GOOGLE_MAPS_MAP_ID` no .env usa o ID de demonstração
+ * do Google (funciona igual, só não permite estilo do mapa pelo Google Cloud).
+ */
+export const ID_MAPA = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
+
 export async function carregarMapa() {
   configurar();
-  return importLibrary('maps');
+  const [maps, marker] = await Promise.all([importLibrary('maps'), importLibrary('marker')]);
+  return {
+    Map: maps.Map,
+    InfoWindow: maps.InfoWindow,
+    AdvancedMarkerElement: marker.AdvancedMarkerElement,
+    PinElement: marker.PinElement,
+  };
+}
+
+/** Latitude/longitude de uma posição de marcador (que pode vir como LatLng ou como objeto simples). */
+export function lerPosicao(p: google.maps.LatLng | google.maps.LatLngLiteral | google.maps.LatLngAltitude | null | undefined) {
+  if (!p) return null;
+  return { lat: typeof p.lat === 'function' ? p.lat() : p.lat, lng: typeof p.lng === 'function' ? p.lng() : p.lng };
 }
 
 export interface EnderecoGeocodificavel {

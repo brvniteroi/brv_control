@@ -55,7 +55,9 @@ Feito:
   `20261029120000_clientes_salvar.sql`, `20261029130000_enderecos_cliente.sql`.
 - Mapa Google no cadastro do cliente (`MapaEnderecos.tsx`, `services/googleMaps.ts`): as coordenadas são
   geocodificadas ao salvar cada endereço. Precisa de `VITE_GOOGLE_MAPS_API_KEY` (opcional; sem ela o mapa fica
-  desligado).
+  desligado). Marcadores são `AdvancedMarkerElement` (o `Marker` foi descontinuado), que exigem Map ID: vem de
+  `VITE_GOOGLE_MAPS_MAP_ID` (opcional; sem ele usa `DEMO_MAP_ID`). A chave precisa liberar por referenciador HTTP
+  `control.brvniteroi.com.br/*` e `www.control.brvniteroi.com.br/*` (sem o `www.` dá `RefererNotAllowedMapError`).
 - Página Mapa (`pages/Mapa.tsx`, `components/mapa/MapaOperacao.tsx`, só escritório): atendimentos do dia no endereço da OS
   (alfinete na cor do status, contorno na cor do técnico, número = ordem do dia) e a última posição de cada técnico.
   O app de campo envia a posição enquanto está aberto (`useRastreioCampo` em `hooks/useCampo.ts`, no máximo 1 por minuto)
@@ -71,7 +73,8 @@ Feito:
   `20261101100000_duracao_atividade.sql` (aplicada).
   Atividade não tem `pendente` nem `pausada` e não existe mais fila "A agendar": toda atividade nasce `agendada` com técnico,
   data e hora (só concluída/cancelada importada pode ficar sem). Migration `20261101120000_status_atividade.sql` (aplicada;
-  apagou as atividades pendentes/pausadas e as em aberto sem técnico ou horário).
+  apagou as atividades pendentes/pausadas e as em aberto sem técnico ou horário). Atividade iniciada por engano volta para
+  `agendada` pelo Editar da OS (`AtividadesOS.tsx` zera início e término reais ao sair de outro status para `agendada`).
 - Equipe (`pages/Equipe.tsx`, `components/equipe/`, `services/equipe.ts`): aba Colaboradores (técnicos etc., cor, login ligado)
   e aba Usuários (só admin: criar com senha temporária, papel, bloquear, redefinir senha). Criar usuário e redefinir senha
   rodam na Edge Function `supabase/functions/gerenciar-usuario` (usa a chave de admin do Supabase, só no servidor);

@@ -65,7 +65,8 @@ Feito:
   a tela apagada: posição com mais de 15 min aparece apagada. Migration `20261102120000_mapa_tecnicos.sql`.
   Online/offline do técnico: o app de campo manda um sinal de vida por minuto (visível e com internet: `usePresencaCampo`, RPC
   `registrar_presenca` → `technician_presence`, migration `20261103140000_presenca_tecnicos.sql`, **a colar no SQL Editor**). O Mapa mostra
-  "Online" (sinal < 3 min) ou "Offline · há X" ao lado do técnico (`usePresencasTecnicos`). O app de campo não mostra indicador de online
+  "Online" (sinal < 3 min) ou "Offline · há X" ao lado do técnico (`usePresencasTecnicos`); a linha do tempo (`GradeTempo.tsx`, só
+  hoje) mostra uma bolinha verde/cinza ao lado do nome, com o "há X min" na dica. O app de campo não mostra indicador de online
   (decisão do usuário; só a faixa de "Sem internet"/envios pendentes).
 - Ordens de Serviço (`pages/OrdensServico.tsx`, `components/ordens/`, `services/ordens.ts`): lista paginada com busca e
   filtros, criar/editar OS, atividades (técnico, data, status) e galeria de fotos. O status da OS segue as atividades (trigger

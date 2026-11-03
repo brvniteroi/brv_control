@@ -1,10 +1,11 @@
-import { memo, useMemo, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
+import { memo, useEffect, useMemo, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import { AlertTriangle, Flame } from 'lucide-react';
+import { MINUTOS_ONLINE, usePresencasTecnicos } from '../../hooks/usePresencasTecnicos';
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { dicaEtiquetas } from '../../services/etiquetas';
 import EtiquetasNoBloco from '../etiquetas/EtiquetasNoBloco';
-import { formatarHora, minutosDoDia, podeMover } from '../../utils/linhaDoTempo';
+import { dataLocal, formatarHora, minutosDoDia, podeMover } from '../../utils/linhaDoTempo';
 import { COR_STATUS_ATIVIDADE as COR_STATUS } from '../../utils/ordens';
 import { COLUNA_TECNICOS_PX, type JanelaTempo } from './janela';
 import type { EspecArrasto, PreviaArrasto } from './useArrasto';
@@ -88,6 +89,24 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
   );
 });
 
+/** Verde = app de campo aberto e com internet agora; cinza = fora do ar (a dica diz há quanto tempo). */
+function BolinhaOnline({ visto, agora }: { visto: string | undefined; agora: number }) {
+  const min = visto ? Math.max(0, Math.round((agora - Date.parse(visto)) / 60000)) : null;
+  const online = min !== null && min < MINUTOS_ONLINE;
+  const dica = online
+    ? 'App de campo online'
+    : min === null
+      ? 'Offline: o app ainda não deu sinal'
+      : `Offline: último sinal ${min < 60 ? `há ${min} min` : `há ${Math.floor(min / 60)} h`}`;
+  return (
+    <span
+      title={dica}
+      aria-label={dica}
+      className={`h-2 w-2 shrink-0 rounded-full ${online ? 'bg-emerald-500' : 'bg-slate-300'}`}
+    />
+  );
+}
+
 function resumoTecnico(atividades: AtividadeLinha[]): string {
   const validas = atividades.filter((a) => a.status !== 'cancelada' && a.scheduled_start && a.scheduled_end);
   if (validas.length === 0) return 'Livre';
@@ -119,6 +138,14 @@ export default function GradeTempo({
   dia, tecnicos, atividades, conflitos, janela, pxPorHora, previa, agoraMin, scrollerRef, registrarLane, aoIniciarArrasto,
 }: GradeTempoProps) {
   const pxPorMin = pxPorHora / 60;
+  // Online/offline do app de campo de cada técnico (só faz sentido no dia de hoje)
+  const presencas = usePresencasTecnicos();
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setAgora(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+  const ehHoje = dia === dataLocal();
   const larguraTotal = (janela.fimMin - janela.inicioMin) * pxPorMin;
   const horas = Array.from({ length: (janela.fimMin - janela.inicioMin) / 60 }, (_, i) => janela.inicioMin / 60 + i);
 
@@ -202,7 +229,10 @@ export default function GradeTempo({
                   {t.name.trim().charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-slate-800">{t.name}</div>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                    <span className="truncate">{t.name}</span>
+                    {ehHoje && !t.somenteLeitura && <BolinhaOnline visto={presencas[t.id]} agora={agora} />}
+                  </div>
                   <div className="truncate text-[11px] text-slate-500">{resumoTecnico(t.atividades)}</div>
                 </div>
               </div>

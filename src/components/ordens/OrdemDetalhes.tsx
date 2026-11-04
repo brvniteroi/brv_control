@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Check, ClipboardList, History, Tag as IconeEtiqueta, X } from 'lucide-react';
+import { Check, ClipboardList, ExternalLink, History, Tag as IconeEtiqueta, X } from 'lucide-react';
 import {
   buscarOrdem,
   listarEnderecosDoCliente,
@@ -17,7 +17,9 @@ import type {
   ServiceType,
   Tag,
 } from '../../types/fsm';
+import { useAuth } from '../../contexts/useAuth';
 import { definirEtiquetasOrdem } from '../../services/etiquetas';
+import ClienteDetalhes from '../clientes/ClienteDetalhes';
 import EtiquetaChip from '../etiquetas/EtiquetaChip';
 import SeletorEtiquetas from '../etiquetas/SeletorEtiquetas';
 import { PRIORIDADES, STATUS_OS, formatarDataHora, rotuloEndereco } from '../../utils/ordens';
@@ -40,6 +42,10 @@ const INPUT =
 
 export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetalhesProps) {
   const nova = ordemId === 'nova';
+  const { profile } = useAuth();
+  // Atalho para o cadastro do cliente: só admin e escritório
+  const podeAbrirCliente = profile?.role === 'admin' || profile?.role === 'escritorio';
+  const [clienteAberto, setClienteAberto] = useState(false);
   const [carregando, setCarregando] = useState(!nova);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -303,7 +309,18 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <span className="block text-xs font-medium text-slate-700">Cliente *</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="block text-xs font-medium text-slate-700">Cliente *</span>
+                {podeAbrirCliente && cliente && (
+                  <button
+                    type="button"
+                    onClick={() => setClienteAberto(true)}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                  >
+                    <ExternalLink size={12} /> Abrir cadastro do cliente
+                  </button>
+                )}
+              </div>
               {/* Trocar o cliente de uma OS existente deixaria atividades e fotos com o cliente errado */}
               <SeletorCliente valor={cliente} onChange={escolherCliente} desabilitado={!nova} />
             </div>
@@ -415,6 +432,23 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
           )
         )}
       </div>
+
+      {clienteAberto && podeAbrirCliente && cliente && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50 pb-10">
+          <ClienteDetalhes
+            clienteId={cliente.id}
+            onFechar={() => setClienteAberto(false)}
+            // O nome pode ter mudado: atualiza o cliente mostrado na OS (sem mexer no que foi digitado nos demais campos)
+            onSalvo={() => {
+              void buscarOrdem(ordemId).then((o) => {
+                if (!o) return;
+                setOrdem(o);
+                setCliente(o.customer);
+              });
+            }}
+          />
+        </div>
+      )}
 
       {historicoAberto && ordem && (
         <HistoricoAtendimentosOS

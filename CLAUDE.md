@@ -79,7 +79,9 @@ Feito:
   senão alguma agendada → agendada, senão concluida; não mexe em OS cancelada, sem atividade ou com todas canceladas) e só pode ser `agendada`, `em_andamento`, `concluida` ou `cancelada` (migration
   `20261101110000_status_os.sql`, aplicada: converte aberta→agendada e pausada→em_andamento; chamado do portal nasce agendada). Depois de importar OS, rodar o `setval` da numeração (já vai no fim do `os.sql` gerado).
   Nova atividade (linha do tempo/calendário, `NovaAtividadeModal.tsx`): cliente com mais de um endereço ativo escolhe o
-  endereço da OS nova; duração prevista é obrigatória e livre, guardada em `tasks.estimated_minutes`. Migration
+  endereço da OS nova; duração prevista é obrigatória e livre, guardada em `tasks.estimated_minutes`. O modal também tem "Solicitação do cliente" e
+  "Observações internas" (campos da OS): na OS nova vão junto; em OS existente vêm preenchidos e, se mudarem, `atualizarTextosOrdem`
+  grava só esses dois campos. Migration
   `20261101100000_duracao_atividade.sql` (aplicada).
   Atividade não tem `pendente` nem `pausada` e não existe mais fila "A agendar": toda atividade nasce `agendada` com técnico,
   data e hora (só concluída/cancelada importada pode ficar sem). Migration `20261101120000_status_atividade.sql` (aplicada;
@@ -89,7 +91,9 @@ Feito:
   <cliente>, estou entrando em contato para confirmar seu agendamento do dia <data>, para o serviço <título>").
   Link "Histórico de atendimentos" no cabeçalho da OS (`HistoricoAtendimentosOS.tsx`): painel por cima da OS com as OS do cliente
   (`AtendimentosCliente` com relato do técnico; a OS de origem fica marcada); abrir outra OS dali também é por cima, e "Voltar"/Esc
-  volta para a OS de origem sem perder o que não foi salvo.
+  volta para a OS de origem sem perder o que não foi salvo. Na aba Atendimento do cliente (`AtendimentosCliente`, `AvaliacoesCliente`,
+  ambos com `onAbrirOrdem` obrigatório) a OS também abre por cima do cadastro; fechar volta para o cliente e recarrega as listas.
+  Só o Dashboard ainda usa `/ordens-de-servico?os=<id>`.
   O escritório adiciona fotos direto na OS (botão "Adicionar fotos" em `AnexosOS.tsx`, várias de uma vez, via `anexarFoto`; só imagens).
   Admin vê um X vermelho em cada foto da OS (`AnexosOS.tsx`, `excluirAnexo` em `services/anexos.ts`): apaga só o registro em
   `attachments` (a RLS "Só admin exclui" já garante; o arquivo continua na HostGator).

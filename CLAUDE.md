@@ -105,6 +105,7 @@ Feito:
   volta para a OS de origem sem perder o que não foi salvo. Na aba Atendimento do cliente (`AtendimentosCliente`, `AvaliacoesCliente`,
   ambos com `onAbrirOrdem` obrigatório) a OS também abre por cima do cadastro; fechar volta para o cliente e recarrega as listas.
   Só o Dashboard ainda usa `/ordens-de-servico?os=<id>`.
+  Admin e escritório excluem formulário de campo adicionado errado (lixeira em `FormulariosAtividade.tsx`, `excluirFormulario`; migration `20261104100000_escritorio_exclui_formulario.sql`, **a colar no SQL Editor**).
   Link "Abrir cadastro do cliente" ao lado do campo Cliente da OS (só admin/escritório): abre `ClienteDetalhes` por cima da OS; ao salvar, o nome mostrado na OS atualiza.
   O escritório adiciona fotos direto na OS (botão "Adicionar fotos" em `AnexosOS.tsx`, várias de uma vez, via `anexarFoto`; só imagens).
   Admin vê um X vermelho em cada foto da OS (`AnexosOS.tsx`, `excluirAnexo` em `services/anexos.ts`): apaga só o registro em

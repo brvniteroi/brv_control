@@ -6,16 +6,19 @@ import {
   FileText,
   Loader2,
   Plus,
+  Trash2,
   X,
 } from 'lucide-react';
 import {
   abrirFormulario,
+  excluirFormulario,
   listarFormulariosDaAtividade,
   listarModelos,
 } from '../../services/formularios';
 import { listarEquipamentos } from '../../services/equipamentos';
 import type { FormularioRespondido, ModeloFormulario } from '../../types/formularios';
 import type { EquipamentoComCliente } from '../../services/equipamentos';
+import { useAuth } from '../../contexts/useAuth';
 import { formatarDataHora } from '../../utils/ordens';
 import PreencherFormulario from './PreencherFormulario';
 
@@ -28,6 +31,9 @@ export default function FormulariosAtividade({
   taskId,
   clienteId,
 }: FormulariosAtividadeProps) {
+  const { profile } = useAuth();
+  const podeExcluir = profile?.role === 'admin' || profile?.role === 'escritorio';
+  const [excluindoId, setExcluindoId] = useState<string | null>(null);
   const [formularios, setFormularios] = useState<FormularioRespondido[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -55,6 +61,20 @@ export default function FormulariosAtividade({
       setErro('Não foi possível carregar os formulários desta atividade.');
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const excluir = async (form: FormularioRespondido) => {
+    const aviso = form.status === 'preenchido' ? ' Ele já está preenchido e as respostas serão perdidas.' : '';
+    if (!window.confirm(`Excluir o formulário "${form.template_name}" desta atividade?${aviso}`)) return;
+    setExcluindoId(form.id);
+    try {
+      await excluirFormulario(form.id);
+      await recarregar();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Não foi possível excluir o formulário.');
+    } finally {
+      setExcluindoId(null);
     }
   };
 
@@ -218,6 +238,18 @@ export default function FormulariosAtividade({
                 >
                   Abrir
                 </button>
+                {podeExcluir && (
+                  <button
+                    type="button"
+                    onClick={() => excluir(form)}
+                    disabled={excluindoId === form.id}
+                    title="Excluir formulário"
+                    aria-label="Excluir formulário"
+                    className="inline-flex items-center rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                  >
+                    {excluindoId === form.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  </button>
+                )}
               </div>
             );
           })}

@@ -103,7 +103,7 @@ export async function salvarRespostas(
   return data as FormularioRespondido;
 }
 
-/** Só admin (RLS). */
+/** Admin e escritório (RLS). */
 export async function excluirFormulario(id: string): Promise<void> {
   const { error } = await supabase.from('form_responses').delete().eq('id', id);
   if (error) throw new Error(`Não foi possível excluir o formulário: ${error.message}`);

@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ClipboardList } from 'lucide-react';
 import { listarOrdensDoCliente, type OrdemResumo } from '../../services/ordens';
 import { formatarData, formatarDataHora, infoStatusOS } from '../../utils/ordens';
 
-export default function AtendimentosCliente({ clienteId }: { clienteId: string | 'novo' }) {
+interface AtendimentosClienteProps {
+  clienteId: string | 'novo';
+  /** Dentro de uma OS: essa OS aparece marcada. */
+  ordemAtualId?: string;
+  /** Abre a OS por cima da tela atual (cadastro do cliente ou histórico): fechar volta para cá. */
+  onAbrirOrdem: (id: string) => void;
+}
+
+export default function AtendimentosCliente({ clienteId, ordemAtualId, onAbrirOrdem }: AtendimentosClienteProps) {
   const [ordens, setOrdens] = useState<OrdemResumo[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -60,16 +67,29 @@ export default function AtendimentosCliente({ clienteId }: { clienteId: string |
                 const validas = o.tasks.filter((t) => t.status !== 'cancelada');
                 const tecnicos = [...new Set(validas.map((t) => t.employee?.name).filter(Boolean))].join(', ');
                 const datas = validas.map((t) => t.scheduled_start).filter((d): d is string => Boolean(d)).sort();
+                const relato = validas
+                  .filter((t) => t.technician_notes?.trim())
+                  .sort((a, b) => (a.finished_at ?? a.scheduled_start ?? '').localeCompare(b.finished_at ?? b.scheduled_start ?? ''))
+                  .at(-1)?.technician_notes;
+                const atual = o.id === ordemAtualId;
                 return (
-                  <tr key={o.id} className="transition hover:bg-slate-50/80">
+                  <tr key={o.id} className={`transition hover:bg-slate-50/80 ${atual ? 'bg-blue-50/60' : ''}`}>
                     <td className="px-3 py-3 font-mono font-bold">
-                      <Link to={`/ordens-de-servico?os=${o.id}`} className="text-blue-600 hover:underline">
+                      <button type="button" onClick={() => onAbrirOrdem(o.id)} className="text-blue-600 hover:underline">
                         {o.number}
-                      </Link>
+                      </button>
+                      {atual && <div className="font-sans text-[10px] font-semibold text-blue-600">esta OS</div>}
                     </td>
                     <td className="px-3 py-3">
                       <div>{o.service_type?.name ?? '—'}</div>
-                      {o.description && <div className="max-w-72 truncate text-[11px] text-slate-400">{o.description}</div>}
+                      {o.description && (
+                        <div title={o.description} className="max-w-72 truncate text-[11px] text-slate-400">{o.description}</div>
+                      )}
+                      {relato && (
+                        <div title={relato} className="max-w-96 truncate text-[11px] text-slate-600">
+                          <span className="font-semibold">Relato:</span> {relato}
+                        </div>
+                      )}
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>

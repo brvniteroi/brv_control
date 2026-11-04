@@ -69,7 +69,7 @@ Feito:
   pela RPC `registrar_posicao` para `technician_locations` (só a última, sem histórico; Realtime). Navegador não rastreia com
   a tela apagada: posição com mais de 15 min aparece apagada. Migration `20261102120000_mapa_tecnicos.sql`.
   Online/offline do técnico: o app de campo manda um sinal de vida por minuto (visível e com internet: `usePresencaCampo`, RPC
-  `registrar_presenca` → `technician_presence`, migration `20261103140000_presenca_tecnicos.sql`, **a colar no SQL Editor**). O Mapa mostra
+  `registrar_presenca` → `technician_presence`, migration `20261103140000_presenca_tecnicos.sql`, aplicada). O Mapa mostra
   "Online" (sinal < 3 min) ou "Offline · há X" ao lado do técnico (`usePresencasTecnicos`); a linha do tempo (`GradeTempo.tsx`, só
   hoje) mostra uma bolinha verde/cinza ao lado do nome, com o "há X min" na dica. O app de campo não mostra indicador de online
   (decisão do usuário; só a faixa de "Sem internet"/envios pendentes).
@@ -87,10 +87,17 @@ Feito:
   `agendada` pelo Editar da OS (`AtividadesOS.tsx` zera início e término reais ao sair de outro status para `agendada`).
   Atividade agendada tem o botão "Confirmar pelo WhatsApp" (abre o wa.me no celular do cliente com "Bom dia/Boa tarde/Boa noite,
   <cliente>, estou entrando em contato para confirmar seu agendamento do dia <data>, para o serviço <título>").
+  Link "Histórico de atendimentos" no cabeçalho da OS (`HistoricoAtendimentosOS.tsx`): painel por cima da OS com as OS do cliente
+  (`AtendimentosCliente` com relato do técnico; a OS de origem fica marcada); abrir outra OS dali também é por cima, e "Voltar"/Esc
+  volta para a OS de origem sem perder o que não foi salvo.
   O escritório adiciona fotos direto na OS (botão "Adicionar fotos" em `AnexosOS.tsx`, várias de uma vez, via `anexarFoto`; só imagens).
   Admin vê um X vermelho em cada foto da OS (`AnexosOS.tsx`, `excluirAnexo` em `services/anexos.ts`): apaga só o registro em
   `attachments` (a RLS "Só admin exclui" já garante; o arquivo continua na HostGator).
   A situação da OS segue as atividades; cancelar a OS não cancela as atividades (decisão do usuário, 2026-11-03).
+  Linha do tempo acompanha o horário real: o trigger `tasks_segue_horario_real` (migration `20261103160000_horario_real_na_agenda.sql`,
+  aplicada) move o início para `started_at` ao iniciar (mesma duração) e o fim para `finished_at` ao concluir; em
+  execução, a barra cresce até agora. O escritório arrasta qualquer atividade não cancelada (`podeMover`): na concluída corrige
+  início/fim reais, na em execução corrige o início real; a caminho/em execução não trocam de técnico pelo arraste (`podeTrocarTecnico`).
 - Equipe (`pages/Equipe.tsx`, `components/equipe/`, `services/equipe.ts`): aba Colaboradores (técnicos etc., cor, login ligado)
   e aba Usuários (só admin: criar com senha temporária, papel, bloquear, redefinir senha). Criar usuário e redefinir senha
   rodam na Edge Function `supabase/functions/gerenciar-usuario` (usa a chave de admin do Supabase, só no servidor);

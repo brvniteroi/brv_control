@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { avaliacoesDoCliente, type Avaliacao } from '../../services/avaliacoes';
 import { formatarData } from '../../utils/ordens';
 import Estrelas from './Estrelas';
 
 /** Avaliações que o cliente já deu (média e lista), na aba Atendimento do cliente. */
-export default function AvaliacoesCliente({ clienteId }: { clienteId: string }) {
+export default function AvaliacoesCliente({ clienteId, onAbrirOrdem }: { clienteId: string; onAbrirOrdem: (id: string) => void }) {
   const [lista, setLista] = useState<Avaliacao[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -48,9 +47,9 @@ export default function AvaliacoesCliente({ clienteId }: { clienteId: string }) 
                   {a.service_order && (
                     <>
                       {' · '}
-                      <Link to={`/ordens-de-servico?os=${a.service_order.id}`} className="text-blue-600 hover:underline">
+                      <button type="button" onClick={() => onAbrirOrdem(a.service_order!.id)} className="text-blue-600 hover:underline">
                         OS {a.service_order.number}
-                      </Link>
+                      </button>
                     </>
                   )}
                   {a.employee ? ` · ${a.employee.name}` : ''}

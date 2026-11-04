@@ -7,7 +7,7 @@ import {
   type TecnicoLinha,
 } from '../services/linhaDoTempo';
 import type { Task } from '../types/fsm';
-import { atividadesEmConflito, limitesDoDia, podeMover } from '../utils/linhaDoTempo';
+import { atividadesEmConflito, horarioRealDoArraste, limitesDoDia, podeMover, podeTrocarTecnico } from '../utils/linhaDoTempo';
 import { useOrdensDasAtividades } from './useOrdensDasAtividades';
 import { useRealtimeTable } from './useRealtimeTable';
 
@@ -66,11 +66,15 @@ export function useLinhaDoTempo(dia: string) {
       setErroAcao(null);
       const original = doDia.linhas.find((t) => t.id === id);
       if (!original || !podeMover(original)) throw new Error('Esta atividade não pode ser movida.');
-      const otimista: Task = { ...original, ...d };
+      if (d.employee_id !== original.employee_id && !podeTrocarTecnico(original)) {
+        throw new Error('Atividade a caminho ou em execução não troca de técnico pela linha do tempo. Use o Editar da OS.');
+      }
+      const dados = { ...d, ...horarioRealDoArraste(original.status, d.scheduled_start, d.scheduled_end) };
+      const otimista: Task = { ...original, ...dados };
 
       doDia.setLinhas((atual) => atual.map((t) => (t.id === id ? otimista : t)));
       try {
-        const salvo = await agendarAtividade(id, d);
+        const salvo = await agendarAtividade(id, original.status, dados);
         doDia.setLinhas((atual) => atual.map((t) => (t.id === id ? salvo : t)));
       } catch (e) {
         doDia.setLinhas((atual) => atual.map((t) => (t.id === id ? original : t)));

@@ -13,6 +13,8 @@ export interface EspecArrasto {
   employeeId: string | null;
   /** Atividade que não pode ser movida: o ponteiro só serve para clicar. */
   fixo?: boolean;
+  /** False: move só no tempo, fica na linha do mesmo técnico (atividade a caminho ou em execução). */
+  trocaTecnico?: boolean;
 }
 
 export interface PreviaArrasto {
@@ -91,7 +93,7 @@ export function useArrasto(opcoes: Opcoes) {
       let employeeId = spec.employeeId;
 
       if (spec.modo === 'mover') {
-        employeeId = laneId;
+        employeeId = spec.trocaTecnico === false ? spec.employeeId : laneId;
         inicioMin = limitar(arredondarMinutos(spec.inicioMin + deltaMin), 0, 1440 - duracao);
         fimMin = inicioMin + duracao;
       } else if (spec.modo === 'inicio') {

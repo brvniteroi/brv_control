@@ -126,6 +126,7 @@ interface EnderecoBruto {
 function traduzirErro(mensagem: string): string {
   if (mensagem.includes('tasks_scheduled_needs_slot')) return 'A atividade precisa de técnico e horário.';
   if (mensagem.includes('tasks_schedule_valid')) return 'O horário de término deve ser depois do início.';
+  if (mensagem.includes('tasks_execution_valid')) return 'O término real deve ser depois do início real.';
   if (mensagem.includes('row-level security') || mensagem.includes('permission')) {
     return 'Você não tem permissão para reagendar esta atividade.';
   }
@@ -133,23 +134,30 @@ function traduzirErro(mensagem: string): string {
 }
 
 /**
- * Reagenda: muda técnico e horário. Só deve ser chamada para atividades que `podeMover` (agendada).
+ * Reagenda: muda técnico e horário (`podeMover`). Em atividade iniciada/concluída também corrige o horário
+ * real (`horarioRealDoArraste`). Só grava se o status ainda for o que a tela mostrava: se o técnico mudou
+ * a situação nesse meio-tempo, pede para atualizar em vez de sobrescrever.
  */
 export async function agendarAtividade(
   id: string,
-  d: { employee_id: string; scheduled_start: string; scheduled_end: string },
+  statusNaTela: Task['status'],
+  d: { employee_id: string; scheduled_start: string; scheduled_end: string; started_at?: string; finished_at?: string },
 ): Promise<Task> {
   const { data, error } = await supabase
     .from('tasks')
-    .update({
-      ...d,
-      estimated_minutes: Math.max(1, Math.round((Date.parse(d.scheduled_end) - Date.parse(d.scheduled_start)) / 60000)),
-    })
+    .update(
+      statusNaTela === 'agendada'
+        ? {
+            ...d,
+            estimated_minutes: Math.max(1, Math.round((Date.parse(d.scheduled_end) - Date.parse(d.scheduled_start)) / 60000)),
+          }
+        : d, // iniciada/concluída: a duração prevista continua a original
+    )
     .eq('id', id)
-    .eq('status', 'agendada') // não mexe em atividade que o técnico já iniciou
+    .eq('status', statusNaTela)
     .select()
     .maybeSingle();
   if (error) throw new Error(traduzirErro(error.message));
-  if (!data) throw new Error('Esta atividade já foi iniciada ou alterada por outra pessoa. Atualize a tela.');
+  if (!data) throw new Error('O técnico mudou a situação desta atividade enquanto você arrastava. Atualize a tela.');
   return data as Task;
 }

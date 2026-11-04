@@ -78,7 +78,7 @@ export default function OrdensServico() {
   const [pagina, setPagina] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  // /ordens-de-servico?os=<id> abre a OS direto (usado pela aba Atendimento do cliente);
+  // /ordens-de-servico?os=<id> abre a OS direto (usado pelo Dashboard);
   // ?situacao=abertas|atrasadas|urgentes|<status> já abre filtrada (cards do Dashboard)
   const [params, setParams] = useSearchParams();
   const [filtros, setFiltros] = useState<FiltrosOrdens>(() => {

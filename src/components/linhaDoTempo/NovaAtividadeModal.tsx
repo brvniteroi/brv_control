@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Loader2, Search, UserPlus, X } from 'lucide-react';
 import {
+  atualizarTextosOrdem,
   listarEnderecosDoCliente,
   listarOrdens,
   listarTipos,
@@ -51,6 +52,9 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
   const [hora, setHora] = useState('');
   // Obrigatória e livre; só vem preenchida se o tipo de serviço tiver duração padrão
   const [duracao, setDuracao] = useState('');
+  // Campos da OS: na OS nova vão junto; numa OS existente vêm preenchidos e, se mudarem, atualizam a OS
+  const [solicitacao, setSolicitacao] = useState('');
+  const [observacoes, setObservacoes] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -113,12 +117,17 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
   const escolherOrdem = (o: OrdemResumo) => {
     setOrdem(o);
     setTitulo(o.service_type?.name ?? '');
+    setSolicitacao(o.description ?? '');
+    setObservacoes(o.internal_notes ?? '');
     const dur = o.service_type && duracoes[o.service_type.id];
     if (dur) setDuracao(String(dur));
   };
 
   const escolherSemOs = (id: string, nome: string) => {
     setSemOs({ id, nome });
+    setOrdem(null);
+    setSolicitacao('');
+    setObservacoes('');
     setTipoId('');
     setEnderecos([]);
     setEnderecoId('');
@@ -165,11 +174,16 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
           service_type_id: tipoId,
           status: 'agendada',
           priority: 'normal',
-          description: '',
-          internal_notes: '',
+          description: solicitacao,
+          internal_notes: observacoes,
           due_date: '',
           cancel_reason: '',
         });
+      } else if (
+        ordem &&
+        (solicitacao.trim() !== (ordem.description ?? '').trim() || observacoes.trim() !== (ordem.internal_notes ?? '').trim())
+      ) {
+        await atualizarTextosOrdem(ordem.id, solicitacao, observacoes);
       }
       await salvarAtividade({
         service_order_id: ordemId!,
@@ -196,7 +210,7 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
           <ClienteDetalhes clienteId="novo" nomeInicial={termo.trim()} onFechar={fecharCadastro} onSalvo={setClienteCriadoId} />
         </div>
       )}
-      <form onSubmit={salvar} className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-2xl">
+      <form onSubmit={salvar} className="max-h-[calc(100dvh-2rem)] w-full max-w-lg space-y-4 overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">Nova atividade</h2>
           <button type="button" onClick={aoFechar} aria-label="Fechar" className="text-slate-400 hover:text-slate-600">
@@ -338,6 +352,27 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
               className={`${CAMPO} mt-1.5`}
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="na-solicitacao" className="block text-xs font-semibold text-slate-700">Solicitação do cliente / descrição</label>
+          <textarea
+            id="na-solicitacao"
+            rows={2}
+            value={solicitacao}
+            onChange={(e) => setSolicitacao(e.target.value)}
+            className={`${CAMPO} mt-1.5 resize-y`}
+          />
+        </div>
+        <div>
+          <label htmlFor="na-obs" className="block text-xs font-semibold text-slate-700">Observações internas (só o escritório)</label>
+          <textarea
+            id="na-obs"
+            rows={2}
+            value={observacoes}
+            onChange={(e) => setObservacoes(e.target.value)}
+            className={`${CAMPO} mt-1.5 resize-y`}
+          />
         </div>
 
         <div className="flex justify-end gap-2 pt-1">

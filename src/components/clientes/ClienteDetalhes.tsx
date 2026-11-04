@@ -24,6 +24,7 @@ import EnderecosAdicionais from './EnderecosAdicionais';
 import EnderecosOriginaisField from './EnderecosOriginaisField';
 import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
+import OrdemDetalhes from '../ordens/OrdemDetalhes';
 import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
 import MapaEnderecos from './MapaEnderecos';
 import { formatarTelefone } from '../../utils/telefone';
@@ -53,6 +54,8 @@ const ABAS: AbaItem[] = [
 
 export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInicial }: ClienteDetalhesProps) {
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('geral');
+  const [ordemAberta, setOrdemAberta] = useState<string | null>(null);
+  const [versaoAtendimentos, setVersaoAtendimentos] = useState(0);
   const [carregando, setCarregando] = useState(clienteId !== 'novo');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -882,9 +885,26 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
       {/* Conteúdo das outras abas */}
       {abaAtiva === 'atendimento' && (
         <>
-          <AtendimentosCliente clienteId={clienteId} />
-          {clienteId !== 'novo' && <AvaliacoesCliente clienteId={clienteId} />}
+          {/* key: OS aberta daqui e salva/fechada -> recarrega as listas */}
+          <AtendimentosCliente key={`os-${versaoAtendimentos}`} clienteId={clienteId} onAbrirOrdem={setOrdemAberta} />
+          {clienteId !== 'novo' && (
+            <AvaliacoesCliente key={`av-${versaoAtendimentos}`} clienteId={clienteId} onAbrirOrdem={setOrdemAberta} />
+          )}
         </>
+      )}
+
+      {/* OS aberta pela aba Atendimento: por cima do cadastro; fechar volta para o cliente */}
+      {ordemAberta && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50 pb-10">
+          <OrdemDetalhes
+            ordemId={ordemAberta}
+            onFechar={() => {
+              setOrdemAberta(null);
+              setVersaoAtendimentos((v) => v + 1);
+            }}
+            onSalvo={() => {}}
+          />
+        </div>
       )}
 
       {abaAtiva === 'modelos' && (

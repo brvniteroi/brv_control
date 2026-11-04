@@ -221,6 +221,15 @@ export async function salvarOrdem(d: SalvarOrdemInput): Promise<string> {
   return data.id as string;
 }
 
+/** Só a solicitação do cliente e as observações internas (nova atividade em OS que já existe). */
+export async function atualizarTextosOrdem(id: string, description: string, internalNotes: string): Promise<void> {
+  const { error } = await supabase
+    .from('service_orders')
+    .update({ description: description.trim() || null, internal_notes: internalNotes.trim() || null })
+    .eq('id', id);
+  if (error) throw new Error(traduzirErro(error.message));
+}
+
 export interface SalvarAtividadeInput {
   id?: string;
   service_order_id: string;

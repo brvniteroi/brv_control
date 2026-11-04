@@ -5,7 +5,7 @@ import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { dicaEtiquetas } from '../../services/etiquetas';
 import EtiquetasNoBloco from '../etiquetas/EtiquetasNoBloco';
-import { dataLocal, formatarHora, minutosDoDia, podeMover } from '../../utils/linhaDoTempo';
+import { dataLocal, formatarHora, minutosDoDia, podeMover, podeTrocarTecnico } from '../../utils/linhaDoTempo';
 import { COR_STATUS_ATIVIDADE as COR_STATUS } from '../../utils/ordens';
 import { COLUNA_TECNICOS_PX, type JanelaTempo } from './janela';
 import type { EspecArrasto, PreviaArrasto } from './useArrasto';
@@ -22,12 +22,19 @@ interface BarraProps {
   pxPorMin: number;
   conflito: boolean;
   esmaecida: boolean;
+  /** Minutos de agora no dia mostrado (null = outro dia): a atividade em execução cresce até aqui. */
+  agoraMin: number | null;
   aoIniciar: (e: ReactPointerEvent, spec: EspecArrasto) => void;
 }
 
-const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin, conflito, esmaecida, aoIniciar }: BarraProps) {
+const horaDe = (iso: string | null, dia: string) => (iso ? formatarHora(minutosDoDia(iso, dia)) : null);
+
+const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin, conflito, esmaecida, agoraMin, aoIniciar }: BarraProps) {
+  // O banco encaixa o horário no real quando o técnico inicia/conclui (tasks_segue_horario_real)
   const inicioReal = minutosDoDia(a.scheduled_start!, dia);
-  const fimReal = minutosDoDia(a.scheduled_end!, dia);
+  const fimPrevisto = minutosDoDia(a.scheduled_end!, dia);
+  // Em execução além do previsto: a barra vai até agora
+  const fimReal = a.status === 'em_execucao' && agoraMin !== null ? Math.max(fimPrevisto, agoraMin) : fimPrevisto;
   const esquerda = (Math.max(0, inicioReal) - janelaInicioMin) * pxPorMin;
   const largura = Math.max(18, (Math.min(1440, fimReal) - Math.max(0, inicioReal)) * pxPorMin);
   const movel = podeMover(a);
@@ -39,16 +46,32 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
     fimMin: fimReal,
     employeeId: a.employee_id,
     fixo: !movel,
+    trocaTecnico: podeTrocarTecnico(a),
   });
 
   const detalhes = [o ? `OS ${o.number}` : null, o?.service_type?.name, o?.local].filter(Boolean).join(' · ');
+  const real =
+    a.status === 'concluida' && a.started_at && a.finished_at
+      ? `Realizada: ${horaDe(a.started_at, dia)} – ${horaDe(a.finished_at, dia)}`
+      : a.status === 'em_execucao' && a.started_at
+        ? `Em execução desde ${horaDe(a.started_at, dia)}`
+        : null;
   const dica = [
     `${formatarHora(inicioReal)} – ${formatarHora(fimReal)}`,
+    real,
     o?.customer?.name,
     detalhes,
     dicaEtiquetas(o?.etiquetas),
     conflito ? 'Conflito de horário com outra atividade do técnico' : null,
-    movel ? null : 'Atividade já iniciada: não pode ser movida aqui',
+    !movel
+      ? null
+      : a.status === 'concluida'
+        ? 'Arrastar corrige o horário real'
+        : a.status === 'em_execucao'
+          ? 'Arrastar corrige o início real (fica com o mesmo técnico)'
+          : a.status === 'em_deslocamento'
+            ? 'A caminho: arrastar muda só o horário (fica com o mesmo técnico)'
+            : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -265,6 +288,7 @@ export default function GradeTempo({
                     pxPorMin={pxPorMin}
                     conflito={conflitos.has(a.id)}
                     esmaecida={previa?.id === a.id}
+                    agoraMin={agoraMin}
                     aoIniciar={aoIniciarArrasto}
                   />
                 ))}

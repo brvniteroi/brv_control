@@ -44,9 +44,34 @@ export function formatarHora(minutos: number): string {
   return `${dois(Math.floor(m / 60))}:${dois(m % 60)}`;
 }
 
-/** Só atividades ainda não iniciadas podem ser movidas na linha do tempo. */
+/**
+ * O escritório ajusta o horário de qualquer atividade, inclusive iniciada ou concluída (corrige o horário
+ * real); só a cancelada fica parada.
+ */
 export function podeMover(t: Pick<Task, 'status'>): boolean {
-  return t.status === 'agendada';
+  return t.status !== 'cancelada';
+}
+
+/**
+ * Trocar de técnico arrastando para outra linha: não com a atividade nas mãos do técnico (a caminho ou
+ * em execução), para não sumir do celular dele no meio do serviço. Para isso, use o Editar da OS.
+ */
+export function podeTrocarTecnico(t: Pick<Task, 'status'>): boolean {
+  return t.status === 'agendada' || t.status === 'concluida';
+}
+
+/**
+ * Horário real que acompanha o arraste: iniciada -> o novo início vira o início real; concluída -> início e
+ * término reais. A caminho e agendada só mexem no previsto.
+ */
+export function horarioRealDoArraste(
+  status: Task['status'],
+  inicio: string,
+  fim: string,
+): { started_at?: string; finished_at?: string } {
+  if (status === 'em_execucao') return { started_at: inicio };
+  if (status === 'concluida') return { started_at: inicio, finished_at: fim };
+  return {};
 }
 
 type Agendada = Pick<Task, 'id' | 'employee_id' | 'status' | 'scheduled_start' | 'scheduled_end'>;

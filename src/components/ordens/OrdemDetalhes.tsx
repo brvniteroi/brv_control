@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Check, ClipboardList, Tag as IconeEtiqueta, X } from 'lucide-react';
+import { Check, ClipboardList, History, Tag as IconeEtiqueta, X } from 'lucide-react';
 import {
   buscarOrdem,
   listarEnderecosDoCliente,
@@ -24,6 +24,7 @@ import { PRIORIDADES, STATUS_OS, formatarDataHora, rotuloEndereco } from '../../
 import AnexosOS from './AnexosOS';
 import AtividadesOS from './AtividadesOS';
 import ComentariosOS from './ComentariosOS';
+import HistoricoAtendimentosOS from './HistoricoAtendimentosOS';
 import AvaliacaoOS from '../avaliacoes/AvaliacaoOS';
 import SeletorCliente from './SeletorCliente';
 import FormulariosDaOrdem from '../formularios/FormulariosDaOrdem';
@@ -61,6 +62,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
   // OS existente grava na hora; OS nova grava junto com o primeiro "Salvar"
   const [etiquetas, setEtiquetas] = useState<Tag[]>([]);
   const [seletorEtiquetasAberto, setSeletorEtiquetasAberto] = useState(false);
+  const [historicoAberto, setHistoricoAberto] = useState(false);
 
   const tecnicosPorTask = useMemo(() => {
     const mapa: Record<string, string> = {};
@@ -237,6 +239,15 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
                 {ordem.field_control_id ? ' · importada do Field Control' : ''}
               </span>
             )}
+            {ordem && (
+              <button
+                type="button"
+                onClick={() => setHistoricoAberto(true)}
+                className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+              >
+                <History size={13} /> Histórico de atendimentos
+              </button>
+            )}
           </div>
         </div>
 
@@ -404,6 +415,16 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
           )
         )}
       </div>
+
+      {historicoAberto && ordem && (
+        <HistoricoAtendimentosOS
+          clienteId={ordem.customer_id}
+          clienteNome={ordem.customer?.name ?? null}
+          ordemOrigemId={ordem.id}
+          ordemOrigemNumero={ordem.number}
+          onVoltar={() => setHistoricoAberto(false)}
+        />
+      )}
 
       {seletorEtiquetasAberto && (
         <SeletorEtiquetas

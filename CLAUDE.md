@@ -42,6 +42,17 @@ O usuário fala português; código, comentários e mensagens de commit também 
   service_role.
 - `hostgator-api/config.php` (no servidor) usa os mesmos URL e chave do `.env`.
 
+## Supabase: plano e uso (conferido em 2026-11-03)
+- Plano **gratuito**. A organização tem 2 projetos (`brv-control` e `BRV Equipamentos`) que dividem os limites e ocupam as 2
+  vagas de projeto ativo do gratuito. Uso: em Dashboard > organização > Usage (ou na tela Projects, "Free plan usage").
+- Uso em 2026-11-03: banco 154 / 500 MB (31%, já com todo o histórico do Field), egress 0,18 / 5 GB, usuários ativos 11 / 50.000,
+  arquivos 0,12 / 1 GB. O banco cresce poucos MB por mês (~200 OS/mês; fotos ficam na HostGator): espaço não é problema por anos.
+- Projeto gratuito é pausado após 1 semana sem uso (não ocorre com uso diário).
+- **Backup é o único motivo para contratar o Pro**: o gratuito não tem backup automático confiável. Pro ≈ US$ 25/mês por organização
+  com crédito para 1 projeto; com 2 projetos ≈ US$ 35/mês (conferir na tela de upgrade). Traz backup diário (7 dias), 8 GB de banco,
+  250 GB de egress e sem pausa. Recomendação: Pro. Alternativa sem custo: backup próprio diário (pg_dump dos dois projetos para o
+  Google Drive/HD externo), que depende do computador ligado. **Decisão pendente do usuário.**
+
 ## Estado atual (2026-10-29)
 Feito:
 - Estrutura do app, layout, menu e rotas. Única página ainda placeholder (`EmConstrucao`): Estoque.

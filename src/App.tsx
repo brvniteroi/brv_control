@@ -15,6 +15,9 @@ import Equipamentos from './pages/Equipamentos';
 import Formularios from './pages/Formularios';
 import TiposServico from './pages/TiposServico';
 import Etiquetas from './pages/Etiquetas';
+import Pmoc from './pages/Pmoc';
+import PmocEditorPage from './pages/PmocEditorPage';
+import PmocModelo from './pages/PmocModelo';
 import PortalRoute from './components/portal/PortalRoute';
 import Avaliar from './pages/Avaliar';
 import PortalLogin from './pages/portal/PortalLogin';
@@ -50,6 +53,10 @@ export default function App() {
             <Route path="calendario" element={<Calendario />} />
             <Route path="mapa" element={<Mapa />} />
             <Route path="ordens-de-servico" element={<OrdensServico />} />
+            <Route path="pmoc" element={<Pmoc />} />
+            <Route path="pmoc/modelo" element={<PmocModelo />} />
+            <Route path="pmoc/novo" element={<PmocEditorPage />} />
+            <Route path="pmoc/:id" element={<PmocEditorPage />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="equipamentos" element={<Equipamentos />} />
             <Route path="formularios" element={<Formularios />} />

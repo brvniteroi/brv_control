@@ -202,6 +202,10 @@ https://control.brvniteroi.com.br/app/brv-control.apk (link para o pessoal baixa
 A chave de assinatura fica em `android-assinatura/` (gitignored): **guardar cópia fora do computador**; sem ela não dá para atualizar o app já instalado
 (teria que desinstalar em cada celular). `applicationId`: `br.com.brvniteroi.control`. Build local: JDK 21 + Android SDK (instalados em `C:Usersrvandroid-build`).
 
+Módulo PMOC (em andamento; telas do Gemini prontas e auditadas em 2026-11-04, ainda com dados de demonstração; item do menu oculto em `Sidebar.tsx` até ligar ao banco, rotas `/pmoc` acessíveis por URL; falta migration `pmoc_*`, `services/pmoc.ts`, PDF no `upload.php`, CPF/registro em `employees`): briefing para o Gemini em `docs/gemini/pmoc-briefing.md` (telas e documentos impressos, com camada de dados de demonstração
+`src/components/pmoc/fonteDeDados.ts`). Ele deve gravar o resumo em `docs/gemini/pmoc.md`, que o Claude **audita** antes de criar migration, services e a ligação
+com o banco (o registro do responsável é CFT/TRT, não CREA/ART). A execução mensal no celular será feita pelo motor de formulários.
+
 Avaliações do cliente (`ratings`, migration `20261102160000_avaliacoes.sql`, `services/avaliacoes.ts`, `components/avaliacoes/`):
 uma por OS. Com a OS concluída, o escritório clica "Enviar avaliação pelo WhatsApp" na OS (gera o token em
 `service_orders.rating_token`, abre o wa.me com o celular do cliente); o cliente avalia em `/avaliar/<token>` (`pages/Avaliar.tsx`,

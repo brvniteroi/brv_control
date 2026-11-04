@@ -16,6 +16,11 @@ O usuário fala português; código, comentários e mensagens de commit também 
   https://control.brvniteroi.com.br. O upload vai junto em `/api/` (fotos em `/api/uploads/AAAA/MM/`); o `config.php`
   é gerado no deploy a partir dos secrets (`scripts/gerar-config-upload.mjs`)
 - Comandos: `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint` (oxlint)
+- `vite.config.ts`: `optimizeDeps.entries = ['index.html']` e o vigia ignora `scripts/**/dados`, `amostra`, `android*`. Sem isso o
+  `npm run dev` trava em "scanning dependencies" (o Vite varre o backup do Field, ~68 mil arquivos, e o build do Android)
+- Integração com o BRV Equipamentos (outro sistema): Edge Function `supabase/functions/consultar-os` devolve os dados de uma OS
+  pelo número (cliente, telefone, endereço, relatos, técnico). Só o servidor do Equipamentos chama (`control-proxy.php`), com o
+  segredo `EQUIPAMENTOS_SEGREDO` no cabeçalho `x-segredo`; publicada com Verify JWT desligado
 
 ## Banco de dados
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no

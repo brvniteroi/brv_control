@@ -222,6 +222,8 @@ export default function AtividadesOS({
   // Técnicos inativos só aparecem se já estiverem na atividade em edição
   const atual = atividades.find((a) => a.id === editandoId)?.employee_id;
   const opcoesTecnicos = tecnicos.filter((t) => t.active || t.id === atual);
+  // Uma atividade por OS; cancelada não conta (trigger tasks_uma_por_os)
+  const podeCriar = !atividades.some((a) => a.status !== 'cancelada');
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
@@ -230,14 +232,16 @@ export default function AtividadesOS({
           <CalendarClock size={18} className="text-blue-600" />
           <h2 className="text-base font-bold">Atividades ({atividades.length})</h2>
         </div>
-        <button
-          type="button"
-          onClick={abrirNova}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
-        >
-          <Plus size={14} />
-          Nova atividade
-        </button>
+        {podeCriar && (
+          <button
+            type="button"
+            onClick={abrirNova}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
+          >
+            <Plus size={14} />
+            Nova atividade
+          </button>
+        )}
       </div>
 
       {atividades.length === 0 ? (

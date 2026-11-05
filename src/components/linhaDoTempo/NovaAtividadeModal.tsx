@@ -87,7 +87,7 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
     };
   }, [clienteSemOsId]);
 
-  // Busca de OS (só as que ainda estão em andamento)
+  // Busca de OS (só as em andamento e ainda sem atividade: cada OS tem uma; cancelada não conta)
   useEffect(() => {
     if (escolhido || termo.trim().length < 2) return;
     let ativo = true;
@@ -96,7 +96,11 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
       Promise.all([listarOrdens({ termo: termo.trim(), status: '', tipoId: '' }, 0), listarClientes(termo.trim(), 'ativos', 0)])
         .then(([r, c]) => {
           if (!ativo) return;
-          setResultados(r.itens.filter((o) => o.status !== 'concluida' && o.status !== 'cancelada').slice(0, 8));
+          setResultados(
+            r.itens
+              .filter((o) => o.status !== 'concluida' && o.status !== 'cancelada' && o.tasks.every((t) => t.status === 'cancelada'))
+              .slice(0, 8),
+          );
           setClientesAchados(c.itens.slice(0, 5));
         })
         .catch(() => {
@@ -280,7 +284,7 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
                     </li>
                   )}
                   {!buscando && resultados.length === 0 && clientesAchados.length === 0 && (
-                    <li className="px-3 py-2 text-xs text-slate-500">Nenhuma OS em andamento nem cliente encontrado.</li>
+                    <li className="px-3 py-2 text-xs text-slate-500">Nenhuma OS sem atividade nem cliente encontrado.</li>
                   )}
                   {resultados.map((o) => (
                     <li key={o.id}>

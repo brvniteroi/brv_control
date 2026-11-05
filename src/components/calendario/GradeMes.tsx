@@ -2,7 +2,7 @@ import { memo } from 'react';
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { COR_STATUS_ATIVIDADE } from '../../utils/ordens';
-import { dicaAtividade, horaDe } from './formato';
+import { bateBusca, dicaAtividade, horaDe, ordenarPelaBusca } from './formato';
 import EtiquetasNoBloco from '../etiquetas/EtiquetasNoBloco';
 
 const DIAS_SEMANA = ['Dom.', 'Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.'];
@@ -27,11 +27,13 @@ interface GradeMesProps {
   hoje: string;
   porDia: Map<string, AtividadeLinha[]>;
   tecnicos: Map<string, TecnicoLinha>;
+  /** Termo da busca por cliente (vazio = sem busca): destaca as que batem e apaga as demais. */
+  termo: string;
   aoAbrirOrdem: (ordemId: string) => void;
   aoAbrirDia: (dia: string) => void;
 }
 
-export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbrirOrdem, aoAbrirDia }: GradeMesProps) {
+export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, termo, aoAbrirOrdem, aoAbrirDia }: GradeMesProps) {
   const semanas = dias.length / 7;
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
@@ -45,10 +47,11 @@ export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbr
 
       <div className="grid min-h-0 flex-1 grid-cols-7 overflow-y-auto" style={{ gridTemplateRows: `repeat(${semanas}, minmax(7.5rem, 1fr))` }}>
         {dias.map((dia, i) => {
-          const atividades = porDia.get(dia) ?? [];
+          const atividades = ordenarPelaBusca(porDia.get(dia) ?? [], termo);
           const doMes = dia.startsWith(mes);
           const fimDeSemana = i % 7 === 0 || i % 7 === 6;
           const extras = atividades.length - MAX_POR_DIA;
+          const encontradas = atividades.filter((a) => bateBusca(a, termo)).length;
           return (
             <div
               key={dia}
@@ -73,6 +76,7 @@ export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbr
               <div className="hidden flex-col gap-1 md:flex">
                 {atividades.slice(0, MAX_POR_DIA).map((a) => {
                   const tecnico = a.employee_id ? tecnicos.get(a.employee_id) : undefined;
+                  const destaque = !termo ? '' : bateBusca(a, termo) ? 'ring-2 ring-amber-400 ring-offset-1' : 'opacity-25';
                   return (
                     <button
                       key={a.id}
@@ -81,7 +85,7 @@ export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbr
                       title={dicaAtividade(a, tecnico)}
                       className={`flex min-w-0 items-center gap-1 rounded-md border-b-2 px-1.5 py-0.5 text-left text-[11px] font-semibold text-white transition hover:brightness-110 ${
                         COR_STATUS_ATIVIDADE[a.status]
-                      } ${a.status === 'cancelada' ? 'line-through' : ''}`}
+                      } ${a.status === 'cancelada' ? 'line-through' : ''} ${destaque}`}
                     >
                       <span className="min-w-0 flex-1 truncate">
                         {horaDe(a.scheduled_start)} - {a.ordem?.customer?.name ?? a.title}
@@ -95,7 +99,9 @@ export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbr
                   <button
                     type="button"
                     onClick={() => aoAbrirDia(dia)}
-                    className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-left text-[11px] font-semibold text-blue-600 hover:bg-blue-50"
+                    className={`rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-left text-[11px] font-semibold text-blue-600 hover:bg-blue-50 ${
+                      termo && encontradas <= MAX_POR_DIA ? 'opacity-25' : ''
+                    }`}
                   >
                     Ver mais (+ {extras})
                   </button>
@@ -103,13 +109,15 @@ export default memo(function GradeMes({ mes, dias, hoje, porDia, tecnicos, aoAbr
               </div>
 
               {/* Celular: só a quantidade */}
-              {atividades.length > 0 && (
+              {(termo ? encontradas : atividades.length) > 0 && (
                 <button
                   type="button"
                   onClick={() => aoAbrirDia(dia)}
-                  className="rounded-md bg-blue-50 px-1 py-0.5 text-[11px] font-bold text-blue-700 md:hidden"
+                  className={`rounded-md px-1 py-0.5 text-[11px] font-bold md:hidden ${
+                    termo ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700'
+                  }`}
                 >
-                  {atividades.length}
+                  {termo ? encontradas : atividades.length}
                 </button>
               )}
             </div>

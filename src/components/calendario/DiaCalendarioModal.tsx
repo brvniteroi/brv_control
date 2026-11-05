@@ -2,7 +2,7 @@ import { CalendarRange, Plus, X } from 'lucide-react';
 import type { AtividadeLinha } from '../../hooks/useLinhaDoTempo';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { infoStatusAtividade } from '../../utils/ordens';
-import { horaDe } from './formato';
+import { bateBusca, horaDe, ordenarPelaBusca } from './formato';
 import { Avatar } from './GradeMes';
 import EtiquetaChip from '../etiquetas/EtiquetaChip';
 
@@ -10,6 +10,8 @@ interface Props {
   dia: string;
   atividades: AtividadeLinha[];
   tecnicos: Map<string, TecnicoLinha>;
+  /** Termo da busca por cliente do calendário (vazio = sem busca). */
+  termo: string;
   aoFechar: () => void;
   aoAbrirOrdem: (ordemId: string) => void;
   aoAbrirLinhaDoTempo: () => void;
@@ -18,7 +20,7 @@ interface Props {
 
 /** Todas as atividades de um dia do calendário. */
 export default function DiaCalendarioModal({
-  dia, atividades, tecnicos, aoFechar, aoAbrirOrdem, aoAbrirLinhaDoTempo, aoNovaAtividade,
+  dia, atividades, tecnicos, termo, aoFechar, aoAbrirOrdem, aoAbrirLinhaDoTempo, aoNovaAtividade,
 }: Props) {
   const titulo = new Date(`${dia}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -45,16 +47,17 @@ export default function DiaCalendarioModal({
             <p className="py-8 text-center text-xs text-slate-400">Nenhuma atividade neste dia.</p>
           ) : (
             <ul className="space-y-1.5">
-              {atividades.map((a) => {
+              {ordenarPelaBusca(atividades, termo).map((a) => {
                 const tecnico = a.employee_id ? tecnicos.get(a.employee_id) : undefined;
                 const info = infoStatusAtividade(a.status);
                 const o = a.ordem;
+                const destaque = !termo ? '' : bateBusca(a, termo) ? 'border-amber-400 bg-amber-50 hover:bg-amber-100' : 'opacity-40';
                 return (
                   <li key={a.id}>
                     <button
                       type="button"
                       onClick={() => aoAbrirOrdem(a.service_order_id)}
-                      className="flex w-full items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
+                      className={`flex w-full items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-xs transition hover:bg-slate-50 ${destaque}`}
                     >
                       <span className="font-mono font-bold text-slate-700">{horaDe(a.scheduled_start)}</span>
                       <span className="min-w-0 flex-1">

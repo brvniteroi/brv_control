@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Loader2, Lock, Plus, RefreshCw } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2, Lock, Plus, RefreshCw, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DiaCalendarioModal from '../components/calendario/DiaCalendarioModal';
+import { bateBusca, termoBusca } from '../components/calendario/formato';
 import GradeMes from '../components/calendario/GradeMes';
 import NovaAtividadeModal from '../components/linhaDoTempo/NovaAtividadeModal';
 import OrdemDetalhes from '../components/ordens/OrdemDetalhes';
@@ -41,6 +42,8 @@ function CalendarioEscritorio() {
   const [diaAberto, setDiaAberto] = useState<string | null>(null);
   const [novaNoDia, setNovaNoDia] = useState<string | null>(null);
   const [ordemAberta, setOrdemAberta] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
+  const termo = termoBusca(busca);
 
   const c = useCalendario(mes);
 
@@ -80,6 +83,14 @@ function CalendarioEscritorio() {
     [porDiaVisivel, mes],
   );
 
+  const encontradasNoMes = useMemo(
+    () =>
+      [...porDiaVisivel]
+        .filter(([dia]) => dia.startsWith(mes))
+        .reduce((s, [, l]) => s + l.filter((a) => bateBusca(a, termo)).length, 0),
+    [porDiaVisivel, mes, termo],
+  );
+
   if (ordemAberta) {
     return (
       <OrdemDetalhes
@@ -107,10 +118,42 @@ function CalendarioEscritorio() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 first-letter:uppercase">{nomeMes}</h1>
           <p className="mt-0.5 text-xs text-slate-500">
             Calendário de atividades · {totalDoMes} {totalDoMes === 1 ? 'atividade' : 'atividades'} no mês
+            {termo && (
+              <span className={`font-semibold ${encontradasNoMes > 0 ? 'text-amber-700' : 'text-rose-600'}`}>
+                {' · '}
+                {encontradasNoMes === 0
+                  ? 'nenhuma deste cliente'
+                  : `${encontradasNoMes} ${encontradasNoMes === 1 ? 'encontrada' : 'encontradas'}`}
+              </span>
+            )}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setBusca('')}
+              placeholder="Buscar cliente…"
+              aria-label="Buscar cliente no calendário"
+              className="w-48 rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-7 text-xs text-slate-800 shadow-2xs placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+            />
+            {busca && (
+              <button
+                type="button"
+                onClick={() => setBusca('')}
+                aria-label="Limpar busca"
+                title="Limpar busca"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
           <div className="inline-flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
             <button type="button" onClick={() => setMes(somarMeses(mes, -1))} aria-label="Mês anterior" className="px-2.5 py-2 text-slate-600 hover:bg-slate-50">
               <ChevronLeft size={16} />
@@ -185,6 +228,7 @@ function CalendarioEscritorio() {
           hoje={hoje}
           porDia={porDiaVisivel}
           tecnicos={tecnicosPorId}
+          termo={termo}
           aoAbrirOrdem={setOrdemAberta}
           aoAbrirDia={setDiaAberto}
         />
@@ -206,6 +250,7 @@ function CalendarioEscritorio() {
           dia={diaAberto}
           atividades={porDiaVisivel.get(diaAberto) ?? []}
           tecnicos={tecnicosPorId}
+          termo={termo}
           aoFechar={() => setDiaAberto(null)}
           aoAbrirOrdem={(id) => {
             setDiaAberto(null);

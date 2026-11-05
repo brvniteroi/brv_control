@@ -4,26 +4,22 @@ import { useAuth } from '../../contexts/useAuth';
 import { anexarFoto, excluirAnexo } from '../../services/anexos';
 import type { Attachment } from '../../types/fsm';
 import { formatarDataHora } from '../../utils/ordens';
+import VisualizadorFotos from './VisualizadorFotos';
 
 function ehVideo(a: Attachment): boolean {
   return /\.(mp4|mov|webm)$/i.test(a.file_name ?? a.public_url);
 }
 
-function Miniatura({ anexo, onExcluir }: { anexo: Attachment; onExcluir?: (a: Attachment) => void }) {
+function Miniatura({ anexo, onAbrir, onExcluir }: { anexo: Attachment; onAbrir: () => void; onExcluir?: (a: Attachment) => void }) {
   const [falhou, setFalhou] = useState(false);
   const video = ehVideo(anexo);
   // Assinatura: imagem inteira em fundo branco (PNG transparente) e o nome de quem assinou
   const assinatura = anexo.category === 'assinatura';
+  const titulo = anexo.caption ?? anexo.file_name ?? '';
+  const classes = 'group relative block aspect-square w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50';
 
-  return (
-    <div className="relative">
-    <a
-      href={anexo.public_url}
-      target="_blank"
-      rel="noreferrer"
-      title={anexo.caption ?? anexo.file_name ?? ''}
-      className="group relative block aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
-    >
+  const conteudo = (
+    <>
       {video || falhou ? (
         <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-slate-400">
           {video ? <Film size={22} /> : <ExternalLink size={20} />}
@@ -41,7 +37,21 @@ function Miniatura({ anexo, onExcluir }: { anexo: Attachment; onExcluir?: (a: At
       <span className="absolute inset-x-0 bottom-0 truncate bg-black/50 px-1.5 py-0.5 text-[10px] text-white">
         {assinatura ? (anexo.caption ?? 'Assinatura') : formatarDataHora(anexo.created_at)}
       </span>
-    </a>
+    </>
+  );
+
+  return (
+    <div className="relative">
+    {/* Vídeo ou arquivo que não abre como imagem continua indo para o link original */}
+    {video || falhou ? (
+      <a href={anexo.public_url} target="_blank" rel="noreferrer" title={titulo} className={classes}>
+        {conteudo}
+      </a>
+    ) : (
+      <button type="button" onClick={onAbrir} title={titulo} className={`${classes} cursor-zoom-in`}>
+        {conteudo}
+      </button>
+    )}
     {onExcluir && (
       <button
         type="button"
@@ -69,6 +79,8 @@ export default function AnexosOS({ ordemId, anexos, onAlterado }: AnexosOSProps)
   const entradaRef = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState<{ feitas: number; total: number } | null>(null);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
+  const [fotoAberta, setFotoAberta] = useState<number | null>(null);
+  const fotos = anexos.filter((a) => !ehVideo(a));
 
   // Uma foto por vez (compacta e sobe); as que falharem ficam listadas no aviso
   const adicionar = async (arquivos: File[]) => {
@@ -145,9 +157,18 @@ export default function AnexosOS({ ordemId, anexos, onAlterado }: AnexosOSProps)
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {anexos.map((a) => (
-            <Miniatura key={a.id} anexo={a} onExcluir={ehAdmin ? excluir : undefined} />
+            <Miniatura
+              key={a.id}
+              anexo={a}
+              onAbrir={() => setFotoAberta(fotos.findIndex((f) => f.id === a.id))}
+              onExcluir={ehAdmin ? excluir : undefined}
+            />
           ))}
         </div>
+      )}
+
+      {fotoAberta !== null && (
+        <VisualizadorFotos fotos={fotos} indiceInicial={fotoAberta} onFechar={() => setFotoAberta(null)} />
       )}
     </div>
   );

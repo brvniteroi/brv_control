@@ -140,7 +140,7 @@ Feito:
 - Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
 
-**LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. `docs/oficina.md` e este arquivo têm alterações sem commit. Ao concluir, apagar este lembrete.
+**LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-04): retomar o APK do app de campo.** Hoje (2026-11-03) o código foi enviado e o release assinado compila local, mas falta
 o usuário fazer: (1) projeto Firebase + `google-services.json` + JSON da conta de serviço; (2) os 5 secrets do workflow `android.yml` (valores em

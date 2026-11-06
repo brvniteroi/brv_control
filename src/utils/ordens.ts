@@ -3,7 +3,7 @@ import type { CustomerAddress, ServiceOrderPriority, ServiceOrderStatus, TaskSta
 /** Texto do endereço na escolha de local da OS. */
 export function rotuloEndereco(e: CustomerAddress): string {
   const apelido = e.label && e.label !== 'Principal' ? `${e.label} — ` : '';
-  const via = [e.street, e.number].filter(Boolean).join(', ');
+  const via = [e.street, e.number].filter(Boolean).join(', ') + (e.complement ? ` - ${e.complement}` : '');
   return `${apelido}${via}${e.district ? ` · ${e.district}` : ''}${e.is_primary ? ' (principal)' : ''}${e.active ? '' : ' (inativo)'}`;
 }
 

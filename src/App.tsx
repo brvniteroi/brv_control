@@ -15,6 +15,10 @@ import Equipamentos from './pages/Equipamentos';
 import Formularios from './pages/Formularios';
 import TiposServico from './pages/TiposServico';
 import Etiquetas from './pages/Etiquetas';
+import RelatorioAtividades from './pages/RelatorioAtividades';
+import RelatorioGraficos from './pages/RelatorioGraficos';
+import RelatorioTiposServico from './pages/RelatorioTiposServico';
+import RelatorioGarantia from './pages/RelatorioGarantia';
 import Pmoc from './pages/Pmoc';
 import PmocEditorPage from './pages/PmocEditorPage';
 import PmocModelo from './pages/PmocModelo';
@@ -62,6 +66,10 @@ export default function App() {
             <Route path="formularios" element={<Formularios />} />
             <Route path="tipos-de-servico" element={<TiposServico />} />
             <Route path="etiquetas" element={<Etiquetas />} />
+            <Route path="relatorios/atividades" element={<RelatorioAtividades />} />
+            <Route path="relatorios/graficos" element={<RelatorioGraficos />} />
+            <Route path="relatorios/tipos-de-servico" element={<RelatorioTiposServico />} />
+            <Route path="relatorios/garantia-brv" element={<RelatorioGarantia />} />
             <Route path="equipe" element={<Equipe />} />
           </Route>
         </Route>

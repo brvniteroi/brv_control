@@ -112,7 +112,7 @@ Feito:
   `attachments` (a RLS "Só admin exclui" já garante; o arquivo continua na HostGator).
   A situação da OS segue as atividades; cancelar a OS não cancela as atividades (decisão do usuário, 2026-11-03).
   Ordem de execução vale também para o escritório: migration `20261105100000_ordem_execucao_para_todos.sql` (**a colar no SQL Editor**) refaz `tasks_protege_agenda`: sair de `agendada` (a caminho/em execução/concluída direto) exige a anterior do mesmo técnico no dia concluída ou cancelada; "só hoje" segue só para o técnico; scripts com service_role não são barrados.
-  Uma atividade por OS (decisão do usuário, 2026-11-05): outra visita ou segundo técnico = OS nova, sem botão de retorno. Cancelada não conta (dá para reagendar na mesma OS). Trigger `tasks_uma_por_os` (migration `20261105110000_uma_atividade_por_os.sql`, **a colar no SQL Editor**) só olha quem entra (criar, reativar, mudar de OS), então as OS antigas com várias seguem editáveis; scripts com service_role não são barrados. Na tela: `AtividadesOS.tsx` esconde "Nova atividade" e `NovaAtividadeModal.tsx` só lista OS sem atividade.
+  Uma atividade por OS (decisão do usuário, 2026-11-05): outra visita ou segundo técnico = OS nova, sem botão de retorno. Cancelada não conta (dá para reagendar na mesma OS). Trigger `tasks_uma_por_os` (migration `20261105110000_uma_atividade_por_os.sql`, aplicada) só olha quem entra (criar, reativar, mudar de OS), então as OS antigas com várias seguem editáveis; scripts com service_role não são barrados. Na tela: `AtividadesOS.tsx` esconde "Nova atividade" e `NovaAtividadeModal.tsx` só lista OS sem atividade.
   Fim nunca antes do início: trigger `tasks_ajusta_fim` (migration `20261104110000_fim_nunca_antes_do_inicio.sql`, **a colar no SQL Editor**) evita o erro `tasks_execution_valid` ao concluir.
   Linha do tempo acompanha o horário real: o trigger `tasks_segue_horario_real` (migration `20261103160000_horario_real_na_agenda.sql`,
   aplicada) move o início para `started_at` ao iniciar (mesma duração) e o fim para `finished_at` ao concluir; em
@@ -139,6 +139,8 @@ Feito:
 - Divisão de trabalho: o Gemini cuida do visual; o trabalho técnico é feito pelo Claude.
 - Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
+
+**LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. `docs/oficina.md` e este arquivo têm alterações sem commit. Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-04): retomar o APK do app de campo.** Hoje (2026-11-03) o código foi enviado e o release assinado compila local, mas falta
 o usuário fazer: (1) projeto Firebase + `google-services.json` + JSON da conta de serviço; (2) os 5 secrets do workflow `android.yml` (valores em
@@ -173,6 +175,7 @@ Pendente, nesta ordem:
 3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,
    com limpeza) → orçamentos com aprovação do cliente → vendas e financeiro (PIX/boleto) → NF-e/NFS-e via API → estoque.
    Empresa no Simples Nacional (CSOSN 102). Análise do CSV e decisões na memória do projeto.
+   **Módulo Oficina** (trazer o BRV Equipamentos para o Control): em estudo desde 2026-11-05, plano, riscos e decisões pendentes em `docs/oficina.md`. Ler antes de começar; nada implementado.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.
 

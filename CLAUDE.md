@@ -284,4 +284,4 @@ por cima (`useTelaAjuda('os' | 'cliente' | 'nova-atividade')` em `src/ajuda/cont
 (ele só mexe em `AjudaPainel.tsx`, `TextoAjuda.tsx`, `pages/Ajuda.tsx`; visual feito e auditado em 2026-11-07, resumo em `docs/gemini/ajuda-resultado.md`).
 A impressão do manual é uma cópia montada por portal em `document.body`, porque o `index.css` esconde o `#root` ao imprimir.
 
-Usuários: admin criado; Adriana Lobo (operadora, papel `escritorio`, colaboradora "Supervisor") criada em 2026-11-01.
+Usuários: admin criado; Adriana Lobo (Diretora Administrativa, papel `admin`: acesso a tudo, inclusive dados pessoais dos funcionários; criada em 2026-11-01, cargo corrigido em 2026-11-08).

@@ -169,8 +169,10 @@ Deno.serve(async (req) => {
     console.error('fcm: falta o segredo FIREBASE_SERVICE_ACCOUNT');
   }
 
+  // Com o APK registrado, o Chrome do mesmo celular (inscrição antiga do navegador) não recebe: evita aviso duplicado
+  const aparelhosWeb = tokensFcm?.length ? [] : (aparelhos ?? []);
   await Promise.all(
-    (aparelhos ?? []).map(async (a) => {
+    aparelhosWeb.map(async (a) => {
       try {
         await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload, {
           TTL: 4 * 3600,

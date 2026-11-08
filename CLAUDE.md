@@ -154,6 +154,10 @@ antiga), pen drive e Google Drive privado; (2) liberar para os outros técnicos.
 notificação fixa do GPS, "Online" no Mapa, posição com tela apagada e push com app fechado ok. O teste mostrou que, com a tela apagada, o
 WebView congela o relógio da presença ("Offline" falso) e o `distanceFilter: 10` não entregava leitura com o técnico parado (posição velha):
 corrigido em `useRastreioCampo` (`distanceFilter: 0` e cada leitura do GPS renova a presença, 1/min); falta repetir o teste parado com tela apagada.
+Push pelo APK só passou a funcionar em 2026-11-08: o plugin era devolvido por função `async` e o proxy do Capacitor responde a `then`, então o
+`await` travava para sempre sem erro (nenhum celular gerava token). **Nunca dar `await`/`return` de plugin do Capacitor em função async**; usar
+`registerPlugin` direto (`services/push.ts`, `services/nativo.ts`). Com token do APK, a `notificar-tecnico` não manda mais pelo Chrome (evita duplicada).
+Testado no A20: nova atividade e exclusão chegam com a tela apagada e o app fechado.
 Samsung: Configurações > Aplicativos > BRV Control > Bateria "Sem restrições" e tirar de "Apps em suspensão".
 Até lá o pessoal usa pelo navegador. Ao concluir, apagar este lembrete.
 

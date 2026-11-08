@@ -66,7 +66,8 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease -PversionCodeApp=${{ github.run_number }} -PversionNameApp=1.0.${{ github.run_number }}
+        # chmod: commit feito no Windows perde a permissão de execução do gradlew (erro 126 no Linux)
+        run: chmod +x ./gradlew && ./gradlew assembleRelease -PversionCodeApp=${{ github.run_number }} -PversionNameApp=1.0.${{ github.run_number }}
 
       - uses: actions/upload-artifact@v4
         with:

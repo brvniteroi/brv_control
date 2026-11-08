@@ -142,12 +142,15 @@ Feito:
 
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 
-**LEMBRETE (2026-11-04): retomar o APK do app de campo.** Hoje (2026-11-03) o código foi enviado e o release assinado compila local, mas falta
-o usuário fazer: (1) projeto Firebase + `google-services.json` + JSON da conta de serviço; (2) os 5 secrets do workflow `android.yml` (valores em
-`android-assinatura/`); (3) guardar cópia de `android-assinatura/` fora do PC; (4) colar a migration `20261103150000_push_fcm.sql`;
-(5) republicar a Edge Function `notificar-tecnico` + segredo `FIREBASE_SERVICE_ACCOUNT`. Depois: rodar o workflow, instalar no celular de um técnico e testar GPS
-com tela apagada, push com app fechado e o "Online" no Mapa. Até lá o pessoal usa pelo navegador. NÃO distribuir o APK sem o Firebase configurado (o
-botão de ativar notificações pode travar o app). Ao concluir, apagar este lembrete.
+**LEMBRETE: APK do app de campo (atualizado 2026-11-08).** Feito em 2026-11-08 (no PC de casa `PCBRAULIOCASA`): Firebase projeto `brv-control`
+(plano Spark, app `br.com.brvniteroi.control`, FCM V1 ativada); migration `20261103150000_push_fcm.sql` colada; segredo `FIREBASE_SERVICE_ACCOUNT`
+no Supabase (hash conferido) e `notificar-tecnico` republicada (Verify JWT desligado); os 5 secrets do `android.yml` no GitHub.
+**Chave nova gerada em 2026-11-08** (openssl, PKCS12, RSA 4096, alias `brv-control`, validade até 2056), porque a antiga não estava neste PC (o
+primeiro build foi em outro PC, provavelmente o da empresa; nenhum APK foi instalado com ela). `android-assinatura/` (gitignored, não vem no
+`git pull`) tem `brv-control.jks`, os `.base64.txt`, `google-services.json`, `firebase-conta-servico.json` e `LEIA-ME.txt` com os valores.
+Falta: (1) o usuário copiar `android-assinatura/` para o PC da empresa (substituindo a antiga), pen drive e Google Drive privado; (2) rodar o
+workflow (1º build com a chave do openssl) e instalar num celular de técnico; testar GPS com tela apagada, push com app fechado e o "Online" no Mapa.
+Até lá o pessoal usa pelo navegador. Ao concluir, apagar este lembrete.
 
 Pendente, nesta ordem:
 1. Importar a base do Field Control antes de 2026-11-18 (vencimento da assinatura). Backup completo baixado em

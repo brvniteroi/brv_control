@@ -77,6 +77,22 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Atualiza sozinho (a cada 2 min e ao voltar para a aba): avaliação que o cliente acabou de mandar aparece sem clicar
+  useEffect(() => {
+    const atualizarEmSilencio = () => {
+      if (document.visibilityState !== 'visible') return;
+      carregarDashboard()
+        .then(setDados)
+        .catch(() => {}); // falha em segundo plano não interrompe a tela; o botão Atualizar mostra o erro
+    };
+    const timer = window.setInterval(atualizarEmSilencio, 2 * 60_000);
+    document.addEventListener('visibilitychange', atualizarEmSilencio);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', atualizarEmSilencio);
+    };
+  }, []);
+
   const dataHoje = formatarDataHojeExtenso();
 
   return (

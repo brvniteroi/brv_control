@@ -25,6 +25,10 @@ export interface AtividadeDoDia {
     id: string;
     number: number;
     customer: { id: string; name: string } | null;
+    /** Avaliação do cliente (uma por OS; as do Field podem ser várias). */
+    avaliacoes: { stars: number; comment: string | null; origem: 'email' | 'whatsapp' | null }[];
+    /** Pedidos de avaliação (e-mail automático e WhatsApp), para mostrar "aguardando". */
+    pedidos: { channel: 'email' | 'whatsapp'; status: 'pendente' | 'enviado' | 'falhou' | 'pulado'; created_at: string }[];
   } | null;
 }
 
@@ -80,7 +84,9 @@ export async function carregarDashboard(): Promise<DadosDashboard> {
     supabase
       .from('tasks')
       .select(
-        'id, title, status, scheduled_start, scheduled_end, employee:employees(id, name), service_order:service_orders(id, number, customer:customers(id, name))',
+        'id, title, status, scheduled_start, scheduled_end, employee:employees(id, name), ' +
+          'service_order:service_orders(id, number, customer:customers(id, name), ' +
+          'avaliacoes:ratings(stars, comment, origem), pedidos:rating_requests(channel, status, created_at))',
       )
       .gte('scheduled_start', inicioDia.toISOString())
       .lt('scheduled_start', fimDia.toISOString())

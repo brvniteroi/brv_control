@@ -48,7 +48,11 @@ $texto = static function ($v, int $max = 120): string {
 
 $pedido = (string)($dados['pedido_id'] ?? '');
 $para = trim((string)($dados['para'] ?? ''));
+// Cadastros em maiúsculas (comum nos importados do Field): "BRAULIO" -> "Braulio"
 $nome = $texto($dados['nome'] ?? '', 60);
+if ($nome !== '' && function_exists('mb_convert_case')) {
+    $nome = mb_convert_case(mb_strtolower($nome, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+}
 $numero = preg_replace('/\D/', '', (string)($dados['numero'] ?? ''));
 $servico = $texto($dados['servico'] ?? '');
 $tecnico = $texto($dados['tecnico'] ?? '', 60);

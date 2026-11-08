@@ -4,10 +4,44 @@ import {
   Calendar,
   ChevronRight,
   Clock,
+  Mail,
+  MessageCircle,
   User,
 } from 'lucide-react';
 import type { AtividadeDoDia } from '../../services/dashboard';
 import { infoStatusAtividade } from '../../utils/ordens';
+import Estrelas from '../avaliacoes/Estrelas';
+
+const RESPOSTA = { email: 'respondeu pelo e-mail', whatsapp: 'respondeu pelo WhatsApp' } as const;
+
+/** Avaliação da OS (ou o pedido ainda sem resposta), só para atividade concluída. */
+function LinhaAvaliacao({ atv }: { atv: AtividadeDoDia }) {
+  const os = atv.service_order;
+  if (atv.status !== 'concluida' || !os) return null;
+
+  const avaliacao = os.avaliacoes?.[0];
+  if (avaliacao) {
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500" title={avaliacao.comment ?? undefined}>
+        <Estrelas nota={avaliacao.stars} tamanho={12} />
+        {avaliacao.origem && <span>Cliente {RESPOSTA[avaliacao.origem]}</span>}
+        {avaliacao.comment && <span className="max-w-full truncate italic text-slate-600">"{avaliacao.comment}"</span>}
+      </div>
+    );
+  }
+
+  const pedido = [...(os.pedidos ?? [])]
+    .filter((p) => p.status === 'enviado' || p.status === 'pendente')
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  if (!pedido) return null;
+  const Icone = pedido.channel === 'email' ? Mail : MessageCircle;
+  return (
+    <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+      <Icone size={12} />
+      Avaliação pedida {pedido.channel === 'email' ? 'por e-mail' : 'pelo WhatsApp'}, aguardando resposta
+    </div>
+  );
+}
 
 interface AtividadesHojeProps {
   atividades: AtividadeDoDia[];
@@ -114,6 +148,8 @@ export default function AtividadesHoje({ atividades }: AtividadesHojeProps) {
                       </span>
                     )}
                   </div>
+
+                  <LinhaAvaliacao atv={atv} />
                 </div>
 
                 {os?.id && (

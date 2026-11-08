@@ -173,7 +173,7 @@ export default function OrdensServico() {
             type="text"
             value={filtros.termo}
             onChange={(e) => mudarFiltro({ termo: e.target.value })}
-            placeholder="Buscar por número, cliente ou descrição..."
+            placeholder="Buscar por número da OS ou nome do cliente..."
             className="block w-full rounded-xl border border-slate-200 py-2.5 pr-3 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           />
         </div>

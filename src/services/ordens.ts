@@ -110,7 +110,8 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
 
   const termo = termoSeguro(f.termo);
   if (termo) {
-    const condicoes = [`description.ilike.%${termo}%`, `internal_notes.ilike.%${termo}%`];
+    // Só número da OS e nome do cliente (decisão do usuário: nada de descrição/observações)
+    const condicoes: string[] = [];
     if (/^\d{1,15}$/.test(termo)) condicoes.push(`number.eq.${termo}`);
     // O nome do cliente está em outra tabela: acha os clientes primeiro e filtra por id.
     // `busca` inclui o e-mail; aqui vale só nome/fantasia ("lobo" não pode achar "@globo.com").
@@ -126,6 +127,7 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
       .slice(0, 100)
       .map((c) => c.id);
     if (ids.length > 0) condicoes.push(`customer_id.in.(${ids.join(',')})`);
+    if (condicoes.length === 0) return { itens: [], total: 0 };
     query = query.or(condicoes.join(','));
   }
 

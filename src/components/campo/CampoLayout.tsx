@@ -9,6 +9,8 @@ import { meuColaborador, type MeuColaborador } from '../../services/campo';
 import { iniciarFila, processarFila } from '../../services/filaCampo';
 import { useFilaCampo, useOnline, usePresencaCampo, useRastreioCampo } from '../../hooks/useCampo';
 import AlterarSenhaModal from '../AlterarSenhaModal';
+import { aparelhoLiberado, guardarMotivoSaida } from '../../services/aparelho';
+import { supabase } from '../../services/supabase';
 import type { ContextoCampo } from './contextoCampo';
 
 const CHAVE_COLABORADOR = 'brv:campo:colaborador';
@@ -52,6 +54,32 @@ export default function CampoLayout() {
   const ehTecnico = profile?.role === 'tecnico' && !!colaborador;
   const gpsNegado = useRastreioCampo(ehTecnico);
   usePresencaCampo(ehTecnico);
+
+  // Um aparelho por técnico: se o login foi aberto em outro celular, este sai sozinho (confere a cada minuto,
+  // ao voltar para o app e quando a internet volta). Sai só DESTE aparelho (scope local), sem derrubar o outro.
+  useEffect(() => {
+    if (profile?.role !== 'tecnico') return;
+    let saindo = false;
+    const conferir = async () => {
+      if (saindo || !navigator.onLine || document.visibilityState !== 'visible') return;
+      if (await aparelhoLiberado()) return;
+      saindo = true;
+      guardarMotivoSaida(
+        'Seu login foi aberto em outro aparelho e saiu deste. Cada técnico usa o sistema em um celular só. Se não foi você, avise o escritório para trocar sua senha.',
+      );
+      await desligarPushDoLogin();
+      await supabase.auth.signOut({ scope: 'local' });
+    };
+    void conferir();
+    const relogio = setInterval(conferir, 60_000);
+    document.addEventListener('visibilitychange', conferir);
+    window.addEventListener('online', conferir);
+    return () => {
+      clearInterval(relogio);
+      document.removeEventListener('visibilitychange', conferir);
+      window.removeEventListener('online', conferir);
+    };
+  }, [profile?.role]);
 
   // Avaliações dos clientes nos últimos 30 dias (estrela no cabeçalho); sem sinal, a estrela some
   const [avaliacoes, setAvaliacoes] = useState<MinhasAvaliacoes | null>(null);

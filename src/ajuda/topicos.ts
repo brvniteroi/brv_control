@@ -690,6 +690,23 @@ Papéis:
 `,
   },
   {
+    id: 'um-aparelho',
+    titulo: '"Login usado em 2 aparelhos" e técnico que saiu sozinho do app',
+    secao: 'Dúvidas comuns',
+    telas: ['mapa', 'equipe', 'geral'],
+    palavras: 'senha compartilhada dois celulares aparelho saiu deslogou login outro celular seguranca',
+    texto: `
+Cada técnico usa o sistema em **um celular só**. Quando ele entra num celular novo, o aparelho anterior sai sozinho em até 1 minuto, com o aviso "Seu login foi aberto em outro aparelho".
+- No **Mapa**, o alerta **Login usado em 2 aparelhos nas últimas 24 h** aparece ao lado do técnico.
+- Se ele **trocou de celular** ou reinstalou o app, o alerta é normal e some em 24 horas.
+- Se **não** trocou, a senha pode ter sido passada para outra pessoa:
+1. Fale com o técnico.
+2. O administrador troca a senha em **Equipe > Usuários e acessos**, abrindo o usuário e clicando em **Redefinir senha**.
+3. Passe a senha nova só para o técnico.
+! O navegador (Chrome) e o app BRV Control no mesmo celular contam como **dois aparelhos**. O técnico deve usar só o app.
+`,
+  },
+  {
     id: 'sem-internet-tecnico',
     titulo: 'Técnico sem internet no local',
     secao: 'Dúvidas comuns',

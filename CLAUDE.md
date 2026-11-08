@@ -243,6 +243,12 @@ Só gerar APK novo quando mexer no nativo (plugins, GPS, push, ícone). No naveg
   tirar de "Apps em suspensão"; Xiaomi = bateria "Sem restrições" + "Início automático". Conferir no Mapa ("Online") e com uma atividade de hoje
   criada com o app fechado (deve chegar notificação). Testado no Samsung A20 (Android 11) do Alberto em 2026-11-08: GPS com tela apagada, Online,
   nova atividade e exclusão com app fechado.
+- **Um aparelho por técnico** (2026-11-08, migration `20261108120000_um_aparelho_por_tecnico.sql`, **a colar antes do push**): cada aparelho tem
+  um id em localStorage (`services/aparelho.ts`); no login (`AuthContext.signIn`) o técnico assume o aparelho (RPC `assumir_aparelho`) e as
+  sessões dos outros são revogadas (`signOut({ scope: 'others' })`); o `CampoLayout` confere a cada minuto (`aparelho_liberado`) e, se outro
+  aparelho assumiu, sai só deste (`scope: 'local'`, tira o token de push) com aviso na tela de login. Sem aparelho registrado, o primeiro que
+  conferir fica. Trocas em `tecnico_aparelho_trocas`; o Mapa avisa "Login usado em N aparelhos nas últimas 24 h". Chrome e APK no mesmo
+  celular contam como 2. Escritório/admin não têm a regra. Motivo: o link do APK é público e login compartilhado fazia o técnico "estar em 2 lugares".
 - Login (`pages/Login.tsx`) com `name`/`autocomplete="username"` para o gerenciador de senhas oferecer salvar; o app não consegue forçar, depende
   do serviço de preenchimento automático do celular (Google ou Samsung Pass). A sessão fica salva: o técnico só digita a senha de novo se sair.
 

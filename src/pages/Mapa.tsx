@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
+  AlertTriangle,
   CalendarRange,
   ChevronLeft,
   ChevronRight,
@@ -20,6 +21,7 @@ import { usePosicoesTecnicos } from '../hooks/usePosicoesTecnicos';
 import { MINUTOS_ONLINE, usePresencasTecnicos } from '../hooks/usePresencasTecnicos';
 import { mapasConfigurados } from '../services/googleMaps';
 import type { PosicaoTecnico } from '../services/mapa';
+import { alertasAparelhos, type AlertaAparelhos } from '../services/aparelho';
 import type { TaskStatus } from '../types/fsm';
 import { dataLocal, somarDias } from '../utils/linhaDoTempo';
 import { infoStatusAtividade } from '../utils/ordens';
@@ -123,6 +125,15 @@ function MapaEscritorio() {
   const { posicoes, erro: erroPosicoes, recarregar: recarregarPosicoes } = usePosicoesTecnicos();
   const presencas = usePresencasTecnicos();
   const ehHoje = dia === dataLocal();
+
+  // Login de técnico usado em 2+ aparelhos nas últimas 24 h (possível senha compartilhada)
+  const [alertasLogin, setAlertasLogin] = useState<Record<string, AlertaAparelhos>>({});
+  useEffect(() => {
+    const ler = () => alertasAparelhos().then(setAlertasLogin);
+    void ler();
+    const timer = setInterval(ler, 120_000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Atualiza o "há X min"
   useEffect(() => {
@@ -372,6 +383,14 @@ function MapaEscritorio() {
                         {g.nome}
                         {g.id && ehHoje && <IndicadorOnline visto={presencas[g.id]} agora={agora} />}
                       </span>
+                      {g.id && ehHoje && alertasLogin[g.id] && (
+                        <span
+                          className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-amber-700"
+                          title={`Última troca de aparelho: ${hora(alertasLogin[g.id].ultimaTroca)}. Cada técnico deve usar um celular só; se não foi troca de celular, o login pode ter sido passado para outra pessoa. Troque a senha em Equipe > Usuários e acessos.`}
+                        >
+                          <AlertTriangle size={11} /> Login usado em {alertasLogin[g.id].aparelhos} aparelhos nas últimas 24 h
+                        </span>
+                      )}
                       <span className="flex items-center gap-1 text-[11px] text-slate-500">
                         {!ehHoje ? (
                           `${g.atividades.length} ${g.atividades.length === 1 ? 'atendimento' : 'atendimentos'}`

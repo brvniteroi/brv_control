@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
+import { assumirAparelhoAoEntrar } from '../services/aparelho';
 import type { Profile } from '../types/fsm';
 import { AuthContext } from './authContextDef';
 
@@ -71,6 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+    // Técnico: este aparelho passa a ser o dele e os outros saem (um aparelho por técnico)
+    if (!error) await assumirAparelhoAoEntrar();
     return { error: error as Error | null };
   };
 

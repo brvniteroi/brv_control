@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../services/supabase';
+import { apagarMotivoSaida, lerMotivoSaida } from '../services/aparelho';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 
 export default function Login() {
@@ -15,6 +16,9 @@ export default function Login() {
   const [erro, setErro] = useState<string | null>(null);
   const [submetendo, setSubmetendo] = useState(false);
   const [googleCarregando, setGoogleCarregando] = useState(false);
+  // Saída automática (login aberto em outro aparelho): mostra o motivo uma vez
+  const [motivoSaida] = useState(lerMotivoSaida);
+  useEffect(() => apagarMotivoSaida(), []);
 
   // Redireciona para o destino original ou Dashboard
   const destino = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
@@ -126,6 +130,11 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            {motivoSaida && (
+              <div role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                {motivoSaida}
+              </div>
+            )}
             {erro && (
               <div
                 role="alert"

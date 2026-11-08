@@ -122,6 +122,16 @@ Feito:
   e aba Usuários (só admin: criar com senha temporária, papel, bloquear, redefinir senha). Criar usuário e redefinir senha
   rodam na Edge Function `supabase/functions/gerenciar-usuario` (usa a chave de admin do Supabase, só no servidor);
   já publicada e testada (2026-11-01). Migration `20261029150000_equipe.sql` impede ficar sem admin.
+  Funcionários e cargos (2026-11-08; migration `20261108110000_funcionarios_cargos.sql`, **a colar no SQL Editor ANTES do push**, senão a aba
+  quebra): a aba virou "Funcionários" (`ColaboradoresTab.tsx`). Cargos em `public.cargos` (`pages/Cargos.tsx`, menu Cadastros > Cargos,
+  `services/cargos.ts`): nome livre + categoria (`tecnico` = "Atende em campo", `auxiliar`, `supervisor`, `administrativo`). O funcionário
+  tem `employees.cargo_id` e o trigger `employees_role_do_cargo` copia a categoria para `employees.role`, que continua sendo o que o sistema
+  usa (linha do tempo, agenda, relatórios: `role = 'tecnico'`); mudar a categoria de um cargo muda os funcionários dele
+  (`cargos_propaga_categoria`). Cargos iniciais: Mecânico de Refrigeração, Auxiliar, Supervisor, Administrativo (os atuais foram ligados pela
+  função antiga). Dados pessoais em `public.funcionario_dados` (1:1, RLS **só admin**, LGPD): CPF (único, validado), RG/órgão, nascimento,
+  CTPS (nº/série/UF; a digital é o CPF), PIS/NIS, admissão, registro profissional (CFT, para o PMOC) e endereço com CEP (`utils/cep.ts`).
+  **Comercialização (pedido do usuário, 2026-11-08)**: o usuário quer vender o sistema; multiempresa (cada empresa só vê os próprios dados,
+  `empresa_id` em todas as tabelas) fica para um plano separado, ainda não escrito.
 - Qualquer usuário troca a própria senha pelo botão "Senha" do cabeçalho (`AlterarSenhaModal.tsx`, confere a senha atual).
   Telefones usam máscara (`utils/telefone.ts`).
 - Tipos de OS editáveis (`service_types`; `service_orders.service_type_id` substitui o antigo `type` fixo). Migration

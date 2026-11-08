@@ -1,6 +1,6 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import type { Employee, EmployeeRole, Profile, ProfileRole } from '../types/fsm';
+import type { Employee, FuncionarioDados, Profile, ProfileRole } from '../types/fsm';
 
 export interface ColaboradorComLogin extends Employee {
   profile: { id: string; email: string; full_name: string } | null;
@@ -23,7 +23,8 @@ export async function listarColaboradores(): Promise<ColaboradorComLogin[]> {
 export interface SalvarColaboradorInput {
   id?: string;
   name: string;
-  role: EmployeeRole;
+  /** A categoria do cargo vira employees.role no banco (trigger). */
+  cargo_id: string;
   phone: string;
   email: string;
   timeline_color: string;
@@ -34,25 +35,51 @@ export interface SalvarColaboradorInput {
 function traduzir(mensagem: string): string {
   if (mensagem.includes('employees_profile_id_key')) return 'Este login já está ligado a outro colaborador.';
   if (mensagem.includes('employees_timeline_color_check')) return 'Cor inválida.';
+  if (mensagem.includes('funcionario_dados_cpf_key')) return 'Este CPF já está no cadastro de outro funcionário.';
   if (mensagem.includes('profiles_protege_ultimo_admin') || mensagem.includes('pelo menos um administrador')) {
     return 'É preciso manter pelo menos um administrador ativo.';
   }
   return mensagem;
 }
 
-export async function salvarColaborador(d: SalvarColaboradorInput): Promise<void> {
+/** Grava o funcionário e devolve o id (o novo, na inclusão). */
+export async function salvarColaborador(d: SalvarColaboradorInput): Promise<string> {
   const campos = {
     name: d.name.trim(),
-    role: d.role,
+    cargo_id: d.cargo_id,
     phone: d.phone.trim() || null,
     email: d.email.trim() || null,
     timeline_color: d.timeline_color,
     active: d.active,
     profile_id: d.profile_id,
   };
-  const { error } = d.id
-    ? await supabase.from('employees').update(campos).eq('id', d.id)
-    : await supabase.from('employees').insert(campos);
+  if (d.id) {
+    const { error } = await supabase.from('employees').update(campos).eq('id', d.id);
+    if (error) throw new Error(traduzir(error.message));
+    return d.id;
+  }
+  const { data, error } = await supabase.from('employees').insert(campos).select('id').single();
+  if (error) throw new Error(traduzir(error.message));
+  return data.id as string;
+}
+
+// ---------------------------------------------------------------------
+// Dados pessoais (tabela funcionario_dados): só o admin lê e grava (RLS)
+// ---------------------------------------------------------------------
+export type DadosPessoaisInput = Omit<FuncionarioDados, 'employee_id'>;
+
+export async function buscarDadosPessoais(employeeId: string): Promise<FuncionarioDados | null> {
+  const { data, error } = await supabase.from('funcionario_dados').select('*').eq('employee_id', employeeId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as FuncionarioDados | null;
+}
+
+export async function salvarDadosPessoais(employeeId: string, d: DadosPessoaisInput): Promise<void> {
+  // Texto vazio vira null (o CPF tem índice único só entre os preenchidos)
+  const limpo = Object.fromEntries(
+    Object.entries(d).map(([k, v]) => [k, typeof v === 'string' && v.trim() === '' ? null : typeof v === 'string' ? v.trim() : v]),
+  );
+  const { error } = await supabase.from('funcionario_dados').upsert({ employee_id: employeeId, ...limpo });
   if (error) throw new Error(traduzir(error.message));
 }
 

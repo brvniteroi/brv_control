@@ -15,6 +15,7 @@ import Equipamentos from './pages/Equipamentos';
 import Formularios from './pages/Formularios';
 import TiposServico from './pages/TiposServico';
 import Etiquetas from './pages/Etiquetas';
+import Cargos from './pages/Cargos';
 import RelatorioAtividades from './pages/RelatorioAtividades';
 import RelatorioGraficos from './pages/RelatorioGraficos';
 import RelatorioTiposServico from './pages/RelatorioTiposServico';
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="formularios" element={<Formularios />} />
             <Route path="tipos-de-servico" element={<TiposServico />} />
             <Route path="etiquetas" element={<Etiquetas />} />
+            <Route path="cargos" element={<Cargos />} />
             <Route path="relatorios/atividades" element={<RelatorioAtividades />} />
             <Route path="relatorios/graficos" element={<RelatorioGraficos />} />
             <Route path="relatorios/tipos-de-servico" element={<RelatorioTiposServico />} />

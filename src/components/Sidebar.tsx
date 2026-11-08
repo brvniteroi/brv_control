@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
+  BriefcaseBusiness,
   CalendarDays,
   CalendarRange,
   ChartColumn,
@@ -67,6 +68,7 @@ const MENU: EntradaMenu[] = [
       { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
       { rota: '/tipos-de-servico', rotulo: 'Tipos de Serviço', icone: ListChecks, apenasEscritorio: true },
       { rota: '/etiquetas', rotulo: 'Etiquetas', icone: Tag, apenasEscritorio: true },
+      { rota: '/cargos', rotulo: 'Cargos', icone: BriefcaseBusiness, apenasEscritorio: true },
       { rota: '/formularios', rotulo: 'Modelos de Formulários', icone: FileText, apenasEscritorio: true },
     ],
   },

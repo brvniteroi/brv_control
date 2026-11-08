@@ -83,8 +83,43 @@ export interface Employee {
   timeline_color: string;
   active: boolean;
   field_control_id: string | null;
+  /** Cargo do cadastro de cargos; `role` é copiado da categoria dele (trigger no banco). */
+  cargo_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Cargo (cadastro livre); a categoria diz ao sistema quem atende em campo. */
+export interface Cargo {
+  id: string;
+  nome: string;
+  categoria: EmployeeRole;
+  descricao: string | null;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Dados pessoais do funcionário (LGPD): só o admin lê e altera. */
+export interface FuncionarioDados {
+  employee_id: string;
+  cpf: string | null;
+  rg: string | null;
+  rg_orgao: string | null;
+  data_nascimento: string | null;
+  ctps_numero: string | null;
+  ctps_serie: string | null;
+  ctps_uf: string | null;
+  pis: string | null;
+  data_admissao: string | null;
+  registro_profissional: string | null;
+  cep: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
 }
 
 export interface Equipment {

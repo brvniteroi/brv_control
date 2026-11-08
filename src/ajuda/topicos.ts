@@ -96,9 +96,9 @@ Aperte **F1** em qualquer tela para abrir a ajuda daquela tela. O botão **Ajuda
 O menu fica à esquerda. No celular, toque no ícone ☰ no alto para abrir.
 - **Dashboard**: resumo do dia, com OS em aberto, atividades de hoje e o que precisa de atenção.
 - **Serviços**: **Linha do Tempo**, **Calendário**, **Mapa** e **Ordens de Serviço**.
-- **Cadastros**: **Clientes**, **Equipamentos**, **Tipos de Serviço**, **Etiquetas** e **Modelos de Formulários**.
+- **Cadastros**: **Clientes**, **Equipamentos**, **Tipos de Serviço**, **Etiquetas**, **Cargos** e **Modelos de Formulários**.
 - **Relatórios**: atividades por técnico, gráficos, tipos de serviço e Garantia BRV.
-- **Equipe**: técnicos, colaboradores e, para o administrador, os usuários do sistema.
+- **Equipe**: funcionários e, para o administrador, os usuários do sistema.
 Clique no nome de um grupo (Serviços, Cadastros, Relatórios) para abrir ou fechar a lista.
 `,
   },
@@ -602,18 +602,57 @@ No menu **Relatórios**:
   // ───────────── Equipe ─────────────
   {
     id: 'colaboradores',
-    titulo: 'Cadastrar um técnico ou colaborador',
+    titulo: 'Cadastrar um funcionário',
     secao: 'Equipe e acessos',
     telas: ['equipe'],
-    palavras: 'tecnico colaborador funcionario cor',
+    palavras: 'tecnico colaborador funcionario mecanico cor contratar',
     texto: `
-1. No menu, clique em **Equipe**, aba **Colaboradores**.
-2. Clique em **Novo colaborador**.
-3. Preencha **Nome**, **Função**, **Cor na linha do tempo**, telefone e e-mail.
-4. Em **Login de acesso ao app**, ligue o login do técnico. Sem login, ele aparece na agenda mas não usa o app.
-5. Clique em **Salvar**.
+1. No menu, clique em **Equipe**, aba **Funcionários**.
+2. Clique em **Novo funcionário**.
+3. Preencha **Nome completo** e escolha o **Cargo**. Se o cargo não existir, crie antes em **Cadastros > Cargos**.
+4. Escolha a **Cor na linha do tempo** e preencha telefone e e-mail.
+5. Em **Login de acesso ao app**, ligue o login do técnico. Sem login, ele aparece na agenda mas não usa o app.
+6. Clique em **Salvar**.
+- Quem tem cargo da categoria **Atende em campo** aparece na linha do tempo e na escolha do técnico.
 - Para criar o login, use a aba **Usuários e acessos** (só o administrador).
+- Funcionário que saiu da empresa: desmarque **Ativo**. O histórico de atendimentos e avaliações continua.
 `,
+    veja: ['cargos', 'dados-pessoais'],
+  },
+  {
+    id: 'dados-pessoais',
+    titulo: 'Dados pessoais do funcionário (CPF, endereço, carteira de trabalho)',
+    secao: 'Equipe e acessos',
+    telas: ['equipe'],
+    palavras: 'cpf rg endereco ctps carteira trabalho pis nis admissao nascimento cft registro lgpd',
+    texto: `
+Só o **administrador** vê e preenche estes dados. O escritório e o técnico não enxergam (LGPD).
+1. Em **Equipe > Funcionários**, clique no funcionário.
+2. Na parte **Dados pessoais**, preencha o que tiver: CPF, RG, nascimento, admissão, PIS/NIS, carteira de trabalho, registro profissional e endereço.
+3. Digite o **CEP** para a rua, o bairro e a cidade virem preenchidos.
+4. Clique em **Salvar**.
+- **Carteira de trabalho digital** (desde 2019): o número é o próprio CPF. Deixe número e série em branco.
+- **Registro profissional**: por exemplo, o CFT do responsável técnico, usado no PMOC.
+- O CPF é conferido ao salvar e não pode se repetir entre funcionários.
+`,
+  },
+  {
+    id: 'cargos',
+    titulo: 'Cadastro de cargos',
+    secao: 'Cadastros',
+    telas: ['cadastros', 'equipe'],
+    palavras: 'cargo funcao mecanico refrigeracao ajudante eletricista categoria',
+    texto: `
+1. No menu, clique em **Cadastros > Cargos**.
+2. Clique em **Novo cargo** e dê o nome (ex.: "Mecânico de Refrigeração", "Ajudante", "Eletricista").
+3. Escolha a **Categoria**:
+- **Atende em campo**: aparece na linha do tempo, na agenda e nos relatórios de técnicos.
+- **Auxiliar**, **Supervisão** ou **Administrativo**: não recebe atividades próprias.
+4. Clique em **Salvar**. O cargo passa a aparecer no cadastro do funcionário.
+- Mudar a categoria de um cargo muda todos os funcionários dele.
+- Cargo que não se usa mais: desmarque **Ativo**. Só dá para excluir cargo sem funcionários (e só o administrador).
+`,
+    veja: ['colaboradores'],
   },
   {
     id: 'usuarios',

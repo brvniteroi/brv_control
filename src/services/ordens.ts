@@ -112,14 +112,20 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
   if (termo) {
     const condicoes = [`description.ilike.%${termo}%`, `internal_notes.ilike.%${termo}%`];
     if (/^\d{1,15}$/.test(termo)) condicoes.push(`number.eq.${termo}`);
-    // O nome do cliente está em outra tabela: acha os clientes primeiro e filtra por id
+    // O nome do cliente está em outra tabela: acha os clientes primeiro e filtra por id.
+    // `busca` inclui o e-mail; aqui vale só nome/fantasia ("lobo" não pode achar "@globo.com").
+    const alvo = semAcento(termo);
     const { data: clientes, error: erroClientes } = await supabase
       .from('customers')
-      .select('id')
-      .ilike('busca', `%${semAcento(termo)}%`)
-      .limit(100);
+      .select('id, name, trade_name')
+      .ilike('busca', `%${alvo}%`)
+      .limit(300);
     if (erroClientes) throw erroClientes;
-    if (clientes && clientes.length > 0) condicoes.push(`customer_id.in.(${clientes.map((c) => c.id).join(',')})`);
+    const ids = (clientes ?? [])
+      .filter((c) => semAcento(`${c.name ?? ''} ${c.trade_name ?? ''}`).includes(alvo))
+      .slice(0, 100)
+      .map((c) => c.id);
+    if (ids.length > 0) condicoes.push(`customer_id.in.(${ids.join(',')})`);
     query = query.or(condicoes.join(','));
   }
 

@@ -144,9 +144,9 @@ Feito:
 
 **LEMBRETE (2026-11-08): concluir a implantação do APK** (detalhes técnicos na seção "APK do app de campo", abaixo). Falta:
 (1) o usuário copiar `android-assinatura/` do PC de casa para `D:\BRV_Control\` do **PC da empresa** (substituindo a chave antiga, que não vale
-mais), pen drive e Google Drive privado; (2) confirmar que republicou a `notificar-tecnico` com o fim da duplicada (commit `3c8ba40`);
-(3) repetir no A20 do Alberto o teste **parado com tela apagada ~10 min** (Mapa deve seguir "Online" e a posição atualizar a cada 5 min);
-(4) instalar nos outros técnicos (passo a passo na seção). Ao concluir, apagar este lembrete.
+mais), pen drive e Google Drive privado; (2) repetir no A20 do Alberto o teste **parado com tela apagada ~10 min** (Mapa deve seguir
+"Online" e a posição atualizar a cada 5 min); (3) instalar nos outros técnicos (passo a passo na seção). A `notificar-tecnico` sem a duplicada
+(commit `3c8ba40`) foi republicada em 2026-11-08. Ao concluir, apagar este lembrete.
 Até lá o pessoal usa pelo navegador. Ao concluir, apagar este lembrete.
 
 Pendente, nesta ordem:

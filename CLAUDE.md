@@ -237,7 +237,7 @@ Só gerar APK novo quando mexer no nativo (plugins, GPS, push, ícone). No naveg
   openssl, PKCS12, RSA 4096, validade até 2056; substitui a do primeiro build, que nunca foi instalada), os `.base64.txt` dos secrets,
   `google-services.json`, `firebase-conta-servico.json` e `LEIA-ME.txt` com senha e valores. **Guardar cópia fora do computador**: sem ela não
   dá para atualizar o app instalado (teria que desinstalar em cada celular). Tratar como senha (a conta de serviço manda push em nome do app).
-- **Instalar num celular**: Chrome > control.brvniteroi.com.br/app/brv-control.apk > baixar mesmo assim > permitir instalar desta fonte (e
+- **Instalar num celular**: antes, desinstalar o PWA (atalho do sistema pelo Chrome), se houver, porque Chrome e APK contam como 2 aparelhos. Chrome > control.brvniteroi.com.br/app/brv-control.apk > baixar mesmo assim > permitir instalar desta fonte (e
   "Instalar mesmo assim" no Play Protect); se houver versão assinada com outra chave, desinstalar antes. Abrir, logar com o técnico, localização
   "Permitir o tempo todo". Bateria: Samsung = Aplicativos > BRV Control > Bateria "Sem restrições" + desmarcar em "Otimizar uso da bateria" +
   tirar de "Apps em suspensão"; Xiaomi = bateria "Sem restrições" + "Início automático". Conferir no Mapa ("Online") e com uma atividade de hoje

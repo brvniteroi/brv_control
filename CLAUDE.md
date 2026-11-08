@@ -122,8 +122,8 @@ Feito:
   e aba Usuários (só admin: criar com senha temporária, papel, bloquear, redefinir senha). Criar usuário e redefinir senha
   rodam na Edge Function `supabase/functions/gerenciar-usuario` (usa a chave de admin do Supabase, só no servidor);
   já publicada e testada (2026-11-01). Migration `20261029150000_equipe.sql` impede ficar sem admin.
-  Funcionários e cargos (2026-11-08; migration `20261108110000_funcionarios_cargos.sql`, **a colar no SQL Editor ANTES do push**, senão a aba
-  quebra): a aba virou "Funcionários" (`ColaboradoresTab.tsx`). Cargos em `public.cargos` (`pages/Cargos.tsx`, menu Cadastros > Cargos,
+  Funcionários e cargos (2026-11-08; migration `20261108110000_funcionarios_cargos.sql`, aplicada em
+  2026-11-08): a aba virou "Funcionários" (`ColaboradoresTab.tsx`). Cargos em `public.cargos` (`pages/Cargos.tsx`, menu Cadastros > Cargos,
   `services/cargos.ts`): nome livre + categoria (`tecnico` = "Atende em campo", `auxiliar`, `supervisor`, `administrativo`). O funcionário
   tem `employees.cargo_id` e o trigger `employees_role_do_cargo` copia a categoria para `employees.role`, que continua sendo o que o sistema
   usa (linha do tempo, agenda, relatórios: `role = 'tecnico'`); mudar a categoria de um cargo muda os funcionários dele

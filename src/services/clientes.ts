@@ -190,6 +190,22 @@ export async function adicionarContato(customerId: string, contato: ContatoNovo)
   return data as CustomerContact;
 }
 
+/** O banco cuida do "principal" e copia telefone/e-mail do principal para o cliente (trigger). */
+export async function atualizarContato(contatoId: string, contato: ContatoNovo): Promise<void> {
+  const { error } = await supabase
+    .from('customer_contacts')
+    .update({
+      name: contato.name.trim(),
+      role: contato.role?.trim() || null,
+      phone: contato.phone?.trim() || null,
+      is_whatsapp: contato.is_whatsapp ?? true,
+      email: contato.email?.trim() || null,
+      is_primary: contato.is_primary ?? false,
+    })
+    .eq('id', contatoId);
+  if (error) throw error;
+}
+
 export async function removerContato(contatoId: string): Promise<void> {
   const { error } = await supabase
     .from('customer_contacts')

@@ -16,6 +16,7 @@ import {
   salvarCliente,
   alternarStatusCliente,
   adicionarContato,
+  atualizarContato,
   removerContato,
   ajustarPosicaoEndereco,
 } from '../../services/clientes';
@@ -51,6 +52,9 @@ const ABAS: AbaItem[] = [
   { id: 'atendimento', rotulo: 'Atendimento' },
   { id: 'modelos', rotulo: 'Modelos' },
 ];
+
+/** Rótulos oferecidos no cadastro de contato (os mesmos das opções do formulário). */
+const ROTULOS_CONTATO = ['Celular', 'WhatsApp', 'Casa', 'Comercial', 'Financeiro', 'Síndico(a)'];
 
 export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInicial }: ClienteDetalhesProps) {
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('geral');
@@ -114,6 +118,8 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
   const [contatoEmail, setContatoEmail] = useState('');
   const [contatoWhatsapp, setContatoWhatsapp] = useState(true);
   const [contatoPrincipal, setContatoPrincipal] = useState(false);
+  /** Contato aberto para edição (null = adicionando um novo). */
+  const [contatoEditando, setContatoEditando] = useState<CustomerContact | null>(null);
 
 
   useEffect(() => {
@@ -321,7 +327,19 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
     setContatoFuncao('Celular');
     setContatoWhatsapp(true);
     setContatoPrincipal(false);
+    setContatoEditando(null);
     setModalContatoAberto(false);
+  };
+
+  const abrirEdicaoContato = (contato: CustomerContact) => {
+    setContatoEditando(contato);
+    setContatoNome(contato.name && contato.name !== nome ? contato.name : '');
+    setContatoFuncao(contato.role || 'Celular');
+    setContatoTelefone(contato.phone ? formatarTelefone(contato.phone) : '');
+    setContatoEmail(contato.email ?? '');
+    setContatoWhatsapp(contato.is_whatsapp);
+    setContatoPrincipal(contato.is_primary);
+    setModalContatoAberto(true);
   };
 
   const handleAdicionarContato = async (e: FormEvent) => {
@@ -336,8 +354,32 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
       phone: contatoTelefone.trim() || null,
       email: contatoEmail.trim() || null,
       is_whatsapp: contatoWhatsapp,
-      is_primary: contatos.length === 0 || contatoPrincipal,
+      // O principal não deixa de ser principal pela edição: para trocar, marca-se outro
+      is_primary: contatos.length === 0 || contatoPrincipal || !!contatoEditando?.is_primary,
     };
+
+    if (contatoEditando) {
+      if (clienteId === 'novo') {
+        setContatos((prev) =>
+          prev.map((c) =>
+            c.id === contatoEditando.id
+              ? { ...c, ...dadosContato }
+              : dadosContato.is_primary ? { ...c, is_primary: false } : c,
+          ),
+        );
+        fecharModalContato();
+        return;
+      }
+      try {
+        await atualizarContato(contatoEditando.id, dadosContato);
+        await recarregarContatos(clienteId);
+        fecharModalContato();
+      } catch (err: unknown) {
+        console.error('Erro ao atualizar contato:', err);
+        setErro('Não foi possível salvar o contato.');
+      }
+      return;
+    }
 
     if (clienteId === 'novo') {
       const novo: CustomerContact = {
@@ -836,6 +878,15 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
+                            onClick={() => abrirEdicaoContato(contato)}
+                            className="rounded-md p-1 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                            title="Editar contato"
+                            aria-label="Editar contato"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleRemoverContato(contato.id)}
                             className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                             title="Remover contato"
@@ -921,7 +972,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-800">Adicionar Contato</h3>
+              <h3 className="text-base font-bold text-slate-800">{contatoEditando ? 'Editar Contato' : 'Adicionar Contato'}</h3>
               <button
                 type="button"
                 onClick={fecharModalContato}
@@ -962,17 +1013,19 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                   <option value="Comercial">Comercial</option>
                   <option value="Financeiro">Financeiro</option>
                   <option value="Síndico(a)">Síndico(a)</option>
+                  {/* Rótulo fora da lista (ex.: "E-mail" vindo do Field) continua aparecendo na edição */}
+                  {!ROTULOS_CONTATO.includes(contatoFuncao) && <option value={contatoFuncao}>{contatoFuncao}</option>}
                 </select>
               </div>
 
               <div>
                 <label htmlFor="ct-tel" className="block text-xs font-medium text-slate-700">
-                  Telefone / WhatsApp *
+                  Telefone / WhatsApp {contatoEmail.trim() ? '' : '*'}
                 </label>
                 <input
                   id="ct-tel"
                   type="text"
-                  required
+                  required={!contatoEmail.trim()}
                   value={contatoTelefone}
                   onChange={(e) => setContatoTelefone(formatarTelefone(e.target.value))}
                   placeholder="(21) 99999-9999"
@@ -982,7 +1035,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
 
               <div>
                 <label htmlFor="ct-email" className="block text-xs font-medium text-slate-700">
-                  E-mail (opcional)
+                  E-mail {contatoTelefone.trim() ? '(opcional)' : '*'}
                 </label>
                 <input
                   id="ct-email"
@@ -999,6 +1052,8 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                   id="ct-princ"
                   type="checkbox"
                   checked={contatoPrincipal}
+                  disabled={!!contatoEditando?.is_primary}
+                  title={contatoEditando?.is_primary ? 'Para trocar o principal, marque outro contato como principal.' : undefined}
                   onChange={(e) => setContatoPrincipal(e.target.checked)}
                   className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
@@ -1019,7 +1074,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
                   type="submit"
                   className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700"
                 >
-                  Adicionar
+                  {contatoEditando ? 'Salvar contato' : 'Adicionar'}
                 </button>
               </div>
             </form>

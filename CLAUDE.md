@@ -221,7 +221,9 @@ uma por OS. Com a OS concluída, o escritório clica "Enviar avaliação pelo Wh
 sem login). Não há botão no app do técnico (decisão do usuário). Histórico do Field (uma por atividade) importado por
 `scripts/field-control/importar-avaliacoes.mjs`. Aparecem na OS, na aba Atendimento do cliente e com a média por técnico em Equipe.
 Pedido automático por e-mail ao concluir (o Field fazia por e-mail, não WhatsApp; ver memória): migration `20261107100000_avaliacao_por_email.sql`
-(aplicada em 2026-11-07; secret `AVALIACAO_SEGREDO` criado). Trigger `service_orders_pede_avaliacao` → `avaliacao_email_processar` (regras: só com login; OS já avaliada ou já pedida
+(aplicada em 2026-11-07; secret `AVALIACAO_SEGREDO` criado). E-mail usado: o do contato principal (`customers.email`); sem ele, o de outro
+contato do cliente (migration `20261107110000_avaliacao_email_outros_contatos.sql`, **a colar no SQL Editor**). Contatos do cliente têm botão
+Editar (lápis em `ClienteDetalhes.tsx`, `atualizarContato`); basta telefone ou e-mail. Trigger `service_orders_pede_avaliacao` → `avaliacao_email_processar` (regras: só com login; OS já avaliada ou já pedida
 por e-mail não; concluída há mais de 24 h não; cliente sem e-mail não; cliente com pedido por e-mail ou WhatsApp nas últimas 72 h, mesmo de outra OS, não)
 → pg_net → `hostgator-api/enviar-avaliacao.php` (publicado em `/api/`, `mail()` da HostGator, remetente `avaliacao@brvniteroi.com.br`, resposta
 `brv@brvniteroi.com.br`) → `avaliacao_email_resultado`. Tudo fica em `rating_requests` (enviado/falhou/pulado com motivo; o botão do WhatsApp registra

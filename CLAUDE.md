@@ -142,23 +142,11 @@ Feito:
 
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 
-**LEMBRETE: APK do app de campo (atualizado 2026-11-08).** Feito em 2026-11-08 (no PC de casa `PCBRAULIOCASA`): Firebase projeto `brv-control`
-(plano Spark, app `br.com.brvniteroi.control`, FCM V1 ativada); migration `20261103150000_push_fcm.sql` colada; segredo `FIREBASE_SERVICE_ACCOUNT`
-no Supabase (hash conferido) e `notificar-tecnico` republicada (Verify JWT desligado); os 5 secrets do `android.yml` no GitHub.
-**Chave nova gerada em 2026-11-08** (openssl, PKCS12, RSA 4096, alias `brv-control`, validade até 2056), porque a antiga não estava neste PC (o
-primeiro build foi em outro PC, provavelmente o da empresa; nenhum APK foi instalado com ela). `android-assinatura/` (gitignored, não vem no
-`git pull`) tem `brv-control.jks`, os `.base64.txt`, `google-services.json`, `firebase-conta-servico.json` e `LEIA-ME.txt` com os valores.
-Workflow rodou com sucesso em 2026-11-08 (execução #2, depois de corrigir o `gradlew` sem permissão de execução; a chave do openssl assinou
-sem problema) e o APK 1.0.2 está publicado no link. Falta: (1) o usuário copiar `android-assinatura/` para o PC da empresa (substituindo a
-antiga), pen drive e Google Drive privado; (2) liberar para os outros técnicos. Testado em 2026-11-08 no Samsung A20 do Alberto: instalação,
-notificação fixa do GPS, "Online" no Mapa, posição com tela apagada e push com app fechado ok. O teste mostrou que, com a tela apagada, o
-WebView congela o relógio da presença ("Offline" falso) e o `distanceFilter: 10` não entregava leitura com o técnico parado (posição velha):
-corrigido em `useRastreioCampo` (`distanceFilter: 0` e cada leitura do GPS renova a presença, 1/min); falta repetir o teste parado com tela apagada.
-Push pelo APK só passou a funcionar em 2026-11-08: o plugin era devolvido por função `async` e o proxy do Capacitor responde a `then`, então o
-`await` travava para sempre sem erro (nenhum celular gerava token). **Nunca dar `await`/`return` de plugin do Capacitor em função async**; usar
-`registerPlugin` direto (`services/push.ts`, `services/nativo.ts`). Com token do APK, a `notificar-tecnico` não manda mais pelo Chrome (evita duplicada).
-Testado no A20: nova atividade e exclusão chegam com a tela apagada e o app fechado.
-Samsung: Configurações > Aplicativos > BRV Control > Bateria "Sem restrições" e tirar de "Apps em suspensão".
+**LEMBRETE (2026-11-08): concluir a implantação do APK** (detalhes técnicos na seção "APK do app de campo", abaixo). Falta:
+(1) o usuário copiar `android-assinatura/` do PC de casa para `D:\BRV_Control\` do **PC da empresa** (substituindo a chave antiga, que não vale
+mais), pen drive e Google Drive privado; (2) confirmar que republicou a `notificar-tecnico` com o fim da duplicada (commit `3c8ba40`);
+(3) repetir no A20 do Alberto o teste **parado com tela apagada ~10 min** (Mapa deve seguir "Online" e a posição atualizar a cada 5 min);
+(4) instalar nos outros técnicos (passo a passo na seção). Ao concluir, apagar este lembrete.
 Até lá o pessoal usa pelo navegador. Ao concluir, apagar este lembrete.
 
 Pendente, nesta ordem:
@@ -183,7 +171,7 @@ Pendente, nesta ordem:
    também ficam guardadas por `guardar-observacoes-field.mjs` em `customer_field_original` (migration `20261103130000_cliente_original_field.sql`,
    só o escritório lê) e aparecem no mesmo bloco; `customers.notes` continua sendo o campo editável.
 2. Depois de 18/11: avaliação automática pela WhatsApp Cloud API da Meta (ao concluir a OS; tentar coexistência no
-   número atual do escritório). O app Android (APK) está em andamento, ver "APK do app de campo" abaixo. Detalhes na memória do projeto.
+   número atual do escritório). O app Android (APK) está pronto e testado (2026-11-08); falta instalar nos técnicos, ver o lembrete e "APK do app de campo" abaixo. Detalhes na memória do projeto.
 3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,
    com limpeza) → orçamentos com aprovação do cliente → vendas e financeiro (PIX/boleto) → NF-e/NFS-e via API → estoque.
    Empresa no Simples Nacional (CSOSN 102). Análise do CSV e decisões na memória do projeto.
@@ -201,29 +189,52 @@ Foto que não sobe (HostGator fora do ar) não trava a fila: a conclusão e as d
 primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em `services/campo.ts`). Testado no celular com login de técnico (2026-11-02). O banco também garante (migration `20261101150000_protecao_campo.sql`, aplicada): técnico não lê `customers` nem `customer_contacts` (nome vem de `campo_clientes()`), e o trigger
 `tasks_protege_agenda` barra sair de `agendada` fora de hoje ou com a anterior não concluída. Técnico logado é mandado para `/campo`.
 Avisos de agenda alterada (escritório criou, mudou horário, passou para outro técnico/dia, cancelou ou excluiu atividade de HOJE; exclusão
-desde a migration `20261108100000_aviso_atividade_excluida.sql`, **a colar no SQL Editor** + republicar `notificar-tecnico`: o banco manda os dados
-da OS junto, porque a função não acha mais a atividade):
+desde a migration `20261108100000_aviso_atividade_excluida.sql`, aplicada em 2026-11-08: o banco manda os dados da OS junto, porque a função não
+acha mais a atividade; testado no A20):
 com o app aberto, `services/avisosCampo.ts` compara com a última agenda vista, toca bipe/vibra e destaca o cartão ("Nova");
 com o app fechado, notificação push: trigger `tasks_notifica_tecnico` → pg_net → Edge Function `notificar-tecnico`
 (publicada com Verify JWT desligado; confere o segredo de `push_config`) → Web Push (`push_subscriptions`, `services/push.ts`,
 evento `push` no `public/sw.js`). Chaves VAPID geradas por `scripts/configurar-push.mjs` (direto no banco). Migration
 `20261103110000_notificacoes_push.sql`. Mudança feita pelo próprio técnico ou sem login (scripts) não avisa. Xiaomi: liberar
-o Chrome em bateria "Sem restrições" e "Início automático".
+o Chrome em bateria "Sem restrições" e "Início automático". No APK o envio é pelo Firebase (ver "APK do app de campo"); técnico com token do APK
+não recebe mais pelo Web Push do Chrome (a inscrição antiga do navegador ficava duplicando).
 Sem sinal: ações e fotos vão para a fila no IndexedDB (`services/filaCampo.ts`) e sobem quando a rede volta; a agenda usa cache
 local. Formulários só online. Instalável (`public/manifest.webmanifest`, `public/sw.js`, registrado só no build).
 
 APK do app de campo (Android, Capacitor 8; `android/`, `capacitor.config.ts`, `src/services/nativo.ts`): casco fino que abre
 https://control.brvniteroi.com.br/campo (`server.url`), então ajuste de tela chega pelo deploy normal, sem APK novo; `android-web/` guarda só a tela
 "Sem conexão" (`errorPath`). Visual do app não mudou (só ícone e splash com o logo, gerados por `@capacitor/assets` a partir de `assets/`).
-Só gerar APK novo quando mexer no nativo (plugins, GPS, push, ícone). No APK (`ehApp`): GPS em segundo plano pelo plugin
-`@capacitor-community/background-geolocation` (serviço em primeiro plano, notificação fixa; `useRastreioCampo` em `hooks/useCampo.ts`) e push nativo
-pelo Firebase (`services/push.ts`; o Web Push não funciona no WebView): token em `push_fcm_tokens` (migration `20261103150000_push_fcm.sql`, **a colar no
-SQL Editor**) e a Edge Function `notificar-tecnico` envia também por FCM (segredo `FIREBASE_SERVICE_ACCOUNT`; **republicar a função**). No navegador/PWA nada mudou.
-Build e publicação: GitHub Actions manual `.github/workflows/android.yml` compila o APK assinado e `scripts/publicar-apk.mjs` envia por FTPS para
-https://control.brvniteroi.com.br/app/brv-control.apk (link para o pessoal baixar; Android pede liberar "fontes desconhecidas"). Secrets do workflow:
-`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `GOOGLE_SERVICES_JSON_BASE64` (Firebase) e os FTP_* do deploy.
-A chave de assinatura fica em `android-assinatura/` (gitignored): **guardar cópia fora do computador**; sem ela não dá para atualizar o app já instalado
-(teria que desinstalar em cada celular). `applicationId`: `br.com.brvniteroi.control`. Build local: JDK 21 + Android SDK (instalados em `C:Usersrvandroid-build`).
+Só gerar APK novo quando mexer no nativo (plugins, GPS, push, ícone). No navegador/PWA nada mudou.
+- **GPS** (`ehApp`): plugin `@capacitor-community/background-geolocation` (serviço em primeiro plano; `useRastreioCampo` em `hooks/useCampo.ts`).
+  Exige a notificação fixa "Compartilhando sua posição com o escritório..." (regra do Android 8+, não dá para esconder; também é a transparência
+  que a LGPD pede). O técnico pode deixá-la "Silenciosa", mas não desligar a categoria. `distanceFilter: 0` (o plugin lê a cada 1 s com o GPS já
+  ligado; com filtro, parado não chegava leitura) e o JS envia no máx. 1/min andando (≥ 30 m) e a cada 5 min parado. Com a tela apagada o WebView
+  congela os relógios, então cada leitura do GPS também renova a presença ("Online" no Mapa).
+- **Push**: Firebase projeto `brv-control` (plano Spark grátis, FCM V1 ativada, app `br.com.brvniteroi.control`; conta da BRV no console.firebase.google.com).
+  `services/push.ts` registra o token em `push_fcm_tokens` (migration `20261103150000_push_fcm.sql`, aplicada) pela RPC `registrar_push_fcm`; no
+  Android < 13 a permissão já vem liberada e o registro roda sozinho ao abrir o app (sem botão); erro aparece na faixa azul do app. A Edge Function
+  `notificar-tecnico` envia por FCM (segredo `FIREBASE_SERVICE_ACCOUNT` no Supabase = JSON da conta de serviço) e, se o técnico tem token do APK,
+  não envia pelo Web Push. **Nunca dar `await`/`return` de um plugin do Capacitor em função async**: o proxy responde a `then` e trava para sempre
+  sem erro (foi o que impediu o push até 2026-11-08); usar `registerPlugin` direto, como em `services/push.ts` e `services/nativo.ts`.
+- **Build**: GitHub Actions manual `.github/workflows/android.yml` (Actions > "APK do app de campo (Android)" > Run workflow; ~2 min) compila,
+  assina e publica por FTPS (`scripts/publicar-apk.mjs`) em https://control.brvniteroi.com.br/app/brv-control.apk. Versão = número da execução
+  (`versionCode`/`1.0.N`); instalar a nova por cima da antiga. Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`
+  (`brv-control`), `ANDROID_KEY_PASSWORD` (= a do keystore, PKCS12), `GOOGLE_SERVICES_JSON_BASE64` e os FTP_* do deploy (cadastrados em 2026-11-08).
+  O workflow faz `chmod +x gradlew` (commit no Windows perde o bit de execução: erro 126). Build local só no PC da empresa (JDK 21 + Android SDK
+  em `C:\Users\brv\android-build`); o PC de casa `PCBRAULIOCASA` não tem Java. Custo do APK: zero (Firebase, Actions e distribuição pelo link
+  são grátis; Play Store só se quiser, US$ 25 uma vez).
+- **Chave de assinatura** em `android-assinatura/` (gitignored, **não vem no `git pull`**): `brv-control.jks` (gerada em 2026-11-08 no PC de casa com
+  openssl, PKCS12, RSA 4096, validade até 2056; substitui a do primeiro build, que nunca foi instalada), os `.base64.txt` dos secrets,
+  `google-services.json`, `firebase-conta-servico.json` e `LEIA-ME.txt` com senha e valores. **Guardar cópia fora do computador**: sem ela não
+  dá para atualizar o app instalado (teria que desinstalar em cada celular). Tratar como senha (a conta de serviço manda push em nome do app).
+- **Instalar num celular**: Chrome > control.brvniteroi.com.br/app/brv-control.apk > baixar mesmo assim > permitir instalar desta fonte (e
+  "Instalar mesmo assim" no Play Protect); se houver versão assinada com outra chave, desinstalar antes. Abrir, logar com o técnico, localização
+  "Permitir o tempo todo". Bateria: Samsung = Aplicativos > BRV Control > Bateria "Sem restrições" + desmarcar em "Otimizar uso da bateria" +
+  tirar de "Apps em suspensão"; Xiaomi = bateria "Sem restrições" + "Início automático". Conferir no Mapa ("Online") e com uma atividade de hoje
+  criada com o app fechado (deve chegar notificação). Testado no Samsung A20 (Android 11) do Alberto em 2026-11-08: GPS com tela apagada, Online,
+  nova atividade e exclusão com app fechado.
+- Login (`pages/Login.tsx`) com `name`/`autocomplete="username"` para o gerenciador de senhas oferecer salvar; o app não consegue forçar, depende
+  do serviço de preenchimento automático do celular (Google ou Samsung Pass). A sessão fica salva: o técnico só digita a senha de novo se sair.
 
 Módulo PMOC (em andamento; telas do Gemini prontas e auditadas em 2026-11-04, ainda com dados de demonstração; item do menu oculto em `Sidebar.tsx` até ligar ao banco, rotas `/pmoc` acessíveis por URL; falta migration `pmoc_*`, `services/pmoc.ts`, PDF no `upload.php`, CPF/registro em `employees`): briefing para o Gemini em `docs/gemini/pmoc-briefing.md` (telas e documentos impressos, com camada de dados de demonstração
 `src/components/pmoc/fonteDeDados.ts`). Ele deve gravar o resumo em `docs/gemini/pmoc.md`, que o Claude **audita** antes de criar migration, services e a ligação

@@ -4,6 +4,18 @@ Situação: **em estudo, nada implementado** (2026-11-05). Nada deste documento 
 Baseado no repositório `D:\BRV_Equipamentos` (commit `84cfe00`, de 2026-11-03), incluindo o `CLAUDE.md` dele, que já traz um plano de unificação.
 O banco real foi conferido em 2026-11-05 com as consultas do Anexo; vale ele, não os arquivos `.sql` do repositório, que estão defasados.
 
+## Atualizações de 2026-11-08 (ler antes do resto)
+- **APK pronto e testado** (Samsung A20 do Alberto): decisão 5 resolvida quanto ao APK. A retirada pela fase 3 não exige APK novo (o app abre o site).
+- **Cargos**: `employees.role` agora vem da categoria do cargo (`public.cargos`, ver CLAUDE.md, "Funcionários e cargos"). Em vez de criar
+  `role = 'bancada'` à mão, criar a **categoria** `oficina` (ou `bancada`) no CHECK de `cargos.categoria` e `employees.role`, e o cargo
+  "Técnico de Bancada" para o Gustavo.
+- **Adriana** é `admin` (Diretora Administrativa), não `escritorio` + financeiro como na tabela "Quem acessa o quê".
+- **Comercialização**: o usuário quer vender o sistema. A frase "`empresa_id` não vem para o Control" precisa ser revista junto com o
+  plano de multiempresa (ainda não escrito); a Oficina deveria nascer compatível com ele.
+- **Um aparelho por técnico** e funcionários com dados pessoais (só admin) já existem; o papel `oficina` deve seguir as mesmas regras.
+- Segurança do Equipamentos segue pendente (lembrete no CLAUDE.md). Recomendação: fechar antes da fase 1.
+- Decisões 1, 2, 3, 4, 6 e 7 seguem abertas.
+
 Objetivo: um sistema só, com o caminho completo **OS de campo → equipamento ou placa na oficina → devolução e cobrança**, sem digitar número de OS de um sistema no outro e com um único login e cadastro de clientes.
 
 ## O que existe hoje no BRV Equipamentos

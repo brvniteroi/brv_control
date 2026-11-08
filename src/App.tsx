@@ -24,6 +24,7 @@ import PmocEditorPage from './pages/PmocEditorPage';
 import PmocModelo from './pages/PmocModelo';
 import PortalRoute from './components/portal/PortalRoute';
 import Avaliar from './pages/Avaliar';
+import Ajuda from './pages/Ajuda';
 import PortalLogin from './pages/portal/PortalLogin';
 import PortalHome from './pages/portal/PortalHome';
 import CampoLayout from './components/campo/CampoLayout';
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="relatorios/tipos-de-servico" element={<RelatorioTiposServico />} />
             <Route path="relatorios/garantia-brv" element={<RelatorioGarantia />} />
             <Route path="equipe" element={<Equipe />} />
+            <Route path="ajuda" element={<Ajuda />} />
           </Route>
         </Route>
 

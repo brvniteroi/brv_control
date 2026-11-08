@@ -31,6 +31,7 @@ import HistoricoAtendimentosOS from './HistoricoAtendimentosOS';
 import AvaliacaoOS from '../avaliacoes/AvaliacaoOS';
 import SeletorCliente from './SeletorCliente';
 import FormulariosDaOrdem from '../formularios/FormulariosDaOrdem';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 
 interface OrdemDetalhesProps {
   ordemId: string | 'nova';
@@ -44,6 +45,7 @@ const INPUT =
 export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetalhesProps) {
   const nova = ordemId === 'nova';
   const { profile } = useAuth();
+  useTelaAjuda('os');
   // Atalho para o cadastro do cliente: só admin e escritório
   const podeAbrirCliente = profile?.role === 'admin' || profile?.role === 'escritorio';
   const [clienteAberto, setClienteAberto] = useState(false);

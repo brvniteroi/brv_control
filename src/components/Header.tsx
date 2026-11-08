@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Menu, LogOut, User, KeyRound } from 'lucide-react';
+import { Menu, LogOut, User, KeyRound, CircleHelp } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import type { ProfileRole } from '../types/fsm';
 import AlterarSenhaModal from './AlterarSenhaModal';
 
 interface HeaderProps {
   onAbrirMenu: () => void;
+  /** Sem ela (técnico), o botão de ajuda não aparece. */
+  onAbrirAjuda?: () => void;
 }
 
 const papelRotulo: Record<ProfileRole, string> = {
@@ -22,7 +24,7 @@ const papelCor: Record<ProfileRole, string> = {
   cliente: 'bg-slate-100 text-slate-700 border-slate-200',
 };
 
-export default function Header({ onAbrirMenu }: HeaderProps) {
+export default function Header({ onAbrirMenu, onAbrirAjuda }: HeaderProps) {
   const { profile, user, signOut } = useAuth();
   const [alterandoSenha, setAlterandoSenha] = useState(false);
 
@@ -30,7 +32,7 @@ export default function Header({ onAbrirMenu }: HeaderProps) {
   const papel = profile?.role || 'tecnico';
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
+    <header className="print:hidden flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -59,6 +61,18 @@ export default function Header({ onAbrirMenu }: HeaderProps) {
         </div>
 
         <div className="h-6 w-px bg-slate-200" />
+
+        {onAbrirAjuda && (
+          <button
+            type="button"
+            onClick={onAbrirAjuda}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+            title="Ajuda desta tela (F1)"
+          >
+            <CircleHelp size={14} />
+            <span className="hidden sm:inline">Ajuda</span>
+          </button>
+        )}
 
         <button
           type="button"

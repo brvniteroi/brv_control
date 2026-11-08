@@ -28,6 +28,7 @@ import AtendimentosCliente from './AtendimentosCliente';
 import OrdemDetalhes from '../ordens/OrdemDetalhes';
 import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
 import MapaEnderecos from './MapaEnderecos';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import { formatarTelefone } from '../../utils/telefone';
 import { geocodificar, textoEndereco } from '../../services/googleMaps';
 import { documentoValido, formatarDocumento, limparDocumento } from '../../utils/documento';
@@ -57,6 +58,7 @@ const ABAS: AbaItem[] = [
 const ROTULOS_CONTATO = ['Celular', 'WhatsApp', 'Casa', 'Comercial', 'Financeiro', 'Síndico(a)'];
 
 export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInicial }: ClienteDetalhesProps) {
+  useTelaAjuda('cliente');
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('geral');
   const [ordemAberta, setOrdemAberta] = useState<string | null>(null);
   const [versaoAtendimentos, setVersaoAtendimentos] = useState(0);

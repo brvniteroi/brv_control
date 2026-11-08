@@ -11,6 +11,7 @@ import {
 } from '../../services/ordens';
 import { buscarClientePorId, listarClientes } from '../../services/clientes';
 import ClienteDetalhes from '../clientes/ClienteDetalhes';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import type { Customer, CustomerAddress, ServiceType } from '../../types/fsm';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { deCamposDataHora, rotuloEndereco } from '../../utils/ordens';
@@ -26,6 +27,7 @@ const CAMPO =
   'block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
 export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }: Props) {
+  useTelaAjuda('nova-atividade');
   const [termo, setTermo] = useState('');
   const [encontradas, setResultados] = useState<OrdemResumo[]>([]);
   const [buscando, setBuscando] = useState(false);

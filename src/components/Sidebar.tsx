@@ -5,6 +5,7 @@ import {
   CalendarRange,
   ChartColumn,
   ChevronDown,
+  CircleHelp,
   ClipboardCheck,
   ClipboardList,
   FileBarChart,
@@ -81,6 +82,7 @@ const MENU: EntradaMenu[] = [
   },
   { rota: '/estoque', rotulo: 'Estoque', icone: Package },
   { rota: '/equipe', rotulo: 'Equipe', icone: UserCog },
+  { rota: '/ajuda', rotulo: 'Ajuda (F1)', icone: CircleHelp, apenasEscritorio: true },
 ];
 
 interface SidebarProps {
@@ -108,7 +110,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-brv-navy text-white transition-transform md:static md:translate-x-0 ${
+        className={`print:hidden fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-brv-navy text-white transition-transform md:static md:translate-x-0 ${
           aberta ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

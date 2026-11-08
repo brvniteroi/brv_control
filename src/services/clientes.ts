@@ -190,6 +190,24 @@ export async function adicionarContato(customerId: string, contato: ContatoNovo)
   return data as CustomerContact;
 }
 
+const EMAIL_VALIDO = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/**
+ * O cliente tem algum e-mail válido (no cadastro ou em qualquer contato)? Mesmo critério do pedido de avaliação
+ * automático (migration 20261107110000). Só para admin/escritório (técnico não lê clientes).
+ */
+export async function clienteTemEmail(clienteId: string): Promise<boolean> {
+  const [cliente, contatos] = await Promise.all([
+    supabase.from('customers').select('email').eq('id', clienteId).maybeSingle(),
+    supabase.from('customer_contacts').select('email').eq('customer_id', clienteId).not('email', 'is', null),
+  ]);
+  if (cliente.error) throw cliente.error;
+  if (contatos.error) throw contatos.error;
+  return [cliente.data?.email, ...(contatos.data ?? []).map((c) => c.email)].some(
+    (e) => typeof e === 'string' && EMAIL_VALIDO.test(e.trim()),
+  );
+}
+
 /** O banco cuida do "principal" e copia telefone/e-mail do principal para o cliente (trigger). */
 export async function atualizarContato(contatoId: string, contato: ContatoNovo): Promise<void> {
   const { error } = await supabase

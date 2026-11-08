@@ -222,9 +222,12 @@ sem login). Não há botão no app do técnico (decisão do usuário). Históric
 `scripts/field-control/importar-avaliacoes.mjs`. Aparecem na OS, na aba Atendimento do cliente e com a média por técnico em Equipe.
 Pedido automático por e-mail ao concluir (o Field fazia por e-mail, não WhatsApp; ver memória): migration `20261107100000_avaliacao_por_email.sql`
 (aplicada em 2026-11-07; secret `AVALIACAO_SEGREDO` criado). E-mail usado: o do contato principal (`customers.email`); sem ele, o de outro
-contato do cliente (migration `20261107110000_avaliacao_email_outros_contatos.sql`, aplicada). Teste aprovado em 2026-11-07 (liberar para clientes = `somente_para = NULL` em `avaliacao_config`).
+contato do cliente (migration `20261107110000_avaliacao_email_outros_contatos.sql`, aplicada). Teste aprovado e envio liberado para os clientes em 2026-11-07 (`somente_para = NULL`; desligar tudo: `ativo = false`).
 O Dashboard (`AtividadesHoje.tsx`) mostra nas atividades concluídas de hoje as estrelas, por onde o cliente respondeu e o comentário, ou
-"Avaliação pedida..., aguardando"; a página se atualiza sozinha a cada 2 min e ao voltar para a aba. Contatos do cliente têm botão
+"Avaliação pedida..., aguardando"; a página se atualiza sozinha a cada 2 min e ao voltar para a aba.
+A OS mostra um aviso grande "Cliente sem e-mail cadastrado" (só admin/escritório; `clienteTemEmail` em `services/clientes.ts`, mesmo critério
+do envio) com botão "Cadastrar e-mail" que abre o cadastro por cima; ao fechar, confere de novo. Em 2026-11-07, 64,7% dos clientes atendidos
+nos últimos 12 meses não tinham e-mail (53,6% do cadastro todo). Contatos do cliente têm botão
 Editar (lápis em `ClienteDetalhes.tsx`, `atualizarContato`); basta telefone ou e-mail. Trigger `service_orders_pede_avaliacao` → `avaliacao_email_processar` (regras: só com login; OS já avaliada ou já pedida
 por e-mail não; concluída há mais de 24 h não; cliente sem e-mail não; cliente com pedido por e-mail ou WhatsApp nas últimas 72 h, mesmo de outra OS, não)
 → pg_net → `hostgator-api/enviar-avaliacao.php` (publicado em `/api/`, `mail()` da HostGator, remetente `avaliacao@brvniteroi.com.br`, resposta

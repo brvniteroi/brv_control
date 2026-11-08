@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Check, ClipboardList, ExternalLink, History, Tag as IconeEtiqueta, X } from 'lucide-react';
+import { Check, ClipboardList, ExternalLink, History, MailWarning, Tag as IconeEtiqueta, X } from 'lucide-react';
+import { clienteTemEmail } from '../../services/clientes';
 import {
   buscarOrdem,
   listarEnderecosDoCliente,
@@ -149,6 +150,20 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
     };
   }, [clienteId, nova]);
 
+  // Cliente sem e-mail não recebe o pedido de avaliação automático: aviso para o escritório pedir o e-mail.
+  // Confere de novo ao fechar o cadastro do cliente (o contato é gravado lá na hora).
+  const [semEmail, setSemEmail] = useState(false);
+  useEffect(() => {
+    if (!clienteId || !podeAbrirCliente || clienteAberto) return;
+    let ativo = true;
+    clienteTemEmail(clienteId)
+      .then((tem) => ativo && setSemEmail(!tem))
+      .catch(() => ativo && setSemEmail(false)); // na dúvida, não mostra o aviso
+    return () => {
+      ativo = false;
+    };
+  }, [clienteId, podeAbrirCliente, clienteAberto]);
+
   const recarregar = async () => {
     if (nova) return;
     const o = await buscarOrdem(ordemId);
@@ -281,6 +296,32 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
           </button>
         </div>
       </div>
+
+      {semEmail && cliente && (
+        <div className="mx-auto mt-6 max-w-5xl px-6">
+        <div
+          role="alert"
+          className="flex flex-col gap-4 rounded-2xl border-2 border-amber-400 bg-amber-50 p-5 shadow-sm sm:flex-row sm:items-center"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white">
+            <MailWarning size={26} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-bold text-amber-900">Cliente sem e-mail cadastrado</p>
+            <p className="mt-0.5 text-sm text-amber-800">
+              Peça o e-mail ao cliente. Sem ele, o pedido de avaliação não é enviado automaticamente quando a OS for concluída.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setClienteAberto(true)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-xs transition hover:bg-amber-600"
+          >
+            <ExternalLink size={16} /> Cadastrar e-mail
+          </button>
+        </div>
+        </div>
+      )}
 
       {erro && (
         <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700">

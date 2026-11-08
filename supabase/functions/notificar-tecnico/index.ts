@@ -76,14 +76,30 @@ Deno.serve(async (req) => {
   if (erroCfg || !cfg?.vapid_private) return responder(500, { erro: 'Push não configurado.' });
   if (req.headers.get('x-segredo') !== cfg.segredo) return responder(401, { erro: 'Não autorizado.' });
 
-  const { employee_id, task_id, evento } = (await req.json()) as { employee_id: string; task_id: string; evento: Evento };
+  const { employee_id, task_id, evento, dados } = (await req.json()) as {
+    employee_id: string;
+    task_id: string;
+    evento: Evento;
+    /** Atividade excluída: o banco manda os dados, porque aqui ela já não existe. */
+    dados?: { numero?: number; cliente?: string; tipo?: string; titulo?: string } | null;
+  };
   if (!EVENTOS.includes(evento)) return responder(400, { erro: 'Evento inválido.' });
 
-  const { data: t } = await sb
+  const { data: lida } = await sb
     .from('tasks')
     .select('id, title, scheduled_start, ordem:service_orders(number, tipo:service_types!service_type_id(name), cliente:customers!customer_id(name, trade_name))')
     .eq('id', task_id)
     .maybeSingle();
+  const t =
+    lida ??
+    (dados
+      ? {
+          id: task_id,
+          title: dados.titulo ?? '',
+          scheduled_start: null,
+          ordem: { number: dados.numero, tipo: { name: dados.tipo }, cliente: { name: dados.cliente } },
+        }
+      : null);
   if (!t) return responder(200, { enviados: 0, motivo: 'atividade não existe mais' });
 
   const { data: colab } = await sb.from('employees').select('profile_id').eq('id', employee_id).maybeSingle();

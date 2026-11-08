@@ -196,7 +196,9 @@ telefone/contatos do cliente), a caminho / iniciar (GPS) / observações durante
 Foto que não sobe (HostGator fora do ar) não trava a fila: a conclusão e as demais ações seguem. Sair/iniciar só na
 primeira atividade do dia ou na seguinte a uma concluída (`bloqueioDeInicio` em `services/campo.ts`). Testado no celular com login de técnico (2026-11-02). O banco também garante (migration `20261101150000_protecao_campo.sql`, aplicada): técnico não lê `customers` nem `customer_contacts` (nome vem de `campo_clientes()`), e o trigger
 `tasks_protege_agenda` barra sair de `agendada` fora de hoje ou com a anterior não concluída. Técnico logado é mandado para `/campo`.
-Avisos de agenda alterada (escritório criou, mudou horário, passou para outro técnico/dia ou cancelou atividade de HOJE):
+Avisos de agenda alterada (escritório criou, mudou horário, passou para outro técnico/dia, cancelou ou excluiu atividade de HOJE; exclusão
+desde a migration `20261108100000_aviso_atividade_excluida.sql`, **a colar no SQL Editor** + republicar `notificar-tecnico`: o banco manda os dados
+da OS junto, porque a função não acha mais a atividade):
 com o app aberto, `services/avisosCampo.ts` compara com a última agenda vista, toca bipe/vibra e destaca o cartão ("Nova");
 com o app fechado, notificação push: trigger `tasks_notifica_tecnico` → pg_net → Edge Function `notificar-tecnico`
 (publicada com Verify JWT desligado; confere o segredo de `push_config`) → Web Push (`push_subscriptions`, `services/push.ts`,

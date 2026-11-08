@@ -2,6 +2,8 @@
 // `notificar-tecnico`; aqui só a inscrição do aparelho. Ver migration 20261103110000_notificacoes_push.sql.
 // Só funciona no build (o service worker não é registrado no `npm run dev`).
 import { supabase } from './supabase';
+import { registerPlugin } from '@capacitor/core';
+import type { PushNotificationsPlugin } from '@capacitor/push-notifications';
 import { ehApp } from './nativo';
 
 export type EstadoPush = 'sem_suporte' | 'negado' | 'desligado' | 'ligado';
@@ -18,9 +20,10 @@ const passo = (s: string) => {
   diagPush.push(s);
 };
 
-async function pushNativo() {
-  return (await import('@capacitor/push-notifications')).PushNotifications;
-}
+// Import direto: um plugin do Capacitor NUNCA pode ser devolvido por função async nem passar por `await`. O proxy
+// do plugin responde a qualquer propriedade, inclusive `then`, então o JS o trata como promessa e chama
+// "PushNotifications.then" no Android, que nunca responde: o registro travava em silêncio (achado no A20, 2026-11-08).
+const PushNotifications = registerPlugin<PushNotificationsPlugin>('PushNotifications');
 
 async function salvarTokenFcm(token: string): Promise<void> {
   localStorage.setItem(CHAVE_TOKEN_FCM, token);
@@ -32,7 +35,7 @@ async function salvarTokenFcm(token: string): Promise<void> {
 async function iniciarOuvintesNativos(): Promise<void> {
   if (ouvintesNativos) return;
   ouvintesNativos = true;
-  const push = await pushNativo();
+  const push = PushNotifications;
   await push.addListener('registration', (t) => {
     salvarTokenFcm(t.value).catch(() => {
       /* sem sinal: confirma na próxima abertura */
@@ -46,7 +49,7 @@ async function iniciarOuvintesNativos(): Promise<void> {
 
 /** Registra no Firebase e espera o token (máx. 15 s). */
 async function registrarNativo(): Promise<string> {
-  const push = await pushNativo();
+  const push = PushNotifications;
   await iniciarOuvintesNativos();
   return new Promise<string>((resolve, reject) => {
     const limite = setTimeout(() => {
@@ -76,7 +79,7 @@ async function registrarNativo(): Promise<string> {
 
 async function estadoPushNativo(): Promise<EstadoPush> {
   passo('APK');
-  const push = await pushNativo();
+  const push = PushNotifications;
   const { receive } = await push.checkPermissions();
   passo(`permissão: ${receive}`);
   if (receive === 'denied') return 'negado';
@@ -95,7 +98,7 @@ async function estadoPushNativo(): Promise<EstadoPush> {
 }
 
 async function ativarPushNativo(): Promise<EstadoPush> {
-  const push = await pushNativo();
+  const push = PushNotifications;
   const { receive } = await push.requestPermissions();
   if (receive === 'denied') return 'negado';
   if (receive !== 'granted') return 'desligado';

@@ -77,8 +77,11 @@ export default function CampoLayout() {
     let ativo = true;
     estadoPush()
       .then((e) => ativo && setPush(e))
-      .catch(() => {
-        /* fica sem o aviso */
+      .catch((e) => {
+        // Mostra o motivo na faixa azul, com o botão "Ativar" para tentar de novo
+        if (!ativo) return;
+        setPush('desligado');
+        setErroPush(`Notificações com erro: ${e instanceof Error ? e.message : String(e)}`);
       });
     return () => {
       ativo = false;

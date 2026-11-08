@@ -60,8 +60,9 @@ async function estadoPushNativo(): Promise<EstadoPush> {
   const { receive } = await push.checkPermissions();
   if (receive === 'denied') return 'negado';
   if (receive !== 'granted') return 'desligado';
-  await iniciarOuvintesNativos();
-  await push.register(); // confirma o token no servidor (o ouvinte 'registration' salva)
+  // Android < 13 já nasce com permissão: o registro acontece aqui, sem botão. Espera o token e o salvamento
+  // para que um erro (Firebase, servidor) apareça na tela em vez de sumir em silêncio
+  await salvarTokenFcm(await registrarNativo());
   return 'ligado';
 }
 

@@ -40,14 +40,16 @@ jobs:
 
       # As fotos ficam em api/uploads/ no servidor. O FTP-Deploy só apaga o que ele mesmo enviou,
       # então as fotos já gravadas lá não são removidas a cada deploy.
-      - name: Incluir o upload de fotos (dist/api)
+      - name: Incluir o upload de fotos e o envio de avaliação (dist/api)
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           APP_URL: https://control.brvniteroi.com.br
+          # Mesmo valor de public.avaliacao_config.segredo (sem ele o e-mail de avaliação fica desligado)
+          AVALIACAO_SEGREDO: ${{ secrets.AVALIACAO_SEGREDO }}
         run: |
           mkdir -p dist/api/uploads
-          cp hostgator-api/upload.php hostgator-api/.htaccess dist/api/
+          cp hostgator-api/upload.php hostgator-api/enviar-avaliacao.php hostgator-api/.htaccess dist/api/
           cp hostgator-api/uploads/.htaccess dist/api/uploads/
           node scripts/gerar-config-upload.mjs > dist/api/config.php
 

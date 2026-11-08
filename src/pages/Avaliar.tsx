@@ -1,13 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Loader2, Star } from 'lucide-react';
-import { enviarAvaliacao, verAvaliacao, type DadosAvaliacao } from '../services/avaliacoes';
+import { enviarAvaliacao, verAvaliacao, type DadosAvaliacao, type OrigemAvaliacao } from '../services/avaliacoes';
 
 const ROTULOS = ['', 'Muito ruim', 'Ruim', 'Regular', 'Bom', 'Excelente'];
 
 /** Página pública (sem login) em que o cliente avalia o atendimento: /avaliar/<token>. */
 export default function Avaliar() {
   const { token = '' } = useParams();
+  // Link do e-mail (?origem=email) ou do WhatsApp (?origem=whatsapp): a OS mostra por onde o cliente avaliou
+  const [parametros] = useSearchParams();
+  const origemParam = parametros.get('origem');
+  const origem: OrigemAvaliacao | null = origemParam === 'email' || origemParam === 'whatsapp' ? origemParam : null;
   const [dados, setDados] = useState<DadosAvaliacao | null | undefined>(undefined);
   const [erro, setErro] = useState<string | null>(null);
   const [estrelas, setEstrelas] = useState(0);
@@ -36,7 +40,7 @@ export default function Avaliar() {
     setErro(null);
     setEnviando(true);
     try {
-      await enviarAvaliacao(token, estrelas, comentario);
+      await enviarAvaliacao(token, estrelas, comentario, origem);
       setEnviada(true);
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível enviar. Tente de novo.');

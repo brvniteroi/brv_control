@@ -220,6 +220,15 @@ uma por OS. Com a OS concluída, o escritório clica "Enviar avaliação pelo Wh
 `service_orders.rating_token`, abre o wa.me com o celular do cliente); o cliente avalia em `/avaliar/<token>` (`pages/Avaliar.tsx`,
 sem login). Não há botão no app do técnico (decisão do usuário). Histórico do Field (uma por atividade) importado por
 `scripts/field-control/importar-avaliacoes.mjs`. Aparecem na OS, na aba Atendimento do cliente e com a média por técnico em Equipe.
+Pedido automático por e-mail ao concluir (o Field fazia por e-mail, não WhatsApp; ver memória): migration `20261107100000_avaliacao_por_email.sql`
+(aplicada em 2026-11-07; secret `AVALIACAO_SEGREDO` criado). Trigger `service_orders_pede_avaliacao` → `avaliacao_email_processar` (regras: só com login; OS já avaliada ou já pedida
+por e-mail não; concluída há mais de 24 h não; cliente sem e-mail não; cliente com pedido por e-mail ou WhatsApp nas últimas 72 h, mesmo de outra OS, não)
+→ pg_net → `hostgator-api/enviar-avaliacao.php` (publicado em `/api/`, `mail()` da HostGator, remetente `avaliacao@brvniteroi.com.br`, resposta
+`brv@brvniteroi.com.br`) → `avaliacao_email_resultado`. Tudo fica em `rating_requests` (enviado/falhou/pulado com motivo; o botão do WhatsApp registra
+pedido também). Liga/desliga e modo teste em `avaliacao_config` (`ativo`, `somente_para` manda tudo para um endereço só); o segredo de lá vai no secret
+`AVALIACAO_SEGREDO` do GitHub (`scripts/gerar-config-upload.mjs` põe no `config.php`). Na OS (`AvaliacaoOS.tsx`): situação do e-mail, WhatsApp e
+"Copiar link" bloqueados por 72 h depois do e-mail (`ESPERA_EMAIL_HORAS`), depois "Pedir de novo pelo WhatsApp"; a avaliação mostra se o cliente
+respondeu pelo e-mail ou pelo WhatsApp (`ratings.origem`, vem de `?origem=` no link). DNS: SPF, DKIM e DMARC (`p=none`, criado em 2026-11-07) ok.
 
 Relatórios (menu só para admin/escritório; `services/relatorios.ts`, `utils/relatorios.ts`, `components/relatorios/`): `/relatorios/atividades` (`pages/RelatorioAtividades.tsx`, por técnico no mês: realizadas, dias trabalhados, média por dia, média e quantidade de avaliações) e `/relatorios/graficos` (`pages/RelatorioGraficos.tsx`, colunas dos últimos 12 meses, com tabela; gráfico em HTML/CSS, sem biblioteca) e `/relatorios/tipos-de-servico` (`pages/RelatorioTiposServico.tsx`, por tipo no mês: realizadas, % do total, média e quantidade de avaliações; o tipo vem da OS) e `/relatorios/garantia-brv` (`pages/RelatorioGarantia.tsx`, ranking de técnicos por mês ou ano; reconhece o tipo pelo nome "Garantia BRV" em `ehGarantiaBrv`: renomear o tipo quebra o relatório; "Garantia TCL" fica de fora). Atividade realizada = `concluida`, datada por `finished_at` (na importada sem término, `scheduled_start`); concluída sem nenhuma das duas não entra. Dia trabalhado = dia com ao menos uma concluída. Avaliação conta no mês do `created_at`. Sem migration: lê `tasks` e `ratings` em páginas de 1000 linhas.
 

@@ -10,9 +10,42 @@ export interface Avaliacao {
   stars: number;
   comment: string | null;
   field_control_id: string | null;
+  /** Por onde o cliente chegou à avaliação (link do e-mail ou do WhatsApp); null = link copiado ou histórico. */
+  origem: OrigemAvaliacao | null;
   created_at: string;
   employee: { id: string; name: string } | null;
   service_order: { id: string; number: number } | null;
+}
+
+export type OrigemAvaliacao = 'email' | 'whatsapp';
+
+/** Pedido de avaliação: e-mail automático ao concluir ou WhatsApp pelo botão. Ver migration 20261107100000. */
+export interface PedidoAvaliacao {
+  id: string;
+  channel: OrigemAvaliacao;
+  /** pendente = entregue ao servidor de e-mail, aguardando confirmação; pulado = uma regra impediu o envio */
+  status: 'pendente' | 'enviado' | 'falhou' | 'pulado';
+  detail: string | null;
+  created_at: string;
+}
+
+/** Depois de pedir por e-mail, o WhatsApp só é liberado se o cliente não avaliar neste prazo. */
+export const ESPERA_EMAIL_HORAS = 72;
+
+export async function pedidosDaOS(osId: string): Promise<PedidoAvaliacao[]> {
+  const { data, error } = await supabase
+    .from('rating_requests')
+    .select('id, channel, status, detail, created_at')
+    .eq('service_order_id', osId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as PedidoAvaliacao[];
+}
+
+/** Registra o pedido feito pelo WhatsApp (conta na regra das 72 h do e-mail automático). */
+export async function registrarPedidoWhatsapp(osId: string): Promise<void> {
+  const { error } = await supabase.rpc('registrar_pedido_avaliacao_whatsapp', { p_os: osId });
+  if (error) throw new Error(error.message);
 }
 
 const SELECT = '*, employee:employees(id, name), service_order:service_orders(id, number)';
@@ -88,7 +121,18 @@ export async function verAvaliacao(token: string): Promise<DadosAvaliacao | null
   return (data as DadosAvaliacao | null) ?? null;
 }
 
-export async function enviarAvaliacao(token: string, estrelas: number, comentario: string): Promise<void> {
-  const { error } = await supabase.rpc('avaliacao_enviar', { p_token: token, p_estrelas: estrelas, p_comentario: comentario });
+export async function enviarAvaliacao(
+  token: string,
+  estrelas: number,
+  comentario: string,
+  origem: OrigemAvaliacao | null = null,
+): Promise<void> {
+  const { error } = await supabase.rpc('avaliacao_enviar', {
+    p_token: token,
+    p_estrelas: estrelas,
+    p_comentario: comentario,
+    // Só manda quando existe: o link copiado (sem origem) funciona com qualquer versão da função
+    ...(origem && { p_origem: origem }),
+  });
   if (error) throw new Error(error.message.includes('fetch') ? 'Sem conexão. Tente de novo.' : error.message);
 }

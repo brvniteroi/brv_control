@@ -19,4 +19,11 @@ return [
 
     // O app compacta para ~300 KB; 5 MB cobre PNG de documento escaneado
     'max_bytes' => 5 * 1024 * 1024,
+
+    // E-mail de pedido de avaliação (enviar-avaliacao.php). O segredo é o mesmo de
+    // public.avaliacao_config.segredo; vazio = envio desligado.
+    'app_url' => 'https://control.brvniteroi.com.br',
+    'avaliacao_segredo' => '',
+    'email_remetente' => 'avaliacao@brvniteroi.com.br',
+    'email_resposta' => 'brv@brvniteroi.com.br',
 ];

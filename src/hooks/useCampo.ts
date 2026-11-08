@@ -64,10 +64,19 @@ export function useRastreioCampo(ativo: boolean): boolean {
     if (!ativo || (!ehApp && !('geolocation' in navigator))) return;
     let ultimo: (Posicao & { em: number }) | null = null;
     let enviando = false;
+    let ultimaPresenca = 0;
 
     const receber = (lat: number, lng: number, precisao: number) => {
       setNegado(false);
       const agora = Date.now();
+      // No APK, com a tela apagada o WebView congela o relógio do usePresencaCampo e o escritório veria "Offline";
+      // as leituras do GPS seguem chegando, então elas renovam o sinal de vida (no máximo 1 por minuto)
+      if (ehApp && agora - ultimaPresenca >= INTERVALO_MS && navigator.onLine) {
+        ultimaPresenca = agora;
+        enviarPresenca().catch(() => {
+          ultimaPresenca = 0;
+        });
+      }
       const atual = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
       if (ultimo) {
         const decorrido = agora - ultimo.em;
@@ -99,7 +108,9 @@ export function useRastreioCampo(ativo: boolean): boolean {
           backgroundMessage: 'Compartilhando sua posição com o escritório durante o atendimento.',
           requestPermissions: true,
           stale: false,
-          distanceFilter: 10,
+          // 0 = toda leitura (o plugin lê a cada 1 s com o GPS já ligado, então não gasta mais bateria). Com filtro de
+          // distância, parado não chegava nada: a posição ficava velha no Mapa e o "parado: reenvia a cada 5 min" nunca rodava
+          distanceFilter: 0,
         },
         (local, erro) => {
           if (erro) {

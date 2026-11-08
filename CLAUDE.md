@@ -148,8 +148,13 @@ no Supabase (hash conferido) e `notificar-tecnico` republicada (Verify JWT desli
 **Chave nova gerada em 2026-11-08** (openssl, PKCS12, RSA 4096, alias `brv-control`, validade até 2056), porque a antiga não estava neste PC (o
 primeiro build foi em outro PC, provavelmente o da empresa; nenhum APK foi instalado com ela). `android-assinatura/` (gitignored, não vem no
 `git pull`) tem `brv-control.jks`, os `.base64.txt`, `google-services.json`, `firebase-conta-servico.json` e `LEIA-ME.txt` com os valores.
-Falta: (1) o usuário copiar `android-assinatura/` para o PC da empresa (substituindo a antiga), pen drive e Google Drive privado; (2) rodar o
-workflow (1º build com a chave do openssl) e instalar num celular de técnico; testar GPS com tela apagada, push com app fechado e o "Online" no Mapa.
+Workflow rodou com sucesso em 2026-11-08 (execução #2, depois de corrigir o `gradlew` sem permissão de execução; a chave do openssl assinou
+sem problema) e o APK 1.0.2 está publicado no link. Falta: (1) o usuário copiar `android-assinatura/` para o PC da empresa (substituindo a
+antiga), pen drive e Google Drive privado; (2) liberar para os outros técnicos. Testado em 2026-11-08 no Samsung A20 do Alberto: instalação,
+notificação fixa do GPS, "Online" no Mapa, posição com tela apagada e push com app fechado ok. O teste mostrou que, com a tela apagada, o
+WebView congela o relógio da presença ("Offline" falso) e o `distanceFilter: 10` não entregava leitura com o técnico parado (posição velha):
+corrigido em `useRastreioCampo` (`distanceFilter: 0` e cada leitura do GPS renova a presença, 1/min); falta repetir o teste parado com tela apagada.
+Samsung: Configurações > Aplicativos > BRV Control > Bateria "Sem restrições" e tirar de "Apps em suspensão".
 Até lá o pessoal usa pelo navegador. Ao concluir, apagar este lembrete.
 
 Pendente, nesta ordem:

@@ -11,6 +11,13 @@ export type EstadoPush = 'sem_suporte' | 'negado' | 'desligado' | 'ligado';
 const CHAVE_TOKEN_FCM = 'brv_fcm_token';
 let ouvintesNativos = false;
 
+// TEMPORÁRIO (2026-11-08): diagnóstico do registro no Firebase, mostrado no app de campo dentro do APK.
+// Remover depois que o registro funcionar no Samsung A20 do Alberto.
+export const diagPush: string[] = [];
+const passo = (s: string) => {
+  diagPush.push(s);
+};
+
 async function pushNativo() {
   return (await import('@capacitor/push-notifications')).PushNotifications;
 }
@@ -42,27 +49,48 @@ async function registrarNativo(): Promise<string> {
   const push = await pushNativo();
   await iniciarOuvintesNativos();
   return new Promise<string>((resolve, reject) => {
-    const limite = setTimeout(() => reject(new Error('O Firebase não respondeu. Tente de novo com internet.')), 15000);
+    const limite = setTimeout(() => {
+      passo('sem resposta do Firebase em 15 s');
+      reject(new Error('O Firebase não respondeu. Tente de novo com internet.'));
+    }, 15000);
     void push.addListener('registration', (t) => {
       clearTimeout(limite);
+      passo(`token recebido (${t.value.length} car.)`);
       resolve(t.value);
     });
     void push.addListener('registrationError', (e) => {
       clearTimeout(limite);
+      passo(`registrationError: ${e.error}`);
       reject(new Error(e.error || 'Não foi possível registrar as notificações.'));
     });
-    void push.register();
+    passo('register()');
+    // A chamada pode falhar direto (Firebase não iniciado), sem evento registrationError
+    push.register().catch((e: unknown) => {
+      clearTimeout(limite);
+      const msg = e instanceof Error ? e.message : String(e);
+      passo(`register falhou: ${msg}`);
+      reject(new Error(msg));
+    });
   });
 }
 
 async function estadoPushNativo(): Promise<EstadoPush> {
+  passo('APK');
   const push = await pushNativo();
   const { receive } = await push.checkPermissions();
+  passo(`permissão: ${receive}`);
   if (receive === 'denied') return 'negado';
   if (receive !== 'granted') return 'desligado';
   // Android < 13 já nasce com permissão: o registro acontece aqui, sem botão. Espera o token e o salvamento
   // para que um erro (Firebase, servidor) apareça na tela em vez de sumir em silêncio
-  await salvarTokenFcm(await registrarNativo());
+  const token = await registrarNativo();
+  try {
+    await salvarTokenFcm(token);
+    passo('salvo no servidor');
+  } catch (e) {
+    passo(`erro ao salvar: ${e instanceof Error ? e.message : String(e)}`);
+    throw e;
+  }
   return 'ligado';
 }
 
@@ -108,6 +136,7 @@ async function salvarInscricao(sub: PushSubscription): Promise<void> {
  */
 export async function estadoPush(): Promise<EstadoPush> {
   if (ehApp) return estadoPushNativo();
+  if (/; wv\)/.test(navigator.userAgent)) passo('WebView sem Capacitor (ehApp = false)');
   const reg = await registroSW();
   if (!reg) return 'sem_suporte';
   if (Notification.permission === 'denied') return 'negado';

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { AlertTriangle, Bell, BellOff, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw, Star } from 'lucide-react';
-import { ativarPush, desligarPushDoLogin, estadoPush, type EstadoPush } from '../../services/push';
+import { ativarPush, desligarPushDoLogin, diagPush, estadoPush, type EstadoPush } from '../../services/push';
+import { ehApp } from '../../services/nativo';
+
+// TEMPORÁRIO (2026-11-08): linha de diagnóstico das notificações, só dentro do APK/WebView
+const mostrarDiagPush = ehApp || /; wv\)/.test(navigator.userAgent);
 import { minhasAvaliacoes, type MinhasAvaliacoes } from '../../services/avaliacoes';
 import MinhasAvaliacoesModal from './MinhasAvaliacoesModal';
 import { useAuth } from '../../contexts/useAuth';
@@ -87,6 +91,13 @@ export default function CampoLayout() {
       ativo = false;
     };
   }, [ehTecnico]);
+
+  const [diag, setDiag] = useState('');
+  useEffect(() => {
+    if (!mostrarDiagPush) return;
+    const relogio = setInterval(() => setDiag(diagPush.join(' → ')), 1000);
+    return () => clearInterval(relogio);
+  }, []);
 
   const ligarPush = async () => {
     setErroPush(null);
@@ -184,6 +195,11 @@ export default function CampoLayout() {
           </div>
         )}
 
+        {mostrarDiagPush && ehTecnico && (
+          <div className="bg-slate-800 px-3 py-1 text-[10px] break-words text-slate-200">
+            Diag. notificações ({push}): {diag || 'aguardando...'}
+          </div>
+        )}
         {ehTecnico && push === 'desligado' && (
           <div className="flex items-center justify-center gap-2 bg-blue-600 px-4 py-1.5 text-xs font-semibold">
             <Bell size={14} className="shrink-0" />

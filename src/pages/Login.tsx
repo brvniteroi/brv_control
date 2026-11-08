@@ -148,8 +148,10 @@ export default function Login() {
                 </div>
                 <input
                   id="email"
+                  name="username"
                   type="email"
-                  autoComplete="email"
+                  // "username" (e não "email") é o que os gerenciadores de senha usam para oferecer salvar/preencher
+                  autoComplete="username"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -172,6 +174,7 @@ export default function Login() {
                 </div>
                 <input
                   id="password"
+                  name="password"
                   type={mostrarSenha ? 'text' : 'password'}
                   autoComplete="current-password"
                   required

@@ -24,7 +24,7 @@ interface AtividadesOSProps {
   tituloPadrao: string;
   duracaoPadrao: number;
   atividades: AtividadeDetalhe[];
-  tecnicos: Pick<Employee, 'id' | 'name' | 'active'>[];
+  tecnicos: Pick<Employee, 'id' | 'name' | 'active' | 'role'>[];
   onAlterado: () => Promise<void>;
 }
 
@@ -219,9 +219,9 @@ export default function AtividadesOS({
     }
   };
 
-  // Técnicos inativos só aparecem se já estiverem na atividade em edição
+  // Só técnicos ativos; inativo ou de outra função só aparece se já estiver na atividade em edição
   const atual = atividades.find((a) => a.id === editandoId)?.employee_id;
-  const opcoesTecnicos = tecnicos.filter((t) => t.active || t.id === atual);
+  const opcoesTecnicos = tecnicos.filter((t) => (t.active && t.role === 'tecnico') || t.id === atual);
   // Uma atividade por OS; cancelada não conta (trigger tasks_uma_por_os)
   const podeCriar = !atividades.some((a) => a.status !== 'cancelada');
 

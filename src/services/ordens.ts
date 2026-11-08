@@ -151,8 +151,9 @@ export async function listarTipos(): Promise<ServiceType[]> {
   return (data ?? []) as ServiceType[];
 }
 
-export async function listarTecnicos(): Promise<Pick<Employee, 'id' | 'name' | 'active'>[]> {
-  const { data, error } = await supabase.from('employees').select('id, name, active').order('name');
+/** Todos os colaboradores (para nomes em atividades antigas); a escolha de técnico filtra por `role`. */
+export async function listarTecnicos(): Promise<Pick<Employee, 'id' | 'name' | 'active' | 'role'>[]> {
+  const { data, error } = await supabase.from('employees').select('id, name, active, role').order('name');
   if (error) throw error;
   return data ?? [];
 }

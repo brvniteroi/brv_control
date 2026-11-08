@@ -53,7 +53,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
 
   const [ordem, setOrdem] = useState<OrdemDetalhe | null>(null);
   const [tipos, setTipos] = useState<ServiceType[]>([]);
-  const [tecnicos, setTecnicos] = useState<Pick<Employee, 'id' | 'name' | 'active'>[]>([]);
+  const [tecnicos, setTecnicos] = useState<Pick<Employee, 'id' | 'name' | 'active' | 'role'>[]>([]);
   const [enderecos, setEnderecos] = useState<CustomerAddress[]>([]);
 
   const [cliente, setCliente] = useState<{ id: string; name: string } | null>(null);

@@ -243,7 +243,7 @@ Só gerar APK novo quando mexer no nativo (plugins, GPS, push, ícone). No naveg
   tirar de "Apps em suspensão"; Xiaomi = bateria "Sem restrições" + "Início automático". Conferir no Mapa ("Online") e com uma atividade de hoje
   criada com o app fechado (deve chegar notificação). Testado no Samsung A20 (Android 11) do Alberto em 2026-11-08: GPS com tela apagada, Online,
   nova atividade e exclusão com app fechado.
-- **Um aparelho por técnico** (2026-11-08, migration `20261108120000_um_aparelho_por_tecnico.sql`, **a colar antes do push**): cada aparelho tem
+- **Um aparelho por técnico** (2026-11-08, migration `20261108120000_um_aparelho_por_tecnico.sql`, aplicada): cada aparelho tem
   um id em localStorage (`services/aparelho.ts`); no login (`AuthContext.signIn`) o técnico assume o aparelho (RPC `assumir_aparelho`) e as
   sessões dos outros são revogadas (`signOut({ scope: 'others' })`); o `CampoLayout` confere a cada minuto (`aparelho_liberado`) e, se outro
   aparelho assumiu, sai só deste (`scope: 'local'`, tira o token de push) com aviso na tela de login. Sem aparelho registrado, o primeiro que

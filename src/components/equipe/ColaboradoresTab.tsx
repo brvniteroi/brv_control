@@ -12,7 +12,8 @@ import type { EmployeeRole } from '../../types/fsm';
 import { formatarTelefone } from '../../utils/telefone';
 
 const FUNCOES_COLABORADOR: { valor: EmployeeRole; rotulo: string }[] = [
-  { valor: 'tecnico', rotulo: 'Técnico' },
+  // Só o rótulo mudou (pedido do usuário, 2026-11-08); no banco segue 'tecnico'
+  { valor: 'tecnico', rotulo: 'Mecânico de Refrigeração' },
   { valor: 'auxiliar', rotulo: 'Auxiliar' },
   { valor: 'supervisor', rotulo: 'Supervisor' },
   { valor: 'administrativo', rotulo: 'Administrativo' },

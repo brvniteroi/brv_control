@@ -10,6 +10,8 @@ export interface Profile {
   email: string;
   role: ProfileRole;
   active: boolean;
+  /** Acesso ao financeiro das placas (hoje só o Braulio). Vem da migration 20261109120000; ausente antes dela. */
+  board_finance_access?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -53,7 +53,7 @@ O orçamento é um **estado dentro da etapa** (`quote_status`): `nao_feito` | `e
 - **Aviso de parada:** placa há **4 dias ou mais** na mesma etapa (sem ser Pronto) = "Encalhada" (selo vermelho); `diasNaEtapa`.
 - **Pronto → Entregue / Faturado** pede data de saída (padrão hoje). **Sem conserto** pede motivo.
 - Garantia: `is_warranty` + `warranty_origin_id` (placa original, escolher entre as entregues do mesmo cliente). Garantia **não gera orçamento**; mostre selo "Garantia" em destaque.
-- Reembolso: `refunded`, `refund_amount`, `refunded_at`, `refund_reason` (só escritório/admin).
+- Reembolso: `refunded`, `refund_amount`, `refunded_at`, `refund_reason` (**só quem tem o acesso ao financeiro das placas**, seção 5).
 
 ## 3. Telas e rotas (todas dentro do `Layout`, exceto a pública)
 
@@ -65,7 +65,7 @@ com os equipamentos e **não muda**. Em `components/Sidebar.tsx` (única altera�
 |---|---|---|
 | Reparos (Kanban) | `/placas` | admin, escritório, oficina |
 | Clientes de placas | `/placas/clientes` | admin, escritório, oficina (oficina só leitura) |
-| Financeiro | `/placas/financeiro` | só admin, escritório |
+| Financeiro | `/placas/financeiro` | **só quem tem o acesso ao financeiro das placas (hoje só o Braulio)**, seção 5 |
 | Fichas técnicas | `/placas/fichas` | admin, escritório, oficina |
 | Códigos de erro | `/placas/erros` | admin, escritório, oficina |
 | Assistente técnico | `/placas/assistente` | admin, escritório, oficina |
@@ -98,7 +98,7 @@ Seções, na ordem:
 - **Orçamento** (só escritório/admin): valor, validade em dias (padrão 10), CPF/CNPJ do cliente (`utils/documento.ts`), endereço do cliente, parecer técnico. Botões: **"Ver/Imprimir orçamento"** (3.4),
   **"Enviar PDF pelo WhatsApp"**, **"Registrar resposta"** (modal: Aprovado/Recusado, canal `whatsapp|telefone|presencial|email`, observação). Mostre quem registrou e quando.
 - **Garantia:** selo, placa de origem (link que abre o detalhe dela), e, na placa entregue, validade (**saída + 90 dias**) com botão **"Termo de garantia"** (3.6).
-- **Financeiro** (só escritório/admin): valor cobrado, **reembolso** (checkbox "Reembolsada", valor, data, motivo).
+- **Financeiro** (**só com o acesso ao financeiro das placas**, seção 5; para os demais a seção nem aparece): valor cobrado, **reembolso** (checkbox "Reembolsada", valor, data, motivo).
 - **Acompanhamento do cliente:** o link público (`/placa/<token>`), botões **Copiar link**, **Enviar pelo WhatsApp** e **Gerar novo link** (revoga o anterior; confirmar).
 - **Fotos:** categorias Antes/Depois/Outros, envio de várias, ampliar com o `VisualizadorFotos` de `components/ordens/`, legenda, etapa em que foi tirada. Na demo, guarde só a pré-visualização local.
 - **Histórico:** linha do tempo vertical (quem, quando, o quê; mudança de etapa de→para, alteração de campo com antes/depois, orçamento, resposta, reembolso) e "Anotar no histórico".
@@ -140,7 +140,7 @@ Lista com busca (nome/telefone, sem acento: use `semAcento` de `utils`), filtro 
 (nome, telefone com `formatarTelefone`, tipo, cidade, observação). Detalhe: histórico de placas do cliente (número, equipamento, etapa, valor se escritório, data), com link que abre a placa.
 Não pode excluir cliente que tem placas (explique). Só escritório/admin e oficina (oficina vê, não edita).
 
-### 3.10 `/placas/financeiro` — Financeiro das placas (só escritório/admin)
+### 3.10 `/placas/financeiro` — Financeiro das placas (**só com o acesso ao financeiro das placas, hoje só o Braulio**)
 Reproduza, no visual do Control, o `DashboardReparos.jsx` do sistema antigo (**leia-o e preserve as regras de cálculo**; documente-as no resumo, o Claude confere uma a uma):
 cartões **Faturamento do mês**, **Ticket médio do mês**, **Valor na bancada (em aberto)**, **Placas encalhadas** (paradas ≥ 4 dias) e **Total do ano**; seletor de ano; **faturamento por mês**
 (colunas em HTML/CSS no padrão de `pages/RelatorioGraficos.tsx`, **sem biblioteca**, com tabela); clicar num mês abre a lista das placas e dos reembolsos daquele mês; **reembolsos** (total do ano e quantidade);
@@ -184,10 +184,14 @@ Referência: `pages/Reparos` (consulta de erros) e `supabase/functions/upload-ma
 ## 5. Papéis (esconder, não só bloquear)
 | Papel | Vê |
 |---|---|
-| `admin`, `escritorio` | tudo, inclusive valores, orçamento, reembolso, financeiro, clientes de placas |
+| `admin`, `escritorio` | tudo **menos o financeiro das placas**: valores e orçamento, clientes de placas, fichas, erros, assistente e manuais |
+| `admin`/`escritorio` **com o acesso ao financeiro das placas** (hoje só o Braulio) | o acima **mais** o menu/tela Financeiro, o dashboard, o valor cobrado e o reembolso |
 | `oficina` (Gustavo) | Kanban e detalhes da bancada, fotos, histórico, clientes de placas (só leitura), **sem valores, orçamento, reembolso e financeiro** |
 | público (`/placa/:token`) | só a página de acompanhamento |
-Use `useAuth()` (`profile.role`) como as telas existentes. O banco repetirá as regras.
+Use `useAuth()` (`profile.role`) como as telas existentes. **Para o financeiro use SEMPRE `podeVerFinanceiroPlacas(profile)` de `src/utils/acessoPlacas.ts`** (já existe, é do Claude; lê a marca
+`board_finance_access` do perfil, que **não é papel**: um admin comum sem a marca não vê). Quem não tem a marca: o item "Financeiro" some do menu, `/placas/financeiro` mostra "Acesso restrito" (como o PMOC para técnico),
+os campos de reembolso e valor cobrado ficam ocultos, e o **valor do orçamento continua visível** para admin e escritório (o escritório faz o orçamento). Na demo, para ver o financeiro você precisa estar logado
+como o Braulio (marca já dada pela migration `20261109120000_acesso_financeiro_placas.sql`). O banco repetirá as regras.
 
 ## 6. Dados de demonstração (`dadosDemo.ts`)
 Fictícios e sem dado real: **3 parceiros instaladores, 1 cliente final e 1 cliente do Control** (para a retirada de campo), telefones `(21) 9XXXX-0000`, CPF/CNPJ sintéticos válidos.

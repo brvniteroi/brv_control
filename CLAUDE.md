@@ -228,7 +228,7 @@ Pendente, nesta ordem:
    com o Equipamentos em `docs/oficina.md`. Ler antes de continuar.
    **Migração das Placas** (reparo de placas do Equipamentos para o Control): plano em `docs/placas.md` (2026-11-09), nada implementado. Decidido: número próprio `OS-DDMMAA-NNN` (OS do Control só
    quando a equipe de campo retira a placa), cadastro de clientes de placas paralelo (`board_clients`), orçamento feito no Control com PDF pelo WhatsApp, parceiro acompanha por
-   link público (`/placa/<token>`) enviado no comprovante de entrada, financeiro das placas próprio (aproveita o dashboard do sistema antigo), **migração dos dados só no fim, com telas
+   link público (`/placa/<token>`) enviado no comprovante de entrada, financeiro das placas próprio e **só para o Braulio** (marca `profiles.board_finance_access`, migration `20261109120000_acesso_financeiro_placas.sql`, **a colar no SQL Editor**; helper `utils/acessoPlacas.ts`), aproveitando o dashboard do sistema antigo, **migração dos dados só no fim, com telas
    prontas, testadas e simulações**. Telas: briefing para o Gemini em `docs/gemini/placas-briefing.md` (dados de demonstração em `src/components/placas/fonteDeDados.ts`; resumo em
    `docs/gemini/placas.md`, que o Claude **audita** antes de criar migration/services/importador). O apoio técnico (fichas técnicas, manuais, códigos de erro e assistente com IA) migra junto, dentro do **menu "Placas"** (rotas `/placas...`; `ProtectedRoute` já libera para o papel oficina). Nenhuma decisão em aberto.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento

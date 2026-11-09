@@ -226,6 +226,11 @@ Pendente, nesta ordem:
    O importador não sobrescreve item já alterado no Control. Migration `20261109110000_oficina_corrige_historico.sql` (aplicada em
    2026-11-09) corrigiu o erro "Só é possível escrever notas no histórico" em toda ação com login; retirada pelo app testada (OS 17332). Fases 2 e 3, pendências e o uso em paralelo
    com o Equipamentos em `docs/oficina.md`. Ler antes de continuar.
+   **Migração das Placas** (reparo de placas do Equipamentos para o Control): plano em `docs/placas.md` (2026-11-09), nada implementado. Decidido: número próprio `OS-DDMMAA-NNN` (OS do Control só
+   quando a equipe de campo retira a placa), cadastro de clientes de placas paralelo (`board_clients`), orçamento feito no Control com PDF pelo WhatsApp, parceiro acompanha por
+   link público (`/placa/<token>`) enviado no comprovante de entrada, financeiro das placas próprio (aproveita o dashboard do sistema antigo), **migração dos dados só no fim, com telas
+   prontas, testadas e simulações**. Telas: briefing para o Gemini em `docs/gemini/placas-briefing.md` (dados de demonstração em `src/components/placas/fonteDeDados.ts`; resumo em
+   `docs/gemini/placas.md`, que o Claude **audita** antes de criar migration/services/importador). Em aberto: se o apoio técnico (fichas, manuais, IA) migra junto.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.
 

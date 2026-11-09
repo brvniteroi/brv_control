@@ -158,11 +158,11 @@ Feito:
 `C:\brv-agente-impressora\agente-impressora`), imprime sem etiqueta em branco (ajustes do rolo no `LEIA-ME.md` do agente). Falta só conferir
 se o `instalar-tarefa.cmd` (como administrador) já foi rodado: sem ele o agente não sobe sozinho quando o servidor reinicia;
 (2) **FEITO**: Gustavo já usa o sistema (2026-11-09);
-(3) avisar a equipe: equipamento só no Control (técnicos: "Recolher equipamento" na atividade; o Equipamentos fica só para placas);
-(4) decidir se mostra a trava também na tela do BRV Equipamentos (faixa "só consulta", sem arrastar), que exige mexer no código de lá
-e publicar (o banco já está travado por `somente-leitura-equipamentos.sql`, aplicado em 2026-11-09);
-(5) pendências em `docs/oficina.md`: ~~OS de balcão concluir sozinha~~ (decidido: NÃO, 2026-11-09), ~~F1 para o Gustavo~~ (liberado, 2026-11-09; no `Layout.tsx`),
-tipo padrão da OS de devolução (falta decidir). Cópia de `android-assinatura/` para o PC da empresa: feita em 2026-11-09.
+(3) **FEITO**: equipe avisada (equipamento só no Control; técnicos usam "Recolher equipamento"; o Equipamentos fica só para placas);
+(4) **DECIDIDO: não** mostrar a faixa "só consulta" no BRV Equipamentos (o banco já está travado por `somente-leitura-equipamentos.sql`, aplicado em 2026-11-09);
+(5) pendências de `docs/oficina.md` **todas decididas em 2026-11-09**: OS de balcão NÃO conclui sozinha, F1 liberado para o Gustavo (`Layout.tsx`),
+tipo da OS de devolução continua sendo escolhido pelo escritório na hora. Cópia de `android-assinatura/` para o PC da empresa: feita em 2026-11-09.
+**Só falta confirmar** que a tarefa "BRV Control - Impressora" existe no Agendador de Tarefas do servidor (`instalar-tarefa.cmd` como administrador).
 Para rodar o importador no PC da empresa seria preciso `EQUIP_SERVICE_ROLE_KEY` no `.env` de lá (não deve ser mais necessário).
 Ao concluir, apagar este lembrete.
 

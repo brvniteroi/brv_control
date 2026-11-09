@@ -30,6 +30,14 @@ do BRV Equipamentos, que **continuam funcionando** enquanto o Equipamentos estiv
    "BRV Control - Impressora" (conta SYSTEM, sem janela, sobe ao ligar o servidor e volta sozinha se cair).
 8. Repetir o teste do passo 6 pela tela. Conferir `agente.log` nesta pasta se algo falhar.
 
+## Ajustes do rolo (feitos em 2026-11-09)
+- Rolo 100x50 mm com 3 mm de espaço entre etiquetas e nas laterais. O agente ajusta o ZPL antes de enviar:
+  margem esquerda de 3 mm (`^LH24`), passo de 53 mm (`^LL424`) e leitura do espaço entre etiquetas (`^MNY`).
+  Opcionais no `.env`: `MARGEM_ESQUERDA_MM` (3), `PASSO_ETIQUETA_MM` (53), `PAUSA_ENTRE_COPIAS_MS` (1500).
+- Várias cópias saem uma por vez (trabalhos separados), nunca com `^PQ` maior que 1.
+- Etiqueta em branco no meio = sensor desajustado: parar o agente, `npm run calibrar` (envia `~JC`; a Elgin avança
+  algumas etiquetas) e iniciar de novo. Trocar de rolo também pede calibrar.
+
 ## No dia a dia
 - A tela Oficina mostra "Pronta" (sinal nos últimos 90 s) ou "Servidor da loja sem sinal". Sem sinal, use
   "Imprimir pelo navegador" (contingência, no Chrome com Margens "Nenhuma").

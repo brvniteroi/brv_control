@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node agente.mjs",
-    "teste": "node agente.mjs --teste-local"
+    "teste": "node agente.mjs --teste-local",
+    "calibrar": "node agente.mjs --calibrar"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"

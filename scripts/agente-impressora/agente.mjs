@@ -47,6 +47,12 @@ const CFG = {
   impressoraWin: env.IMPRESSORA_WIN || 'ELGIN L42PRO FULL',
   ip: (env.ELGIN_IP || '').trim(),
   porta: Number(env.ELGIN_PORTA || 9100),
+  // Margem esquerda extra (mm), somada pelo comando ^LH: compensa a etiqueta que sai encostada na borda. 8 pontos por mm.
+  margemEsquerdaMm: Number(env.MARGEM_ESQUERDA_MM || 3),
+  // Altura da etiqueta + espaço até a próxima (mm). Rolo atual: 50 + 3.
+  passoEtiquetaMm: Number(env.PASSO_ETIQUETA_MM || 53),
+  // Pausa entre uma cópia e a próxima (ms), para a Elgin terminar uma etiqueta antes de receber a outra.
+  pausaEntreCopiasMs: Number(env.PAUSA_ENTRE_COPIAS_MS || 1500),
 };
 
 // ---------------------------------------------------------------------
@@ -101,7 +107,28 @@ function pelaRede(zpl) {
   });
 }
 
-async function imprimir(zpl) {
+const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function imprimir(zplOriginal) {
+  // Rolo 100x50 mm com 3 mm de espaço entre etiquetas e nas laterais: passo de 53 mm (424 pontos) e leitura do
+  // espaço entre etiquetas (^MNY). Sem isso a Elgin podia andar duas etiquetas e deixar uma em branco.
+  const zpl = zplOriginal
+    .replace('^LH0,0', `^LH${Math.round(CFG.margemEsquerdaMm * 8)},0`)
+    .replace('^LL400', `^LL${Math.round(CFG.passoEtiquetaMm * 8)}`)
+    .replace('^XA', '^XA\r\n^MNY');
+  // Várias cópias: com ^PQn (e também com vários blocos num envio só) a Elgin deixava etiquetas em branco no meio.
+  // Manda uma cópia por vez, cada uma como um trabalho separado (como o sistema antigo), com uma pausa entre elas.
+  const copias = Math.min(10, Number(/\^PQ(\d+)/.exec(zpl)?.[1] ?? 1));
+  const uma = zpl.replace(/\^PQ\d+/, '^PQ1');
+  let via = '';
+  for (let i = 0; i < copias; i++) {
+    if (i > 0) await pausa(CFG.pausaEntreCopiasMs);
+    via = await enviarUma(uma);
+  }
+  return via;
+}
+
+async function enviarUma(zpl) {
   try {
     return await pelaFilaDoWindows(zpl);
   } catch (e) {
@@ -120,7 +147,13 @@ process.on('unhandledRejection', (e) => log('Erro não tratado:', e?.message ?? 
 // ---------------------------------------------------------------------
 // Teste local (sem Supabase)
 // ---------------------------------------------------------------------
-if (process.argv.includes('--teste-local')) {
+if (process.argv.includes('--calibrar')) {
+  // Recalibra o sensor de etiquetas (~JC): a Elgin avança algumas etiquetas e aprende o tamanho/espaço do rolo.
+  // Usar com o rolo certo colocado e a tampa fechada. Corrige etiqueta em branco entre as impressas.
+  imprimir('~JC\r\n')
+    .then((via) => { log('Calibração enviada pela', via, '- a impressora deve avançar algumas etiquetas'); process.exit(0); })
+    .catch((e) => { log('Calibração FALHOU:', e.message); process.exit(1); });
+} else if (process.argv.includes('--teste-local')) {
   const zpl = [
     '^XA', '^CI28', '^PW800', '^LL400', '^LH0,0', '^PR2',
     '^FO24,18^A0N,32,32^FDBRV CLIMATIZACAO^FS', '^FO24,70^GB752,3,3^FS',

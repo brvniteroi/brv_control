@@ -159,11 +159,12 @@ Menu **Oficina**: Equipamentos (Kanban, só os em aberto; finalizados em lista p
 - O `consultar-os` (Edge Function usada pelo Equipamentos) continua igual até o Equipamentos ser desligado.
 
 ### Pendências para a fase 2
-- **OS de balcão** fica "em andamento" (não tem atividade, então o status automático não mexe). Decidir: concluir sozinha quando todos
-  os itens finalizarem? (Cuidado: concluir dispara o pedido de avaliação por e-mail; no descarte não faz sentido.)
+- **OS de balcão** fica "em andamento" (não tem atividade, então o status automático não mexe). **Decidido em 2026-11-09: NÃO conclui
+  sozinha**; o escritório conclui à mão. (Motivo: concluir dispara o pedido de avaliação por e-mail; no descarte não faz sentido.)
 - Tipo de serviço padrão da OS de devolução (hoje o escritório escolhe na hora).
-- ~~Ajuda F1 da Oficina~~ feita em 2026-11-08 (tópicos `oficina-*` em `src/ajuda/topicos.ts`). O F1 só abre para admin/escritório; o
-  Gustavo (papel oficina) não tem a ajuda. Decidir se libera para ele.
+- ~~Ajuda F1 da Oficina~~ feita em 2026-11-08 (tópicos `oficina-*` em `src/ajuda/topicos.ts`). ~~O F1 só abre para admin/escritório; o
+  Gustavo (papel oficina) não tem a ajuda.~~ **Liberado para o papel oficina em 2026-11-09** (`Layout.tsx`: F1 e botão "Ajuda"; sem o
+  link "Manual completo", porque ele só acessa `/oficina`).
 - Importador do BRV Equipamentos (abaixo).
 
 ### VIRADA FEITA EM 2026-11-09 (decisão do usuário)

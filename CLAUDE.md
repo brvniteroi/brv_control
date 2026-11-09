@@ -161,13 +161,13 @@ se o `instalar-tarefa.cmd` (como administrador) já foi rodado: sem ele o agente
 (3) avisar a equipe: equipamento só no Control (técnicos: "Recolher equipamento" na atividade; o Equipamentos fica só para placas);
 (4) decidir se mostra a trava também na tela do BRV Equipamentos (faixa "só consulta", sem arrastar), que exige mexer no código de lá
 e publicar (o banco já está travado por `somente-leitura-equipamentos.sql`, aplicado em 2026-11-09);
-(5) pendências em `docs/oficina.md`: OS de balcão concluir sozinha?, F1 para o Gustavo?, tipo padrão da OS de devolução.
+(5) pendências em `docs/oficina.md`: ~~OS de balcão concluir sozinha~~ (decidido: NÃO, 2026-11-09), ~~F1 para o Gustavo~~ (liberado, 2026-11-09; no `Layout.tsx`),
+tipo padrão da OS de devolução (falta decidir). Cópia de `android-assinatura/` para o PC da empresa: feita em 2026-11-09.
 Para rodar o importador no PC da empresa seria preciso `EQUIP_SERVICE_ROLE_KEY` no `.env` de lá (não deve ser mais necessário).
 Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-08): concluir a implantação do APK** (detalhes técnicos na seção "APK do app de campo", abaixo). Falta:
-(1) o usuário copiar `android-assinatura/` do PC de casa para `D:\BRV_Control\` do **PC da empresa** (substituindo a chave antiga, que não vale
-mais), pen drive e Google Drive privado; (2) repetir no A20 do Alberto o teste **parado com tela apagada ~10 min** (Mapa deve seguir
+(1) ~~copiar `android-assinatura/` do PC de casa para o PC da empresa, pen drive e Google Drive~~ (feito, usuário confirmou em 2026-11-09); (2) repetir no A20 do Alberto o teste **parado com tela apagada ~10 min** (Mapa deve seguir
 "Online" e a posição atualizar a cada 5 min); (3) instalar nos outros técnicos (passo a passo na seção). A `notificar-tecnico` sem a duplicada
 (commit `3c8ba40`) foi republicada em 2026-11-08. Ao concluir, apagar este lembrete.
 Até lá o pessoal usa pelo navegador. Ao concluir, apagar este lembrete.

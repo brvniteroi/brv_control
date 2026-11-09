@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/useAuth';
 import {
   ArrowLeft,
   BookOpen,
@@ -43,6 +44,7 @@ const ICONE_SECAO: Record<string, LucideIcon> = {
 
 /** Painel lateral da ajuda (F1). Abre na lista de tópicos da tela atual. */
 export default function AjudaPainel({ tela, onFechar }: AjudaPainelProps) {
+  const { profile } = useAuth();
   const [termo, setTermo] = useState('');
   const [aberto, setAberto] = useState<Topico | null>(null);
   const [secoesAbertas, setSecoesAbertas] = useState<Record<string, boolean>>({});
@@ -423,14 +425,17 @@ export default function AjudaPainel({ tela, onFechar }: AjudaPainelProps) {
           <span className="text-[11px] text-slate-500">
             Atalho: <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 font-mono text-[10px] font-semibold text-slate-700">F1</kbd> em qualquer tela
           </span>
-          <Link
-            to="/ajuda"
-            onClick={onFechar}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:min-h-8 sm:py-1.5"
-          >
-            <BookOpen size={14} aria-hidden="true" />
-            Manual completo
-          </Link>
+          {/* O técnico da oficina só usa a Oficina: a rota /ajuda o mandaria de volta para ela */}
+          {profile?.role !== 'oficina' && (
+            <Link
+              to="/ajuda"
+              onClick={onFechar}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:min-h-8 sm:py-1.5"
+            >
+              <BookOpen size={14} aria-hidden="true" />
+              Manual completo
+            </Link>
+          )}
         </div>
       </aside>
     </>

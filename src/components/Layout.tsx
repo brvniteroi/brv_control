@@ -12,7 +12,8 @@ export default function Layout() {
   const { profile } = useAuth();
   const { pathname } = useLocation();
   const sobreposta = useTelaSobreposta();
-  const temAjuda = profile?.role === 'admin' || profile?.role === 'escritorio';
+  // Admin, escritório e técnico da oficina (este só vê os tópicos da Oficina e não abre o manual completo)
+  const temAjuda = profile?.role === 'admin' || profile?.role === 'escritorio' || profile?.role === 'oficina';
 
   // F1 abre/fecha a ajuda da tela atual (no lugar da ajuda do navegador)
   useEffect(() => {

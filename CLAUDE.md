@@ -154,10 +154,10 @@ Feito:
 
 **LEMBRETE (2026-11-09): continuar a Oficina no PC da empresa** (lembrar o usuário logo no início da conversa). Antes: `git pull` no
 `D:\BRV_Control` (o BRV Equipamentos não precisa: o repositório dele não mudou, só os dados do banco). Roteiro:
-(1) instalar o agente da Elgin no servidor da loja (192.168.1.9) seguindo `scripts/agente-impressora/LEIA-ME.md`: criar no Supabase o login
-`impressora@brvniteroi.com.br` (papel `impressora`), Node 22, copiar a pasta para `C:\brv-agente-impressora`, `.env`, `npm install`,
-`npm run teste`, `npm start` + "Imprimir etiqueta de teste" na tela Oficina (botão "..."), depois `instalar-tarefa.cmd` como administrador;
-(2) Gustavo entra pelo celular e confere os 23 itens em aberto, leitura e preenchimento;
+(1) **FEITO em 2026-11-09**: agente da Elgin instalado no servidor da loja (login `impressora@brvniteroi.com.br`, pasta em
+`C:\brv-agente-impressora\agente-impressora`), imprime sem etiqueta em branco (ajustes do rolo no `LEIA-ME.md` do agente). Falta só conferir
+se o `instalar-tarefa.cmd` (como administrador) já foi rodado: sem ele o agente não sobe sozinho quando o servidor reinicia;
+(2) **FEITO**: Gustavo já usa o sistema (2026-11-09);
 (3) avisar a equipe: equipamento só no Control (técnicos: "Recolher equipamento" na atividade; o Equipamentos fica só para placas);
 (4) decidir se mostra a trava também na tela do BRV Equipamentos (faixa "só consulta", sem arrastar), que exige mexer no código de lá
 e publicar (o banco já está travado por `somente-leitura-equipamentos.sql`, aplicado em 2026-11-09);

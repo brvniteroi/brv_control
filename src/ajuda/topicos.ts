@@ -718,6 +718,7 @@ Com o item em **Pronto**, abra-o e veja a parte **Devolução**:
 - **Criar OS de devolução**: a equipe leva e instala. Escolha o **Tipo de serviço**, marque outros itens prontos da mesma OS para irem juntos e clique em **Criar OS de devolução**. A OS nasce sem atividade: **agende a visita pela Linha do Tempo**.
 - Quando a atividade da OS de devolução for **concluída**, o item passa para **Entregue** sozinho.
 - **Cliente buscou na loja**: marca como **Entregue** na hora, sem OS de devolução.
+- **Dar baixa (já devolvido)** (só administrador): para equipamento que já foi devolvido ao cliente fora do sistema. Passa para **Entregue** e anota no histórico.
 - Na OS, o bloco **Na oficina** mostra os itens recolhidos nela (ou "Devolução de: OS X · item Y"). Clique em **Ver na oficina** para abrir.
 - No cadastro do cliente, aba **Atendimento**, o bloco **Oficina** lista tudo o que já passou pela loja.
 `,

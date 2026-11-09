@@ -26,6 +26,7 @@ import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import { useAuth } from '../../contexts/useAuth';
 import { buscarClientePorId } from '../../services/clientes';
 import {
+  anotarNoHistorico,
   atualizarItem,
   buscarItem,
   fotosDoItem,
@@ -514,6 +515,23 @@ export default function ItemOficinaDetalhes({
       await atualizarAposAcao(true);
     } catch (err) {
       setErroAcao(err instanceof Error ? err.message : 'Não foi possível marcar como entregue.');
+    } finally {
+      setMovendoEtapa(false);
+    }
+  };
+
+  /** Admin: o equipamento já foi devolvido ao cliente fora do sistema (sem OS de devolução). */
+  const handleDarBaixa = async () => {
+    if (!item) return;
+    if (!window.confirm('Dar baixa neste item? Use só se o equipamento JÁ foi devolvido ao cliente. Ele passará para Entregue.')) return;
+    setErroAcao(null);
+    setMovendoEtapa(true);
+    try {
+      await marcarEntregue(item.id);
+      await anotarNoHistorico(item.id, 'Baixa feita pelo administrador: equipamento já devolvido ao cliente fora do sistema.');
+      await atualizarAposAcao(true);
+    } catch (err) {
+      setErroAcao(err instanceof Error ? err.message : 'Não foi possível dar baixa no item.');
     } finally {
       setMovendoEtapa(false);
     }
@@ -1361,6 +1379,19 @@ export default function ItemOficinaDetalhes({
                     >
                       <Store size={15} className="text-slate-600" />
                       Cliente buscou na loja
+                    </button>
+                  )}
+
+                  {ehAdmin && acoes.marcarEntregue && (
+                    <button
+                      type="button"
+                      disabled={movendoEtapa}
+                      onClick={() => void handleDarBaixa()}
+                      title="Só o administrador. Para equipamento que já foi devolvido ao cliente."
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900 transition hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      <PackageCheck size={15} />
+                      Dar baixa (já devolvido)
                     </button>
                   )}
                 </div>

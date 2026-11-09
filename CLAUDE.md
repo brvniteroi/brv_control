@@ -194,7 +194,8 @@ Pendente, nesta ordem:
    (migration `20261109100000_oficina_ajustes_importacao.sql` aplicada; `EQUIP_SERVICE_ROLE_KEY` no `.env`; uso em `docs/oficina.md`).
    **Virada da oficina feita em 2026-11-09**: importação final (62 itens, 276 eventos, 139 fotos/vídeos); equipamentos agora só no
    Control, com "Recolher equipamento" no app de campo (`components/campo/RecolherEquipamento.tsx`). O Equipamentos segue só para placas.
-   O importador não sobrescreve item já alterado no Control. Fases 2 e 3, pendências e o uso em paralelo
+   O importador não sobrescreve item já alterado no Control. Migration `20261109110000_oficina_corrige_historico.sql` (aplicada em
+   2026-11-09) corrigiu o erro "Só é possível escrever notas no histórico" em toda ação com login; retirada pelo app testada (OS 17332). Fases 2 e 3, pendências e o uso em paralelo
    com o Equipamentos em `docs/oficina.md`. Ler antes de continuar.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.

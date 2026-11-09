@@ -42,6 +42,14 @@ O usuário fala português; código, comentários e mensagens de commit também 
   service_role.
 - `hostgator-api/config.php` (no servidor) usa os mesmos URL e chave do `.env`.
 
+## Computadores do usuário
+- **PC da empresa** = `DESKTOP-PKGLS0I`, projeto em `D:\brv-control` (registrado em 2026-11-09). Tem o JDK 21 + Android SDK em
+  `C:\Users\brv\android-build` (build local do APK), o `.env` com a `service_role` (scripts de dados) e a cópia de `android-assinatura/`.
+  Daqui se acessa o servidor da loja (192.168.1.9: XAMPP do BRV Equipamentos e o agente da Elgin em `C:\brv-agente-impressora\agente-impressora`)
+  e existe `D:\BRV_Equipamentos` (código antigo do Equipamentos, só leitura).
+- **PC de casa** = `PCBRAULIOCASA` (sem Java). Antes de trabalhar em qualquer um: `git pull`; ao terminar: commit e push, para o outro PC
+  continuar de onde parou. `.env` e `android-assinatura/` não vêm no `git pull`.
+
 ## Supabase: plano e uso (conferido em 2026-11-03)
 - Plano **gratuito**. A organização tem 2 projetos (`brv-control` e `BRV Equipamentos`) que dividem os limites e ocupam as 2
   vagas de projeto ativo do gratuito. Uso: em Dashboard > organização > Usage (ou na tela Projects, "Free plan usage").
@@ -165,6 +173,14 @@ tipo da OS de devolução continua sendo escolhido pelo escritório na hora. Có
 **Só falta confirmar** que a tarefa "BRV Control - Impressora" existe no Agendador de Tarefas do servidor (`instalar-tarefa.cmd` como administrador).
 Para rodar o importador no PC da empresa seria preciso `EQUIP_SERVICE_ROLE_KEY` no `.env` de lá (não deve ser mais necessário).
 Ao concluir, apagar este lembrete.
+
+**LEMBRETE (2026-11-10, amanhã): fazer o teste do APK com tela apagada** (lembrar o usuário logo no início da conversa). Em 2026-11-09 o APK
+já estava instalado nos técnicos Alberto, Emerson e Marcus (têm token em `push_fcm_tokens`; o Bruno Brum, conta técnica do usuário, ainda só
+no navegador), mas o teste não foi conclusivo. Roteiro: técnico parado (Alberto), Mapa "Online" com o app aberto, apagar a tela ~10 min sem mexer,
+conferir no Mapa que segue "Online" (sinal < 3 min) e que a posição atualizou (parado: a cada 5 min), e criar uma atividade de hoje para ele com o
+app fechado (deve chegar notificação). O Claude pode acompanhar pelo banco (`technician_presence`, `technician_locations`, só leitura) enquanto o
+usuário testa. Se cair para "Offline": bateria "Sem restrições" + tirar de "Otimizar uso da bateria"/"Apps em suspensão" (Samsung) ou "Início
+automático" (Xiaomi). Ao dar certo, apagar este lembrete e o de baixo.
 
 **LEMBRETE (2026-11-08): concluir a implantação do APK** (detalhes técnicos na seção "APK do app de campo", abaixo). Falta:
 (1) ~~copiar `android-assinatura/` do PC de casa para o PC da empresa, pen drive e Google Drive~~ (feito, usuário confirmou em 2026-11-09); (2) repetir no A20 do Alberto o teste **parado com tela apagada ~10 min** (Mapa deve seguir

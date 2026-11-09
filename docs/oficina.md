@@ -170,6 +170,19 @@ Pergunta do usuário (2026-11-08): dá para migrar já e seguir com o Equipament
   equipe passa a lançar só no Control. O XAMPP (`print.php`) e o `zpl_bridge.php` continuam funcionando para as placas.
 - A impressão pela fila não interfere no Equipamentos: são caminhos separados até a Elgin.
 
+### Importador (escrito em 2026-11-09): `scripts/equipamentos/importar-oficina.mjs`
+- Antes: aplicar a migration `20261109100000_oficina_ajustes_importacao.sql` (sem ela, os itens importados com aprovação não podem
+  ser editados depois) e pôr `EQUIP_SERVICE_ROLE_KEY` no `.env` (Supabase do Equipamentos > Project Settings > API Keys > service_role).
+- `node --env-file=.env scripts/equipamentos/importar-oficina.mjs --simular` → só confere e gera o relatório em
+  `scripts/equipamentos/dados/` (gitignored). Sem `--simular` grava; `--sem-fotos` pula as mídias.
+- O que faz: OS numérica → item ligado à OS do Control (cliente da OS); sem OS → cliente por documento, telefone ou nome exato (se não
+  achar, fica de fora e vai para a lista de revisão). Etapas antigas convertidas; aprovado/recusado viram resposta do cliente "canal não
+  registrado"; descarte antigo fica com nota "autorização não registrada no sistema antigo". Valores de peças/serviço, gás, técnicos em
+  texto e OS de devolução não numérica vão para a "Conferência na chegada", marcados "[Importado do BRV Equipamentos]". Histórico vira
+  eventos (autor "Nome (BRV Equipamentos)"), refeitos a cada rodada. Fotos/vídeos (registrados em `midias` e os arquivos soltos no
+  Storage) são baixados, enviados por FTPS para `api/uploads/oficina/<id antigo>/` e registrados em `attachments` (não repete).
+- Pode rodar várias vezes: atualiza os itens importados e não duplica.
+
 ### Importação
 Mesmo método do Field: script com `--simular`, service_role só no `.env` local, repetível por `legacy_id`, backup antes.
 - **Clientes:** casar por CPF/CNPJ, depois telefone, depois nome sem acento. Duvidosos viram **lista para revisão manual**. Só 12

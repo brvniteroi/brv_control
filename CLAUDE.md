@@ -190,7 +190,10 @@ Pendente, nesta ordem:
    autorização do cliente registrada na OS; item usa o número da OS do Control). **Fase 1 e telas feitas em 2026-11-08**: migration
    `20261108130000_oficina_base.sql` (aplicada em 2026-11-08), `services/oficina.ts`, `utils/etiquetaOficina.ts`, telas do Gemini em
    `components/oficina/` (auditadas; resumo em `docs/gemini/oficina.md`), ajuda F1 (telas `oficina` e `item-oficina`), agente da Elgin em
-   `scripts/agente-impressora/` (ainda não instalado no servidor). Fases 2 e 3, pendências e o uso em paralelo
+   `scripts/agente-impressora/` (ainda não instalado no servidor). Importador do Equipamentos: `scripts/equipamentos/importar-oficina.mjs`
+   (migration `20261109100000_oficina_ajustes_importacao.sql` aplicada; `EQUIP_SERVICE_ROLE_KEY` no `.env`; uso em `docs/oficina.md`).
+   **Primeira importação feita em 2026-11-09**: 62 itens, 276 eventos, 139 fotos/vídeos. Equipamentos segue oficial até a virada;
+   rodar de novo atualiza os importados (não editar no Control os itens importados até lá). Fases 2 e 3, pendências e o uso em paralelo
    com o Equipamentos em `docs/oficina.md`. Ler antes de continuar.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.

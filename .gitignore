@@ -15,6 +15,9 @@ hostgator-api/uploads/*
 scripts/field-control/amostra/
 scripts/field-control/dados/
 
+# Relatórios da importação do BRV Equipamentos (nomes de clientes)
+scripts/equipamentos/dados/
+
 # Exportações do SicWeb (dados reais da empresa)
 scripts/sicweb/dados/
 

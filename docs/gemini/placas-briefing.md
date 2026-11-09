@@ -35,7 +35,9 @@ deles), às vezes cliente final, às vezes a **equipe de campo da BRV** retira a
 `ModalOrcamentoPlaca`, `ModalComprovanteEntrada`, `ModalTermoGarantia`, `ModalEtiquetaTermica`, `DashboardReparos`, `ClientesReparos`) e `pages/Public/GaleriaPublicaOS.jsx`.
 Use para **entender regras, campos e textos dos documentos**. **O visual é o do BRV Control** (tema claro, `brv-navy`, cartões brancos com borda `slate-200`), nunca o tema escuro de lá,
 e **não copie código** (ele tem fotos em `localStorage`, regras só no navegador etc.). Textos jurídicos e de garantia dos impressos: copie **literalmente** e liste-os no resumo para o
-Braulio revisar. Não implemente ditado por voz, IA, assistente, fichas técnicas nem códigos de erro (ficam para outra fase).
+Braulio revisar. **O apoio técnico (fichas técnicas de splits, manuais, códigos de erro e assistente com IA) migra junto com as placas e também é seu (seções 3.11 a 3.14)**; no sistema antigo
+ele vive em `pages/ConsultaEquipamentos.jsx`, `pages/ConsultaErros.jsx`, `pages/CadastrarEquipamentoIA.jsx` e `pages/Reparos/AssistenteTecnicoIA.jsx`. Você faz **só as telas**: as chamadas à IA
+(Gemini) são Edge Functions que o Claude cria, então na demo elas devolvem respostas fixas pela fonte de dados. Não implemente o ditado por voz nem a leitura de foto por IA da nova placa.
 
 ## 2. Etapas e regras
 
@@ -55,11 +57,25 @@ O orçamento é um **estado dentro da etapa** (`quote_status`): `nao_feito` | `e
 
 ## 3. Telas e rotas (todas dentro do `Layout`, exceto a pública)
 
-Navegação comum nas telas de placas (componente `NavegacaoPlacas`): abas **Equipamentos** (volta para `/oficina`), **Placas** (`/oficina/placas`), **Clientes de placas**
-(`/oficina/placas/clientes`) e **Financeiro** (`/oficina/placas/financeiro`, só escritório/admin). Em `pages/Oficina.tsx` você pode acrescentar essa navegação (é a única alteração
-permitida lá). O papel `oficina` só abre rotas que começam com `/oficina` (o roteamento já cuida disso); o menu lateral **não ganha item novo** (tudo entra por "Oficina").
+**Decidido em 2026-11-09: as placas têm um menu próprio, "Placas", no menu lateral, e tudo o que é de placas, inclusive o apoio técnico, fica dentro dele.** O menu "Oficina" continua só
+com os equipamentos e **não muda**. Em `components/Sidebar.tsx` (única alteração permitida lá, como você fez com o PMOC) crie o **grupo recolhível "Placas"** (ícone de placa/circuito do
+`lucide-react`) com estes itens, na ordem:
 
-### 3.1 `/oficina/placas` — Kanban de placas
+| Item do menu | Rota | Quem vê |
+|---|---|---|
+| Reparos (Kanban) | `/placas` | admin, escritório, oficina |
+| Clientes de placas | `/placas/clientes` | admin, escritório, oficina (oficina só leitura) |
+| Financeiro | `/placas/financeiro` | só admin, escritório |
+| Fichas técnicas | `/placas/fichas` | admin, escritório, oficina |
+| Códigos de erro | `/placas/erros` | admin, escritório, oficina |
+| Assistente técnico | `/placas/assistente` | admin, escritório, oficina |
+| Manuais | `/placas/manuais` | admin, escritório, oficina |
+
+O papel `oficina` (Gustavo) hoje só vê o menu da Oficina (`oficina: true` por item, em `Sidebar.tsx`): marque os itens acima com a mesma lógica; ele passa a ver **Oficina e Placas** (o
+`ProtectedRoute` já foi ajustado pelo Claude para liberar as rotas que começam com `/placas`). Dentro das telas, uma navegação de abas comum (`NavegacaoPlacas`) repete esses itens no topo para
+quem está no computador. **Não mexa em `pages/Oficina.tsx`.** A página pública de acompanhamento continua `/placa/:token` (singular, fora do `Layout`).
+
+### 3.1 `/placas` — Kanban de placas
 Cabeçalho: título, busca (número, cliente, marca/modelo, código da placa), botão **"Nova placa"**, indicador da impressora (reaproveite o da Oficina). Filtros em chips com contagem:
 **Todas · Parceiros · Cliente final · Garantias · Encalhadas**. Abas **Em andamento** (Kanban) e **Finalizadas** (lista paginada com filtro Entregue/Sem conserto, busca e ano).
 Cartão: número (grande), cliente com selo Parceiro/Final, equipamento (marca/modelo), código da placa, dias na etapa (vermelho a partir de 4), técnico de bancada, selos Garantia / Reembolsada /
@@ -74,7 +90,7 @@ Campos: tipo de cliente (instalador/final), cidade, técnico de retirada e de ba
 marca/modelo, **código da placa**, periféricos/acessórios, defeito reclamado, código de erro (opcional), "Sem defeito aparente" (checkbox), "Retorno em garantia" (checkbox + escolher a placa de origem),
 fotos de entrada (várias, com pré-visualização). Validar em português. Ao salvar: abrir o **comprovante de entrada** (3.5) com os botões de imprimir/enviar e a **etiqueta** (3.7).
 
-### 3.3 Detalhe da placa (painel por cima do Kanban; também `/oficina/placas?placa=<id>`)
+### 3.3 Detalhe da placa (painel por cima do Kanban; também `/placas?placa=<id>`)
 Seções, na ordem:
 - **Topo:** número, etapa (com cor), cliente (selo Parceiro/Final; se vier do campo, "OS do Control N" com texto simples), botões de etapa permitidos, **Etiqueta**, **Comprovante**.
 - **Equipamento e placa:** tipo, marca/modelo, código da placa, periféricos, defeito reclamado, "Sem defeito aparente", técnicos de retirada e de bancada.
@@ -119,16 +135,43 @@ Mostra: número da placa, equipamento e código da placa, **etapa atual em desta
 **"Falar com a BRV no WhatsApp"** (telefone de `EMPRESA_BRV`). **Nunca** mostre diagnóstico técnico detalhado, reembolso, valores internos nem dados de outros clientes. Estados: carregando,
 **"Link inválido ou expirado"**, erro com "Tentar de novo". Dados só por `buscarAcompanhamentoPublico(token)`.
 
-### 3.9 `/oficina/placas/clientes` — Clientes de placas
+### 3.9 `/placas/clientes` — Clientes de placas
 Lista com busca (nome/telefone, sem acento: use `semAcento` de `utils`), filtro **Todos · Parceiros · Cliente final**, contagem de placas por cliente e data da última. Criar/editar em modal
 (nome, telefone com `formatarTelefone`, tipo, cidade, observação). Detalhe: histórico de placas do cliente (número, equipamento, etapa, valor se escritório, data), com link que abre a placa.
 Não pode excluir cliente que tem placas (explique). Só escritório/admin e oficina (oficina vê, não edita).
 
-### 3.10 `/oficina/placas/financeiro` — Financeiro das placas (só escritório/admin)
+### 3.10 `/placas/financeiro` — Financeiro das placas (só escritório/admin)
 Reproduza, no visual do Control, o `DashboardReparos.jsx` do sistema antigo (**leia-o e preserve as regras de cálculo**; documente-as no resumo, o Claude confere uma a uma):
 cartões **Faturamento do mês**, **Ticket médio do mês**, **Valor na bancada (em aberto)**, **Placas encalhadas** (paradas ≥ 4 dias) e **Total do ano**; seletor de ano; **faturamento por mês**
 (colunas em HTML/CSS no padrão de `pages/RelatorioGraficos.tsx`, **sem biblioteca**, com tabela); clicar num mês abre a lista das placas e dos reembolsos daquele mês; **reembolsos** (total do ano e quantidade);
 rankings de **marcas** e **defeitos** mais comuns. Todos os cálculos em funções puras de `regrasPlacas.ts`, alimentadas por `listarPlacasParaFinanceiro(ano)`.
+
+### 3.11 `/placas/fichas` — Fichas técnicas (splits)
+Consulta de fichas por **fabricante, linha, modelo (evaporadora/condensadora) e capacidade** (busca única sem acento + filtros por fabricante e por BTUs), lista de cartões (fabricante, linha,
+evaporadora/condensadora, BTUs, tensão) e **detalhe em painel** com as ficha agrupada em seções: **Identificação**, **Linha frigorífica** (gás, cobre líquido e sucção, distância mínima/padrão/máxima,
+desnível, carga extra e de fábrica, regra de bitola), **Elétrica** (tensão, potência nominal e máxima, correntes de refrigeração/aquecimento/máxima, cabos, proteção) e **Notas** (observação, lacunas,
+fonte, link do arquivo original). Veja os campos em `D:\BRV_Equipamentos\schema_fichas.sql` e a tela em `pages/ConsultaEquipamentos.jsx`. Campos vazios aparecem como "—", nunca em branco.
+**Editar e excluir ficha: só admin** (modal com todos os campos, validação em português). Botão **"Cadastrar ficha com IA"** (admin e escritório) leva a 3.12. Tipos em `types/placas.ts`
+(`PlacaFichaTecnica`, nomes dos campos no padrão do schema). Imprimir a ficha (A4 simples, portal em `document.body`).
+
+### 3.12 Cadastrar ficha com IA (modal ou `/placas/fichas/nova`)
+Arrastar ou escolher um **PDF ou TXT** de manual → estado "A IA está lendo o manual..." → formulário **pré-preenchido** com os campos extraídos, que o usuário **revisa e corrige** antes de salvar
+(campos duvidosos marcados com "conferir" e as `lacunas` visíveis) → salvar. Referência: `pages/CadastrarEquipamentoIA.jsx`. Na demo, `extrairFichaDoManual(arquivo)` devolve uma ficha fixa depois de 2 s.
+Erros em português ("Não foi possível ler este arquivo."), arquivo grande, formato errado.
+
+### 3.13 `/placas/erros` — Códigos de erro e `/placas/assistente` — Assistente técnico
+- **Códigos de erro:** campos **marca**, **modelo** (opcional) e **código ou sintoma** (ex.: "Erro E1 Midea Inverter ou CH05 LG"); resultado em cartão: significado, causas prováveis (em lista),
+  o que verificar (passo a passo), componentes envolvidos, **aviso de segurança** quando houver e a **fonte** (manual do fabricante ou "pesquisa da IA", sempre identificada). Estado "A IA está pesquisando...",
+  erro com "Tentar de novo" e histórico das últimas consultas (local, só na sessão). Referência: `pages/ConsultaErros.jsx`.
+- **Assistente técnico (para a bancada):** campos **marca**, **código de erro**, **modelo da placa** e **sintoma observado** (texto livre); resposta estruturada: hipóteses ordenadas por probabilidade,
+  testes de bancada sugeridos, componentes a medir, observações. Botão **"Usar na placa"**, que (quando aberto a partir do detalhe de uma placa) leva o resultado para o campo de diagnóstico. Referência:
+  `pages/Reparos/AssistenteTecnicoIA.jsx`. Respostas de IA sempre com o rótulo **"Sugestão da IA: confirme na bancada"**.
+- Na demo, `consultarCodigoErro(dados)` e `assistenteTecnico(dados)` devolvem textos fixos coerentes (3 ou 4 exemplos), com atraso simulado de 1,5 s.
+
+### 3.14 `/placas/manuais` — Manuais de fabricantes
+Lista dos manuais usados pela IA e pelas fichas: fabricante, título/modelo, tipo (PDF/TXT), tamanho, data, se tem **texto extraído** (usado nas consultas de erro). Busca e filtro por fabricante. **Enviar manual**
+(PDF/TXT, fabricante, título; admin e escritório) e **excluir** (só admin). Abrir o arquivo em outra aba. A extração do texto é do Claude: na demo, mostre "texto extraído" fixo. Estados de lista completos.
+Referência: `pages/Reparos` (consulta de erros) e `supabase/functions/upload-manual` do sistema antigo (só para entender; o manual vira registro + arquivo).
 
 ## 4. Visual e acessibilidade
 - Componentes em `src/components/placas/` (ex.: `KanbanPlacas`, `CartaoPlaca`, `PlacaDetalhes`, `NovaPlacaModal`, `OrcamentoPlacaDocumento`, `ComprovanteEntradaDocumento`, `TermoGarantiaDocumento`,
@@ -148,11 +191,13 @@ Use `useAuth()` (`profile.role`) como as telas existentes. O banco repetirá as 
 
 ## 6. Dados de demonstração (`dadosDemo.ts`)
 Fictícios e sem dado real: **3 parceiros instaladores, 1 cliente final e 1 cliente do Control** (para a retirada de campo), telefones `(21) 9XXXX-0000`, CPF/CNPJ sintéticos válidos.
+**Apoio técnico:** cerca de **8 fichas técnicas** de fabricantes e linhas variados (fictícias, mas com campos realistas e alguns vazios/lacunas), **5 manuais** (PDF e TXT, um sem texto
+extraído), 3 respostas fixas de código de erro e 2 do assistente.
 Cerca de **14 placas** espalhadas por todas as etapas, **2 garantias** (uma ligada à original), **1 sem conserto**, **1 reembolsada**, **3 encalhadas**, estados de orçamento variados, com
 histórico e fotos (SVG embutido). Para o financeiro: entregues em **vários meses do ano** (com valores, uma com reembolso) e algumas na bancada em aberto. Números no formato `OS-DDMMAA-NNN`.
 
 ## 7. O que NÃO fazer
-Ditado por voz, leitura de foto por IA, assistente técnico, fichas, códigos de erro, ZPL, gravar no banco, migration, importador, texto da ajuda F1, botão "Recolher placa" no app de campo,
+Ditado por voz, leitura de foto por IA na nova placa, chamar o Gemini/IA de verdade (são Edge Functions do Claude; na demo as respostas são fixas), ZPL, gravar no banco, migration, importador, texto da ajuda F1, botão "Recolher placa" no app de campo,
 alterar clientes do Control, mexer em `components/oficina/` além do necessário para reaproveitar (prefira importar, não editar).
 
 ## 8. Ajuda (F1)
@@ -179,6 +224,12 @@ Tipos em `src/types/placas.ts` (nomes de campo em inglês, no padrão do banco, 
 | `buscarOsControl(numero)` | OS do Control para a retirada de campo (cliente, endereço, técnico, relato) |
 | `listarTecnicos()` | nomes para retirada e bancada |
 | `listarPlacasParaFinanceiro(ano)` | entregues/reembolsos do ano e em aberto, para o dashboard |
+| `listarFichas(filtro)` / `buscarFicha(id)` | fichas técnicas (busca sem acento, fabricante, BTUs) |
+| `salvarFicha(dados)` / `excluirFicha(id)` | só admin (o banco repete a regra) |
+| `extrairFichaDoManual(arquivo)` | **IA (Edge Function do Claude)**: devolve a ficha pré-preenchida com `lacunas`; demo fixa |
+| `consultarCodigoErro({ marca, modelo?, consulta })` | **IA**: significado, causas, verificações, componentes, aviso de segurança, fonte; demo fixa |
+| `assistenteTecnico({ marca, codigoErro, modeloPlaca, sintoma })` | **IA**: hipóteses, testes, componentes a medir; demo fixa |
+| `listarManuais(filtro)` / `enviarManual(arquivo, dados)` / `excluirManual(id)` | manuais de fabricantes (arquivo na HostGator, texto extraído no servidor) |
 | `buscarAcompanhamentoPublico(token)` | dados **seguros** da página pública (3.8) |
 | `gerarPdfOrcamento(id)` / `gerarPdfTermo(id)` | `Blob` (demo); **TODO(Claude)** |
 | `pedirEtiquetaPlaca(id, copias)` / `situacaoImpressora()` | **stubs** (o Claude liga à fila da Elgin) |

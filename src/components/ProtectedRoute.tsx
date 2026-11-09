@@ -103,8 +103,12 @@ export default function ProtectedRoute() {
     );
   }
 
-  // Técnico de bancada usa só a Oficina
-  if (profile?.role === 'oficina' && !location.pathname.startsWith('/oficina')) {
+  // Técnico de bancada usa só a Oficina e as Placas (reparo de placas e apoio técnico)
+  if (
+    profile?.role === 'oficina' &&
+    !location.pathname.startsWith('/oficina') &&
+    !location.pathname.startsWith('/placas')
+  ) {
     return <Navigate to="/oficina" replace />;
   }
 

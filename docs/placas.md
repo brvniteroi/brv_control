@@ -95,10 +95,18 @@ Fotos: mesmo caminho dos equipamentos: baixar de `midias/reparos/<id>/` e enviar
 - Comprovante de entrada, orçamento da placa e termo de garantia: HTML imprimível como os documentos do Control (padrão `createPortal` em `document.body`).
 - Dashboard: viram relatórios do Control (menu Relatórios), lendo `workshop_orders`. Dependem do valor do orçamento estar preenchido.
 
-### 8. Apoio técnico (IA, fichas, manuais, códigos de erro)
-Não faz parte da placa em si, mas o Equipamentos só pode ser desligado depois deles. **Fase separada**, depois das placas: fichas técnicas (131), manuais (18 PDFs, bucket do
-Supabase antigo → HostGator), `consultar-erro`, `extrair-ficha`, `interpretar-voz`, assistente. As Edge Functions usam `GEMINI_API_KEY` no servidor; seriam republicadas no projeto do Control.
-Enquanto não migrarem, o Equipamentos continua ligado só para consulta técnica.
+### 8. Apoio técnico (IA, fichas, manuais, códigos de erro) — **migra junto com as placas** (decidido em 2026-11-09)
+**Menu "Placas" próprio, com tudo dentro** (decidido em 2026-11-09): Reparos (Kanban), Clientes de placas, Financeiro (só escritório/admin), **Fichas técnicas**, **Códigos de erro**,
+**Assistente técnico** e **Manuais**, rotas `/placas`, `/placas/clientes`, `/placas/financeiro`, `/placas/fichas`, `/placas/erros`, `/placas/assistente`, `/placas/manuais` (a página pública do parceiro
+segue `/placa/<token>`). O menu "Oficina" fica só com os equipamentos. O papel `oficina` (Gustavo) vê Oficina e Placas (menos o Financeiro); `ProtectedRoute` já libera `/placas` para ele.
+
+O que migra: fichas técnicas dos splits (131; **editar e excluir só admin**), manuais de fabricantes (18 PDFs, do bucket do Supabase antigo para a HostGator, com o texto extraído que a IA usa),
+códigos de erro com IA (`consultar-erro`), cadastro de ficha com IA a partir de PDF/TXT (`extrair-ficha`) e o assistente técnico da bancada (`assistente-tecnico`). Ficam de fora o ditado por voz
+(`interpretar-voz`) e a leitura de foto da nova placa; entram depois, se fizerem falta.
+- **IA:** as Edge Functions (Gemini) são do Claude: nascem de novo no projeto do Control, com `GEMINI_API_KEY` em Secrets e **login obrigatório** (a do sistema antigo só conferia o usuário, sem papel).
+  Usam as fichas e os manuais como contexto. Resposta sempre rotulada "Sugestão da IA: confirme na bancada". Limitar uso por usuário para não estourar a cota da chave.
+- **Dados:** `service_tech_sheets` (fichas, 1:1 com `fichas_tecnicas_split`), `service_tech_manuals` (manuais) e o histórico de consultas, se for útil. Cadastro de ficha e manual: admin e escritório.
+- **Escopo do Equipamentos:** só depois de fichas, manuais, erros e assistente estarem no Control e as placas virarem, o BRV Equipamentos e o XAMPP da loja podem ser desligados.
 
 ## Fases
 **Ordem decidida em 2026-11-09: a migração dos dados vem por último.** Primeiro as telas ficam prontas e testadas com dados de demonstração (como no PMOC: camada
@@ -110,11 +118,11 @@ briefing em `docs/gemini/placas-briefing.md`.
 | **P0 Telas (Gemini)** | Todas as telas de placas com dados de demonstração, resumo em `docs/gemini/placas.md`; auditoria do Claude | Antes de qualquer migration |
 | **P1 Banco** (depois do P0) | Migration (`teste`, `workshop_board_details` com `board_number`, `board_clients`, `service_order_id` e `customer_id` opcionais só para placas (exatamente um cliente por item), função do número, RLS: só `oficina`, escritório e admin), regras de etapa para placas, `kind` no Kanban | Colar no SQL Editor |
 | **P2 Importador** | `scripts/equipamentos/importar-placas.mjs`, repetível e sem sobrescrever o que já mudou no Control; `--simular`; fotos por FTPS; clientes 1:1 para `board_clients` (sem revisão) | Precisa da chave de serviço do Equipamentos no `.env` |
-| **P3 Telas** | Aba **Placas** na Oficina (Kanban com Teste), nova entrada, detalhes com os campos da placa, orçamento, garantia, comprovante, galeria por token, ajuda F1. Visual com o Gemini (briefing em `docs/gemini/placas.md`), auditoria do Claude | Regra fixa: sem ajuda F1 não está pronto |
+| **P3 Telas** | Menu **Placas** (Kanban com Teste), nova entrada, detalhes com os campos da placa, orçamento, garantia, comprovante, galeria por token, ajuda F1. Visual com o Gemini (briefing em `docs/gemini/placas.md`), auditoria do Claude | Regra fixa: sem ajuda F1 não está pronto |
 | **P4 Etiqueta e impressos** | Layout da placa na Elgin, termo de garantia, comprovante | Testar na loja |
 | **P5 Virada** | Importação final, Equipamentos em só leitura também para placas (políticas RESTRICTIVE, como em `somente-leitura-equipamentos.sql`), equipe lança só no Control | Backup do Equipamentos antes |
 | **P6 Relatórios** | Faturamento, reembolsos, bancada, encalhadas, marcas e defeitos | Pode vir logo depois da virada |
-| **P7 Apoio técnico** | Fichas, manuais, códigos de erro, IA; depois desligar o Equipamentos e o XAMPP | Fecha a unificação |
+| **P7 Apoio técnico (dados e IA)** | Migration das fichas e dos manuais, importação (131 fichas, 18 PDFs), Edge Functions de IA (`consultar-erro`, `extrair-ficha`, `assistente-tecnico`) no projeto do Control; depois desligar o Equipamentos e o XAMPP | As **telas** do apoio técnico já saem no P0; aqui entram dados e IA. Fecha a unificação |
 
 ## Riscos
 - **Orçamento de placa no Control e de equipamento no SicWeb:** são dois comportamentos na mesma Oficina. A tela precisa deixar claro qual vale (por `kind`): placa tem "Fazer orçamento" (valor, validade, PDF), equipamento tem "Registrar orçamento" (nº do SicWeb).
@@ -132,7 +140,9 @@ Decididas em 2026-11-09:
 5. ~~Quando~~ **a migração dos dados fica para o fim, com as telas prontas e testadas e simulações** (ordem das fases).
 Também decididos: número da OS com data (`OS-DDMMAA-NNN`), cadastro de clientes de placas paralelo (3) e design com o Gemini (briefing `docs/gemini/placas-briefing.md`).
 
-**Ainda aberta:** 4. **Apoio técnico (fichas, manuais, IA):** migra logo depois das placas (P7) ou o Equipamentos fica ligado só para isso por mais tempo?
+4. ~~Apoio técnico~~ **migra junto com as placas, dentro do menu "Placas"** (8).
+
+**Nenhuma decisão aberta** (2026-11-09).
 
 ## Ajuda F1 (regra fixa)
 Telas e botões novos exigem tópicos em `src/ajuda/topicos.ts` no mesmo commit (`oficina-placas`, `oficina-teste-simulador`, `oficina-garantia-placa`...).

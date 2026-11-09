@@ -1,158 +1,228 @@
-# Módulo Oficina: plano para trazer o BRV Equipamentos para o BRV Control
+# Módulo Oficina: trazer o BRV Equipamentos para o BRV Control
 
-Situação: **em estudo, nada implementado** (2026-11-05). Nada deste documento existe no código nem no banco do Control.
-Baseado no repositório `D:\BRV_Equipamentos` (commit `84cfe00`, de 2026-11-03), incluindo o `CLAUDE.md` dele, que já traz um plano de unificação.
-O banco real foi conferido em 2026-11-05 com as consultas do Anexo; vale ele, não os arquivos `.sql` do repositório, que estão defasados.
+Situação (2026-11-08): **migration aplicada; telas do Gemini prontas e auditadas pelo Claude; ajuda F1 feita.** Falta: instalar o
+agente da Elgin no servidor da loja, republicar `gerenciar-usuario`, criar o login do Gustavo, testar com a equipe, importador do
+Equipamentos e "Recolher equipamento" no app de campo (fase 3). Placas ficam para depois.
+Baseado no repositório `D:\BRV_Equipamentos` (commit `84cfe00`, de 2026-11-03). O banco real do Equipamentos foi conferido em
+2026-11-05 com as consultas do Anexo; vale ele, não os arquivos `.sql` do repositório, que estão defasados.
 
-## Atualizações de 2026-11-08 (ler antes do resto)
-- **APK pronto e testado** (Samsung A20 do Alberto): decisão 5 resolvida quanto ao APK. A retirada pela fase 3 não exige APK novo (o app abre o site).
-- **Cargos**: `employees.role` agora vem da categoria do cargo (`public.cargos`, ver CLAUDE.md, "Funcionários e cargos"). Em vez de criar
-  `role = 'bancada'` à mão, criar a **categoria** `oficina` (ou `bancada`) no CHECK de `cargos.categoria` e `employees.role`, e o cargo
-  "Técnico de Bancada" para o Gustavo.
-- **Adriana** é `admin` (Diretora Administrativa), não `escritorio` + financeiro como na tabela "Quem acessa o quê".
-- **Comercialização**: o usuário quer vender o sistema. A frase "`empresa_id` não vem para o Control" precisa ser revista junto com o
-  plano de multiempresa (ainda não escrito); a Oficina deveria nascer compatível com ele.
-- **Um aparelho por técnico** e funcionários com dados pessoais (só admin) já existem; o papel `oficina` deve seguir as mesmas regras.
-- Segurança do Equipamentos segue pendente (lembrete no CLAUDE.md). Recomendação: fechar antes da fase 1.
-- Decisões 1, 2, 3, 4, 6 e 7 seguem abertas.
+Objetivo: um sistema só, com o caminho completo **OS de campo → equipamento na oficina → devolução**, sem digitar número de OS de
+um sistema no outro, com um único login e cadastro de clientes, sem perder dados e com a impressora Elgin funcionando de qualquer lugar.
 
-Objetivo: um sistema só, com o caminho completo **OS de campo → equipamento ou placa na oficina → devolução e cobrança**, sem digitar número de OS de um sistema no outro e com um único login e cadastro de clientes.
+## Decisões (2026-11-08)
 
-## O que existe hoje no BRV Equipamentos
+| # | Decisão | Resposta |
+|---|---|---|
+| 1 | Retirada | Pelo app de campo ("Recolher equipamento"), já ligada à OS |
+| 2 | Placas | **Fica para depois.** Primeiro só equipamentos. A tabela já nasce com `kind` para receber placas sem refazer nada |
+| 3 | OS de devolução | Botão "Criar OS de devolução" já preenchido e ligado |
+| 4 | Gustavo | **Só Oficina.** Papel de login novo `oficina`. Hoje é ajudante de refrigeração e vai virar mecânico, a princípio só dentro da empresa |
+| 5 | Ordem | APK pronto (2026-11-08); a Oficina vem antes do financeiro |
+| 6 | Vídeos | Só fotos (confirmar com a oficina se sente falta) |
+| 7 | Etapas | As do Equipamentos, mais "Em trânsito" e "Aguardando cliente". Recusado tem duas saídas: devolver ou **descarte autorizado pelo cliente** |
+| 8 | Orçamento | **Continua no SicWeb** até o financeiro vir em definitivo. O Control guarda só a referência (nº do orçamento no SicWeb, valor total, data do envio) |
+| 9 | Servidor da loja (192.168.1.9) | Fica ligado direto: recebe o agente de impressão |
 
+Outras mudanças desde o estudo de 2026-11-05:
+- **Cargos**: `employees.role` vem da categoria do cargo (`public.cargos`). Criar a categoria `oficina` ("Atende na oficina") no CHECK de
+  `cargos.categoria` e de `employees.role`. Assim quem é da oficina não aparece na linha do tempo nem nos relatórios de técnicos de campo.
+  Enquanto for ajudante, o Gustavo pode ficar com um cargo "Ajudante de Oficina" nessa categoria; ao virar mecânico, "Mecânico de Bancada".
+- **Adriana** é `admin` (Diretora Administrativa).
+- **Comercialização**: o usuário quer vender o sistema. A Oficina deve nascer compatível com o futuro plano de multiempresa (ainda não
+  escrito): sem nada fixo da BRV no código além do que já é configuração (ex.: cabeçalho da etiqueta vindo de um lugar só).
+- Segurança do Equipamentos segue pendente (lembrete no CLAUDE.md). Recomendação: fechar antes da importação.
+
+## Caminho do equipamento
+
+| Etapa (`status`) | Quem | O que acontece |
+|---|---|---|
+| `em_transito` *(nova)* | Mecânico, pelo app | Na atividade da OS, "Recolher equipamento": o que levou (evaporadora, condensadora, completo, ACJ...), aparelho do cliente (`equipments`, opcional), defeito, fotos. Cliente, OS e técnico vêm sozinhos |
+| `entrada` | Gustavo | "Receber": confere o que chegou; a **etiqueta sai sozinha na Elgin**. Balcão (sem OS) começa aqui |
+| `diagnostico` | Gustavo | Laudo, peças necessárias, fotos |
+| `aguardando_orcamento` | Atendimento | Monta o orçamento **no SicWeb** |
+| `aguardando_cliente` *(nova)* | Atendimento | Registra nº do orçamento no SicWeb, valor e envio (texto pronto para o WhatsApp). Espera a resposta |
+| `aguardando_peca` | Atendimento | Aprovado, falta peça |
+| `em_reparo` | Gustavo | Aprovado com peça: conserta, fotos |
+| `pronto` | Gustavo / Atendimento | Pronto para voltar ao cliente: consertado **ou recusado para devolver sem conserto** |
+| `entregue` (final) | Atendimento | "Criar OS de devolução" (cliente, endereço e título preenchidos, ligada). Concluir essa OS marca como entregue |
+| `descarte` (final) | Atendimento | Só com a **autorização de descarte** registrada (abaixo) |
+| `cancelado` (final) | Escritório | Entrada feita por engano |
+
+### Resposta do cliente ao orçamento
+Registrada com: decisão (`aprovado`, `recusado_devolver`, `recusado_descarte`), **canal** (WhatsApp, telefone, presencial, e-mail),
+data, observação e **quem registrou** (vem do login). Comprovante opcional (print da conversa) como anexo da oficina.
+- Aprovado → `aguardando_peca` ou `em_reparo`.
+- Recusado, devolver → `pronto` (aparece "Sem conserto: recusado pelo cliente").
+- **Recusado, descarte autorizado** → `descarte`. O banco **exige** canal e observação. Fica registrado em três lugares: na ficha da
+  oficina, no histórico (`workshop_order_events`) e **na OS de origem**, como comentário automático em `service_order_comments`
+  ("Cliente autorizou o descarte da condensadora (oficina nº X) em dd/mm, por WhatsApp. Registrado por Fulano. Obs.: ..."). O bloco
+  "Na oficina" da OS também mostra "Descartado com autorização do cliente".
+
+### Na OS de campo
+Bloco "Na oficina: <etapa>" com link; o cadastro do cliente lista os serviços de oficina. A OS de devolução combina com a regra de
+uma atividade por OS (retirada e devolução são duas OS).
+
+## Impressora Elgin L42PRO: fila de impressão
+
+**Hoje**: o navegador grava o ZPL na HostGator (`zpl_bridge.php`, chave fixa `BRV9100`, CORS aberto) e abre uma aba para
+`http://192.168.1.9:8080/brv_print/print.php` (XAMPP), que baixa o ZPL e envia à Elgin (fila do Windows em RAW, ou TCP direto).
+Só funciona no Wi-Fi da loja, depende de pop-up, a ponte fica aberta e falha sem registro.
+
+**No Control**:
+```
+Qualquer tela (PC, celular, app de campo, até no 4G)
+  → grava o pedido em print_jobs (ZPL, cópias, quem pediu, de qual registro)
+  → agente no servidor da loja recebe na hora (Realtime; confere a fila a cada 30 s por segurança)
+  → envia à Elgin (fila do Windows RAW 'ELGIN L42PRO FULL'; se falhar, TCP direto, como o print.php)
+  → marca impressa / falhou com o motivo → a tela mostra o resultado
+```
+- Agente: script Node (`scripts/agente-impressora/`), tarefa do Windows ao ligar o servidor; instalar o Node uma vez. Entra com um
+  login próprio (papel `impressora`, só lê e atualiza `print_jobs` e o próprio sinal de vida). Sem chave fixa, sem CORS aberto.
+- Sinal de vida (`print_agents`): a tela mostra "Elgin pronta" ou "Servidor da loja desligado"; nesse caso, botão de contingência
+  "Imprimir pelo navegador / PDF" (o HTML de 100x50 mm que já existe hoje, com o aviso de margem "Nenhuma" no Chrome).
+- Histórico: quem imprimiu, quando, quantas cópias; reimprimir pelo histórico.
+- Um modelo só: pré-visualização e ZPL saem da mesma função TypeScript. Etiqueta 100x50 mm (80x50 opcional), como a atual, com
+  **QR code** que abre o equipamento no Control (pede login). Texto sem acento no ZPL (como `zplText` do bridge).
+- Depois: recibo de entrega e termo de garantia 80 mm pela mesma fila.
+
+## Para não perder dados
+- Tudo grava direto no banco pelos `services/`; nada de cópia em `localStorage` nem gravação por só abrir tela.
+- Histórico por trigger (quem, quando, de qual etapa para qual; autor pelo `auth.uid()`); ninguém altera nem apaga o histórico.
+- Nada se exclui no dia a dia: cancela ou descarta. Excluir só admin.
+- O banco valida as transições (não pula etapa, descarte exige autorização, entregue exige OS de devolução concluída ou baixa manual
+  do escritório) e a numeração vem de sequência.
+- Fotos na HostGator via `upload.php`, registradas em `attachments`; no app de campo, fila offline (`filaCampo.ts`).
+- Importação com `--simular` e `legacy_id` (repetível); o Kanban antigo fica só leitura depois da virada.
+- **Backup**: o plano gratuito do Supabase não tem backup confiável. Decidir o Pro (ou o backup próprio diário) **antes da virada**
+  da oficina. Unir os projetos libera uma vaga: o Pro fica ≈ US$ 25/mês.
+
+## Banco (migrations novas, prefixo `workshop_`)
+`equipments` no Control já é o aparelho instalado no cliente; por isso o prefixo.
+
+- **`workshop_orders`**: `number` (sequência), `kind` (`equipamento`; `placa` depois), `status`, `service_order_id` (origem; nulo no
+  balcão), `return_service_order_id`, `customer_id`, `address_id`, `equipment_id` (opcional), tipo, marca, modelo, tensão, unidades
+  recolhidas, defeito relatado, relato do técnico, diagnóstico, peças necessárias e situação das peças, `pickup_employee_id`,
+  `bench_employee_id`, referência do orçamento (`quote_reference` = nº no SicWeb, `quote_amount`, `quote_sent_at`), resposta do cliente
+  (`decision`, `decision_channel`, `decision_note`, `decision_at`, `decision_by`), garantia (`is_warranty`, `warranty_origin_id`), datas
+  de cada marco (recebido, pronto, entregue, descartado), `legacy_table`/`legacy_id`, `created_by`.
+- **`workshop_order_events`**: histórico de auditoria.
+- **`attachments.workshop_order_id`**: fotos e comprovantes.
+- **`print_jobs`** e **`print_agents`**: fila e sinal de vida da impressora.
+- **Papéis**: `profiles.role` ganha `oficina` (Gustavo) e `impressora` (agente); `cargos.categoria`/`employees.role` ganham `oficina`.
+- **Realtime**: `workshop_orders` e `print_jobs`, via `useRealtimeTable`.
+
+### Quem acessa o quê
+| Pessoa | Equipamentos hoje | Control |
+|---|---|---|
+| Braulio, Adriana | `admin`, `diretoria` | `admin` |
+| Jéssica, Pedro | `atendimento`, `suporte_oficina` | `escritorio` (ainda sem login no Control) |
+| Gustavo | `tecnico_bancada` | **`oficina`**: só o menu Oficina, sem telefone nem cadastro de clientes (mesmo cuidado do app de campo) |
+| Mecânicos | não usam | `tecnico`: só "Recolher equipamento" no app |
+
+## Telas
+Menu **Oficina**: Equipamentos (Kanban, só os em aberto; finalizados em lista paginada à parte), Nova entrada (balcão), detalhes
+(abre por cima, como a OS), etiqueta. Bloco na OS e na aba Atendimento do cliente. Visual no padrão do Control (tema claro).
+**Ajuda F1 obrigatória** (regra fixa): `TelaAjuda` nova, tópicos em `src/ajuda/topicos.ts`, seção em `SECOES`, rota em `telaDaRota`,
+`useTelaAjuda` no painel de detalhes.
+
+## Fases do módulo Equipamentos
+| Fase | O que entra | Resultado |
+|---|---|---|
+| **1. Base** | Migration (tabelas, etapas, histórico, RLS, fila de impressão), papéis `oficina`/`impressora`, categoria de cargo, **agente da Elgin instalado e testado** no servidor | Etiqueta de teste saindo da Elgin pela fila |
+| **2. Oficina** | Kanban, entrada de balcão, detalhes, resposta do cliente e descarte, etiqueta, bloco na OS, OS de devolução, ajuda F1. Importação dos 61 equipamentos e 129 mídias; Kanban antigo só leitura | Equipe usa só o Control para equipamentos |
+| **3. Campo** | "Recolher equipamento" no app (sem APK novo); atualizar ou aposentar `consultar-os` | Caminho completo sem redigitar |
+| Depois | Placas, fichas técnicas, códigos de erro e assistente; desligar o Equipamentos | Um sistema só |
+
+### Fase 1: o que foi feito (2026-11-08)
+- Migration `20261108130000_oficina_base.sql` (**colar no SQL Editor**): papéis `oficina`/`impressora`, categoria de cargo `oficina`
+  (cargos "Ajudante de Oficina" e "Mecânico de Oficina"), `workshop_orders`, `workshop_order_events`, visão `oficina_itens`, fotos em
+  `attachments.workshop_order_id`, regras de etapa (`workshop_orders_regras`), histórico automático e comentário de descarte na OS
+  (`workshop_orders_historico`), funções `oficina_entrada_balcao`, `oficina_recolher`, `oficina_buscar_os`,
+  `oficina_criar_os_devolucao`, baixa automática ao concluir a OS de devolução (`service_orders_entrega_oficina`), fila
+  `print_jobs`, `print_agents` e funções do agente (`impressora_pegar`, `impressora_concluir`, `impressora_sinal`).
+- **Numeração**: sem sequência própria. O item usa o número da OS do Control ("OS 17300", ou "OS 17300 · item 2" se a mesma OS
+  tiver mais de um). Entrada de balcão cria a OS junto (tipo "Oficina (balcão)", situação em andamento).
+- App: `types/oficina.ts`, `services/oficina.ts`, `utils/oficina.ts` (rótulos e espelho das regras), `utils/etiquetaOficina.ts` (ZPL
+  100x50/80x50 com QR + HTML de contingência), `hooks/useOficina.ts` (Kanban por Realtime, situação da impressora), página provisória
+  `/oficina` com o teste da Elgin, menu "Oficina", papel `oficina` vai direto para `/oficina`, papel `impressora` não usa telas.
+- Agente: `scripts/agente-impressora/` (Node 22; passo a passo em `LEIA-ME.md`).
+- `gerenciar-usuario` aceita o papel `oficina`: **republicar** a Edge Function antes de criar o login do Gustavo.
+- Visual das telas: briefing `docs/gemini/oficina-briefing.md`; o Gemini grava o resumo em `docs/gemini/oficina.md` e o Claude audita.
+
+### Pendências para a fase 2
+- **OS de balcão** fica "em andamento" (não tem atividade, então o status automático não mexe). Decidir: concluir sozinha quando todos
+  os itens finalizarem? (Cuidado: concluir dispara o pedido de avaliação por e-mail; no descarte não faz sentido.)
+- Tipo de serviço padrão da OS de devolução (hoje o escritório escolhe na hora).
+- ~~Ajuda F1 da Oficina~~ feita em 2026-11-08 (tópicos `oficina-*` em `src/ajuda/topicos.ts`). O F1 só abre para admin/escritório; o
+  Gustavo (papel oficina) não tem a ajuda. Decidir se libera para ele.
+- Importador do BRV Equipamentos (abaixo).
+
+### Usar o Control e o Equipamentos ao mesmo tempo (período de teste)
+Pergunta do usuário (2026-11-08): dá para migrar já e seguir com o Equipamentos até testar tudo? **Sim**, assim:
+- **O Equipamentos continua sendo o oficial** até a virada. A equipe lança tudo lá, como hoje.
+- O importador copia o Equipamentos para o Control e **pode rodar quantas vezes quiser** (casa por `legacy_id`; cada rodada atualiza
+  os itens importados). Assim o Control fica com os dados reais para testar telas, etiqueta e Kanban.
+- **Não editar no Control os itens importados** durante o teste: a próxima importação sobrescreve. Para testar o fluxo inteiro,
+  criar entradas novas no Control e cancelá-las no fim ("teste").
+- Mesma numeração: o Equipamentos já guarda o número da OS do Control (`os_field_control`); o importador liga o item à mesma OS.
+  Entradas `BALCAO-n` antigas entram sem OS, com a referência antiga (`legacy_reference`).
+- **Virada** (quando o usuário aprovar): última importação, o Equipamentos fica só leitura para equipamentos (placas seguem lá) e a
+  equipe passa a lançar só no Control. O XAMPP (`print.php`) e o `zpl_bridge.php` continuam funcionando para as placas.
+- A impressão pela fila não interfere no Equipamentos: são caminhos separados até a Elgin.
+
+### Importação
+Mesmo método do Field: script com `--simular`, service_role só no `.env` local, repetível por `legacy_id`, backup antes.
+- **Clientes:** casar por CPF/CNPJ, depois telefone, depois nome sem acento. Duvidosos viram **lista para revisão manual**. Só 12
+  clientes para 61 equipamentos: a maioria guarda o cliente só como texto.
+- **OS:** `os_field_control` numérico → `service_orders.number`. `BALCAO-` fica sem OS, guardado como referência.
+- **Status:** o banco antigo aceita dois formatos (`Em Reparo` e `em_conserto`); converter para a lista nova.
+- **Arquivos:** copiar do bucket `midias` para a HostGator e registrar em `attachments` (reduzir fotos acima de 5 MB). Há caminhos
+  relativos (`uploads/...`, do sistema antigo em `oficina.brvniteroi.com.br`) e URLs do Storage. Fotos sem registro: localizar pela pasta.
+- **Links antigos:** QR das etiquetas já coladas e galerias enviadas por WhatsApp exigem redirecionamento do domínio antigo.
+
+## O que não trazer junto
+- Número por contagem de registros; `codigo_interno` gerado no navegador.
+- Fotos em `localStorage` e `localStorage.clear()` em erro; sincronização que grava ao abrir a tela; cliente casado pelo nome.
+- Regras só no navegador; admin por nome (`nome LIKE '%braulio%'`); Kanban carregando a tabela inteira.
+- `zpl_bridge.php` com chave fixa `BRV9100` e `Access-Control-Allow-Origin: *`; aba de pop-up para a ponte.
+- Galeria pública pelo id: usar token, como `rating_token`.
+- Arquivos soltos, como `ModalOrcamentoPlaca - Cópia.jsx`.
+
+## O que existe hoje no BRV Equipamentos (referência)
 | Parte | Como funciona |
 |---|---|
 | **Equipamentos recolhidos** | Kanban: Entrada → Diagnóstico → Aguardando orçamento → Aprovado → Aguardando peça → Em reparo → Pronto. Finais: Entregue, Recusado, Descarte. Peças, valores, técnico de retirada e de bancada, fotos e vídeos, histórico, etiqueta e recibo com garantia |
-| **Reparo de placas** | Kanban próprio: Entrada/Triagem → Diagnóstico/Orçamento → Aguardando peça → Em reparo → Teste em simulador → Pronto → Entregue/Faturado, ou Sem conserto. Código da placa e do erro, componentes trocados, orçamento, garantia ligada à OS de origem, reembolso, dashboard de faturamento, ditado por voz, comprovante, termo de garantia, galeria pública de fotos |
-| **Clientes** | `clientes` (equipamentos) e `reparos_clientes` (instaladores e clientes finais), separados entre si e do Control. A ligação é só pelo nome |
-| **Apoio técnico** | Fichas técnicas (`fichas_tecnicas_split`), extração de ficha de PDF, busca de códigos de erro em manuais e assistente técnico, com Gemini |
-| **Impressão** | Etiqueta ZPL na Elgin L42PRO, passando por `zpl_bridge.php` e pelo XAMPP do servidor da loja |
-| **Ligação com o Control** | Só leitura: o operador digita o número da OS e `control-proxy.php` chama `consultar-os`. Nada volta para o Control |
+| **Reparo de placas** | Kanban próprio, orçamento, comprovante, garantia, reembolso, dashboard, galeria pública, ditado por voz |
+| **Clientes** | `clientes` e `reparos_clientes`, separados entre si e do Control; ligação só pelo nome |
+| **Apoio técnico** | Fichas técnicas, extração de ficha de PDF, códigos de erro, assistente técnico (Gemini) |
+| **Impressão** | Etiqueta ZPL na Elgin L42PRO por `zpl_bridge.php` + `servidor_xampp/brv_print/print.php` no servidor da loja |
+| **Ligação com o Control** | Só leitura: o operador digita o número da OS e `control-proxy.php` chama `consultar-os` |
 
-Volume real (2026-11-05): 61 equipamentos, 129 mídias, 266 movimentações, 12 clientes, 78 OS de placa, 584 históricos de placa, 49 clientes de placa, 131 fichas, 18 manuais, 6 usuários e 1 empresa. As tabelas têm menos de 1 MB no total, então espaço no banco não é problema. No Storage: 63 arquivos, 186 MB (2 vídeos somam 52,9 MB).
-A empresa é única: `empresa_id` não vem para o Control. Só 12 clientes para 61 equipamentos: a maioria das OS guarda o cliente apenas como texto, o que aumenta a revisão manual.
-
-## Recomendação
-
-**Um banco só e um app só, com o menu "Oficina" dentro do BRV Control, migrando por partes.** O Equipamentos segue em produção até cada parte ser validada.
-
-Motivos:
-- É o que dá ligação real entre OS, equipamento e cliente. Sincronizar dois bancos manteria dois logins, dois cadastros e dois pontos de falha.
-- O Equipamentos ainda é pequeno, então migrar agora é bem mais barato do que depois.
-- As bases técnicas já são as mesmas (React 19, Vite 8, Tailwind 4, Supabase, HostGator).
-- Libera uma das 2 vagas de projeto do plano gratuito. Se decidir pelo Pro, o custo estimado cai de ≈ US$ 35 para ≈ US$ 25/mês (conferir na tela de upgrade).
-
-**As telas serão reescritas, não copiadas.** O Equipamentos é JavaScript com tema escuro e consultas direto nos componentes; o Control é TypeScript com `services/`, tema claro e regras no banco. Aproveita-se a lógica e o ZPL, mas não o código das telas.
-
-## Como encaixa no BRV Control
-
-### Banco (só migrations novas, tabelas em inglês)
-Atenção ao nome: `equipments` no Control já significa **aparelho instalado no cliente**. Por isso, o módulo usa o prefixo `workshop_`.
-
-- **`workshop_orders`: uma tabela para equipamento e placa**, com `kind` (`equipamento` | `placa`). Os dois fluxos compartilham a maioria dos campos, fotos, histórico e etiquetas, e assim evitamos duplicar telas. Cada tipo tem suas colunas no Kanban.
-  - Numeração por sequência do banco. Hoje vem de uma contagem de registros, que pode repetir número ao excluir ou salvar ao mesmo tempo.
-  - `service_order_id` (OS de origem; vazio em entrada de balcão) e `return_service_order_id` (OS da devolução). Substituem os textos `os_field_control` e `os_devolucao`.
-  - `customer_id`, `equipment_id` (opcional, liga ao aparelho do cliente) e `parent_order_id` (placa que saiu de um equipamento na oficina).
-  - `pickup_employee_id` e `bench_employee_id`. Os nomes antigos em texto ficam guardados como histórico.
-  - `warranty_origin_id` (garantia aponta para o serviço original), reembolso e valores de peças e serviço.
-  - `legacy_table` e `legacy_id`, para a importação poder ser repetida sem duplicar.
-- **`workshop_order_events`**: histórico de auditoria; o autor vem do login, nunca do navegador.
-- **`attachments`**: nova coluna `workshop_order_id`, reaproveitando o que já existe.
-- **`customers`**: passa a indicar **instalador** ou cliente final.
-- **Fichas e manuais**: `fichas_tecnicas_split` e `documentos_fabricantes` vêm praticamente como estão, assim como as Edge Functions do Gemini.
-- **Realtime**: `workshop_orders`, consumida por `useRealtimeTable`.
-
-### Quem acessa o quê
-
-| Pessoa | Hoje no Equipamentos | No Control |
-|---|---|---|
-| Braulio | `admin` | `admin` |
-| Adriana | `diretoria` | `escritorio` + `financial_access` completo |
-| Jéssica | `atendimento` | `escritorio` + `financial_access` caixa (ainda sem login no Control) |
-| Pedro | `suporte_oficina` | `escritorio` + `financial_access` caixa (ainda sem login no Control) |
-| Gustavo | `tecnico_bancada` | **papel novo `oficina`** |
-| Técnicos de campo | não usam | `tecnico`: só registram a retirada pelo app |
-
-- O dashboard financeiro de placas passa a usar o `financial_access` de `docs/financeiro.md`. Esse campo precisa ser antecipado.
-- O papel `oficina` não conflita com a ressalva do financeiro, porque o Gustavo não acumula outra função no sistema. Ele vê só a Oficina; telefone de cliente segue mascarado, e `customers` não fica aberta a ele (mesmo cuidado do app de campo).
-- Em `employees`, criar `role = 'bancada'`. Se ele for `tecnico`, aparece na linha do tempo e nos relatórios de técnicos de campo.
-
-### Telas e caminho do serviço
-
-Menu **Oficina**: Equipamentos (Kanban), Placas (Kanban), Finalizados, Fichas técnicas e Códigos de erro. Dashboard financeiro de placas em Relatórios.
-
-1. **Retirada:** no app de campo, o técnico toca em "Recolher equipamento" e registra unidade, defeito e fotos. Isso cria a entrada na Oficina ligada à OS, sem redigitar nada.
-2. **Na OS:** um bloco mostra "Na oficina: Em reparo" com link. O cadastro do cliente passa a listar também os serviços de oficina.
-3. **Oficina:** diagnóstico, aprovação pelo WhatsApp, peças, reparo, etiqueta. Balcão e instaladores entram direto, sem OS.
-4. **Devolução:** quando fica pronto, o escritório cria a OS de devolução já preenchida e ligada. Combina com a regra de **uma atividade por OS**: retirada e devolução são duas OS, como o Equipamentos já registra hoje.
-5. **Cobrança:** valores ficam registrados na OS da oficina e se ligam ao financeiro quando ele existir.
-
-## Fases
-
-| Fase | O que entra | Resultado | Porte |
-|---|---|---|---|
-| **0. Preparação** | Segurança abaixo, consultas do Anexo, decisões pendentes | Dados reais conhecidos | Pequeno |
-| **1. Base** | Migrations, papel `oficina`, `financial_access`, logins, instalador em `customers` | Estrutura pronta, nada visível | Médio |
-| **2. Equipamentos** | Kanban, entrada, detalhes, fotos, etiqueta, recibo. Importação + conferência | Equipe usa só o Control para equipamentos | Grande |
-| **3. Campo** | Retirada pelo app, bloco na OS, OS de devolução. Atualiza o `consultar-os` | É o ganho principal: o caminho completo | Médio |
-| **4. Placas** | Kanban, orçamento, comprovante, garantia, reembolso, dashboard, galeria, voz | Laboratório só no Control | Grande |
-| **5. Apoio técnico** | Fichas, manuais, erros, assistente | Nada mais depende do sistema antigo | Médio |
-| **6. Desligamento** | Backup final, redirecionar `oficina.brvniteroi.com.br`, aposentar proxy, pausar o projeto antigo | Um sistema só | Pequeno |
-
-Cada módulo muda de sistema de uma vez: o histórico é importado e o Kanban antigo vira somente leitura. Assim, os dois nunca recebem lançamentos do mesmo módulo ao mesmo tempo.
-O APK, se publicado até a fase 3, não precisa de versão nova para a retirada, porque o app abre o site. Só exigiria APK novo se a câmera ou outro recurso nativo mudar.
-
-### Importação
-Mesmo método do Field: script com `--simular`, que grava com a service_role do `.env` local e pode ser repetido (`legacy_id`). Sempre com backup antes e nunca sobre dados já em uso no módulo novo.
-
-- **Clientes:** casar por CPF/CNPJ, depois telefone, depois nome sem acento. Casos duvidosos viram **lista para revisão manual**, nunca união automática, porque o nome hoje é o único elo.
-- **OS:** `os_field_control` numérico → `service_orders.number`. Códigos `BALCAO-` ficam sem OS, guardados como referência.
-- **Status:** o banco aceita valores antigos em dois formatos (`Em Reparo` e `em_conserto`); converter para uma lista única.
-- **Fotos das placas:** estão em três lugares (coluna `fotos`, JSON no histórico e pasta do Storage). Juntar sem duplicar.
-- **Arquivos:** copiar do bucket `midias` para a HostGator e registrar em `attachments`. O `upload.php` hoje só aceita imagens de até 5 MB, e o Equipamentos aceita vídeos de até 50 MB; ver decisão 6. A média das JPEG é de 2,3 MB, mas algumas podem passar do limite: reduzir na importação.
-- **Mídias em dois lugares:** há registros com caminho relativo (`uploads/...`, do sistema antigo em `oficina.brvniteroi.com.br`) e com URL do Storage. Os arquivos antigos só saem de lá depois de copiados.
-- **Fotos sem registro:** arquivos no Storage sem linha em `midias` (ver defeito 5 abaixo) precisam ser localizados pela pasta do equipamento e registrados.
-- **Links antigos:** QR das etiquetas já coladas nas máquinas, galerias enviadas por WhatsApp. Exigem redirecionamento do domínio antigo (conferir formato do QR na fase 2).
-
-## O que não trazer junto
-
-- Número de OS por contagem de registros (usar sequência do banco).
-- Fotos guardadas em `localStorage` como cópia de segurança, e `localStorage.clear()` em qualquer erro do Kanban.
-- Sincronização que grava no banco só por abrir uma OS, e cliente casado pelo nome.
-- Regras só no navegador: o que importa fica em RLS e triggers, como no Control.
-- Admin por nome (`nome LIKE '%braulio%'`).
-- Kanban carregando toda a tabela, inclusive finalizados.
-- Chave fixa no código para impressão (`BRV9100`) e `Access-Control-Allow-Origin: *` no bridge.
-- Galeria pública pelo id da OS: usar token, como `rating_token` nas avaliações.
-- Arquivos soltos, como `ModalOrcamentoPlaca - Cópia.jsx`.
+Volume (2026-11-05): 61 equipamentos, 129 mídias, 266 movimentações, 12 clientes, 78 OS de placa, 584 históricos de placa,
+49 clientes de placa, 131 fichas, 18 manuais, 6 usuários. Tabelas < 1 MB; Storage 63 arquivos, 186 MB (2 vídeos somam 52,9 MB).
 
 ## Segurança do sistema atual (independe da unificação)
 
-Conferido no banco real em 2026-11-05. Situação: o usuário rodou a 1ª correção (itens 1 a 3 e a exclusão do item 4) no mesmo dia. A conferência confirmou que `anon` tinha privilégio em todas as tabelas, então os itens 1 e 2 eram exposição real até essa correção. Ela também mostrou `documentos_fabricantes` e `fichas_tecnicas_split` com RLS desligado; a 2ª correção ligou o RLS nas duas, e a conferência final mostrou RLS em todas as 12 tabelas, com regras sem login só em `clientes` (exige `auth.uid()`) e na leitura de `documentos_fabricantes`. Falta o usuário confirmar os testes de uso. O item 5 foi corrigido no commit `119d428` do Equipamentos (falta confirmar com uma OS de teste) e as 6 fotos que tinham ficado sem registro foram recuperadas em `midias` no mesmo dia. A checagem de `ativo` e os itens 6 e 7 seguem abertos. Os itens abaixo descrevem o estado encontrado.
+Conferido no banco real em 2026-11-05. O usuário rodou a 1ª correção (itens 1 a 3 e a exclusão do item 4) no mesmo dia; `anon` tinha
+privilégio em todas as tabelas, então os itens 1 e 2 eram exposição real até ali. A 2ª correção ligou o RLS em `documentos_fabricantes`
+e `fichas_tecnicas_split`; a conferência final mostrou RLS nas 12 tabelas. Falta o usuário confirmar os testes de uso. O item 5 foi
+corrigido no commit `119d428` do Equipamentos (falta confirmar com uma OS de teste) e as 6 fotos sem registro foram recuperadas. A
+checagem de `ativo` e os itens 6 e 7 seguem abertos. Os itens descrevem o estado encontrado.
 
-1. **Fotos abertas (confirmado na política).** `storage.objects` permite envio, alteração e exclusão no bucket `midias` para `public`, sem login. A chave pública necessária está no site.
-2. **Equipamentos, histórico e mídias abertos (política confirmada).** `Acesso Publico Temporario` dá acesso total a `public` nessas tabelas, com nome, telefone e endereço de clientes. Falta confirmar se o `anon` também tem privilégio na tabela (`supabase_auth.sql` mandava revogar).
-3. **Autopromoção a admin (confirmado na política).** `Acesso perfis autenticados` deixa qualquer usuário logado alterar qualquer perfil, inclusive o próprio nível.
-4. **Qualquer logado exclui OS de placa (confirmado na política).** `Permitir delecao...` anula a regra "só admin". Nenhuma política checa `ativo`: bloquear um usuário não impede o acesso direto ao banco.
-5. **Defeito: fotos da entrada não registradas (confirmado no código e nas colunas; efeito não testado).** `NovaOS.jsx` envia `observacao` para `midias`, coluna que não existe. O arquivo sobe, o registro falha sem aviso, e a foto só aparece no navegador que a enviou (cópia em `localStorage`).
-6. **Chave do Field no Git.** `frontend/.env_old` está versionado com `FC_API_KEY`. O repositório não é público, mas a chave está no histórico. Revogar no Field se possível e remover o arquivo.
-7. **Admin pelo nome.** `is_admin()` aceita qualquer perfil com "braulio" no nome. O risco cai quando o item 3 for corrigido.
+1. **Fotos abertas.** `storage.objects` permitia envio, alteração e exclusão no bucket `midias` para `public`, sem login.
+2. **Equipamentos, histórico e mídias abertos.** `Acesso Publico Temporario` dava acesso total a `public`.
+3. **Autopromoção a admin.** `Acesso perfis autenticados` deixava qualquer logado alterar qualquer perfil.
+4. **Qualquer logado exclui OS de placa.** Nenhuma política checa `ativo`: bloquear um usuário não impede o acesso direto ao banco.
+5. **Fotos da entrada não registradas.** `NovaOS.jsx` enviava `observacao` para `midias`, coluna inexistente.
+6. **Chave do Field no Git.** `frontend/.env_old` versionado com `FC_API_KEY`. Revogar no Field e remover o arquivo.
+7. **Admin pelo nome.** `is_admin()` aceita qualquer perfil com "braulio" no nome.
 
-Ao corrigir o item 2, a consulta de reserva do `zpl_bridge.php` em `equipamentos` deixa de funcionar, porque usa a chave pública. O botão de impressão não depende dela, pois grava a etiqueta antes (cópia válida por 4 horas). A de `reparos_os` já não funciona hoje.
-
-## Decisões pendentes (do usuário)
-
-1. **Retirada pelo celular:** o técnico registra pelo app de campo, como proposto, ou continua registrando só na chegada à loja? *Recomendo pelo app.*
-2. **Placa e equipamento:** uma placa recebida de fora e uma que saiu de uma máquina da oficina seguem o mesmo fluxo? *Recomendo que sim, e uma tabela só.*
-3. **OS de devolução:** quando ficar pronto, o sistema cria a OS já preenchida ao clicar, ou o escritório abre manualmente? *Recomendo um botão só para este caso.*
-4. **Gustavo:** só usa a Oficina, ou também vai a campo? Se for a campo, muda a proposta do papel `oficina`.
-5. **Ordem frente ao resto:** fica antes ou depois do financeiro, do APK e da avaliação pelo WhatsApp? *Recomendo terminar o APK, porque já está quase pronto, e fazer as fases 0 a 3 antes do financeiro: elas geram os valores que o financeiro receberá.*
-6. **Vídeos:** ampliar o `upload.php` para aceitar vídeo (confirmar espaço na HostGator) ou deixar de aceitar vídeos novos? Só há 2 vídeos no Storage em toda a história do sistema. *Recomendo limitar a fotos, se a oficina não sentir falta.*
-7. **Problemas atuais:** o que mais incomoda hoje na oficina? É o que deve entrar como melhoria, em vez de só copiar.
+Ao corrigir o item 2, a consulta de reserva do `zpl_bridge.php` em `equipamentos` deixa de funcionar (usa a chave pública); o botão de
+impressão não depende dela, pois grava a etiqueta antes (cópia por 4 horas).
 
 ## Anexo: consultas no Supabase do BRV Equipamentos
 
-Colar no SQL Editor do projeto **`tnsmwpewdkdigwjyaufr`** e guardar os resultados. Todas só leem dados e não mostram informações de clientes.
+Colar no SQL Editor do projeto **`tnsmwpewdkdigwjyaufr`**. Todas só leem dados e não mostram informações de clientes.
 
 ```sql
 -- 1. Quantidade de registros

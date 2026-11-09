@@ -9,6 +9,7 @@ export const CATEGORIAS_CARGO: { valor: EmployeeRole; rotulo: string; explicacao
   { valor: 'auxiliar', rotulo: 'Auxiliar', explicacao: 'Ajudante; não recebe atividades próprias' },
   { valor: 'supervisor', rotulo: 'Supervisão', explicacao: 'Coordena a equipe' },
   { valor: 'administrativo', rotulo: 'Administrativo', explicacao: 'Escritório, financeiro, atendimento' },
+  { valor: 'oficina', rotulo: 'Atende na oficina', explicacao: 'Bancada na loja; não aparece na linha do tempo nem nos relatórios de técnicos' },
 ];
 
 export const rotuloCategoria = (c: EmployeeRole) => CATEGORIAS_CARGO.find((x) => x.valor === c)?.rotulo ?? c;

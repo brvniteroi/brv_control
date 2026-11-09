@@ -67,6 +67,8 @@ export interface DestinoAnexo {
   serviceOrderId?: string;
   taskId?: string;
   equipmentId?: string;
+  /** Item da oficina (sozinho: a foto não aparece na galeria da OS) */
+  workshopOrderId?: string;
   category?: AttachmentCategory;
   caption?: string;
 }
@@ -98,6 +100,7 @@ export async function registrarAnexo(enviado: UploadResult, destino: DestinoAnex
       service_order_id: destino.serviceOrderId ?? null,
       task_id: destino.taskId ?? null,
       equipment_id: destino.equipmentId ?? null,
+      ...(destino.workshopOrderId ? { workshop_order_id: destino.workshopOrderId } : {}),
       category: destino.category ?? 'outros',
       caption: destino.caption ?? null,
     })

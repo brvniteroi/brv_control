@@ -12,6 +12,7 @@ import {
   FileBarChart,
   FileText,
   FolderOpen,
+  Hammer,
   Layers,
   LayoutDashboard,
   ListChecks,
@@ -34,6 +35,8 @@ interface ItemMenu {
   rotulo: string;
   icone: LucideIcon;
   apenasEscritorio?: boolean;
+  /** Visível também para o papel 'oficina' (que só vê estes itens) */
+  oficina?: boolean;
 }
 
 interface GrupoMenu {
@@ -60,6 +63,7 @@ const MENU: EntradaMenu[] = [
       // { rota: '/pmoc', rotulo: 'PMOC', icone: FileCheck2, apenasEscritorio: true },
     ],
   },
+  { rota: '/oficina', rotulo: 'Oficina', icone: Hammer, oficina: true },
   {
     rotulo: 'Cadastros',
     icone: FolderOpen,
@@ -102,7 +106,9 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
   const { pathname } = useLocation();
   const [gruposAbertos, setGruposAbertos] = useState<Record<string, boolean>>({});
   const podeGerenciarFormularios = profile?.role === 'admin' || profile?.role === 'escritorio';
-  const visivel = (item: ItemMenu) => !item.apenasEscritorio || podeGerenciarFormularios;
+  const ehBancada = profile?.role === 'oficina';
+  const visivel = (item: ItemMenu) =>
+    ehBancada ? !!item.oficina : !item.apenasEscritorio || podeGerenciarFormularios;
 
   return (
     <>

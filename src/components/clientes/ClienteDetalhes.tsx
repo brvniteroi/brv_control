@@ -27,6 +27,7 @@ import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
 import OrdemDetalhes from '../ordens/OrdemDetalhes';
 import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
+import { ItensOficinaCliente } from '../oficina/NaOficinaOS';
 import MapaEnderecos from './MapaEnderecos';
 import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import { formatarTelefone } from '../../utils/telefone';
@@ -940,6 +941,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
         <>
           {/* key: OS aberta daqui e salva/fechada -> recarrega as listas */}
           <AtendimentosCliente key={`os-${versaoAtendimentos}`} clienteId={clienteId} onAbrirOrdem={setOrdemAberta} />
+          <ItensOficinaCliente key={`of-${versaoAtendimentos}`} clienteId={clienteId} />
           {clienteId !== 'novo' && (
             <AvaliacoesCliente key={`av-${versaoAtendimentos}`} clienteId={clienteId} onAbrirOrdem={setOrdemAberta} />
           )}

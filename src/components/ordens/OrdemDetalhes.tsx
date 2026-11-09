@@ -31,6 +31,7 @@ import HistoricoAtendimentosOS from './HistoricoAtendimentosOS';
 import AvaliacaoOS from '../avaliacoes/AvaliacaoOS';
 import SeletorCliente from './SeletorCliente';
 import FormulariosDaOrdem from '../formularios/FormulariosDaOrdem';
+import NaOficinaOS from '../oficina/NaOficinaOS';
 import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 
 interface OrdemDetalhesProps {
@@ -446,6 +447,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
         ) : (
           ordem && (
             <>
+              {podeAbrirCliente && <NaOficinaOS ordemId={ordem.id} onAlterado={recarregar} />}
               <AtividadesOS
                 ordemId={ordem.id}
                 clienteId={ordem.customer_id}

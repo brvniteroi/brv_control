@@ -185,7 +185,13 @@ Pendente, nesta ordem:
 3. Plataforma completa para substituir o SicWeb, em fases: catálogo de produtos/serviços (importar do CSV do SicWeb,
    com limpeza) → orçamentos com aprovação do cliente → vendas e financeiro (PIX/boleto) → NF-e/NFS-e via API → estoque.
    Empresa no Simples Nacional (CSOSN 102). Análise do CSV e decisões na memória do projeto.
-   **Módulo Oficina** (trazer o BRV Equipamentos para o Control): em estudo desde 2026-11-05, plano, riscos e decisões pendentes em `docs/oficina.md`. Ler antes de começar; nada implementado.
+   **Módulo Oficina** (trazer o BRV Equipamentos para o Control): plano do módulo Equipamentos aprovado em 2026-11-08 (placas depois;
+   orçamento continua no SicWeb; Gustavo com papel `oficina`; Elgin por fila de impressão + agente no servidor da loja; descarte só com
+   autorização do cliente registrada na OS; item usa o número da OS do Control). **Fase 1 e telas feitas em 2026-11-08**: migration
+   `20261108130000_oficina_base.sql` (aplicada em 2026-11-08), `services/oficina.ts`, `utils/etiquetaOficina.ts`, telas do Gemini em
+   `components/oficina/` (auditadas; resumo em `docs/gemini/oficina.md`), ajuda F1 (telas `oficina` e `item-oficina`), agente da Elgin em
+   `scripts/agente-impressora/` (ainda não instalado no servidor). Fases 2 e 3, pendências e o uso em paralelo
+   com o Equipamentos em `docs/oficina.md`. Ler antes de continuar.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.
 

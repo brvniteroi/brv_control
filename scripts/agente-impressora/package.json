@@ -1,0 +1,17 @@
+{
+  "name": "brv-agente-impressora",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente da fila de impressão do BRV Control: pega as etiquetas da fila e envia para a Elgin L42PRO",
+  "type": "module",
+  "scripts": {
+    "start": "node agente.mjs",
+    "teste": "node agente.mjs --teste-local"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

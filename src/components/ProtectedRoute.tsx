@@ -91,6 +91,23 @@ export default function ProtectedRoute() {
   // Cliente final não usa o sistema da equipe: vai para o portal
   if (profile?.role === 'cliente') return <Navigate to="/portal" replace />;
 
+  // Login do agente da impressora não usa telas
+  if (profile?.role === 'impressora') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-sm text-slate-600">Este login é do agente da impressora da loja e não usa as telas do sistema.</p>
+        <button type="button" onClick={() => signOut()} className="rounded-lg border border-slate-200 px-4 py-2 text-sm">
+          Sair da conta
+        </button>
+      </div>
+    );
+  }
+
+  // Técnico de bancada usa só a Oficina
+  if (profile?.role === 'oficina' && !location.pathname.startsWith('/oficina')) {
+    return <Navigate to="/oficina" replace />;
+  }
+
   // Técnico usa só o app de campo
   if (profile?.role === 'tecnico' && !location.pathname.startsWith('/campo')) {
     return <Navigate to="/campo" replace />;

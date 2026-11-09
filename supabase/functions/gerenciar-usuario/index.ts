@@ -7,7 +7,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const ORIGENS = ['https://control.brvniteroi.com.br', 'http://localhost:5173'];
-const PAPEIS = ['admin', 'escritorio', 'tecnico'];
+const PAPEIS = ['admin', 'escritorio', 'tecnico', 'oficina'];
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 Deno.serve(async (req) => {

@@ -11,6 +11,7 @@ import Mapa from './pages/Mapa';
 import Equipe from './pages/Equipe';
 import OrdensServico from './pages/OrdensServico';
 import Estoque from './pages/Estoque';
+import Oficina from './pages/Oficina';
 import Equipamentos from './pages/Equipamentos';
 import Formularios from './pages/Formularios';
 import TiposServico from './pages/TiposServico';
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="pmoc/novo" element={<PmocEditorPage />} />
             <Route path="pmoc/:id" element={<PmocEditorPage />} />
             <Route path="estoque" element={<Estoque />} />
+            <Route path="oficina" element={<Oficina />} />
             <Route path="equipamentos" element={<Equipamentos />} />
             <Route path="formularios" element={<Formularios />} />
             <Route path="tipos-de-servico" element={<TiposServico />} />

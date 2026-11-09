@@ -24,7 +24,9 @@ export type TelaAjuda =
   | 'equipamentos'
   | 'cadastros'
   | 'relatorios'
-  | 'equipe';
+  | 'equipe'
+  | 'oficina'
+  | 'item-oficina';
 
 export interface Topico {
   id: string;
@@ -47,6 +49,7 @@ export const SECOES = [
   'Ordens de serviço',
   'Agenda dos técnicos',
   'Avaliação do cliente',
+  'Oficina',
   'Cadastros',
   'Relatórios',
   'Equipe e acessos',
@@ -68,6 +71,8 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   cadastros: 'Cadastros',
   relatorios: 'Relatórios',
   equipe: 'Equipe',
+  oficina: 'Oficina',
+  'item-oficina': 'Item na oficina',
 };
 
 export const TOPICOS: Topico[] = [
@@ -97,6 +102,7 @@ O menu fica à esquerda. No celular, toque no ícone ☰ no alto para abrir.
 - **Dashboard**: resumo do dia, com OS em aberto, atividades de hoje e o que precisa de atenção.
 - **Serviços**: **Linha do Tempo**, **Calendário**, **Mapa** e **Ordens de Serviço**.
 - **Cadastros**: **Clientes**, **Equipamentos**, **Tipos de Serviço**, **Etiquetas**, **Cargos** e **Modelos de Formulários**.
+- **Oficina**: equipamentos recolhidos para conserto na loja, da entrada à devolução.
 - **Relatórios**: atividades por técnico, gráficos, tipos de serviço e Garantia BRV.
 - **Equipe**: funcionários e, para o administrador, os usuários do sistema.
 Clique no nome de um grupo (Serviços, Cadastros, Relatórios) para abrir ou fechar a lista.
@@ -581,6 +587,169 @@ Os modelos definem os formulários que o técnico preenche no celular (orçament
 `,
   },
 
+  // ───────────── Oficina ─────────────
+  {
+    id: 'oficina-como-funciona',
+    titulo: 'Como funciona a Oficina',
+    secao: 'Oficina',
+    telas: ['oficina', 'item-oficina'],
+    palavras: 'oficina bancada kanban conserto recolhido evaporadora condensadora janela acj etapas',
+    texto: `
+A **Oficina** acompanha o equipamento (ou parte dele) que a equipe trouxe do cliente para consertar na loja.
+O item usa o **número da OS** em que foi recolhido: "OS 17300". Se saiu mais de uma peça da mesma OS: "OS 17300 · item 2".
+## As etapas (aba Em andamento)
+1. **Em trânsito**: o técnico recolheu e ainda está trazendo.
+2. **Entrada**: chegou na loja. Imprima a etiqueta.
+3. **Diagnóstico**: a bancada analisa e registra o que precisa ser feito.
+4. **Aguardando orçamento**: o atendimento monta o orçamento no **SicWeb**.
+5. **Aguardando cliente**: orçamento enviado, esperando a resposta.
+6. **Aguardando peça** / **Em reparo**: aprovado; conserto em andamento.
+7. **Pronto**: pronto para voltar ao cliente (consertado ou recusado sem conserto).
+Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados**.
+- Arraste o cartão para outra coluna ou abra o item e use **Mover etapa**. No celular, use **Mover para...** no cartão.
+- A coluna fica apagada quando o item não pode ir para ela, e o motivo aparece (ex.: "Falta registrar a aprovação do cliente").
+- **Garantia**: retorno de serviço anterior. Não passa por orçamento.
+- Cartão com os dias em **vermelho**: está há 15 dias ou mais na loja.
+> Tudo o que muda fica no **Histórico** do item: quem fez, quando e o que estava antes. Ninguém apaga o histórico.
+`,
+    veja: ['oficina-nova-entrada', 'oficina-orcamento', 'oficina-devolucao'],
+  },
+  {
+    id: 'oficina-nova-entrada',
+    titulo: 'Registrar a entrada de um equipamento',
+    secao: 'Oficina',
+    telas: ['oficina'],
+    palavras: 'entrada receber chegou recolher balcao cliente trouxe nova',
+    texto: `
+1. Em **Oficina**, clique em **Nova entrada**.
+2. Escolha a origem:
+- **Da OS**: o equipamento saiu de uma visita. Digite o **Número da OS** e clique em **Buscar OS**. Cliente, técnico e relato vêm sozinhos.
+- **Balcão (sem visita)**: o cliente trouxe na loja. Escolha o **Cliente** e o **Endereço do cliente**. O sistema cria a OS junto.
+3. Preencha **Tipo de equipamento**, **O que veio** (evaporadora, condensadora, as duas, aparelho inteiro), marca, modelo, tensão, **Acessórios** (controle, suporte...) e o **Defeito relatado**.
+4. Em **Conferência na chegada**, anote o estado em que chegou (amassado, sem tampa...).
+5. Deixe **Já chegou na loja** marcado se o equipamento está aqui. Desmarcado, ele fica **Em trânsito**.
+6. Marque **Retorno em garantia** se for o caso.
+7. Clique em **Salvar entrada**. O item abre com a etiqueta pronta para imprimir.
+- Item **Em trânsito** que chegou: abra e clique em **Receber na loja (Entrada)**, ou arraste para **Entrada**.
+! Balcão só para o escritório. A bancada registra apenas pela OS.
+`,
+    veja: ['oficina-etiqueta'],
+  },
+  {
+    id: 'oficina-etiqueta',
+    titulo: 'Imprimir a etiqueta na Elgin',
+    secao: 'Oficina',
+    telas: ['oficina', 'item-oficina'],
+    palavras: 'etiqueta impressora elgin imprimir zpl qr code segunda via termica',
+    texto: `
+1. Abra o item e clique em **Etiqueta**.
+2. Confira a pré-visualização. Escolha a **Largura da etiqueta** (**100 mm (padrão)** ou **80 mm**) e as **Cópias**.
+3. Clique em **Imprimir na Elgin**. A situação aparece na tela: "Na fila..." → "Imprimindo..." → "Impressa".
+- Dá para imprimir de qualquer lugar, até do celular fora da loja: o pedido vai para o servidor da loja, que imprime.
+- O **QR** da etiqueta abre o item no sistema (pede login).
+- No alto da tela Oficina: **Elgin pronta** (bolinha verde) ou **Servidor da loja sem sinal** (cinza).
+- Sem sinal, use **Imprimir pelo navegador**. No Chrome, em **Margens** escolha **Nenhuma**.
+- Pedido que fica mais de 30 minutos na fila (servidor desligado) não sai mais: peça de novo.
+- **Histórico de impressões deste item**: quem pediu e quando. **Cancelar** tira da fila um pedido que ainda não saiu.
+> Para conferir a impressora sem um item: botão **...** no alto da tela Oficina > **Imprimir etiqueta de teste**.
+`,
+    veja: ['oficina-elgin-sem-sinal'],
+  },
+  {
+    id: 'oficina-bancada',
+    titulo: 'Diagnóstico, conserto, fotos e anotações',
+    secao: 'Oficina',
+    telas: ['item-oficina', 'oficina'],
+    palavras: 'diagnostico bancada peca conserto reparo foto anotacao historico gustavo',
+    texto: `
+Abra o item clicando no cartão.
+- **Equipamento**: corrija os dados do aparelho e clique em **Salvar equipamento**.
+- **Bancada**: **Técnico de bancada**, **Situação das peças**, **Diagnóstico**, **Peças necessárias** e **Serviço executado**. Clique em **Salvar bancada**.
+- **Fotos**: clique em **Adicionar fotos** (pode escolher várias). A **Categoria das próximas fotos** já vem sugerida pela etapa (antes na chegada, depois no conserto).
+- **Histórico**: escreva em **Anotar no histórico** e clique em **Salvar anotação**. Em uma alteração, **Ver antes e depois** mostra o valor antigo.
+- Diagnóstico pronto: mova para **Aguardando orçamento**. O atendimento é avisado pelo quadro.
+> A bancada não mexe em orçamento, resposta do cliente, descarte, devolução nem cancelamento. Isso é do escritório.
+`,
+  },
+  {
+    id: 'oficina-orcamento',
+    titulo: 'Orçamento e resposta do cliente',
+    secao: 'Oficina',
+    telas: ['item-oficina', 'oficina'],
+    palavras: 'orcamento sicweb valor aprovado recusado aprovar cliente respondeu whatsapp',
+    texto: `
+O orçamento é feito no **SicWeb**. No sistema fica só a referência e a resposta do cliente.
+1. Abra o item e, em **Orçamento e cliente**, clique em **Registrar orçamento**.
+2. Preencha o **Nº do orçamento no SicWeb** e o **Valor do orçamento (R$)**. Com **Já enviado ao cliente** marcado, o item vai para **Aguardando cliente**.
+3. **Avisar pelo WhatsApp** abre a conversa com o cliente já com o texto do orçamento.
+4. Quando o cliente responder, clique em **Registrar resposta do cliente**:
+- **Aprovado**: marque **Falta peça?** se precisar comprar. O item vai para **Aguardando peça** ou **Em reparo**.
+- **Recusado**: o item vai para **Pronto**, para devolver sem conserto.
+5. Escolha o **Canal da resposta** (WhatsApp, telefone, pessoalmente, e-mail), escreva uma observação se quiser e clique em **Salvar resposta**.
+- Fica registrado quem anotou a resposta e quando.
+`,
+    veja: ['oficina-descarte'],
+  },
+  {
+    id: 'oficina-descarte',
+    titulo: 'Cliente autorizou o descarte',
+    secao: 'Oficina',
+    telas: ['item-oficina'],
+    palavras: 'descarte descartar jogar fora sucata recusou autorizou',
+    texto: `
+Quando o cliente não quer o conserto e **autoriza** a BRV a descartar o equipamento:
+1. Abra o item e clique em **Cliente autorizou o descarte**.
+2. Escolha o **Canal da autorização** e escreva em **Quem autorizou e como** (ex.: "O próprio cliente, João, por WhatsApp às 14h").
+3. Se tiver, anexe o print da conversa em **Anexar print da conversa**.
+4. Clique em **Confirmar descarte**.
+! Não pode ser desfeito. A autorização fica registrada no item, no histórico e como comentário na **OS de origem**.
+- Sem autorização do cliente, não descarte: registre a recusa e devolva (o item vai para **Pronto**).
+`,
+  },
+  {
+    id: 'oficina-devolucao',
+    titulo: 'Devolver ao cliente (OS de devolução)',
+    secao: 'Oficina',
+    telas: ['item-oficina', 'oficina', 'os'],
+    palavras: 'devolver devolucao entregar instalar levar buscou loja entregue',
+    texto: `
+Com o item em **Pronto**, abra-o e veja a parte **Devolução**:
+- **Criar OS de devolução**: a equipe leva e instala. Escolha o **Tipo de serviço**, marque outros itens prontos da mesma OS para irem juntos e clique em **Criar OS de devolução**. A OS nasce sem atividade: **agende a visita pela Linha do Tempo**.
+- Quando a atividade da OS de devolução for **concluída**, o item passa para **Entregue** sozinho.
+- **Cliente buscou na loja**: marca como **Entregue** na hora, sem OS de devolução.
+- Na OS, o bloco **Na oficina** mostra os itens recolhidos nela (ou "Devolução de: OS X · item Y"). Clique em **Ver na oficina** para abrir.
+- No cadastro do cliente, aba **Atendimento**, o bloco **Oficina** lista tudo o que já passou pela loja.
+`,
+    veja: ['agendar'],
+  },
+  {
+    id: 'oficina-cancelar',
+    titulo: 'Entrada errada: cancelar ou reabrir',
+    secao: 'Oficina',
+    telas: ['item-oficina'],
+    palavras: 'cancelar errado engano reabrir desfazer finalizado',
+    texto: `
+- **Cancelar entrada** (escritório): para registro feito por engano. Informe o **Motivo do cancelamento** e clique em **Confirmar cancelamento**.
+- **Reabrir** (só administrador): item entregue, descartado ou cancelado volta para **Pronto**.
+- Item finalizado fica só para consulta, mas a **Etiqueta** continua disponível para segunda via.
+- Etapa errada: mova de volta. O histórico guarda as duas mudanças.
+`,
+  },
+  {
+    id: 'oficina-elgin-sem-sinal',
+    titulo: 'A etiqueta não saiu na Elgin',
+    secao: 'Dúvidas comuns',
+    telas: ['oficina', 'item-oficina', 'geral'],
+    palavras: 'etiqueta nao imprimiu impressora elgin servidor sem sinal travou papel',
+    texto: `
+- **Servidor da loja sem sinal**: o computador servidor da loja está desligado ou sem internet. Ligue e espere 1 minuto. Enquanto isso, use **Imprimir pelo navegador**.
+- **Não imprimiu: <motivo>**: leia o motivo. Os mais comuns: Elgin desligada, sem etiqueta ou com a tampa aberta. Resolva e clique em **Tentar de novo**.
+- **O servidor da loja não respondeu**: o pedido ficou na fila. Confira o servidor e peça de novo.
+- Etiqueta saiu cortada ou torta: confira o rolo (100 x 50 mm) e teste a largura **80 mm**.
+> Para testar sem um item: botão **...** no alto da tela Oficina > **Imprimir etiqueta de teste**.
+`,
+  },
+
   // ───────────── Relatórios ─────────────
   {
     id: 'relatorios',
@@ -647,6 +816,7 @@ Só o **administrador** vê e preenche estes dados. O escritório e o técnico n
 2. Clique em **Novo cargo** e dê o nome (ex.: "Mecânico de Refrigeração", "Ajudante", "Eletricista").
 3. Escolha a **Categoria**:
 - **Atende em campo**: aparece na linha do tempo, na agenda e nos relatórios de técnicos.
+- **Atende na oficina**: trabalha na bancada da loja. Não aparece na linha do tempo nem nos relatórios de técnicos.
 - **Auxiliar**, **Supervisão** ou **Administrativo**: não recebe atividades próprias.
 4. Clique em **Salvar**. O cargo passa a aparecer no cadastro do funcionário.
 - Mudar a categoria de um cargo muda todos os funcionários dele.
@@ -669,6 +839,7 @@ Papéis:
 - **Administrador**: tudo, inclusive excluir.
 - **Escritório**: clientes, OS, agenda e relatórios.
 - **Técnico**: só o app de campo, com as próprias atividades.
+- **Oficina**: só a tela **Oficina** (bancada). Não vê clientes, OS nem telefones.
 - **Bloquear**: abra o usuário e desmarque **Ativo**.
 - **Esqueceu a senha**: abra o usuário e clique em **Redefinir senha**.
 `,

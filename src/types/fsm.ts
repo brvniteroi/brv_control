@@ -1,7 +1,8 @@
 // Tipos do banco. Espelham supabase/migrations: ao mudar uma coluna lá,
 // atualize aqui (ou gere com `supabase gen types typescript`).
 
-export type ProfileRole = 'admin' | 'escritorio' | 'tecnico' | 'cliente';
+/** 'oficina' = técnico de bancada (só o menu Oficina); 'impressora' = agente da Elgin no servidor da loja (sem telas). */
+export type ProfileRole = 'admin' | 'escritorio' | 'tecnico' | 'cliente' | 'oficina' | 'impressora';
 
 export interface Profile {
   id: string;
@@ -71,7 +72,7 @@ export interface CustomerAddress {
   updated_at: string;
 }
 
-export type EmployeeRole = 'tecnico' | 'auxiliar' | 'supervisor' | 'administrativo';
+export type EmployeeRole = 'tecnico' | 'auxiliar' | 'supervisor' | 'administrativo' | 'oficina';
 
 export interface Employee {
   id: string;
@@ -230,6 +231,10 @@ export interface Attachment {
   service_order_id: string | null;
   task_id: string | null;
   equipment_id: string | null;
+  /** Item da oficina (fotos da bancada não aparecem na galeria da OS) */
+  workshop_order_id?: string | null;
+  /** Etapa do item da oficina quando a foto foi tirada (preenchida pelo banco) */
+  workshop_status?: string | null;
   /** 'fieldcontrol' = arquivo ainda no S3 do Field Control (importado), sem mime/tamanho */
   storage: 'hostgator' | 'supabase' | 'fieldcontrol';
   storage_path: string;

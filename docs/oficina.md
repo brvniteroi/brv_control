@@ -149,6 +149,15 @@ Menu **Oficina**: Equipamentos (Kanban, só os em aberto; finalizados em lista p
 - `gerenciar-usuario` aceita o papel `oficina`: **republicar** a Edge Function antes de criar o login do Gustavo.
 - Visual das telas: briefing `docs/gemini/oficina-briefing.md`; o Gemini grava o resumo em `docs/gemini/oficina.md` e o Claude audita.
 
+### Fase 3 (2026-11-09): "Recolher equipamento" no app de campo
+- `components/campo/RecolherEquipamento.tsx`, cartão "Levar para a oficina" em `CampoAtividade.tsx`: com a atividade a caminho, em
+  execução ou concluída, o técnico registra o que levou (tela cheia, botões grandes; toque num equipamento da OS preenche tipo/marca/modelo),
+  defeito, acessórios, observações (vazio = observações da atividade) e fotos. Chama `oficina_recolher` → item "Em trânsito" ligado à OS,
+  à atividade e ao técnico; as fotos sobem depois (falha de foto não desfaz o registro). Lista os itens já recolhidos na atividade e a etapa
+  na oficina (`itensDaAtividade`).
+- Precisa de internet (como os formulários): sem fila offline nesta primeira versão. Sem APK novo (o app abre o site).
+- O `consultar-os` (Edge Function usada pelo Equipamentos) continua igual até o Equipamentos ser desligado.
+
 ### Pendências para a fase 2
 - **OS de balcão** fica "em andamento" (não tem atividade, então o status automático não mexe). Decidir: concluir sozinha quando todos
   os itens finalizarem? (Cuidado: concluir dispara o pedido de avaliação por e-mail; no descarte não faz sentido.)
@@ -157,7 +166,13 @@ Menu **Oficina**: Equipamentos (Kanban, só os em aberto; finalizados em lista p
   Gustavo (papel oficina) não tem a ajuda. Decidir se libera para ele.
 - Importador do BRV Equipamentos (abaixo).
 
-### Usar o Control e o Equipamentos ao mesmo tempo (período de teste)
+### VIRADA FEITA EM 2026-11-09 (decisão do usuário)
+Equipamentos recolhidos passam a ser lançados **só no Control** (inclusive a retirada pelo app de campo). Importação final rodada em
+2026-11-09 (62 itens). O BRV Equipamentos segue só para **placas** (e consulta do histórico antigo). O importador agora **não sobrescreve
+item já alterado no Control** (qualquer evento com login); rodar de novo só traria algo lançado por engano no Equipamentos.
+Falta: avisar a equipe para não lançar equipamento no Equipamentos e, se quiser, deixar o Kanban de equipamentos de lá só leitura.
+
+### Usar o Control e o Equipamentos ao mesmo tempo (período de teste, encerrado em 2026-11-09)
 Pergunta do usuário (2026-11-08): dá para migrar já e seguir com o Equipamentos até testar tudo? **Sim**, assim:
 - **O Equipamentos continua sendo o oficial** até a virada. A equipe lança tudo lá, como hoje.
 - O importador copia o Equipamentos para o Control e **pode rodar quantas vezes quiser** (casa por `legacy_id`; cada rodada atualiza

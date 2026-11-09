@@ -598,7 +598,7 @@ Os modelos definem os formulários que o técnico preenche no celular (orçament
 A **Oficina** acompanha o equipamento (ou parte dele) que a equipe trouxe do cliente para consertar na loja.
 O item usa o **número da OS** em que foi recolhido: "OS 17300". Se saiu mais de uma peça da mesma OS: "OS 17300 · item 2".
 ## As etapas (aba Em andamento)
-1. **Em trânsito**: o técnico recolheu e ainda está trazendo.
+1. **Em trânsito**: o técnico recolheu e ainda está trazendo. Ele registra no app de campo, na atividade, pelo botão **Recolher equipamento** (com o que levou, defeito e fotos). O item aparece sozinho nesta coluna.
 2. **Entrada**: chegou na loja. Imprima a etiqueta.
 3. **Diagnóstico**: o técnico da oficina analisa e registra o que precisa ser feito.
 4. **Aguardando orçamento**: o atendimento monta o orçamento no **SicWeb**.

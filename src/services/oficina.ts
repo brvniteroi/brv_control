@@ -169,6 +169,20 @@ export async function entradaBalcao(customerId: string, addressId: string | null
   return data as string;
 }
 
+/**
+ * App de campo: itens recolhidos nesta atividade. Lê a tabela (o técnico não tem a visão oficina_itens;
+ * a RLS libera os itens das OS dele).
+ */
+export async function itensDaAtividade(taskId: string): Promise<ItemOficina[]> {
+  const { data, error } = await supabase
+    .from('workshop_orders')
+    .select('*')
+    .eq('task_id', taskId)
+    .order('item_number');
+  falhar(error);
+  return (data ?? []) as ItemOficina[];
+}
+
 /** App de campo: técnico registra a retirada na atividade (fase 3). */
 export async function recolherNoCampo(taskId: string, dados: NovoItemOficina): Promise<string> {
   const { data, error } = await supabase.rpc('oficina_recolher', { p_task_id: taskId, p_item: dados });

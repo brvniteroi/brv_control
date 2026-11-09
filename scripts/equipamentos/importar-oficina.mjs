@@ -327,8 +327,28 @@ let fotosOk = 0;
 let fotosJa = 0;
 const idNovo = new Map();   // id antigo → id no Control
 
+// Itens importados que alguém já mexeu no Control (evento com login): não sobrescreve
+const { data: jaImportados } = await control.from('workshop_orders').select('id, legacy_id').eq('legacy_table', 'equipamentos');
+const idPorLegado = new Map((jaImportados ?? []).map((w) => [w.legacy_id, w.id]));
+const mexidos = new Set();
+for (let i = 0; i < (jaImportados ?? []).length; i += 200) {
+  const ids = jaImportados.slice(i, i + 200).map((w) => w.id);
+  const { data } = await control.from('workshop_order_events').select('workshop_order_id').in('workshop_order_id', ids).not('actor_id', 'is', null);
+  (data ?? []).forEach((e) => mexidos.add(e.workshop_order_id));
+}
+relatorio.editadosNoControl = [];
+for (const l of linhas) {
+  const id = idPorLegado.get(l.registro.legacy_id);
+  if (id && mexidos.has(id)) {
+    relatorio.editadosNoControl.push(`${l.registro.legacy_reference}: já alterado no Control, mantido como está`);
+    l.pular = true;
+    idNovo.set(String(l.eq.id), id); // fotos novas ainda podem entrar
+  }
+}
+if (relatorio.editadosNoControl.length) console.log(`Mantidos (já alterados no Control): ${relatorio.editadosNoControl.length}`);
+
 if (!SIMULAR) {
-  for (const l of linhas) {
+  for (const l of linhas.filter((x) => !x.pular)) {
     const { data, error } = await control
       .from('workshop_orders')
       .upsert(l.registro, { onConflict: 'legacy_table,legacy_id' })
@@ -356,6 +376,7 @@ if (!SIMULAR) {
   // Histórico: refaz os eventos importados (marcados no autor) de cada item
   const etapaDoTexto = (s) => (s ? converterEtapa({ status: s })?.[0] ?? null : null);
   for (const [idAntigo, idControl] of idNovo) {
+    if (mexidos.has(idControl)) continue; // histórico de item alterado no Control fica como está
     const doItem = historico.filter((h) => String(h.equipamento_id) === idAntigo);
     await control.from('workshop_order_events').delete().eq('workshop_order_id', idControl).like('actor_name', `%${MARCA}`);
     if (doItem.length === 0) continue;
@@ -506,6 +527,7 @@ const texto_relatorio = [
   SIMULAR ? '' : `Gravados: ${gravados}. Eventos de histórico: ${eventos}. Fotos novas: ${fotosOk} (já estavam: ${fotosJa}).`,
   ...[...porEtapa].map(([e, n]) => `  ${e}: ${n}`),
   ...secao('SEM CLIENTE RECONHECIDO (não importados: cadastre o cliente no Control ou corrija no Equipamentos e rode de novo)', relatorio.semCliente),
+  ...secao('Já alterados no Control (não sobrescritos)', relatorio.editadosNoControl ?? []),
   ...secao('Etapa desconhecida (não importados)', relatorio.etapaDesconhecida),
   ...secao('OS informada que não existe no Control (importados sem OS, pelo cliente)', relatorio.osNaoAchada),
   ...secao('Cliente do Equipamentos diferente do cliente da OS (conferir)', relatorio.nomeDiferenteDaOS),

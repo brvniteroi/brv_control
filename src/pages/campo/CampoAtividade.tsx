@@ -32,6 +32,7 @@ import { useFilaCampo, useOnline } from '../../hooks/useCampo';
 import FotosAtividade from '../../components/campo/FotosAtividade';
 import ConcluirAtividadeModal, { type DadosConclusao } from '../../components/campo/ConcluirAtividadeModal';
 import FormulariosAtividade from '../../components/formularios/FormulariosAtividade';
+import RecolherEquipamento from '../../components/campo/RecolherEquipamento';
 import { formatarDataHora, infoStatusAtividade } from '../../utils/ordens';
 
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -305,6 +306,19 @@ export default function CampoAtividade() {
       {ordem && (
         <Cartao titulo="Fotos">
           <FotosAtividade taskId={a.id} serviceOrderId={ordem.id} />
+        </Cartao>
+      )}
+
+      {ordem && a.status !== 'cancelada' && (
+        <Cartao titulo="Levar para a oficina">
+          <RecolherEquipamento
+            taskId={a.id}
+            osNumero={ordem.number}
+            equipamentosDaOs={ordem.equipamentos.flatMap((e) => (e.equipamento ? [e.equipamento] : []))}
+            online={online}
+            // Mesmo critério do banco (oficina_recolher); ação ainda na fila do celular não conta
+            podeRecolher={['em_deslocamento', 'em_execucao', 'concluida'].includes(servidor.status)}
+          />
         </Cartao>
       )}
 

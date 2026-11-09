@@ -205,7 +205,7 @@ export function ItensOficinaCliente({ clienteId }: ItensOficinaClienteProps) {
                 <th className="px-3 py-2.5">Item</th>
                 <th className="px-3 py-2.5">Equipamento</th>
                 <th className="px-3 py-2.5">Etapa</th>
-                <th className="px-3 py-2.5">Bancada</th>
+                <th className="px-3 py-2.5">Técnico da oficina</th>
                 <th className="px-3 py-2.5">Entrada</th>
               </tr>
             </thead>

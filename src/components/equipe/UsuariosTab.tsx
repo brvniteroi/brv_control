@@ -18,7 +18,7 @@ const PAPEIS: { valor: ProfileRole; rotulo: string; descricao: string }[] = [
   { valor: 'admin', rotulo: 'Administrador', descricao: 'Tudo, inclusive excluir e gerenciar a equipe' },
   { valor: 'escritorio', rotulo: 'Escritório', descricao: 'Cadastros, OS e linha do tempo' },
   { valor: 'tecnico', rotulo: 'Técnico', descricao: 'Só as próprias atividades' },
-  { valor: 'oficina', rotulo: 'Oficina', descricao: 'Só a Oficina (bancada): sem clientes, OS nem telefones' },
+  { valor: 'oficina', rotulo: 'Oficina', descricao: 'Só a Oficina: sem clientes, OS nem telefones' },
 ];
 
 const INPUT =

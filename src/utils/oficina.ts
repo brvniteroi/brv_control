@@ -18,11 +18,11 @@ export const ehFinal = (e: EtapaOficina) => ETAPAS_FINAIS.includes(e);
 export const COLUNAS_KANBAN: { etapa: EtapaOficina; rotulo: string; quem: string }[] = [
   { etapa: 'em_transito', rotulo: 'Em trânsito', quem: 'Recolhido pelo técnico, ainda não chegou' },
   { etapa: 'entrada', rotulo: 'Entrada', quem: 'Chegou na loja' },
-  { etapa: 'diagnostico', rotulo: 'Diagnóstico', quem: 'Bancada' },
+  { etapa: 'diagnostico', rotulo: 'Diagnóstico', quem: 'Oficina' },
   { etapa: 'aguardando_orcamento', rotulo: 'Aguardando orçamento', quem: 'Atendimento monta no SicWeb' },
   { etapa: 'aguardando_cliente', rotulo: 'Aguardando cliente', quem: 'Orçamento enviado' },
   { etapa: 'aguardando_peca', rotulo: 'Aguardando peça', quem: 'Aprovado, falta peça' },
-  { etapa: 'em_reparo', rotulo: 'Em reparo', quem: 'Bancada' },
+  { etapa: 'em_reparo', rotulo: 'Em reparo', quem: 'Oficina' },
   { etapa: 'pronto', rotulo: 'Pronto', quem: 'Para devolver ao cliente' },
 ];
 

@@ -192,7 +192,7 @@ export default function ListaFinalizadosOficina({
                     <th className="px-4 py-3">Cliente</th>
                     <th className="px-4 py-3">Equipamento</th>
                     <th className="px-4 py-3">Situação</th>
-                    <th className="px-4 py-3">Bancada</th>
+                    <th className="px-4 py-3">Técnico da oficina</th>
                     <th className="px-4 py-3">Finalizado em</th>
                   </tr>
                 </thead>

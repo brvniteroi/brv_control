@@ -25,8 +25,11 @@ import SeletorCliente from '../ordens/SeletorCliente';
 
 type CaminhoEntrada = 'os' | 'balcao';
 
+// 16 px no celular (o navegador não dá zoom ao tocar), 14 px no computador
 const INPUT =
-  'mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500';
+  'mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 sm:text-sm';
+/** Texto longo que cresce com o conteúdo. */
+const TEXTO = `${INPUT} resize-none [field-sizing:content] min-h-[4.5rem]`;
 
 function rotuloEndereco(e: CustomerAddress): string {
   const rua = [e.street, e.number].filter(Boolean).join(', ');
@@ -628,13 +631,13 @@ export default function NovaEntradaModal({
             <label htmlFor="entrada-defeito" className="block text-xs font-medium text-slate-700">
               Defeito relatado
             </label>
-            <input
+            <textarea
               id="entrada-defeito"
-              type="text"
+              rows={2}
               value={defeitoRelatado}
               onChange={(e) => setDefeitoRelatado(e.target.value)}
               placeholder="Ex.: Não gela, erro E1, barulho na turbina..."
-              className={INPUT}
+              className={TEXTO}
             />
           </div>
 
@@ -649,7 +652,7 @@ export default function NovaEntradaModal({
                 value={relatoCampo}
                 onChange={(e) => setRelatoCampo(e.target.value)}
                 placeholder="Observações deixadas pelo técnico na visita"
-                className={INPUT}
+                className={TEXTO}
               />
             </div>
           )}
@@ -664,7 +667,7 @@ export default function NovaEntradaModal({
               value={conferenciaChegada}
               onChange={(e) => setConferenciaChegada(e.target.value)}
               placeholder="Estado físico do gabinete, aletas, tampa, carenagem..."
-              className={INPUT}
+              className={TEXTO}
             />
           </div>
         </div>

@@ -319,7 +319,7 @@ export default function HistoricoItem({
               value={nota}
               onChange={(e) => setNota(e.target.value)}
               placeholder="Escreva uma observação sobre este equipamento..."
-              className="block w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block min-h-[4.5rem] w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-base text-slate-800 [field-sizing:content] placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-xs"
             />
             <button
               type="submit"

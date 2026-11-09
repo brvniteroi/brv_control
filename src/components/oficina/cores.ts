@@ -109,7 +109,7 @@ export const ROTULO_CAMPO_HISTORICO: Record<string, string> = {
   parts_status: 'Situação das peças',
   repair_notes: 'Serviço executado',
   pickup_employee_id: 'Técnico de retirada',
-  bench_employee_id: 'Técnico de bancada',
+  bench_employee_id: 'Técnico da oficina',
   equipment_id: 'Equipamento cadastrado',
   is_warranty: 'Retorno em garantia',
   warranty_origin_id: 'Origem da garantia',

@@ -27,8 +27,9 @@ import {
   numeroItem,
 } from '../../utils/oficina';
 
+// 16 px no celular (o navegador não dá zoom ao tocar), 14 px no computador
 const INPUT =
-  'mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+  'mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm';
 
 function converterMoedaParaNumero(texto: string): number | null {
   const limpo = texto.trim().replace(/[R$\s]/g, '');

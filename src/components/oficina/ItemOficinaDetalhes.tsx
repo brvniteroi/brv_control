@@ -79,8 +79,19 @@ import {
 
 type EtapaKanban = Exclude<EtapaOficina, 'entregue' | 'descarte' | 'cancelado'>;
 
+// 16 px no celular (abaixo disso o navegador dá zoom ao tocar no campo); 14 px no computador
 const INPUT =
-  'mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500';
+  'mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 sm:text-sm';
+
+/**
+ * Texto longo: cresce com o conteúdo (nada de caixinha com rolagem no celular). Somente leitura usa
+ * `readOnly`, não `disabled`, para o texto continuar escuro e legível.
+ */
+const TEXTO = `${INPUT} resize-none [field-sizing:content] min-h-[4.5rem] read-only:bg-slate-50 read-only:focus:ring-0 read-only:focus:border-slate-200`;
+
+/** Linhas para navegadores sem `field-sizing` (~45 caracteres por linha no celular). */
+const linhas = (t: string, minimo = 2) =>
+  Math.min(20, Math.max(minimo, t.split('\n').reduce((s, l) => s + Math.max(1, Math.ceil(l.length / 45)), 0)));
 
 function normalizarWhatsapp(telefone: string | null | undefined): string | null {
   const digitos = (telefone ?? '').replace(/\D/g, '').replace(/^0+/, '');
@@ -931,44 +942,44 @@ export default function ItemOficinaDetalhes({
               <label htmlFor="det-eq-defeito" className="block text-xs font-medium text-slate-700">
                 Defeito relatado
               </label>
-              <input
+              <textarea
                 id="det-eq-defeito"
-                type="text"
-                disabled={somenteLeitura}
+                rows={linhas(formEq.reported_defect)}
+                readOnly={somenteLeitura}
                 value={formEq.reported_defect}
                 onChange={(e) => setFormEq({ ...formEq, reported_defect: e.target.value })}
-                className={INPUT}
+                className={TEXTO}
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="det-eq-campo" className="block text-xs font-medium text-slate-700">
-                  Relato do técnico de campo
-                </label>
-                <textarea
-                  id="det-eq-campo"
-                  rows={2}
-                  disabled={somenteLeitura || !ehEscritorio}
-                  value={formEq.field_report}
-                  onChange={(e) => setFormEq({ ...formEq, field_report: e.target.value })}
-                  className={INPUT}
-                />
-              </div>
+            <div>
+              <label htmlFor="det-eq-campo" className="block text-xs font-medium text-slate-700">
+                Relato do técnico de campo
+              </label>
+              <textarea
+                id="det-eq-campo"
+                rows={linhas(formEq.field_report)}
+                readOnly={somenteLeitura || !ehEscritorio}
+                value={formEq.field_report}
+                onChange={(e) => setFormEq({ ...formEq, field_report: e.target.value })}
+                placeholder={ehEscritorio ? '' : 'Sem relato do técnico de campo.'}
+                className={TEXTO}
+              />
+            </div>
 
-              <div>
-                <label htmlFor="det-eq-chegada" className="block text-xs font-medium text-slate-700">
-                  Conferência na chegada
-                </label>
-                <textarea
-                  id="det-eq-chegada"
-                  rows={2}
-                  disabled={somenteLeitura}
-                  value={formEq.intake_notes}
-                  onChange={(e) => setFormEq({ ...formEq, intake_notes: e.target.value })}
-                  className={INPUT}
-                />
-              </div>
+            <div>
+              <label htmlFor="det-eq-chegada" className="block text-xs font-medium text-slate-700">
+                Conferência na chegada
+              </label>
+              <textarea
+                id="det-eq-chegada"
+                rows={linhas(formEq.intake_notes)}
+                readOnly={somenteLeitura}
+                value={formEq.intake_notes}
+                onChange={(e) => setFormEq({ ...formEq, intake_notes: e.target.value })}
+                placeholder="Estado em que chegou: amassado, sem tampa, faltando peça..."
+                className={TEXTO}
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-3 sm:grid-cols-2">
@@ -1015,10 +1026,21 @@ export default function ItemOficinaDetalhes({
                 )}
               </div>
             </div>
+
+            {!somenteLeitura && (
+              <button
+                type="submit"
+                disabled={salvandoEq}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:opacity-50 sm:hidden"
+              >
+                {salvandoEq ? <Loader2 size={16} className="animate-spin" /> : sucessoEq ? <Check size={16} /> : null}
+                {sucessoEq ? 'Salvo' : 'Salvar equipamento'}
+              </button>
+            )}
           </form>
 
           {/* =============================================================== */}
-          {/* SEÇÃO 2: BANCADA                                                */}
+          {/* SEÇÃO 2: OFICINA (diagnóstico e conserto)                       */}
           {/* =============================================================== */}
           <form
             onSubmit={handleSalvarBancada}
@@ -1027,7 +1049,7 @@ export default function ItemOficinaDetalhes({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-slate-800">
                 <Wrench size={18} className="text-blue-600" />
-                <h2 className="text-base font-bold">Bancada</h2>
+                <h2 className="text-base font-bold">Oficina</h2>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1043,7 +1065,7 @@ export default function ItemOficinaDetalhes({
                     className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:opacity-50"
                   >
                     {salvandoBancada && <Loader2 size={14} className="animate-spin" />}
-                    Salvar bancada
+                    Salvar oficina
                   </button>
                 )}
               </div>
@@ -1052,7 +1074,7 @@ export default function ItemOficinaDetalhes({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="det-banc-tec" className="block text-xs font-medium text-slate-700">
-                  Técnico de bancada
+                  Técnico da oficina
                 </label>
                 <select
                   id="det-banc-tec"
@@ -1098,12 +1120,12 @@ export default function ItemOficinaDetalhes({
               </label>
               <textarea
                 id="det-banc-diag"
-                rows={3}
-                disabled={somenteLeitura}
+                rows={linhas(formBancada.diagnosis, 3)}
+                readOnly={somenteLeitura}
                 value={formBancada.diagnosis}
                 onChange={(e) => setFormBancada({ ...formBancada, diagnosis: e.target.value })}
                 placeholder="Causa encontrada e o que precisa ser feito..."
-                className={INPUT}
+                className={TEXTO}
               />
             </div>
 
@@ -1113,12 +1135,12 @@ export default function ItemOficinaDetalhes({
               </label>
               <textarea
                 id="det-banc-pecas"
-                rows={2}
-                disabled={somenteLeitura}
+                rows={linhas(formBancada.parts_needed)}
+                readOnly={somenteLeitura}
                 value={formBancada.parts_needed}
                 onChange={(e) => setFormBancada({ ...formBancada, parts_needed: e.target.value })}
                 placeholder="Ex.: Motor ventilador evaporadora 220V, sensor de degelo..."
-                className={INPUT}
+                className={TEXTO}
               />
             </div>
 
@@ -1128,14 +1150,26 @@ export default function ItemOficinaDetalhes({
               </label>
               <textarea
                 id="det-banc-reparo"
-                rows={3}
-                disabled={somenteLeitura}
+                rows={linhas(formBancada.repair_notes, 3)}
+                readOnly={somenteLeitura}
                 value={formBancada.repair_notes}
                 onChange={(e) => setFormBancada({ ...formBancada, repair_notes: e.target.value })}
-                placeholder="Descrição do reparo e testes realizados na bancada..."
-                className={INPUT}
+                placeholder="Descrição do reparo e testes realizados na oficina..."
+                className={TEXTO}
               />
             </div>
+
+            {/* No celular o botão do topo fica longe depois de digitar: repete embaixo, largura toda */}
+            {!somenteLeitura && (
+              <button
+                type="submit"
+                disabled={salvandoBancada}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:opacity-50 sm:hidden"
+              >
+                {salvandoBancada ? <Loader2 size={16} className="animate-spin" /> : sucessoBancada ? <Check size={16} /> : null}
+                {sucessoBancada ? 'Salvo' : 'Salvar oficina'}
+              </button>
+            )}
           </form>
 
           {/* =============================================================== */}

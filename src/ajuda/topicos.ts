@@ -600,7 +600,7 @@ O item usa o **número da OS** em que foi recolhido: "OS 17300". Se saiu mais de
 ## As etapas (aba Em andamento)
 1. **Em trânsito**: o técnico recolheu e ainda está trazendo.
 2. **Entrada**: chegou na loja. Imprima a etiqueta.
-3. **Diagnóstico**: a bancada analisa e registra o que precisa ser feito.
+3. **Diagnóstico**: o técnico da oficina analisa e registra o que precisa ser feito.
 4. **Aguardando orçamento**: o atendimento monta o orçamento no **SicWeb**.
 5. **Aguardando cliente**: orçamento enviado, esperando a resposta.
 6. **Aguardando peça** / **Em reparo**: aprovado; conserto em andamento.
@@ -631,7 +631,7 @@ Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados
 6. Marque **Retorno em garantia** se for o caso.
 7. Clique em **Salvar entrada**. O item abre com a etiqueta pronta para imprimir.
 - Item **Em trânsito** que chegou: abra e clique em **Receber na loja (Entrada)**, ou arraste para **Entrada**.
-! Balcão só para o escritório. A bancada registra apenas pela OS.
+! Balcão só para o escritório. O técnico da oficina registra apenas pela OS.
 `,
     veja: ['oficina-etiqueta'],
   },
@@ -664,11 +664,12 @@ Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados
     texto: `
 Abra o item clicando no cartão.
 - **Equipamento**: corrija os dados do aparelho e clique em **Salvar equipamento**.
-- **Bancada**: **Técnico de bancada**, **Situação das peças**, **Diagnóstico**, **Peças necessárias** e **Serviço executado**. Clique em **Salvar bancada**.
+- **Oficina**: **Técnico da oficina**, **Situação das peças**, **Diagnóstico**, **Peças necessárias** e **Serviço executado**. Clique em **Salvar oficina**.
+- No celular, os botões **Salvar** aparecem também no fim de cada parte, e os textos longos (como o relato do técnico de campo) abrem inteiros.
 - **Fotos**: clique em **Adicionar fotos** (pode escolher várias). A **Categoria das próximas fotos** já vem sugerida pela etapa (antes na chegada, depois no conserto).
 - **Histórico**: escreva em **Anotar no histórico** e clique em **Salvar anotação**. Em uma alteração, **Ver antes e depois** mostra o valor antigo.
 - Diagnóstico pronto: mova para **Aguardando orçamento**. O atendimento é avisado pelo quadro.
-> A bancada não mexe em orçamento, resposta do cliente, descarte, devolução nem cancelamento. Isso é do escritório.
+> O técnico da oficina não mexe em orçamento, resposta do cliente, descarte, devolução nem cancelamento. Isso é do escritório.
 `,
   },
   {
@@ -816,7 +817,7 @@ Só o **administrador** vê e preenche estes dados. O escritório e o técnico n
 2. Clique em **Novo cargo** e dê o nome (ex.: "Mecânico de Refrigeração", "Ajudante", "Eletricista").
 3. Escolha a **Categoria**:
 - **Atende em campo**: aparece na linha do tempo, na agenda e nos relatórios de técnicos.
-- **Atende na oficina**: trabalha na bancada da loja. Não aparece na linha do tempo nem nos relatórios de técnicos.
+- **Atende na oficina**: trabalha na oficina da loja. Não aparece na linha do tempo nem nos relatórios de técnicos.
 - **Auxiliar**, **Supervisão** ou **Administrativo**: não recebe atividades próprias.
 4. Clique em **Salvar**. O cargo passa a aparecer no cadastro do funcionário.
 - Mudar a categoria de um cargo muda todos os funcionários dele.
@@ -839,7 +840,7 @@ Papéis:
 - **Administrador**: tudo, inclusive excluir.
 - **Escritório**: clientes, OS, agenda e relatórios.
 - **Técnico**: só o app de campo, com as próprias atividades.
-- **Oficina**: só a tela **Oficina** (bancada). Não vê clientes, OS nem telefones.
+- **Oficina**: só a tela **Oficina**. Não vê clientes, OS nem telefones.
 - **Bloquear**: abra o usuário e desmarque **Ativo**.
 - **Esqueceu a senha**: abra o usuário e clique em **Redefinir senha**.
 `,

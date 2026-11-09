@@ -170,7 +170,9 @@ Menu **Oficina**: Equipamentos (Kanban, só os em aberto; finalizados em lista p
 Equipamentos recolhidos passam a ser lançados **só no Control** (inclusive a retirada pelo app de campo). Importação final rodada em
 2026-11-09 (62 itens). O BRV Equipamentos segue só para **placas** (e consulta do histórico antigo). O importador agora **não sobrescreve
 item já alterado no Control** (qualquer evento com login); rodar de novo só traria algo lançado por engano no Equipamentos.
-Falta: avisar a equipe para não lançar equipamento no Equipamentos e, se quiser, deixar o Kanban de equipamentos de lá só leitura.
+Kanban de equipamentos de lá **só leitura**: `scripts/equipamentos/somente-leitura-equipamentos.sql` (colar no SQL Editor do projeto
+do Equipamentos; políticas RESTRICTIVE em `equipamentos`, `midias`, `historico_movimentacao`; placas e Storage não afetados; o arquivo
+tem o bloco para desfazer). Falta: avisar a equipe.
 
 ### Usar o Control e o Equipamentos ao mesmo tempo (período de teste, encerrado em 2026-11-09)
 Pergunta do usuário (2026-11-08): dá para migrar já e seguir com o Equipamentos até testar tudo? **Sim**, assim:

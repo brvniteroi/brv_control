@@ -79,7 +79,7 @@ O valor vai para `quote_amount` e alimenta o financeiro das placas. A resposta d
 ### 5.2 Financeiro das placas (decidido em 2026-11-09)
 **O financeiro do reparo de placas é próprio e distinto do módulo Financeiro futuro do Control** (`docs/financeiro.md`). Aproveita-se o **dashboard financeiro que existe hoje
 no reparo de placas** (faturamento do mês e do ano, reembolsos, valor e quantidade na bancada, encalhadas, marcas e defeitos mais comuns, tabela mensal com a lista de placas de cada mês).
-**Acesso (decidido em 2026-11-09): só o Braulio.** Marca `profiles.board_finance_access` (migration `20261109120000_acesso_financeiro_placas.sql`), **não é papel**: nem a Adriana (admin) vê sem a marca.
+**Acesso (decidido em 2026-11-09): só o Braulio, com o login "Administrador BRV" (`brvniteroi@gmail.com`), e toda a parte financeira, inclusive reembolso, é só dele** (confirmado pelo usuário). Marca `profiles.board_finance_access` (migration `20261109120000_acesso_financeiro_placas.sql`), **não é papel**: nem a Adriana (admin) vê sem a marca.
 `tem_financeiro_placas()` no banco e `podeVerFinanceiroPlacas(profile)` em `src/utils/acessoPlacas.ts` repetem a regra. Só quem já tem a marca consegue dar ou tirar a de outro usuário (trigger),
 então admin comum não se promove. O que a marca libera: menu/tela Financeiro, dashboard, valor cobrado e reembolso. **O orçamento da placa e o valor dele seguem com admin e escritório.** Quando
 `workshop_orders`/`workshop_board_details` forem criadas, reembolso e valor cobrado precisam de RLS/visão que só entregue a quem passa em `tem_financeiro_placas()`.

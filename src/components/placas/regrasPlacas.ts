@@ -668,3 +668,9 @@ export function calcularFinanceiroPlacas(
     rankingDefeitos: montarRanking(contagemDefeitos),
   };
 }
+
+/** Único técnico de bancada das placas (decisão do Braulio, 2026-11-10): Braulio Rodrigues Valente. */
+export function ehTecnicoBancadaPlacas(t: { name: string }): boolean {
+  const nome = t.name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return nome.includes('braulio') && nome.includes('valente');
+}

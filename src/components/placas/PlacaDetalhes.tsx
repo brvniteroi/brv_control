@@ -81,6 +81,7 @@ import {
   podeMoverPlaca,
   textoWhatsAppEntradaPlaca,
   textoWhatsAppOrcamentoPlaca,
+  ehTecnicoBancadaPlacas,
 } from './regrasPlacas';
 import TermoGarantiaDocumento from './TermoGarantiaDocumento';
 
@@ -1158,7 +1159,7 @@ export default function PlacaDetalhes({
                         className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-100"
                       >
                         <option value="">Não atribuído</option>
-                        {tecnicos.map((t) => (
+                        {tecnicos.filter((t) => ehTecnicoBancadaPlacas(t) || t.id === tecBancadaId).map((t) => (
                           <option key={t.id} value={t.id}>
                             {t.name}
                           </option>

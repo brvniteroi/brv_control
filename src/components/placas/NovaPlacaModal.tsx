@@ -34,6 +34,7 @@ import {
   calcularValidadeGarantia,
   garantiaVigente,
   semAcento,
+  ehTecnicoBancadaPlacas,
 } from './regrasPlacas';
 
 interface NovaPlacaModalProps {
@@ -122,7 +123,7 @@ export default function NovaPlacaModal({
         if (cancelado) return;
         setClientes(listaCli);
         setTecnicos(listaTec);
-        const bancadaPadrao = listaTec.find((t) => t.area === 'bancada');
+        const bancadaPadrao = listaTec.find(ehTecnicoBancadaPlacas);
         if (bancadaPadrao) {
           setTecnicoBancadaId((atual) => atual || bancadaPadrao.id);
         }
@@ -941,7 +942,7 @@ export default function NovaPlacaModal({
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none"
             >
               <option value="">Definir depois na triagem</option>
-              {tecnicos.map((t) => (
+              {tecnicos.filter(ehTecnicoBancadaPlacas).map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} ({t.area === 'bancada' ? 'Bancada' : 'Campo'})
                 </option>

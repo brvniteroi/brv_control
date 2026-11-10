@@ -624,6 +624,7 @@ O item usa o **número da OS** em que foi recolhido: "OS 17300". Se saiu mais de
 7. **Pronto**: pronto para voltar ao cliente (consertado ou recusado sem conserto).
 Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados**.
 - Arraste o cartão para outra coluna ou abra o item e use **Mover etapa**. No celular, use **Mover para...** no cartão.
+- No computador, para ver as colunas que ficam à direita, **segure o botão do mouse num espaço vazio do quadro** (fora dos cartões) e **arraste para o lado**: o quadro anda junto, como uma mãozinha.
 - A coluna fica apagada quando o item não pode ir para ela, e o motivo aparece (ex.: "Falta registrar a aprovação do cliente").
 - **Garantia**: retorno de serviço anterior. Não passa por orçamento.
 - Cartão com os dias em **vermelho**: está há 15 dias ou mais na loja.

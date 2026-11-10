@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { DragDropContext, Draggable, Droppable, type DragStart, type DropResult } from '@hello-pangea/dnd';
 import { ArrowRight, Lock, Printer, X } from 'lucide-react';
 import type { ProfileRole } from '../../types/fsm';
@@ -64,7 +64,27 @@ export default function KanbanOficina({
     }
   }, [itemMoverCelular]);
 
-  const aoIniciarArraste = (inicio: DragStart) => {
+  // Arrastar o fundo do quadro (fora dos cartões e botões) com o mouse rola para os lados, como a "mãozinha".
+  const faixaRef = useRef<HTMLDivElement>(null);
+  const comecarPanoramica = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const faixa = faixaRef.current;
+    if (!faixa || e.button !== 0) return;
+    if ((e.target as HTMLElement).closest('[data-rfd-draggable-id], button, a, input, select, textarea')) return;
+    const xInicial = e.clientX;
+    const rolagemInicial = faixa.scrollLeft;
+    e.preventDefault();
+    const mover = (ev: MouseEvent) => {
+      faixa.scrollLeft = rolagemInicial - (ev.clientX - xInicial);
+    };
+    const soltar = () => {
+      window.removeEventListener('mousemove', mover);
+      window.removeEventListener('mouseup', soltar);
+    };
+    window.addEventListener('mousemove', mover);
+    window.addEventListener('mouseup', soltar);
+  };
+
+  const aoIniciarArraste =(inicio: DragStart) => {
     setArrastandoId(inicio.draggableId);
   };
 
@@ -184,7 +204,11 @@ export default function KanbanOficina({
       {/* ================================================================= */}
       <div className="hidden md:block">
         <DragDropContext onDragStart={aoIniciarArraste} onDragEnd={aoSoltar}>
-          <div className="flex items-start gap-3.5 overflow-x-auto pb-4">
+          <div
+            ref={faixaRef}
+            onMouseDown={comecarPanoramica}
+            className="flex cursor-grab items-start gap-3.5 overflow-x-auto pb-4 active:cursor-grabbing"
+          >
             {COLUNAS_KANBAN.map((col) => {
               const lista = porColuna.get(col.etapa) ?? [];
               const estilo = CORES_ETAPA[col.etapa];

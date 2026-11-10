@@ -8,7 +8,7 @@ import { formatarData } from '../../utils/ordens';
 import { formatarTelefone } from '../../utils/telefone';
 import { EMPRESA_BRV } from '../pmoc/empresa';
 import { CORES_TIPO_CLIENTE_PLACA } from './cores';
-import { gerarPdfOrcamento, registrarEnvioOrcamento } from './fonteDeDados';
+import { PdfIndisponivelError, gerarPdfOrcamento, registrarEnvioOrcamento } from './fonteDeDados';
 import { montarLinkWhatsAppPlaca, textoWhatsAppOrcamentoPlaca } from './regrasPlacas';
 import {
   CHAVE_PIX_ORCAMENTO_PLACA,
@@ -106,6 +106,16 @@ export default function OrcamentoPlacaDocumento({
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {
         setAvisoEnvio('Compartilhamento cancelado pelo usuário.');
+      } else if (e instanceof PdfIndisponivelError) {
+        // Sem PDF automático: abre o WhatsApp com a mensagem; o PDF sai de "Imprimir / Salvar PDF" e é anexado à mão
+        try {
+          const atualizada = await registrarEnvioOrcamento(placa.id, atorNome);
+          onPlacaAtualizada?.(atualizada);
+          window.open(montarLinkWhatsAppPlaca(placa.customer_phone, textoWhatsAppOrcamentoPlaca(placa)), '_blank', 'noopener,noreferrer');
+          setAvisoEnvio('WhatsApp aberto com a mensagem. Salve o PDF em "Imprimir / Salvar PDF" e anexe na conversa. A placa foi marcada como "Orçamento enviado".');
+        } catch (e2) {
+          setErroEnvio(e2 instanceof Error ? e2.message : 'Não foi possível registrar o envio do orçamento.');
+        }
       } else {
         setErroEnvio(e instanceof Error ? e.message : 'Não foi possível preparar o PDF do orçamento.');
       }

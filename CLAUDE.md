@@ -180,7 +180,7 @@ com trava; regras de etapa, financeiro só com `tem_financeiro_placas()`, histó
 `src/services/placas.ts`, `fonteDeDados.ts` ligada ao banco (`USAR_BANCO_PLACAS = true`; fichas, manuais, erros, assistente, PDF e etiqueta seguem em demonstração) e o
 script de verificação `supabase/verificacao/placas_base.sql` (ROLLBACK). **Falta (nesta ordem):** (1) o usuário **colar `20261110100000_placas_base.sql` no SQL Editor** e depois colar
 `supabase/verificacao/placas_base.sql` (todas as linhas "OK", nada gravado); (2) testar as telas em `/placas` com dados reais; (3) ~~ligar `MOSTRAR_MENU_PLACAS`~~ (feito em 2026-11-10, após a verificação passar);
-(4) ajuda F1 das Placas (`src/ajuda/topicos.ts`, nomes de botões em `docs/gemini/placas.md` seção 9; regra fixa); (5) tirar o "modo oficina" das telas (o papel `oficina` não usa Placas);
+(4) ~~ajuda F1 das Placas~~ (feita em 2026-11-10: seção "Placas" em `src/ajuda/topicos.ts`, telas `placas`, `placa`, `placas-clientes`, `placas-financeiro` e as 4 do apoio técnico; manter atualizada); (5) tirar o "modo oficina" das telas (o papel `oficina` não usa Placas);
 (6) P2: importador `scripts/equipamentos/importar-placas.mjs` com `--simular` (78 OS, 49 clientes, fotos; atualizar `board_number_seq` com o maior número do dia); (7) P4 (etiqueta ZPL, PDF, QR)
 e P7 (fichas, manuais, IA). Ao concluir, apagar este lembrete.
 

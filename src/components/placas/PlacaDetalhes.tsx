@@ -33,6 +33,7 @@ import type {
   BoardStage,
   BoardTechnicianOption,
 } from '../../types/placas';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import { podeVerFinanceiroPlacas } from '../../utils/acessoPlacas';
 import { documentoValido, formatarDocumento, limparDocumento } from '../../utils/documento';
 import { valorEmReais } from '../../utils/oficina';
@@ -108,6 +109,7 @@ export default function PlacaDetalhes({
   onTrocarPlaca,
   onListaAlterada,
 }: PlacaDetalhesProps) {
+  useTelaAjuda('placa');
   const tituloDrawerId = useId();
   const idBase = useId();
 

@@ -26,7 +26,15 @@ export type TelaAjuda =
   | 'relatorios'
   | 'equipe'
   | 'oficina'
-  | 'item-oficina';
+  | 'item-oficina'
+  | 'placas'
+  | 'placa'
+  | 'placas-clientes'
+  | 'placas-financeiro'
+  | 'placas-fichas'
+  | 'placas-erros'
+  | 'placas-assistente'
+  | 'placas-manuais';
 
 export interface Topico {
   id: string;
@@ -50,6 +58,7 @@ export const SECOES = [
   'Agenda dos técnicos',
   'Avaliação do cliente',
   'Oficina',
+  'Placas',
   'Cadastros',
   'Relatórios',
   'Equipe e acessos',
@@ -73,6 +82,14 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   equipe: 'Equipe',
   oficina: 'Oficina',
   'item-oficina': 'Item na oficina',
+  placas: 'Placas (Kanban)',
+  placa: 'Placa',
+  'placas-clientes': 'Clientes de placas',
+  'placas-financeiro': 'Financeiro das placas',
+  'placas-fichas': 'Fichas técnicas',
+  'placas-erros': 'Códigos de erro',
+  'placas-assistente': 'Assistente técnico',
+  'placas-manuais': 'Manuais',
 };
 
 export const TOPICOS: Topico[] = [
@@ -103,6 +120,7 @@ O menu fica à esquerda. No celular, toque no ícone ☰ no alto para abrir.
 - **Serviços**: **Linha do Tempo**, **Calendário**, **Mapa** e **Ordens de Serviço**.
 - **Cadastros**: **Clientes**, **Equipamentos**, **Tipos de Serviço**, **Etiquetas**, **Cargos** e **Modelos de Formulários**.
 - **Oficina**: equipamentos recolhidos para conserto na loja, da entrada à devolução.
+- **Placas**: reparo de placas eletrônicas do laboratório (Kanban, clientes de placas e, só para quem tem acesso, o financeiro) e o apoio técnico (fichas, códigos de erro, assistente e manuais).
 - **Relatórios**: atividades por técnico, gráficos, tipos de serviço e Garantia BRV.
 - **Equipe**: funcionários e, para o administrador, os usuários do sistema.
 Clique no nome de um grupo (Serviços, Cadastros, Relatórios) para abrir ou fechar a lista.
@@ -749,6 +767,225 @@ Com o item em **Pronto**, abra-o e veja a parte **Devolução**:
 - **O servidor da loja não respondeu**: o pedido ficou na fila. Confira o servidor e peça de novo.
 - Etiqueta saiu cortada ou torta: confira o rolo (100 x 50 mm) e teste a largura **80 mm**.
 > Para testar sem um item: botão **...** no alto da tela Oficina > **Imprimir etiqueta de teste**.
+`,
+  },
+
+  // ───────────── Placas ─────────────
+  {
+    id: 'placas-como-funciona',
+    titulo: 'Como funciona o reparo de placas',
+    secao: 'Placas',
+    telas: ['placas', 'placa'],
+    palavras: 'placas laboratorio eletronica reparo kanban simulador instalador parceiro etapas numero os',
+    texto: `
+O menu **Placas** cuida das placas eletrônicas de ar-condicionado que chegam ao laboratório, quase sempre de **instaladores parceiros**.
+Cada placa tem um número próprio com a data de entrada, por exemplo **OS-101126-001** (dia 10/11/26, primeira do dia). Esse número não é o da OS do BRV Control: só placas retiradas pela equipe de campo têm também uma OS do Control.
+## As etapas
+1. **Entrada / Triagem**: a placa chegou; confira, registre e imprima o comprovante.
+2. **Diagnóstico / Orçamento**: análise na bancada e orçamento para o cliente.
+3. **Aguardando Peça** e 4. **Em Reparo**.
+5. **Teste em Simulador**: teste antes de entregar.
+6. **Pronto para Entrega**.
+Depois de **Entregue / Faturado** ou **Sem Conserto / Devolvido**, a placa vai para a aba **Finalizadas**.
+- Arraste o cartão para outra coluna, use as setas ← → do cartão ou abra a placa. No celular, mostra uma coluna por vez.
+- **Parceiro** ou **Final** no cartão diz o tipo de cliente. **Garantia** é retorno de um reparo anterior.
+- **Encalhada**: a placa está em aberto há **4 dias ou mais desde a entrada** (a contagem não zera quando muda de etapa).
+! O banco não deixa seguir para **Aguardando Peça**, **Em Reparo**, **Teste em Simulador**, **Pronto** ou **Entregue** sem o **orçamento aprovado** (exceto garantia). Só uma placa em **Pronto** pode ser entregue.
+> Tudo o que muda fica no **Histórico** da placa (quem fez, quando e o que mudou). Ninguém apaga o histórico.
+`,
+    veja: ['placas-nova-entrada', 'placas-orcamento', 'placas-finalizar'],
+  },
+  {
+    id: 'placas-nova-entrada',
+    titulo: 'Registrar a entrada de uma placa',
+    secao: 'Placas',
+    telas: ['placas'],
+    palavras: 'nova placa entrada receber cadastrar balcao portador campo retirada comprovante foto',
+    texto: `
+1. Em **Placas**, clique em **Nova placa**.
+2. Escolha a origem:
+- **Balcão / portador**: o parceiro trouxe a placa. Escolha o **Cliente de placas**; se ainda não existe, clique em **Novo cliente** e **Salvar e selecionar cliente**.
+- **Retirada pela equipe de campo**: digite o **Número da OS no BRV Control** e clique em **Buscar OS**. O cliente, o endereço e o relato do técnico vêm da OS. Se já existe placa nessa OS, aparece um aviso.
+3. Preencha **Tipo de equipamento**, **Marca / modelo**, **Código da placa (part number)**, **Defeito reclamado** e, se souber, o **Código de erro**.
+4. Em **Periféricos / acessórios entregues junto** anote o que veio com a placa (sensores, display, chicote, motor).
+5. Marque **Sem defeito aparente** se foi deixada só para teste. Marque **Retorno em garantia** e escolha a **Placa original entregue** se for garantia.
+6. Use **Selecionar fotos** para as fotos da entrada.
+7. Clique em **Registrar entrada e gerar comprovante**.
+A placa entra na coluna **Entrada / Triagem** e o **Comprovante de entrada** abre para imprimir ou enviar o link ao cliente.
+> Placa de parceiro **não cria OS** no BRV Control. O cliente de placas é um cadastro à parte dos clientes do sistema.
+`,
+    veja: ['placas-comprovante', 'placas-clientes'],
+  },
+  {
+    id: 'placas-orcamento',
+    titulo: 'Fazer e enviar o orçamento da placa',
+    secao: 'Placas',
+    telas: ['placa'],
+    palavras: 'orcamento valor proposta pdf whatsapp aprovado recusado resposta cliente parecer validade',
+    texto: `
+O orçamento da placa é feito aqui no sistema (diferente dos equipamentos, que usam o SicWeb).
+1. Abra a placa e vá em **Orçamento**.
+2. Preencha **Valor do orçamento (R$)**, **Validade (dias corridos)**, **CPF / CNPJ no orçamento**, **Endereço do cliente (para o PDF)** e o **Parecer técnico para a proposta**.
+3. Clique em **Salvar orçamento**.
+4. **Ver/Imprimir orçamento** mostra a proposta em A4: use **Imprimir / Salvar PDF**.
+5. **Enviar PDF pelo WhatsApp** abre a conversa com a mensagem pronta e marca a placa como **Orçamento enviado**. Por enquanto o PDF não anexa sozinho: salve-o antes em **Imprimir / Salvar PDF** e anexe na conversa. No celular, o sistema ainda vai passar a anexar o arquivo direto.
+6. Quando o cliente responder, clique em **Registrar resposta**: **Aprovado** ou **Recusado**, o **Canal da resposta** (WhatsApp, telefone, presencial ou e-mail) e **Salvar resposta**.
+- **Aprovado**: a placa pode seguir para **Aguardando Peça**, **Em Reparo** e as próximas etapas.
+- **Recusado**: finalize como **Sem Conserto / Devolvido**.
+! Retorno em **garantia** não tem orçamento.
+! Só administrador e escritório veem o orçamento e o valor.
+`,
+    veja: ['placas-finalizar'],
+  },
+  {
+    id: 'placas-finalizar',
+    titulo: 'Entregar, finalizar sem conserto, arquivar ou cancelar',
+    secao: 'Placas',
+    telas: ['placa'],
+    palavras: 'entregue faturado sem conserto devolvido arquivar cancelar reabrir pronto saida',
+    texto: `
+No rodapé da placa:
+- **Entregue / Faturado**: só com a placa em **Pronto**. Informe a data de saída (hoje, por padrão). A garantia de 90 dias conta daqui.
+- **Sem Conserto / Devolvido**: o cliente recusou o orçamento ou não há conserto. Informe o **motivo**. Sem conserto **não gera reembolso**.
+- **Arquivar**: tira da lista sem apagar o histórico.
+- **Cancelar entrada**: registro feito por engano. Informe o motivo.
+- **Reabrir** (só administrador): placa finalizada volta para **Pronto** (entregue) ou **Diagnóstico** (sem conserto).
+- Placa finalizada fica só para consulta.
+> Na aba **Finalizadas** há filtro por desfecho (**Entregue / Faturado**, **Sem Conserto / Devolvido**) e por **Ano**.
+`,
+  },
+  {
+    id: 'placas-garantia',
+    titulo: 'Garantia de 90 dias e retorno em garantia',
+    secao: 'Placas',
+    telas: ['placa'],
+    palavras: 'garantia termo 90 dias retorno voltou defeito de novo validade',
+    texto: `
+- Toda placa **entregue** tem **garantia de 90 dias** a contar da data de saída. A validade aparece na placa (**Garantia vigente** ou **Garantia expirada**).
+- **Termo de garantia**: abre o termo em A4 com os componentes trocados, a validade e as condições. **Imprimir termo** ou **Enviar pelo WhatsApp**.
+- Preencha **Componentes trocados (sai no Termo de Garantia)** na seção Bancada antes de entregar.
+- Se a placa voltar dentro do prazo, registre uma **Nova placa** marcando **Retorno em garantia** e escolhendo a **Placa original entregue**. Ela não passa por orçamento, e a original abre pelo link **Abrir placa original**.
+`,
+  },
+  {
+    id: 'placas-comprovante',
+    titulo: 'Comprovante de entrada, etiqueta e link de acompanhamento',
+    secao: 'Placas',
+    telas: ['placa', 'placas'],
+    palavras: 'comprovante etiqueta link acompanhamento parceiro pagina publica qr elgin novo link',
+    texto: `
+Na placa, no alto: **Comprovante** e **Etiqueta**.
+- **Comprovante**: documento A4 com os dados da entrada, os termos e o **link de acompanhamento**. **Imprimir comprovante** ou **Enviar o link pelo WhatsApp**.
+- **Etiqueta**: escolha **100 × 50 mm** ou **80 × 50 mm**, a **Quantidade de cópias** e clique em **Imprimir pelo navegador**.
+## Link de acompanhamento do parceiro
+Na seção **Acompanhamento do cliente**: **Copiar link**, **Enviar pelo WhatsApp**, **Abrir página pública** e **Gerar novo link**.
+- O parceiro abre o link, **sem senha**, e vê o número, o equipamento, a etapa atual com as datas, as fotos e a situação do orçamento. **Não** vê valores, diagnóstico interno nem reembolso.
+- **Gerar novo link** faz o link antigo parar de funcionar (use se o link foi para a pessoa errada).
+! A impressão da etiqueta direto na Elgin pelo sistema ainda vai ser ligada; por enquanto use **Imprimir pelo navegador**.
+`,
+  },
+  {
+    id: 'placas-fotos-historico',
+    titulo: 'Fotos e histórico da placa',
+    secao: 'Placas',
+    telas: ['placa'],
+    palavras: 'foto anexar antes depois historico nota anotar diagnostico bancada',
+    texto: `
+- **Fotos**: **Anexar fotos** (várias de uma vez) e filtre por **Antes (entrada)**, **Depois (reparo/teste)** e **Outros**. Clique na foto para ampliar. Cada foto guarda a etapa em que foi tirada.
+- **Bancada**: **Código de erro**, **Diagnóstico técnico de bancada** e **Componentes trocados**. Clique em **Salvar bancada**.
+- **Consultar assistente técnico**, na Bancada, sugere hipóteses e testes; **Usar na placa** leva a sugestão para o diagnóstico. É só uma sugestão: confirme na bancada.
+- **Histórico**: linha do tempo com tudo o que aconteceu. Use **Anotar no histórico** para escrever uma nota. Notas não podem ser apagadas.
+`,
+  },
+  {
+    id: 'placas-clientes',
+    titulo: 'Clientes de placas',
+    secao: 'Placas',
+    telas: ['placas-clientes'],
+    palavras: 'cliente parceiro instalador final cadastro telefone excluir',
+    texto: `
+Cadastro **à parte** dos clientes do sistema, para os instaladores parceiros e os clientes finais do laboratório.
+- Busque pelo nome ou telefone (sem acento) e filtre por **Todos**, **Parceiros** ou **Cliente final**.
+- **Novo cliente**: nome, telefone, tipo, cidade, CPF/CNPJ, endereço e observações. **Cadastrar cliente** salva; **Salvar alterações** grava a edição.
+- **Ver placas** mostra todas as placas do cliente; **Abrir placa** leva ao detalhe.
+- **Excluir cadastro** só funciona se o cliente não tiver nenhuma placa.
+> A mesma pessoa pode estar aqui e em **Clientes**; os dois cadastros não se misturam.
+`,
+  },
+  {
+    id: 'placas-financeiro',
+    titulo: 'Financeiro das placas e reembolso',
+    secao: 'Placas',
+    telas: ['placas-financeiro', 'placa'],
+    palavras: 'financeiro faturamento ticket reembolso bancada encalhadas ano mes valor cobrado',
+    texto: `
+Só quem tem acesso ao financeiro das placas vê esta parte (hoje, só o Braulio). Para os demais, o item **Financeiro** não aparece e o valor cobrado e o reembolso ficam escondidos.
+## Na tela Financeiro
+- Escolha o **Ano de competência**.
+- Cartões: **Faturamento do mês**, **Ticket médio do mês**, **Valor na bancada (em aberto)**, **Placas encalhadas** e **Total do ano**.
+- O gráfico mostra o faturamento mês a mês; clique num mês e **Ver placas** para ver as placas entregues e os reembolsos daquele mês.
+- Rankings das **marcas** e dos **defeitos** mais comuns.
+## Na placa
+- **Valor efetivamente cobrado (R$)** e **Salvar valor cobrado**: é o que entra no faturamento (sem ele vale o valor do orçamento).
+- **Reembolsada (desconta do faturamento líquido)**: marque e informe **Valor reembolsado (R$)**, **Data do reembolso** e **Motivo do reembolso**; clique em **Salvar reembolso**.
+! Reembolso é a devolução do dinheiro que o cliente pagou. **Sem conserto não gera reembolso.**
+`,
+  },
+  {
+    id: 'placas-fichas',
+    titulo: 'Fichas técnicas dos splits',
+    secao: 'Placas',
+    telas: ['placas-fichas'],
+    palavras: 'ficha tecnica split fabricante linha btu gas cobre eletrica imprimir cadastrar ia',
+    texto: `
+Consulta de fichas técnicas por fabricante, linha, modelo ou capacidade (BTUs). Digite na busca (não precisa de acento) e use os filtros.
+- **Abrir ficha completa** mostra as seções **Identificação**, **Linha frigorífica**, **Elétrica** e **Notas**. Campo sem dado aparece como "—".
+- **Abrir manual original** abre o arquivo de onde a ficha saiu. **Imprimir ficha A4** imprime a ficha.
+- **Cadastrar ficha com IA** (administrador e escritório): **Escolher manual e ler com IA**, envie o PDF ou TXT do manual, **revise** os campos marcados **conferir** e as lacunas, e clique em **Confirmar revisão e salvar ficha**.
+- **Editar** e **Excluir** só o administrador.
+! Esta tela ainda mostra **fichas de exemplo**. As fichas reais e a leitura por IA entram na próxima etapa.
+`,
+  },
+  {
+    id: 'placas-erros',
+    titulo: 'Códigos de erro',
+    secao: 'Placas',
+    telas: ['placas-erros'],
+    palavras: 'codigo erro e1 ch05 led piscadas significado causa verificar marca modelo',
+    texto: `
+1. Preencha **Marca**, o **Modelo (opcional)** e o **Código ou sintoma** (ex.: "E1 Midea Inverter", "CH05 LG").
+2. Clique em **Pesquisar código**.
+O resultado traz o significado, as causas prováveis, o que verificar, os componentes envolvidos e o aviso de segurança. O selo diz a fonte: **Manual do fabricante** ou **Pesquisa da IA**.
+! **Sugestão da IA: confirme na bancada.** Nunca troque componente só pelo que a IA disse.
+! Esta tela ainda mostra **respostas de exemplo**. A consulta real (manuais e IA) entra na próxima etapa.
+`,
+  },
+  {
+    id: 'placas-assistente',
+    titulo: 'Assistente técnico da bancada',
+    secao: 'Placas',
+    telas: ['placas-assistente'],
+    palavras: 'assistente tecnico ia diagnostico hipotese sintoma bancada teste medir',
+    texto: `
+Ajuda a investigar um defeito. Preencha **Marca**, **Código de erro**, **Modelo / código da placa** e o **Sintoma observado na bancada**, e clique em **Gerar diagnóstico**.
+- O resultado traz as hipóteses por probabilidade (**Alta**, **Média**, **Baixa**), os testes sugeridos e os componentes a medir.
+- Aberto a partir de uma placa, o botão **Usar na placa** leva o resultado para o diagnóstico dela.
+! **Sugestão da IA: confirme na bancada.**
+! Esta tela ainda mostra **respostas de exemplo**.
+`,
+  },
+  {
+    id: 'placas-manuais',
+    titulo: 'Manuais de fabricantes',
+    secao: 'Placas',
+    telas: ['placas-manuais'],
+    palavras: 'manual pdf txt fabricante enviar texto extraido excluir',
+    texto: `
+Lista dos manuais usados nas consultas de erro e no cadastro de fichas. Busque por fabricante ou título.
+- **Enviar manual** (administrador e escritório): escolha o PDF ou TXT, o fabricante e o título.
+- Selo **Texto extraído**: o sistema leu o conteúdo e a consulta de erros pode usá-lo. **Sem texto extraído**: o arquivo só serve para abrir.
+- **Abrir em nova aba** mostra o arquivo. **Excluir** só o administrador.
+! Esta tela ainda mostra **manuais de exemplo**. Os manuais reais serão importados na próxima etapa.
 `,
   },
 

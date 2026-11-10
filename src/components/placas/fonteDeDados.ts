@@ -1564,7 +1564,7 @@ function criarPdfMinimoDemo(titulo: string, subtitulo: string): Blob {
  * TODO(Claude): gerar o PDF real do orçamento (no servidor ou cliente) com layout oficial A4.
  * Na demonstração devolve um `Blob` `application/pdf` mínimo válido para testar compartilhamento/download.
  */
-export async function gerarPdfOrcamento(id: string): Promise<Blob> {
+async function gerarPdfOrcamentoDemo(id: string): Promise<Blob> {
   await atraso(180);
   const placa = memoriaPlacas.find((p) => p.id === id);
   if (!placa) throw new Error('Placa não encontrada para gerar o PDF do orçamento.');
@@ -1577,7 +1577,7 @@ export async function gerarPdfOrcamento(id: string): Promise<Blob> {
 /**
  * TODO(Claude): gerar o PDF real do termo de garantia de 90 dias.
  */
-export async function gerarPdfTermo(id: string): Promise<Blob> {
+async function gerarPdfTermoDemo(id: string): Promise<Blob> {
   await atraso(180);
   const placa = memoriaPlacas.find((p) => p.id === id);
   if (!placa) throw new Error('Placa não encontrada para gerar o termo de garantia.');
@@ -1590,7 +1590,7 @@ export async function gerarPdfTermo(id: string): Promise<Blob> {
 /**
  * TODO(Claude): enfileirar pedido real com ZPL de placa na tabela de impressão da Elgin L42 Pro.
  */
-export async function pedirEtiquetaPlaca(
+async function pedirEtiquetaPlacaDemo(
   id: string,
   copias: number,
 ): Promise<PedidoEtiquetaPlacaResult> {
@@ -1608,7 +1608,7 @@ export async function pedirEtiquetaPlaca(
 /**
  * TODO(Claude): consultar `print_agents` real da loja (mesmo mecanismo de `services/oficina.ts`).
  */
-export async function situacaoImpressora(): Promise<SituacaoImpressoraPlaca> {
+async function situacaoImpressoraDemo(): Promise<SituacaoImpressoraPlaca> {
   await atraso(80);
   return {
     online: true,
@@ -1621,6 +1621,43 @@ export async function situacaoImpressora(): Promise<SituacaoImpressoraPlaca> {
 // ---------------------------------------------------------------------
 // Funções ligadas ao banco (com a demonstração como reserva)
 // ---------------------------------------------------------------------
+
+/** O PDF automático (orçamento e termo) ainda não existe com o banco ligado: a tela cai no "imprimir / salvar PDF" (fase P4). */
+export class PdfIndisponivelError extends Error {
+  constructor() {
+    super('O PDF automático ainda não está ligado. Use "Imprimir / Salvar PDF" e anexe o arquivo na conversa do WhatsApp.');
+    this.name = 'PdfIndisponivelError';
+  }
+}
+
+export function gerarPdfOrcamento(...args: Parameters<typeof gerarPdfOrcamentoDemo>): ReturnType<typeof gerarPdfOrcamentoDemo> {
+  if (USAR_BANCO_PLACAS) return Promise.reject(new PdfIndisponivelError());
+  return gerarPdfOrcamentoDemo(...args);
+}
+
+export function gerarPdfTermo(...args: Parameters<typeof gerarPdfTermoDemo>): ReturnType<typeof gerarPdfTermoDemo> {
+  if (USAR_BANCO_PLACAS) return Promise.reject(new PdfIndisponivelError());
+  return gerarPdfTermoDemo(...args);
+}
+
+/** Etiqueta da placa na Elgin: o layout e a fila ainda não existem para placas (fase P4). */
+export function pedirEtiquetaPlaca(...args: Parameters<typeof pedirEtiquetaPlacaDemo>): ReturnType<typeof pedirEtiquetaPlacaDemo> {
+  if (USAR_BANCO_PLACAS) {
+    return Promise.resolve({
+      id: '',
+      status: 'falhou' as const,
+      mensagem: 'A impressão direta na Elgin ainda vai ser ligada para as placas. Use "Imprimir pelo navegador".',
+    });
+  }
+  return pedirEtiquetaPlacaDemo(...args);
+}
+
+export function situacaoImpressora(...args: Parameters<typeof situacaoImpressoraDemo>): ReturnType<typeof situacaoImpressoraDemo> {
+  if (USAR_BANCO_PLACAS) {
+    return Promise.resolve({ online: false, printer_name: 'Elgin (impressão direta de placas ainda não ligada)', last_seen_at: null });
+  }
+  return situacaoImpressoraDemo(...args);
+}
 
 export function listarPlacas(...args: Parameters<typeof listarPlacasDemo>): ReturnType<typeof listarPlacasDemo> {
   return USAR_BANCO_PLACAS ? real.listarPlacas(...(args as unknown as Parameters<typeof real.listarPlacas>)) : listarPlacasDemo(...args);

@@ -119,10 +119,10 @@ O menu fica à esquerda. No celular, toque no ícone ☰ no alto para abrir.
 - **Dashboard**: resumo do dia, com OS em aberto, atividades de hoje e o que precisa de atenção.
 - **Serviços**: **Linha do Tempo**, **Calendário**, **Mapa** e **Ordens de Serviço**.
 - **Cadastros**: **Clientes**, **Equipamentos**, **Tipos de Serviço**, **Etiquetas**, **Cargos**, **Modelos de Formulários** e **Equipe** (funcionários e, para o administrador, os usuários do sistema).
-- **Placas**: reparo de placas eletrônicas do laboratório (Kanban, clientes de placas e, só para quem tem acesso, o financeiro) e o apoio técnico (fichas, códigos de erro, assistente e manuais).
 - **Relatórios**: atividades por técnico, gráficos, tipos de serviço e Garantia BRV.
 - **Oficina**: equipamentos recolhidos para conserto na loja, da entrada à devolução.
-Clique no nome de um grupo (Serviços, Cadastros, Relatórios) para abrir ou fechar a lista.
+- **Placas**: reparo de placas eletrônicas do laboratório (Kanban, clientes de placas e, só para quem tem acesso, o financeiro) e o apoio técnico (fichas, códigos de erro, assistente e manuais).
+Clique no nome de um grupo (Serviços, Cadastros, Relatórios, Placas) para abrir ou fechar a lista.
 `,
   },
   {

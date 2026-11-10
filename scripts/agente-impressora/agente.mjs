@@ -18,8 +18,9 @@ import { dirname, join } from 'node:path';
 import { Socket } from 'node:net';
 import { fileURLToPath } from 'node:url';
 
-const VERSAO = '1.0.0';
+const VERSAO = '1.1.0';   // 1.1.0: margem esquerda, passo do rolo, cópias uma por vez, calibrar; o sinal de vida informa os ajustes em uso
 const PASTA = dirname(fileURLToPath(import.meta.url));
+const INICIADO_EM = new Date().toISOString();
 const ARQ_LOG = join(PASTA, 'agente.log');
 
 // ---------------------------------------------------------------------
@@ -189,6 +190,7 @@ async function iniciar() {
     if (error) throw new Error(`Login do agente: ${error.message}`);
   };
   await entrar();
+  log(`Ajustes: margem esquerda ${CFG.margemEsquerdaMm} mm, passo do rolo ${CFG.passoEtiquetaMm} mm, pausa entre cópias ${CFG.pausaEntreCopiasMs} ms (pid ${process.pid})`);
   log(`Agente ${CFG.agente} v${VERSAO} conectado. Impressora: "${CFG.impressoraWin}"${CFG.ip ? ` (reserva pela rede ${CFG.ip}:${CFG.porta})` : ''}`);
 
   // Realtime precisa do token do login (o RLS da fila só deixa o papel 'impressora' ler)
@@ -238,7 +240,18 @@ async function iniciar() {
       p_agente: CFG.agente,
       p_impressora: CFG.impressora,
       p_versao: VERSAO,
-      p_info: { impressora_windows: CFG.impressoraWin, rede: CFG.ip || null, node: process.version },
+      p_info: {
+        impressora_windows: CFG.impressoraWin,
+        rede: CFG.ip || null,
+        node: process.version,
+        // Ajustes que este processo está usando (a tela e o Claude conferem aqui se o arquivo certo está rodando)
+        margem_esquerda_mm: CFG.margemEsquerdaMm,
+        passo_etiqueta_mm: CFG.passoEtiquetaMm,
+        pausa_entre_copias_ms: CFG.pausaEntreCopiasMs,
+        pid: process.pid,
+        iniciado_em: INICIADO_EM,
+        arquivo_modificado_em: statSync(fileURLToPath(import.meta.url)).mtime.toISOString(),
+      },
     });
     if (error) {
       log('Sinal de vida:', error.message);

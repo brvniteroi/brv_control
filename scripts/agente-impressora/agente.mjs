@@ -8,6 +8,8 @@
 //
 // Uso:  node agente.mjs              (normal; a tarefa do Windows roda assim ao ligar o servidor)
 //       node agente.mjs --teste-local (imprime uma etiqueta de teste direto, sem o Supabase)
+//       node agente.mjs --status      (lê ~HS e ^HH pela rede; não imprime)
+//       node agente.mjs --calibrar    (~JC pela rede; não grava)   |   --gravar-config (^MNY + ^LL + ^JUS)
 // Log: agente.log na mesma pasta (os últimos ~2 MB).
 
 import { createClient } from '@supabase/supabase-js';
@@ -18,7 +20,10 @@ import { dirname, join } from 'node:path';
 import { Socket } from 'node:net';
 import { fileURLToPath } from 'node:url';
 
-const VERSAO = '1.1.0';   // 1.1.0: margem esquerda, passo do rolo, cópias uma por vez, calibrar; o sinal de vida informa os ajustes em uso
+// 1.1.0: margem esquerda, passo do rolo, cópias uma por vez, calibrar; o sinal de vida informa os ajustes em uso
+// 1.2.0 (2026-11-10, feita no servidor e trazida para cá): ^LL é a ALTURA da etiqueta (400), sem o espaço; ^MNY só se o ZPL não tiver ^MN;
+//        novos comandos --status (lê ~HS e ^HH) e --gravar-config; --calibrar direto pela rede; sinal de vida com altura_etiqueta_mm e ll_pontos
+const VERSAO = '1.2.0';
 const PASTA = dirname(fileURLToPath(import.meta.url));
 const INICIADO_EM = new Date().toISOString();
 const ARQ_LOG = join(PASTA, 'agente.log');
@@ -50,8 +55,9 @@ const CFG = {
   porta: Number(env.ELGIN_PORTA || 9100),
   // Margem esquerda extra (mm), somada pelo comando ^LH: compensa a etiqueta que sai encostada na borda. 8 pontos por mm.
   margemEsquerdaMm: Number(env.MARGEM_ESQUERDA_MM || 3),
-  // Altura da etiqueta + espaço até a próxima (mm). Rolo atual: 50 + 3.
-  passoEtiquetaMm: Number(env.PASSO_ETIQUETA_MM || 53),
+  // Altura da etiqueta (mm), sem o espaço entre elas: vira ^LL (8 pontos por mm). Rolo atual: 50 mm = ^LL400.
+  // (O PASSO_ETIQUETA_MM de 53 mm da 1.1.0 piorava a leitura do espaço e soltava etiqueta em branco.)
+  alturaEtiquetaMm: Number(env.ALTURA_ETIQUETA_MM || 50),
   // Pausa entre uma cópia e a próxima (ms), para a Elgin terminar uma etiqueta antes de receber a outra.
   pausaEntreCopiasMs: Number(env.PAUSA_ENTRE_COPIAS_MS || 1500),
 };
@@ -110,13 +116,36 @@ function pelaRede(zpl) {
 
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const LL_PONTOS = () => Math.round(CFG.alturaEtiquetaMm * 8);
+
+function ajustarZpl(original) {
+  let zpl = original.replace('^LH0,0', `^LH${Math.round(CFG.margemEsquerdaMm * 8)},0`);
+  zpl = /\^LL\d+/.test(zpl) ? zpl.replace(/\^LL\d+/, `^LL${LL_PONTOS()}`) : zpl.replace('^XA', `^XA\r\n^LL${LL_PONTOS()}`);
+  if (!/\^MN[NYWAMR]/.test(zpl)) zpl = zpl.replace('^XA', '^XA\r\n^MNY');
+  return zpl;
+}
+
+// Direto pela rede, lendo a resposta (para ~HS e ^HH). Não passa pela fila do Windows.
+function perguntarPelaRede(comando, esperaMs = 3000) {
+  return new Promise((resolve, reject) => {
+    if (!CFG.ip) return reject(new Error('Defina ELGIN_IP no .env'));
+    const s = new Socket();
+    let recebido = '';
+    s.setTimeout(15_000);
+    s.on('data', (d) => { recebido += d.toString('latin1'); });
+    s.once('timeout', () => { s.destroy(); reject(new Error(`Elgin não respondeu em ${CFG.ip}:${CFG.porta}`)); });
+    s.once('error', (e) => reject(new Error(`Rede ${CFG.ip}:${CFG.porta}: ${e.message}`)));
+    s.connect(CFG.porta, CFG.ip, () => {
+      s.write(Buffer.from(comando, 'utf8'));
+      setTimeout(() => { s.destroy(); resolve(recebido); }, esperaMs);
+    });
+  });
+}
+
 async function imprimir(zplOriginal) {
-  // Rolo 100x50 mm com 3 mm de espaço entre etiquetas e nas laterais: passo de 53 mm (424 pontos) e leitura do
-  // espaço entre etiquetas (^MNY). Sem isso a Elgin podia andar duas etiquetas e deixar uma em branco.
-  const zpl = zplOriginal
-    .replace('^LH0,0', `^LH${Math.round(CFG.margemEsquerdaMm * 8)},0`)
-    .replace('^LL400', `^LL${Math.round(CFG.passoEtiquetaMm * 8)}`)
-    .replace('^XA', '^XA\r\n^MNY');
+  // Rolo 100x50 mm com 3 mm de espaço entre etiquetas e nas laterais: ^LL = altura da etiqueta (400), sem o espaço,
+  // e leitura do espaço entre etiquetas (^MNY, só se o ZPL ainda não tiver um ^MN).
+  const zpl = ajustarZpl(zplOriginal);
   // Várias cópias: com ^PQn (e também com vários blocos num envio só) a Elgin deixava etiquetas em branco no meio.
   // Manda uma cópia por vez, cada uma como um trabalho separado (como o sistema antigo), com uma pausa entre elas.
   const copias = Math.min(10, Number(/\^PQ(\d+)/.exec(zpl)?.[1] ?? 1));
@@ -151,22 +180,36 @@ process.on('unhandledRejection', (e) => log('Erro não tratado:', e?.message ?? 
 if (process.argv.includes('--calibrar')) {
   // Recalibra o sensor de etiquetas (~JC): a Elgin avança algumas etiquetas e aprende o tamanho/espaço do rolo.
   // Usar com o rolo certo colocado e a tampa fechada. Corrige etiqueta em branco entre as impressas.
-  // Depois grava a calibração na memória da impressora (^JUS) para ela não perder ao desligar (2026-11-10).
-  imprimir('~JC\r\n')
-    .then(async (via) => {
+  // 1.2.0: vai direto pela rede (sem o driver), se houver ELGIN_IP. NÃO grava: só use --gravar-config depois de testes limpos.
+  // ATENÇÃO: com o sensor de espaço fora do lugar (na faixa lateral, em vez de embaixo da etiqueta) a calibração sai ruim.
+  const enviar = CFG.ip ? (z) => pelaRede(z) : (z) => enviarUma(z);
+  enviar('~JC\r\n')
+    .then((via) => {
       log('Calibração enviada pela', via, '- a impressora deve avançar algumas etiquetas');
-      await pausa(20_000);
-      await imprimir('^XA\r\n^JUS\r\n^XZ\r\n');
-      log('Calibração gravada na impressora (^JUS)');
       process.exit(0);
     })
     .catch((e) => { log('Calibração FALHOU:', e.message); process.exit(1); });
+} else if (process.argv.includes('--status')) {
+  // Só lê (não imprime): ~HS e ^HH. O 4º número da 1ª linha do ~HS é o comprimento da etiqueta medido:
+  // perto de 400-406 = bom; 1259 (quase 3 etiquetas) = calibração perdida. WEB S./MEDIA S. do ^HH ficam sempre 067 nesta Elgin: não servem.
+  (async () => {
+    log('~HS:\n' + await perguntarPelaRede('~HS\r\n'));
+    log('^HH:\n' + await perguntarPelaRede('^XA^HH^XZ\r\n', 5000));
+    process.exit(0);
+  })().catch((e) => { log('Status FALHOU:', e.message); process.exit(1); });
+} else if (process.argv.includes('--gravar-config')) {
+  // Grava na memória da impressora o sensor de espaço (^MNY) e a altura da etiqueta, para valerem depois de desligar.
+  // Só depois de uma sequência de testes boa.
+  perguntarPelaRede(`^XA\r\n^MNY\r\n^LL${LL_PONTOS()}\r\n^JUS\r\n^XZ\r\n`, 1000)
+    .then(() => { log(`Configuração gravada (^MNY, ^LL${LL_PONTOS()}, ^JUS)`); process.exit(0); })
+    .catch((e) => { log('Gravar configuração FALHOU:', e.message); process.exit(1); });
 } else if (process.argv.includes('--teste-local')) {
   const zpl = [
     '^XA', '^CI28', '^PW800', '^LL400', '^LH0,0', '^PR2',
     '^FO24,18^A0N,32,32^FDBRV CLIMATIZACAO^FS', '^FO24,70^GB752,3,3^FS',
     '^FO24,110^A0N,40,40^FDTESTE LOCAL DO AGENTE^FS',
-    `^FO24,170^A0N,24,24^FD${new Date().toLocaleString('pt-BR')}^FS`,
+    `^FO24,170^A0N,24,24^FDv${VERSAO}  LL${LL_PONTOS()} LH${Math.round(CFG.margemEsquerdaMm * 8)}^FS`,
+    `^FO24,210^A0N,24,24^FD${new Date().toLocaleString('pt-BR')}^FS`,
     '^PQ1', '^XZ',
   ].join('\r\n') + '\r\n';
   imprimir(zpl)
@@ -196,8 +239,9 @@ async function iniciar() {
     const { error } = await supabase.auth.signInWithPassword({ email: CFG.email, password: CFG.senha });
     if (error) throw new Error(`Login do agente: ${error.message}`);
   };
+  log(`Ajustes v${VERSAO}: margem esquerda ${CFG.margemEsquerdaMm} mm (^LH${Math.round(CFG.margemEsquerdaMm * 8)}), altura da etiqueta ${CFG.alturaEtiquetaMm} mm (^LL${LL_PONTOS()}), pausa entre cópias ${CFG.pausaEntreCopiasMs} ms (pid ${process.pid})`);
+  if (env.PASSO_ETIQUETA_MM) log('Aviso: PASSO_ETIQUETA_MM não é mais usado (1.2.0); pode apagar a linha do .env');
   await entrar();
-  log(`Ajustes: margem esquerda ${CFG.margemEsquerdaMm} mm, passo do rolo ${CFG.passoEtiquetaMm} mm, pausa entre cópias ${CFG.pausaEntreCopiasMs} ms (pid ${process.pid})`);
   log(`Agente ${CFG.agente} v${VERSAO} conectado. Impressora: "${CFG.impressoraWin}"${CFG.ip ? ` (reserva pela rede ${CFG.ip}:${CFG.porta})` : ''}`);
 
   // Realtime precisa do token do login (o RLS da fila só deixa o papel 'impressora' ler)
@@ -253,7 +297,8 @@ async function iniciar() {
         node: process.version,
         // Ajustes que este processo está usando (a tela e o Claude conferem aqui se o arquivo certo está rodando)
         margem_esquerda_mm: CFG.margemEsquerdaMm,
-        passo_etiqueta_mm: CFG.passoEtiquetaMm,
+        altura_etiqueta_mm: CFG.alturaEtiquetaMm,
+        ll_pontos: LL_PONTOS(),
         pausa_entre_copias_ms: CFG.pausaEntreCopiasMs,
         pid: process.pid,
         iniciado_em: INICIADO_EM,

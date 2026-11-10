@@ -32,15 +32,23 @@ do BRV Equipamentos, que **continuam funcionando** enquanto o Equipamentos estiv
 
 ## Ajustes do rolo (feitos em 2026-11-09)
 - Rolo 100x50 mm com 3 mm de espaço entre etiquetas e nas laterais. O agente ajusta o ZPL antes de enviar:
-  margem esquerda de 3 mm (`^LH24`), passo de 53 mm (`^LL424`) e leitura do espaço entre etiquetas (`^MNY`).
-  Opcionais no `.env`: `MARGEM_ESQUERDA_MM` (3), `PASSO_ETIQUETA_MM` (53), `PAUSA_ENTRE_COPIAS_MS` (1500).
+  margem esquerda (`^LH`), altura da etiqueta de 50 mm (`^LL400`, **sem** somar o espaço) e leitura do espaço entre etiquetas (`^MNY`).
+  Opcionais no `.env`: `MARGEM_ESQUERDA_MM` (3), `ALTURA_ETIQUETA_MM` (50), `PAUSA_ENTRE_COPIAS_MS` (1500). O antigo `PASSO_ETIQUETA_MM` não é mais usado (v1.2.0).
 - Várias cópias saem uma por vez (trabalhos separados), nunca com `^PQ` maior que 1.
-- Etiqueta em branco no meio = sensor desajustado: parar o agente, `npm run calibrar` (envia `~JC`; a Elgin avança
-  algumas etiquetas; depois grava a calibração na impressora com `^JUS`, para não perder ao desligar) e iniciar de novo. Trocar de rolo também pede calibrar.
-  Sem parar o agente também dá: o Claude manda `~JC` e `^XA^JUS^XZ` pela fila (foi assim em 2026-11-10, e resolveu a etiqueta em branco).
+- **Etiqueta em branco (causa real, 2026-11-10): o sensor de espaço da Elgin estava na faixa lateral de 3 mm (só papel de fundo), não embaixo da
+  etiqueta; ali ele perdia o espaço e soltava uma etiqueta inteira em branco. Ao trocar o rolo, conferir que o sensor fica no CENTRO, embaixo da
+  etiqueta, e mantê-lo limpo (álcool isopropílico). Com o sensor certo: 5 de 5 testes perfeitos.** Segunda causa: o passo de 53 mm (`^LL424`) da 1.1.0;
+  a 1.2.0 usa `^LL400`.
+- Se voltar: `node agente.mjs --status` (ou `npm run status`) lê a impressora sem imprimir; o **4º número da 1ª linha do `~HS`** é o comprimento
+  medido da etiqueta: perto de 400-406 = ok; 1259 (quase 3 etiquetas) = calibração perdida → conferir o sensor e `npm run calibrar` (`~JC` direto pela
+  rede, não grava). Só depois de uma sequência de testes limpa, `npm run gravar-config` grava `^MNY` + `^LL400` com `^JUS`. Os campos WEB S./MEDIA S.
+  do `^HH` ficam sempre 067 nesta Elgin e não servem para avaliar a calibração.
+- Estado final conferido em 2026-11-10: GAP/NOTCH, sensor TRANSMISSIVE, largura 800, comprimento 405, IP fixo 192.168.1.22, recalibra ao ligar e ao
+  fechar a tampa. Pendente, sem relação com as brancas: conferir se há fita (está em THERMAL-TRANSFER; sem fita o certo é DIRECT THERMAL).
+- Iniciar/parar a tarefa "BRV Control - Impressora" exige PowerShell como **administrador** (ela roda como SYSTEM).
 
 ## Conferir qual agente está rodando (v1.1.0 em diante)
-- O sinal de vida (tabela `print_agents`, coluna `info`) informa a versão, a margem esquerda, o passo do rolo, o PID e a data do arquivo em uso;
+- O sinal de vida (tabela `print_agents`, coluna `info`) informa a versão, a margem esquerda, a altura da etiqueta (`altura_etiqueta_mm`, `ll_pontos`), o PID e a data do arquivo em uso;
   o `agente.log` repete os ajustes ao iniciar. Se a etiqueta sair diferente do combinado (margem encostada, etiqueta em branco), confira
   primeiro se o `agente.mjs` do servidor é o do projeto: arquivo antigo no servidor foi a causa em 2026-11-10 (voltaram a margem encostada e a etiqueta em branco).
 - Trocou o `agente.mjs`? Reinicie (Agendador de Tarefas: "BRV Control - Impressora" > Finalizar > Executar) e confira que há um único `node` (`Get-Process node`).

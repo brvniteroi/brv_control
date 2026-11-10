@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node agente.mjs",
     "teste": "node agente.mjs --teste-local",
-    "calibrar": "node agente.mjs --calibrar"
+    "calibrar": "node agente.mjs --calibrar",
+    "status": "node agente.mjs --status",
+    "gravar-config": "node agente.mjs --gravar-config"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"

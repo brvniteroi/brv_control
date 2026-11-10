@@ -1,18 +1,12 @@
 import { FlaskConical } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 import { FONTE_DADOS_DEMO, USAR_BANCO_PLACAS } from './fonteDeDados';
 
-/** Telas do apoio técnico que dependem da IA (fase P7b): fichas e manuais já usam o banco real. */
-const ROTAS_APOIO = ['/placas/erros', '/placas/assistente'];
-
 /**
- * Faixa discreta de "Dados de demonstração" (oculta na impressão). Com as placas ligadas ao banco
- * (`USAR_BANCO_PLACAS`), só aparece nas telas de códigos de erro e do assistente, que esperam a IA.
+ * Faixa discreta de "Dados de demonstração" (oculta na impressão); só aparece se `USAR_BANCO_PLACAS` for desligado.
  */
 export default function FaixaDadosDemoPlacas() {
-  const { pathname } = useLocation();
   if (!FONTE_DADOS_DEMO) return null;
-  if (USAR_BANCO_PLACAS && !ROTAS_APOIO.some((r) => pathname.startsWith(r))) return null;
+  if (USAR_BANCO_PLACAS) return null; // tudo ligado ao banco e à IA real (P7b)
 
   return (
     <div

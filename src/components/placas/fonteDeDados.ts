@@ -1333,8 +1333,7 @@ async function excluirFichaDemo(id: string, papel: ProfileRole = 'admin'): Promi
  * TODO(Claude): ligar à Edge Function `extrair-ficha` (Gemini) no Supabase.
  * Na demonstração valida tipo/tamanho, aguarda 2 s e devolve ficha pré-preenchida fixa com `lacunas`.
  */
-export async function extrairFichaDoManual(arquivo: File): Promise<ExtracaoFichaManualResultado> {
-  if (USAR_BANCO_PLACAS) throw new Error('A IA do apoio técnico ainda não foi ligada ao banco real (fase P7b). Cadastre a ficha preenchendo os campos à mão.');
+async function extrairFichaDoManualDemo(arquivo: File): Promise<ExtracaoFichaManualResultado> {
   const nome = arquivo.name.toLowerCase();
   const formatoAceito =
     arquivo.type === 'application/pdf' ||
@@ -1360,10 +1359,9 @@ export async function extrairFichaDoManual(arquivo: File): Promise<ExtracaoFicha
  * TODO(Claude): ligar à Edge Function `consultar-erro` (busca nos manuais + Gemini).
  * Na demonstração aguarda 1,5 s e devolve uma das 3 respostas estruturadas coerentes.
  */
-export async function consultarCodigoErro(
+async function consultarCodigoErroDemo(
   dados: ConsultaCodigoErroInput,
 ): Promise<ResultadoConsultaErro> {
-  if (USAR_BANCO_PLACAS) throw new Error('A IA do apoio técnico ainda não foi ligada ao banco real (fase P7b). Consulte os textos de códigos de erro na aba Manuais.');
   if (!dados.marca.trim()) {
     throw new Error('Informe a marca do equipamento.');
   }
@@ -1378,10 +1376,9 @@ export async function consultarCodigoErro(
  * TODO(Claude): ligar à Edge Function `assistente-tecnico` (Gemini especialista em bancada).
  * Na demonstração aguarda 1,5 s e devolve hipóteses, testes de bancada e componentes a medir.
  */
-export async function assistenteTecnico(
+async function assistenteTecnicoDemo(
   dados: AssistenteTecnicoInput,
 ): Promise<ResultadoAssistenteTecnico> {
-  if (USAR_BANCO_PLACAS) throw new Error('A IA do apoio técnico ainda não foi ligada ao banco real (fase P7b). ');
   if (!dados.marca.trim()) {
     throw new Error('Informe a marca do equipamento ou da placa.');
   }
@@ -1812,4 +1809,17 @@ export async function textoDoManual(id: string): Promise<string> {
   if (USAR_BANCO_PLACAS) return real.textoDoManual(id);
   const m = memoriaManuais.find((x) => x.id === id);
   return m ? `Manual de demonstração: ${m.title}` : '';
+}
+
+// IA do apoio técnico: Edge Function real (Gemini) ou demonstração
+export function extrairFichaDoManual(...args: Parameters<typeof extrairFichaDoManualDemo>): ReturnType<typeof extrairFichaDoManualDemo> {
+  return USAR_BANCO_PLACAS ? real.extrairFichaDoManual(args[0]) : extrairFichaDoManualDemo(...args);
+}
+
+export function consultarCodigoErro(...args: Parameters<typeof consultarCodigoErroDemo>): ReturnType<typeof consultarCodigoErroDemo> {
+  return USAR_BANCO_PLACAS ? real.consultarCodigoErro(args[0]) : consultarCodigoErroDemo(...args);
+}
+
+export function assistenteTecnico(...args: Parameters<typeof assistenteTecnicoDemo>): ReturnType<typeof assistenteTecnicoDemo> {
+  return USAR_BANCO_PLACAS ? real.assistenteTecnico(args[0]) : assistenteTecnicoDemo(...args);
 }

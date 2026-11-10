@@ -28,13 +28,18 @@ import type {
   BoardRefundInput,
   BoardStage,
   BoardTechnicianOption,
+  AssistenteTecnicoInput,
+  ConsultaCodigoErroInput,
   CreateBoardInput,
+  ExtracaoFichaManualResultado,
   EnviarManualPlacaInput,
   FiltroFichasPlacas,
   MoveBoardExtra,
   PlacaFichaInput,
   PlacaFichaTecnica,
   PlacaManual,
+  ResultadoAssistenteTecnico,
+  ResultadoConsultaErro,
   UpdateBoardFields,
 } from '../types/placas';
 import {
@@ -912,4 +917,57 @@ export async function textoDoManual(id: string): Promise<string> {
   const { data, error } = await supabase.from('board_manuals').select('content_text').eq('id', id).maybeSingle();
   falhar(error);
   return (data as { content_text: string | null } | null)?.content_text ?? '';
+}
+
+// ---------------------------------------------------------------------
+// IA do apoio técnico (Edge Function apoio-tecnico, Gemini). Exige a chave GEMINI_API_KEY no Supabase.
+// ---------------------------------------------------------------------
+
+async function chamarApoioTecnico<T>(corpo: Record<string, unknown> | FormData): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('apoio-tecnico', { body: corpo });
+  if (error) {
+    const resposta = (error as { context?: Response }).context;
+    const detalhe = resposta ? await resposta.json().catch(() => null) : null;
+    if (resposta?.status === 404) throw new Error('A IA ainda não foi publicada no Supabase (função apoio-tecnico).');
+    throw new Error(detalhe?.erro ?? 'Não foi possível consultar a IA agora. Tente de novo.');
+  }
+  if ((data as { erro?: string })?.erro) throw new Error((data as { erro: string }).erro);
+  return data as T;
+}
+
+export async function extrairFichaDoManual(arquivo: File): Promise<ExtracaoFichaManualResultado> {
+  const nome = arquivo.name.toLowerCase();
+  if (!(arquivo.type === 'application/pdf' || arquivo.type === 'text/plain' || nome.endsWith('.pdf') || nome.endsWith('.txt'))) {
+    throw new Error('Formato não suportado. Envie apenas arquivos PDF ou TXT.');
+  }
+  if (arquivo.size > 20 * 1024 * 1024) throw new Error('Este arquivo é muito grande (máximo de 20 MB).');
+  if (arquivo.size === 0) throw new Error('Não foi possível ler este arquivo.');
+  const form = new FormData();
+  form.append('acao', 'ficha');
+  form.append('arquivo', arquivo);
+  return chamarApoioTecnico<ExtracaoFichaManualResultado>(form);
+}
+
+export async function consultarCodigoErro(dados: ConsultaCodigoErroInput): Promise<ResultadoConsultaErro> {
+  if (!dados.marca.trim()) throw new Error('Informe a marca do equipamento.');
+  if (!dados.consulta.trim()) throw new Error('Informe o código de erro ou sintoma observado.');
+  const r = await chamarApoioTecnico<Omit<ResultadoConsultaErro, 'marca' | 'modelo' | 'codigo_ou_sintoma' | 'consultado_em'>>({
+    acao: 'erro',
+    marca: dados.marca.trim(),
+    modelo: dados.modelo?.trim() ?? '',
+    consulta: dados.consulta.trim(),
+  });
+  return {
+    ...r,
+    marca: dados.marca.trim(),
+    modelo: dados.modelo?.trim() || null,
+    codigo_ou_sintoma: dados.consulta.trim(),
+    consultado_em: new Date().toISOString(),
+  };
+}
+
+export async function assistenteTecnico(dados: AssistenteTecnicoInput): Promise<ResultadoAssistenteTecnico> {
+  if (!dados.marca.trim()) throw new Error('Informe a marca do equipamento ou da placa.');
+  if (!dados.sintoma.trim() && !dados.codigoErro.trim()) throw new Error('Informe o código de erro ou descreva o sintoma observado na bancada.');
+  return chamarApoioTecnico<ResultadoAssistenteTecnico>({ acao: 'assistente', ...dados });
 }

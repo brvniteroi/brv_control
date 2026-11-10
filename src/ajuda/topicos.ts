@@ -783,15 +783,14 @@ Cada placa tem um número próprio com a data de entrada, por exemplo **OS-10112
 ## As etapas
 1. **Entrada / Triagem**: a placa chegou; confira, registre e imprima o comprovante.
 2. **Diagnóstico / Orçamento**: análise na bancada e orçamento para o cliente.
-3. **Aguardando Peça** e 4. **Em Reparo**.
-5. **Teste em Simulador**: teste antes de entregar.
-6. **Pronto para Entrega**.
+3. **Em Reparo / Aguardando Peça**: a placa está na bancada, inclusive quando espera uma peça (o teste no simulador faz parte desta etapa).
+4. **Pronto para Entrega**.
 Depois de **Entregue / Faturado** ou **Sem Conserto / Devolvido**, a placa vai para a aba **Finalizadas**.
 - Arraste o cartão para outra coluna, use as setas ← → do cartão ou abra a placa. No celular, mostra uma coluna por vez.
 - No computador, para ver as colunas que ficam à direita, **segure o botão do mouse num espaço vazio do quadro** (fora dos cartões) e **arraste para o lado**: o quadro anda junto, como uma mãozinha. A barra de rolagem de baixo também funciona.
 - **Parceiro** ou **Final** no cartão diz o tipo de cliente. **Garantia** é retorno de um reparo anterior.
 - **Encalhada**: a placa está em aberto há **4 dias ou mais desde a entrada** (a contagem não zera quando muda de etapa).
-! O banco não deixa seguir para **Aguardando Peça**, **Em Reparo**, **Teste em Simulador**, **Pronto** ou **Entregue** sem o **orçamento aprovado** (exceto garantia). Só uma placa em **Pronto** pode ser entregue.
+! O banco não deixa seguir para **Em Reparo / Aguardando Peça**, **Pronto** ou **Entregue** sem o **orçamento aprovado** (exceto garantia). Só uma placa em **Pronto** pode ser entregue.
 > Tudo o que muda fica no **Histórico** da placa (quem fez, quando e o que mudou). Ninguém apaga o histórico.
 `,
     veja: ['placas-nova-entrada', 'placas-orcamento', 'placas-finalizar'],
@@ -831,7 +830,7 @@ O orçamento da placa é feito aqui no sistema (diferente dos equipamentos, que 
 4. **Ver/Imprimir orçamento** mostra a proposta em A4: use **Imprimir / Salvar PDF**.
 5. **Enviar PDF pelo WhatsApp** abre a conversa com a mensagem pronta e marca a placa como **Orçamento enviado**. Por enquanto o PDF não anexa sozinho: salve-o antes em **Imprimir / Salvar PDF** e anexe na conversa. No celular, o sistema ainda vai passar a anexar o arquivo direto.
 6. Quando o cliente responder, clique em **Registrar resposta**: **Aprovado** ou **Recusado**, o **Canal da resposta** (WhatsApp, telefone, presencial ou e-mail) e **Salvar resposta**.
-- **Aprovado**: a placa pode seguir para **Aguardando Peça**, **Em Reparo** e as próximas etapas.
+- **Aprovado**: a placa pode seguir para **Em Reparo / Aguardando Peça** e as próximas etapas.
 - **Recusado**: finalize como **Sem Conserto / Devolvido**.
 ! Retorno em **garantia** não tem orçamento.
 ! Só administrador e escritório veem o orçamento e o valor.

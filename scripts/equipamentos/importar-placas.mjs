@@ -126,9 +126,10 @@ function etapaDoTexto(t) {
   if (s.includes('sem conserto') || s.includes('devolvido')) return 'sem_conserto';
   if (s.includes('entregue') || s.includes('faturado')) return 'entregue';
   if (s.includes('pronto') || s.includes('retirada')) return 'pronto';
-  if (s.includes('teste') || s.includes('simulador')) return 'teste';
+  // 2026-11-10: Teste/Simulador e Aguardando Peça viraram "Em Reparo" no Control
+  if (s.includes('teste') || s.includes('simulador')) return 'em_reparo';
   if (s.includes('em reparo') || s === 'reparo') return 'em_reparo';
-  if (s.includes('peca')) return 'aguardando_peca';
+  if (s.includes('peca')) return 'em_reparo';
   if (s.includes('diagnostico') || s.includes('orcamento')) return 'diagnostico';
   if (s.includes('entrada') || s.includes('triagem')) return 'entrada';
   return null;

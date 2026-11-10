@@ -7,7 +7,7 @@ itens da Oficina, importador repetível, virada com o Equipamentos em só leitur
 ## O que existe hoje (laboratório de eletrônica)
 | Parte | Como funciona hoje |
 |---|---|
-| **Kanban** | Entrada / Triagem → Diagnóstico / Orçamento → Aguardando Peça → Em Reparo → **Teste em Simulador** → Pronto para Entrega. Finais: Entregue / Faturado e Sem Conserto / Devolvido. Filtros: Parceiros (instaladores), Cliente final, Garantias. Aviso sonoro e arquivar |
+| **Kanban** | Entrada / Triagem → Diagnóstico / Orçamento → **Em Reparo / Aguardando Peça** (juntadas em 2026-11-10; o Teste em Simulador saiu) → Pronto para Entrega. Finais: Entregue / Faturado e Sem Conserto / Devolvido. Filtros: Parceiros (instaladores), Cliente final, Garantias. Aviso sonoro e arquivar |
 | **OS de placa** | `reparos_os`: número próprio `OS-DDMMAA-NNN` (sequência do dia, calculada contando registros no navegador), **número da OS do Control opcional** (`os_field_control`: só vale quando a placa veio de uma retirada da equipe de campo; o botão "buscar" puxa os dados dela), cliente (nome/telefone/tipo/cidade como texto), técnico de retirada e de bancada (texto), tipo de equipamento, marca/modelo, **código da placa**, **código de erro**, periféricos/acessórios, defeito, diagnóstico, **componentes trocados**, **valor do orçamento**, sem defeito, garantia (`eh_garantia` + `os_origem_id`), reembolso (valor, data, motivo) |
 | **Impressos** | Comprovante de entrada, etiqueta térmica (Elgin, `print_reparos.php`), orçamento da placa, **termo de garantia de 90 dias** (WhatsApp/impressão) |
 | **Fotos** | Bucket `midias`, pasta `reparos/<id>/`, mais anotações de foto no histórico. **Galeria pública pelo id** da OS (`GaleriaPublicaOS`) |

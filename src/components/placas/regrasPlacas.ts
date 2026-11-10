@@ -43,25 +43,13 @@ export const ETAPAS_PLACA: readonly DefinicaoEtapaPlaca[] = [
     quemMexe: 'Bancada e Escritório',
     final: false,
   },
-  {
-    etapa: 'aguardando_peca',
-    rotulo: 'Aguardando Peça',
-    rotuloCurto: 'Aguardando Peça',
-    quemMexe: 'Bancada / Compras',
-    final: false,
-  },
+  // 2026-11-10: "Aguardando Peça" foi juntada a "Em Reparo" e "Teste em Simulador" saiu do quadro (decisão do usuário).
+  // Os valores 'aguardando_peca' e 'teste' continuam válidos no banco só para o histórico antigo.
   {
     etapa: 'em_reparo',
-    rotulo: 'Em Reparo',
+    rotulo: 'Em Reparo / Aguardando Peça',
     rotuloCurto: 'Em Reparo',
-    quemMexe: 'Bancada',
-    final: false,
-  },
-  {
-    etapa: 'teste',
-    rotulo: 'Teste em Simulador',
-    rotuloCurto: 'Teste',
-    quemMexe: 'Bancada',
+    quemMexe: 'Bancada / Compras',
     final: false,
   },
   {
@@ -96,9 +84,9 @@ export const ETAPAS_FINAIS_PLACA: readonly BoardStage[] = ['entregue', 'sem_cons
 export const ROTULO_ETAPA_PLACA: Record<BoardStage, string> = {
   entrada: 'Entrada / Triagem',
   diagnostico: 'Diagnóstico / Orçamento',
-  aguardando_peca: 'Aguardando Peça',
-  em_reparo: 'Em Reparo',
-  teste: 'Teste em Simulador',
+  aguardando_peca: 'Aguardando Peça (antiga)',
+  em_reparo: 'Em Reparo /Aguardando Peça',
+  teste: 'Teste em Simulador (antiga)',
   pronto: 'Pronto para Entrega',
   entregue: 'Entregue / Faturado',
   sem_conserto: 'Sem Conserto / Devolvido',

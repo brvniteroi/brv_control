@@ -1196,7 +1196,7 @@ async function listarPlacasParaFinanceiroDemo(ano: number): Promise<BoardOrder[]
 // 5. APOIO TÉCNICO: FICHAS, IA DE FICHAS, ERROS, ASSISTENTE E MANUAIS
 // ============================================================================
 
-export async function listarFichas(filtro?: FiltroFichasPlacas): Promise<PlacaFichaTecnica[]> {
+async function listarFichasDemo(filtro?: FiltroFichasPlacas): Promise<PlacaFichaTecnica[]> {
   await atraso(90);
   const busca = semAcento(filtro?.busca?.trim() ?? '');
   const fab = semAcento(filtro?.fabricante?.trim() ?? '');
@@ -1235,12 +1235,12 @@ export async function listarFichas(filtro?: FiltroFichasPlacas): Promise<PlacaFi
     );
 }
 
-export async function buscarFicha(id: string): Promise<PlacaFichaTecnica | null> {
+async function buscarFichaDemo(id: string): Promise<PlacaFichaTecnica | null> {
   await atraso(60);
   return memoriaFichas.find((f) => f.id === id) ?? null;
 }
 
-export async function salvarFicha(
+async function salvarFichaDemo(
   dados: PlacaFichaInput,
   papel: ProfileRole = 'admin',
 ): Promise<PlacaFichaTecnica> {
@@ -1321,7 +1321,7 @@ export async function salvarFicha(
   return nova;
 }
 
-export async function excluirFicha(id: string, papel: ProfileRole = 'admin'): Promise<void> {
+async function excluirFichaDemo(id: string, papel: ProfileRole = 'admin'): Promise<void> {
   await atraso(100);
   if (papel !== 'admin') {
     throw new Error('Apenas administradores podem excluir fichas técnicas.');
@@ -1334,6 +1334,7 @@ export async function excluirFicha(id: string, papel: ProfileRole = 'admin'): Pr
  * Na demonstração valida tipo/tamanho, aguarda 2 s e devolve ficha pré-preenchida fixa com `lacunas`.
  */
 export async function extrairFichaDoManual(arquivo: File): Promise<ExtracaoFichaManualResultado> {
+  if (USAR_BANCO_PLACAS) throw new Error('A IA do apoio técnico ainda não foi ligada ao banco real (fase P7b). Cadastre a ficha preenchendo os campos à mão.');
   const nome = arquivo.name.toLowerCase();
   const formatoAceito =
     arquivo.type === 'application/pdf' ||
@@ -1362,6 +1363,7 @@ export async function extrairFichaDoManual(arquivo: File): Promise<ExtracaoFicha
 export async function consultarCodigoErro(
   dados: ConsultaCodigoErroInput,
 ): Promise<ResultadoConsultaErro> {
+  if (USAR_BANCO_PLACAS) throw new Error('A IA do apoio técnico ainda não foi ligada ao banco real (fase P7b). Consulte os textos de códigos de erro na aba Manuais.');
   if (!dados.marca.trim()) {
     throw new Error('Informe a marca do equipamento.');
   }
@@ -1379,6 +1381,7 @@ export async function consultarCodigoErro(
 export async function assistenteTecnico(
   dados: AssistenteTecnicoInput,
 ): Promise<ResultadoAssistenteTecnico> {
+  if (USAR_BANCO_PLACAS) throw new Error('A IA do apoio técnico ainda não foi ligada ao banco real (fase P7b). ');
   if (!dados.marca.trim()) {
     throw new Error('Informe a marca do equipamento ou da placa.');
   }
@@ -1394,7 +1397,7 @@ export async function assistenteTecnico(
   );
 }
 
-export async function listarManuais(filtro?: {
+async function listarManuaisDemo(filtro?: {
   busca?: string;
   fabricante?: string;
 }): Promise<PlacaManual[]> {
@@ -1411,7 +1414,7 @@ export async function listarManuais(filtro?: {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function enviarManual(
+async function enviarManualDemo(
   arquivo: File,
   dados: EnviarManualPlacaInput,
   atorNome = 'Escritório BRV',
@@ -1451,7 +1454,7 @@ export async function enviarManual(
   return novo;
 }
 
-export async function excluirManual(id: string, papel: ProfileRole = 'admin'): Promise<void> {
+async function excluirManualDemo(id: string, papel: ProfileRole = 'admin'): Promise<void> {
   await atraso(90);
   if (papel !== 'admin') {
     throw new Error('Apenas administradores podem excluir manuais.');
@@ -1774,4 +1777,39 @@ export function listarPlacasParaFinanceiro(...args: Parameters<typeof listarPlac
 
 export function buscarAcompanhamentoPublico(...args: Parameters<typeof buscarAcompanhamentoPublicoDemo>): ReturnType<typeof buscarAcompanhamentoPublicoDemo> {
   return USAR_BANCO_PLACAS ? real.buscarAcompanhamentoPublico(...(args as unknown as Parameters<typeof real.buscarAcompanhamentoPublico>)) : buscarAcompanhamentoPublicoDemo(...args);
+}
+
+// Apoio técnico: banco real (fichas e manuais) ou demonstração
+export function listarFichas(...args: Parameters<typeof listarFichasDemo>): ReturnType<typeof listarFichasDemo> {
+  return USAR_BANCO_PLACAS ? real.listarFichas(...(args as unknown as Parameters<typeof real.listarFichas>)) : listarFichasDemo(...args);
+}
+
+export function buscarFicha(...args: Parameters<typeof buscarFichaDemo>): ReturnType<typeof buscarFichaDemo> {
+  return USAR_BANCO_PLACAS ? real.buscarFicha(...(args as unknown as Parameters<typeof real.buscarFicha>)) : buscarFichaDemo(...args);
+}
+
+export function salvarFicha(...args: Parameters<typeof salvarFichaDemo>): ReturnType<typeof salvarFichaDemo> {
+  return USAR_BANCO_PLACAS ? real.salvarFicha(args[0]) : salvarFichaDemo(...args);
+}
+
+export function excluirFicha(...args: Parameters<typeof excluirFichaDemo>): ReturnType<typeof excluirFichaDemo> {
+  return USAR_BANCO_PLACAS ? real.excluirFicha(args[0]) : excluirFichaDemo(...args);
+}
+
+export function listarManuais(...args: Parameters<typeof listarManuaisDemo>): ReturnType<typeof listarManuaisDemo> {
+  return USAR_BANCO_PLACAS ? real.listarManuais(...(args as unknown as Parameters<typeof real.listarManuais>)) : listarManuaisDemo(...args);
+}
+
+export function enviarManual(...args: Parameters<typeof enviarManualDemo>): ReturnType<typeof enviarManualDemo> {
+  return USAR_BANCO_PLACAS ? real.enviarManual(args[0], args[1]) : enviarManualDemo(...args);
+}
+
+export function excluirManual(...args: Parameters<typeof excluirManualDemo>): ReturnType<typeof excluirManualDemo> {
+  return USAR_BANCO_PLACAS ? real.excluirManual(args[0]) : excluirManualDemo(...args);
+}
+
+export async function textoDoManual(id: string): Promise<string> {
+  if (USAR_BANCO_PLACAS) return real.textoDoManual(id);
+  const m = memoriaManuais.find((x) => x.id === id);
+  return m ? `Manual de demonstração: ${m.title}` : '';
 }

@@ -17,6 +17,7 @@ import {
   enviarManual,
   excluirManual,
   listarManuais,
+  textoDoManual,
 } from '../components/placas/fonteDeDados';
 import ModalDialogoPlacas from '../components/placas/ModalDialogoPlacas';
 import NavegacaoPlacas from '../components/placas/NavegacaoPlacas';
@@ -24,6 +25,36 @@ import { ehEscritorioOuAdminPlaca } from '../components/placas/regrasPlacas';
 import { useAuth } from '../contexts/useAuth';
 import type { PlacaManual } from '../types/placas';
 import { formatarData } from '../utils/ordens';
+
+/** PDF abre o arquivo; manual só em texto (importado ou TXT) abre o texto numa aba nova. */
+function AbrirManual({ manual, rotulo, className, tamanho }: { manual: PlacaManual; rotulo: string; className: string; tamanho: number }) {
+  const [abrindo, setAbrindo] = useState(false);
+  if (manual.file_url) {
+    return (
+      <a href={manual.file_url} target="_blank" rel="noopener noreferrer" className={className}>
+        <span>{rotulo}</span>
+        <ExternalLink size={tamanho} aria-hidden="true" />
+      </a>
+    );
+  }
+  const abrirTexto = async () => {
+    setAbrindo(true);
+    try {
+      const texto = await textoDoManual(manual.id);
+      const url = URL.createObjectURL(new Blob([texto], { type: 'text/plain;charset=utf-8' }));
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } finally {
+      setAbrindo(false);
+    }
+  };
+  return (
+    <button type="button" onClick={() => void abrirTexto()} disabled={abrindo} className={className}>
+      <span>{abrindo ? 'Abrindo...' : 'Ver texto'}</span>
+      <ExternalLink size={tamanho} aria-hidden="true" />
+    </button>
+  );
+}
 
 function formatarTamanhoBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
@@ -354,15 +385,12 @@ export default function PlacasManuais() {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-                  <a
-                    href={m.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <AbrirManual
+                    manual={m}
+                    rotulo="Abrir em nova aba"
                     className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
-                  >
-                    <ExternalLink size={13} aria-hidden="true" />
-                    <span>Abrir em nova aba</span>
-                  </a>
+                    tamanho={13}
+                  />
 
                   {podeExcluir && (
                     <button
@@ -460,15 +488,12 @@ export default function PlacasManuais() {
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5">
-                        <a
-                          href={m.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <AbrirManual
+                          manual={m}
+                          rotulo="Abrir"
                           className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                          <span>Abrir</span>
-                          <ExternalLink size={12} aria-hidden="true" />
-                        </a>
+                          tamanho={12}
+                        />
                         {podeExcluir && (
                           <button
                             type="button"

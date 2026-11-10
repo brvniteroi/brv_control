@@ -29,7 +29,12 @@ import type {
   BoardStage,
   BoardTechnicianOption,
   CreateBoardInput,
+  EnviarManualPlacaInput,
+  FiltroFichasPlacas,
   MoveBoardExtra,
+  PlacaFichaInput,
+  PlacaFichaTecnica,
+  PlacaManual,
   UpdateBoardFields,
 } from '../types/placas';
 import {
@@ -439,7 +444,7 @@ export async function criarPlaca(dados: CreateBoardInput): Promise<BoardOrder> {
 }
 
 async function atualizar(id: string, campos: Record<string, unknown>): Promise<BoardOrder> {
-  const { error } = await supabase.from('board_orders').update(campos).eq('id', id);
+  const { error } = await supabase.from('board_orders').update(campos as never).eq('id', id);
   falhar(error);
   return placaOuErro(id);
 }
@@ -781,4 +786,130 @@ export async function buscarAcompanhamentoPublico(token: string): Promise<BoardP
     steps,
     photos: r.photos ?? [],
   };
+}
+
+// ---------------------------------------------------------------------
+// Apoio técnico: fichas técnicas e manuais (migration 20261110130000_placas_apoio_tecnico.sql)
+// Leitura e cadastro: admin e escritório; editar ficha e excluir ficha/manual: só admin (a RLS garante).
+// ---------------------------------------------------------------------
+
+type LinhaFicha = Omit<PlacaFichaTecnica, never> & Record<string, unknown>;
+
+export async function listarFichas(filtro?: FiltroFichasPlacas): Promise<PlacaFichaTecnica[]> {
+  // São poucas centenas de fichas: busca (sem acento) e filtros rodam aqui, como na demonstração.
+  const { data, error } = await supabase.from('board_tech_sheets').select('*').order('fabricante').limit(2000);
+  falhar(error);
+  const busca = semAcento(filtro?.busca?.trim() ?? '');
+  const fab = semAcento(filtro?.fabricante?.trim() ?? '');
+  const btus = (filtro?.btus ?? '').replace(/\D/g, '');
+  return ((data ?? []) as LinhaFicha[])
+    .filter((f) => {
+      if (fab && semAcento(f.fabricante) !== fab) return false;
+      if (btus && (f.capacidade_btu ?? '').replace(/\D/g, '') !== btus) return false;
+      if (!busca) return true;
+      return semAcento(
+        [f.fabricante, f.linha, f.tipo_split, f.capacidade_btu, f.evaporadora, f.condensadora, f.ref_evaporadora, f.ref_condensadora, f.gas]
+          .filter(Boolean)
+          .join(' '),
+      ).includes(busca);
+    })
+    .sort((a, b) =>
+      `${a.fabricante} ${a.linha ?? ''} ${a.capacidade_btu ?? ''}`.localeCompare(`${b.fabricante} ${b.linha ?? ''} ${b.capacidade_btu ?? ''}`, 'pt-BR'),
+    ) as PlacaFichaTecnica[];
+}
+
+export async function buscarFicha(id: string): Promise<PlacaFichaTecnica | null> {
+  const { data, error } = await supabase.from('board_tech_sheets').select('*').eq('id', id).maybeSingle();
+  falhar(error);
+  return (data as PlacaFichaTecnica | null) ?? null;
+}
+
+export async function salvarFicha(dados: PlacaFichaInput): Promise<PlacaFichaTecnica> {
+  if (!dados.fabricante.trim()) throw new Error('Informe o fabricante do equipamento.');
+  if (!dados.evaporadora?.trim() && !dados.condensadora?.trim()) throw new Error('Informe ao menos o modelo da evaporadora ou da condensadora.');
+
+  const { id, ...resto } = dados as PlacaFichaInput & { created_at?: string };
+  delete (resto as { created_at?: string }).created_at;
+  const campos: Record<string, string | null> = {};
+  for (const [chave, valor] of Object.entries(resto)) {
+    const texto = typeof valor === 'string' ? valor.trim() : null;
+    campos[chave] = texto ? texto : null;
+  }
+  campos.fabricante = dados.fabricante.trim();
+
+  if (id) {
+    const { data, error } = await supabase.from('board_tech_sheets').update(campos as never).eq('id', id).select('*');
+    falhar(error);
+    if (!data?.length) throw new Error('Apenas administradores podem editar fichas técnicas já cadastradas.');
+    return data[0] as PlacaFichaTecnica;
+  }
+  const { data, error } = await supabase.from('board_tech_sheets').insert(campos as never).select('*').single();
+  falhar(error);
+  return data as PlacaFichaTecnica;
+}
+
+export async function excluirFicha(id: string): Promise<void> {
+  const { data, error } = await supabase.from('board_tech_sheets').delete().eq('id', id).select('id');
+  falhar(error);
+  if (!data?.length) throw new Error('Apenas administradores podem excluir fichas técnicas.');
+}
+
+const COLUNAS_MANUAL = 'id, manufacturer, title, file_name, file_type, file_size_bytes, file_url, has_extracted_text, uploaded_by_name, created_at';
+
+export async function listarManuais(filtro?: { busca?: string; fabricante?: string }): Promise<PlacaManual[]> {
+  const { data, error } = await supabase.from('board_manuals').select(COLUNAS_MANUAL).order('created_at', { ascending: false }).limit(1000);
+  falhar(error);
+  const busca = semAcento(filtro?.busca?.trim() ?? '');
+  const fab = semAcento(filtro?.fabricante?.trim() ?? '');
+  return ((data ?? []) as Array<Omit<PlacaManual, 'file_url'> & { file_url: string | null }>)
+    .filter((m) => {
+      if (fab && semAcento(m.manufacturer) !== fab) return false;
+      return !busca || semAcento(`${m.manufacturer} ${m.title} ${m.file_name}`).includes(busca);
+    })
+    .map((m) => ({ ...m, file_url: m.file_url ?? '' })) as PlacaManual[];
+}
+
+/** Manual em TXT guarda o próprio texto (a IA consulta nele). PDF vai para a HostGator; o texto sai depois, pela IA. */
+export async function enviarManual(arquivo: File, dados: EnviarManualPlacaInput): Promise<PlacaManual> {
+  if (!dados.manufacturer.trim()) throw new Error('Informe o fabricante do manual.');
+  if (!dados.title.trim()) throw new Error('Informe o título ou linha de modelos do manual.');
+  const nome = arquivo.name.toLowerCase();
+  const ehPdf = arquivo.type === 'application/pdf' || nome.endsWith('.pdf');
+  const ehTxt = arquivo.type === 'text/plain' || nome.endsWith('.txt');
+  if (!ehPdf && !ehTxt) throw new Error('Envie apenas manuais nos formatos PDF ou TXT.');
+  if (arquivo.size > 20 * 1024 * 1024) throw new Error('O manual excede o tamanho máximo de 20 MB.');
+
+  let fileUrl: string | null = null;
+  let texto: string | null = null;
+  if (ehTxt) texto = await arquivo.text();
+  else fileUrl = (await enviarParaHostgator(arquivo)).public_url;
+
+  const { data, error } = await supabase
+    .from('board_manuals')
+    .insert({
+      manufacturer: dados.manufacturer.trim(),
+      title: dados.title.trim(),
+      file_name: arquivo.name,
+      file_type: ehPdf ? 'PDF' : 'TXT',
+      file_size_bytes: arquivo.size,
+      file_url: fileUrl,
+      content_text: texto,
+    })
+    .select(COLUNAS_MANUAL)
+    .single();
+  falhar(error);
+  return { ...(data as PlacaManual), file_url: (data as { file_url: string | null }).file_url ?? '' };
+}
+
+export async function excluirManual(id: string): Promise<void> {
+  const { data, error } = await supabase.from('board_manuals').delete().eq('id', id).select('id');
+  falhar(error);
+  if (!data?.length) throw new Error('Apenas administradores podem excluir manuais.');
+}
+
+/** Texto do manual (para abrir manual que só tem texto, sem arquivo). */
+export async function textoDoManual(id: string): Promise<string> {
+  const { data, error } = await supabase.from('board_manuals').select('content_text').eq('id', id).maybeSingle();
+  falhar(error);
+  return (data as { content_text: string | null } | null)?.content_text ?? '';
 }

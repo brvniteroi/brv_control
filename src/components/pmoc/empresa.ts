@@ -7,7 +7,7 @@ export const EMPRESA_BRV = {
   razaoSocial: 'BRV Niterói Elétrica e Refrigeração Ltda',
   cnpj: '07.320.361/0001-64',
   email: 'brvniteroi@gmail.com',
-  telefone: '(21) 97018-8046',
+  telefone: '(21) 99925-4178',
   endereco: 'Estrada Francisco da Cruz Nunes 10112, Niterói - RJ, CEP 24340-000',
   logoUrl: '/logobrvcontrol.png',
   subtituloPmoc: 'PMOC Oficial - BRV Niterói Elétrica e Refrigeração Ltda',

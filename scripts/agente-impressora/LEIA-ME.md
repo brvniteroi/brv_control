@@ -38,6 +38,13 @@ do BRV Equipamentos, que **continuam funcionando** enquanto o Equipamentos estiv
 - Etiqueta em branco no meio = sensor desajustado: parar o agente, `npm run calibrar` (envia `~JC`; a Elgin avança
   algumas etiquetas) e iniciar de novo. Trocar de rolo também pede calibrar.
 
+## Conferir qual agente está rodando (v1.1.0 em diante)
+- O sinal de vida (tabela `print_agents`, coluna `info`) informa a versão, a margem esquerda, o passo do rolo, o PID e a data do arquivo em uso;
+  o `agente.log` repete os ajustes ao iniciar. Se a etiqueta sair diferente do combinado (margem encostada, etiqueta em branco), confira
+  primeiro se o `agente.mjs` do servidor é o do projeto: arquivo antigo no servidor foi a causa em 2026-11-10 (voltaram a margem encostada e a etiqueta em branco).
+- Trocou o `agente.mjs`? Reinicie (Agendador de Tarefas: "BRV Control - Impressora" > Finalizar > Executar) e confira que há um único `node` (`Get-Process node`).
+- Em 2026-11-10 o servidor roda com `MARGEM_ESQUERDA_MM=4` no `.env` (ajuste fino do usuário; o padrão do código é 3).
+
 ## No dia a dia
 - A tela Oficina mostra "Pronta" (sinal nos últimos 90 s) ou "Servidor da loja sem sinal". Sem sinal, use
   "Imprimir pelo navegador" (contingência, no Chrome com Margens "Nenhuma").

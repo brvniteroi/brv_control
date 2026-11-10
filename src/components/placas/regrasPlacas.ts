@@ -7,6 +7,13 @@ import { ROTULO_CATEGORIA_FOTO } from './cores';
 /** Limite de dias desde a entrada (placa ainda em aberto, inclusive `pronto`) para marcar como `"Encalhada"`. */
 export const DIAS_PLACA_ENCALHADA = 4;
 
+/** Até este valor (R$) o orçamento não exige sinal: o pagamento é por PIX na retirada da placa (decisão do Braulio, 2026-11-10). */
+export const LIMITE_SEM_SINAL_PLACA = 250;
+
+export function exigeSinalPlaca(valor: number | null | undefined): boolean {
+  return Number(valor ?? 0) > LIMITE_SEM_SINAL_PLACA;
+}
+
 /** Prazo legal de garantia do reparo de placa em dias corridos após a saída (`entregue`). */
 export const PRAZO_GARANTIA_PLACA_DIAS = 90;
 
@@ -387,9 +394,12 @@ export function textoWhatsAppOrcamentoPlaca(
 ): string {
   const valor = placa.quote_amount != null ? valorEmReais(placa.quote_amount) : 'sob consulta';
   const entrada = placa.quote_amount != null ? valorEmReais(placa.quote_amount / 2) : '50%';
+  const condicao = exigeSinalPlaca(placa.quote_amount)
+    ? `sinal de 50%: ${entrada} via PIX para início em bancada`
+    : 'sem sinal; pagamento via PIX na retirada da placa';
   return (
     `Olá, ${placa.customer_name}! Segue a proposta de orçamento do laboratório BRV Niterói referente à placa ${placa.board_number} (${placa.brand_model} · Cód. ${placa.board_code}).\n` +
-    `Valor total: ${valor} (sinal de 50%: ${entrada} via PIX para início em bancada).\n` +
+    `Valor total: ${valor} (${condicao}).\n` +
     `Validade da proposta: ${placa.quote_validity_days || 10} dias corridos.`
   );
 }

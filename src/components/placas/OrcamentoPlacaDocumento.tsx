@@ -9,11 +9,10 @@ import { formatarTelefone } from '../../utils/telefone';
 import { EMPRESA_BRV } from '../pmoc/empresa';
 import { CORES_TIPO_CLIENTE_PLACA } from './cores';
 import { PdfIndisponivelError, gerarPdfOrcamento, registrarEnvioOrcamento } from './fonteDeDados';
-import { montarLinkWhatsAppPlaca, textoWhatsAppOrcamentoPlaca } from './regrasPlacas';
+import { exigeSinalPlaca, montarLinkWhatsAppPlaca, textoWhatsAppOrcamentoPlaca } from './regrasPlacas';
 import {
   CHAVE_PIX_ORCAMENTO_PLACA,
   CLAUSULAS_ORCAMENTO_PLACA,
-  ESCOPO_ORCAMENTO_PLACA,
   textoPoliticaExecucaoOrcamento,
 } from './textosJuridicosPlacas';
 
@@ -49,6 +48,7 @@ export default function OrcamentoPlacaDocumento({
 
   const valorTotal = placa.quote_amount ?? 0;
   const valorEntrada = valorTotal / 2;
+  const comSinal = exigeSinalPlaca(valorTotal);
   const diasValidade = placa.quote_validity_days || 10;
   const [dataEmissao] = useState(() => new Date());
   const dataValidade = new Date(dataEmissao.getTime() + diasValidade * 86_400_000);
@@ -318,22 +318,10 @@ export default function OrcamentoPlacaDocumento({
             </div>
           </section>
 
-          {/* 3. Escopo Técnico */}
+          {/* 3. Investimento e Condições Comerciais */}
           <section className="mt-4">
             <div className="placas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-              3. Escopo dos Serviços Inclusos
-            </div>
-            <ul className="space-y-1 border border-t-0 border-slate-300 p-3 text-xs leading-relaxed text-slate-800">
-              {ESCOPO_ORCAMENTO_PLACA.map((linha, idx) => (
-                <li key={idx}>• {linha}</li>
-              ))}
-            </ul>
-          </section>
-
-          {/* 4. Investimento e Condições Comerciais */}
-          <section className="mt-4">
-            <div className="placas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-              4. Investimento Total e Condições Comerciais
+              3. Investimento Total e Condições Comerciais
             </div>
             <div className="border border-t-0 border-slate-300 p-3.5 text-xs">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-3">
@@ -346,12 +334,20 @@ export default function OrcamentoPlacaDocumento({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[11px] text-slate-600">
-                    <strong>Entrada (50% via PIX):</strong> {valorEmReais(valorEntrada)}
-                  </div>
-                  <div className="text-[11px] text-slate-600">
-                    <strong>Saldo na retirada (50%):</strong> {valorEmReais(valorEntrada)}
-                  </div>
+                  {comSinal ? (
+                    <>
+                      <div className="text-[11px] text-slate-600">
+                        <strong>Entrada (50% via PIX):</strong> {valorEmReais(valorEntrada)}
+                      </div>
+                      <div className="text-[11px] text-slate-600">
+                        <strong>Saldo na retirada (50%):</strong> {valorEmReais(valorEntrada)}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-[11px] text-slate-600">
+                      <strong>Pagamento via PIX na retirada da placa</strong> (sem sinal)
+                    </div>
+                  )}
                   <div className="mt-0.5 text-[11px] text-slate-700">
                     <strong>Chave PIX (E-mail):</strong>{' '}
                     <span className="font-mono font-bold">{CHAVE_PIX_ORCAMENTO_PLACA}</span> (
@@ -360,16 +356,18 @@ export default function OrcamentoPlacaDocumento({
                 </div>
               </div>
 
-              <p className="placas-cor-exata mt-2.5 rounded border border-amber-300 bg-amber-50 p-2.5 text-[11px] leading-relaxed font-semibold text-amber-950">
-                {textoPoliticaExecucaoOrcamento(valorEmReais(valorEntrada) || '50%')}
-              </p>
+              {comSinal && (
+                <p className="placas-cor-exata mt-2.5 rounded border border-amber-300 bg-amber-50 p-2.5 text-[11px] leading-relaxed font-semibold text-amber-950">
+                  {textoPoliticaExecucaoOrcamento(valorEmReais(valorEntrada) || '50%')}
+                </p>
+              )}
             </div>
           </section>
 
-          {/* 5. Termos de Garantia Legal e Cláusula de Abandono */}
+          {/* 4. Termos de Garantia Legal e Cláusula de Abandono */}
           <section className="mt-4">
             <div className="placas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-              5. Condições Gerais, Garantia Legal (CDC) e Guarda de Bem
+              4. Condições Gerais, Garantia Legal (CDC) e Guarda de Bem
             </div>
             <div className="space-y-1.5 border border-t-0 border-slate-300 p-3 text-[10.5px] leading-snug text-slate-700">
               {CLAUSULAS_ORCAMENTO_PLACA.map((clausula, idx) => (

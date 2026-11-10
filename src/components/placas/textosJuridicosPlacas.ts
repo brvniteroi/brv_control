@@ -4,14 +4,6 @@
 /** Chave PIX exibida no quadro de condições comerciais do orçamento de placa. */
 export const CHAVE_PIX_ORCAMENTO_PLACA = 'brvloja@brvniteroi.com.br';
 
-/** Itens de escopo técnico do orçamento (`ModalOrcamentoPlaca.jsx`, seção 3). */
-export const ESCOPO_ORCAMENTO_PLACA: readonly string[] = [
-  'Reparo eletrônico dos estágios de controle e potência, incluindo substituição de semicondutores e componentes periféricos defeituosos;',
-  'Reconstituição de trilhas condutoras e reforço de soldas térmicas;',
-  'Aplicação de verniz quando necessário;',
-  'Simulação dinâmica em bancada com acionamento de compressor inverter e monitoramento de sinais de comunicação.',
-];
-
 /** Monta o texto literal da política de execução de 50% de entrada (`ModalOrcamentoPlaca.jsx`, seção 4). */
 export function textoPoliticaExecucaoOrcamento(entradaFormatada: string): string {
   return `POLÍTICA DE EXECUÇÃO: O início dos serviços em bancada, alocação de peças de precisão e testes é estritamente condicionado ao envio do comprovante bancário da entrada de 50% (${entradaFormatada}). O saldo restante de 50% deverá ser quitado no ato da retirada/entrega.`;

@@ -134,7 +134,14 @@ function etapaDoTexto(t) {
   return null;
 }
 
-// Logins do sistema antigo que são o Braulio (o funcionário cadastrado no Control é "Braulio Rodrigues Valente")
+// Técnico de bancada de TODAS as placas: Braulio (decidido pelo usuário em 2026-11-10; os nomes do sistema antigo eram logins dele)
+const idBraulio = funcionarios.find((f) => norm(f.name) === 'braulio rodrigues valente')?.id ?? null;
+if (!idBraulio) {
+  console.error('Funcionário "Braulio Rodrigues Valente" não encontrado no Control.');
+  process.exit(1);
+}
+
+// Logins do sistema antigo que são o Braulio (só para o técnico de retirada) (o funcionário cadastrado no Control é "Braulio Rodrigues Valente")
 const APELIDOS_FUNCIONARIO = { 'administrador brv': 'braulio rodrigues valente', 'braulio valente': 'braulio rodrigues valente' };
 
 function acharFuncionario(nome) {
@@ -238,7 +245,7 @@ for (const r of reparos) {
       reported_defect: texto(r.defeito_reclamado) ?? 'Não informado',
       no_apparent_defect: !!r.sem_defeito,
       pickup_employee_id: acharFuncionario(r.tecnico_retirada),
-      bench_employee_id: acharFuncionario(r.tecnico_bancada),
+      bench_employee_id: idBraulio,   // o único técnico de bancada das placas é o Braulio (decidido em 2026-11-10)
       error_code: texto(r.codigo_erro),
       technical_diagnosis: texto(r.diagnostico_tecnico),
       replaced_components: texto(r.componentes_trocados),

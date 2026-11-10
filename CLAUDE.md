@@ -181,9 +181,15 @@ e confirmar se a migration `20261109120000_acesso_financeiro_placas.sql` já foi
 sem `oficina`, colunas financeiras só com `tem_financeiro_placas()`, trigger do bloqueio de etapa, token público e RPC do acompanhamento), `services/placas.ts`,
 trocar `fonteDeDados.ts`, tirar o "modo oficina" das telas, ajuda F1 (`src/ajuda/topicos.ts`). Ao concluir, apagar este lembrete.
 
-**LEMBRETE (2026-11-10, amanhã): fazer o teste do APK com tela apagada** (lembrar o usuário logo no início da conversa). Em 2026-11-09 o APK
+**LEMBRETE (2026-11-10, NOITE): repetir o teste do APK com tela apagada** (lembrar o usuário logo no início da conversa). Em 2026-11-09 o APK
 já estava instalado nos técnicos Alberto, Emerson e Marcus (têm token em `push_fcm_tokens`; o Bruno Brum, conta técnica do usuário, ainda só
-no navegador), mas o teste não foi conclusivo. Roteiro: técnico parado (Alberto), Mapa "Online" com o app aberto, apagar a tela ~10 min sem mexer,
+no navegador). **Resultado do teste de 2026-11-10 de manhã (A20 do Alberto):** a **notificação push chegou** com o app fechado e a tela apagada
+(atividade passada para ele às 07:59, o celular apitou); **falhou o "Online" e o GPS**: o sinal de vida parou às 07:38:30, no minuto em que a tela
+apagou (celular parado), e a posição não atualizou mais; nem o push o fez voltar. Suspeita: a bateria do Android congela o serviço com o celular parado.
+Antes de repetir, no celular: Aplicativos > BRV Control > Bateria "Sem restrições"; Cuidados do dispositivo > Bateria > Limites de uso em segundo plano
+(tirar o app de "Apps em suspensão" e "suspensão profunda"); Localização "Permitir o tempo todo"; conferir que a notificação fixa "Compartilhando sua
+posição..." aparece e **segue visível com a tela apagada**. Se mesmo assim cair, o problema é do app (o serviço em primeiro plano não segura o celular
+acordado): corrigir o código (`useRastreioCampo`, plugin de GPS, talvez WakeLock/`ACCESS_BACKGROUND_LOCATION`) e gerar APK novo. Roteiro: técnico parado (Alberto), Mapa "Online" com o app aberto, apagar a tela ~10 min sem mexer,
 conferir no Mapa que segue "Online" (sinal < 3 min) e que a posição atualizou (parado: a cada 5 min), e criar uma atividade de hoje para ele com o
 app fechado (deve chegar notificação). O Claude pode acompanhar pelo banco (`technician_presence`, `technician_locations`, só leitura) enquanto o
 usuário testa. Se cair para "Offline": bateria "Sem restrições" + tirar de "Otimizar uso da bateria"/"Apps em suspensão" (Samsung) ou "Início

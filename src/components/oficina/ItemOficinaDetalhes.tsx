@@ -63,6 +63,7 @@ import {
   podeMover,
   textoOrcamentoWhatsApp,
   valorEmReais,
+  EXIGE_ORCAMENTO_OFICINA,
 } from '../../utils/oficina';
 import { formatarDataHora } from '../../utils/ordens';
 import OrdemDetalhes from '../ordens/OrdemDetalhes';
@@ -1197,13 +1198,15 @@ export default function ItemOficinaDetalhes({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-slate-800">
                 <DollarSign size={18} className="text-blue-600" />
-                <h2 className="text-base font-bold">Orçamento e cliente</h2>
+                <h2 className="text-base font-bold">{EXIGE_ORCAMENTO_OFICINA ? 'Orçamento e cliente' : 'Autorização de descarte'}</h2>
               </div>
               {!ehEscritorio && (
                 <span className="text-[11px] font-medium text-slate-400">Gerenciado pelo escritório</span>
               )}
             </div>
 
+            {EXIGE_ORCAMENTO_OFICINA && (
+              <>
             {item.is_warranty && !item.quote_reference && !item.quote_amount && (
               <p className="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3.5 py-2.5 text-xs font-medium text-indigo-900">
                 Item marcado como <strong>Garantia</strong>: não precisa passar por orçamento para seguir ao reparo.
@@ -1258,6 +1261,8 @@ export default function ItemOficinaDetalhes({
                 <strong>Observação da resposta:</strong> {item.decision_note}
               </p>
             )}
+              </>
+            )}
 
             {item.discard_authorized_at && item.status !== 'descarte' && (
               <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3.5 py-2.5 text-xs text-rose-900">
@@ -1271,6 +1276,8 @@ export default function ItemOficinaDetalhes({
 
             {ehEscritorio && !somenteLeitura && (
               <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+                {EXIGE_ORCAMENTO_OFICINA && (
+                  <>
                 {acoes.registrarOrcamento && (
                   <button
                     type="button"
@@ -1290,6 +1297,9 @@ export default function ItemOficinaDetalhes({
                   <MessageCircle size={14} />
                   Avisar pelo WhatsApp
                 </button>
+
+                  </>
+                )}
 
                 {acoes.registrarResposta && (
                   <button

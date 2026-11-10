@@ -695,6 +695,8 @@ Abra o item clicando no cartão.
     telas: ['item-oficina', 'oficina'],
     palavras: 'orcamento sicweb valor aprovado recusado aprovar cliente respondeu whatsapp',
     texto: `
+> **Por enquanto esta fase está desligada** (2026-11-10): o item segue do diagnóstico direto para **Em reparo** ou **Aguardando peça**, sem registrar orçamento nem resposta do cliente, e a oficina também faz esse passo. O orçamento continua sendo feito no SicWeb, fora do sistema. Os botões abaixo voltam quando a fase for religada.
+
 O orçamento é feito no **SicWeb**. No sistema fica só a referência e a resposta do cliente.
 1. Abra o item e, em **Orçamento e cliente**, clique em **Registrar orçamento**.
 2. Preencha o **Nº do orçamento no SicWeb** e o **Valor do orçamento (R$)**. Com **Já enviado ao cliente** marcado, o item vai para **Aguardando cliente**.

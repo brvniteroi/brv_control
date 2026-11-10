@@ -10,6 +10,12 @@ import type {
 } from '../types/oficina';
 import type { ProfileRole } from '../types/fsm';
 
+/**
+ * A fase de orçamento/aprovação do cliente está desligada por enquanto (pedido do Braulio, 2026-11-10), para não travar a OS.
+ * Espelha `public.oficina_exige_orcamento()` no banco (migration 20261110150000): trocar os dois juntos para religar.
+ */
+export const EXIGE_ORCAMENTO_OFICINA = false;
+
 export const ETAPAS_FINAIS: EtapaOficina[] = ['entregue', 'descarte', 'cancelado'];
 
 export const ehFinal = (e: EtapaOficina) => ETAPAS_FINAIS.includes(e);
@@ -133,7 +139,11 @@ export function podeMover(item: ItemOficina, para: EtapaOficina, papel: ProfileR
   if (!ehEscritorio(papel)) {
     const passo = PASSOS_BANCADA.some(([de, a]) => de === item.status && a === para);
     const garantia = item.is_warranty && item.status === 'diagnostico' && (para === 'aguardando_peca' || para === 'em_reparo');
-    if (!passo && !garantia) return false;
+    const semOrcamento =
+      !EXIGE_ORCAMENTO_OFICINA &&
+      ['diagnostico', 'aguardando_orcamento', 'aguardando_cliente'].includes(item.status) &&
+      (para === 'aguardando_peca' || para === 'em_reparo');
+    if (!passo && !garantia && !semOrcamento) return false;
     if (papel !== 'oficina') return false;
   }
   return motivoBloqueio(item, para) === null;
@@ -141,6 +151,7 @@ export function podeMover(item: ItemOficina, para: EtapaOficina, papel: ProfileR
 
 /** Por que o item não pode ir para a etapa (null = pode). Texto para mostrar ao usuário. */
 export function motivoBloqueio(item: ItemOficina, para: EtapaOficina): string | null {
+  if (!EXIGE_ORCAMENTO_OFICINA) return null;
   if ((para === 'aguardando_peca' || para === 'em_reparo') && !(item.decision === 'aprovado' || item.is_warranty)) {
     return 'Falta registrar a aprovação do cliente.';
   }
@@ -154,8 +165,8 @@ export function motivoBloqueio(item: ItemOficina, para: EtapaOficina): string | 
 export function acoesEscritorio(item: ItemOficina) {
   const aberto = !ehFinal(item.status);
   return {
-    registrarOrcamento: aberto && ['diagnostico', 'aguardando_orcamento', 'aguardando_cliente'].includes(item.status),
-    registrarResposta: aberto && ['aguardando_orcamento', 'aguardando_cliente'].includes(item.status),
+    registrarOrcamento: EXIGE_ORCAMENTO_OFICINA && aberto && ['diagnostico', 'aguardando_orcamento', 'aguardando_cliente'].includes(item.status),
+    registrarResposta: EXIGE_ORCAMENTO_OFICINA && aberto && ['aguardando_orcamento', 'aguardando_cliente'].includes(item.status),
     autorizarDescarte: aberto && item.status !== 'em_transito',
     criarOsDevolucao: item.status === 'pronto' && !item.return_service_order_id,
     marcarEntregue: item.status === 'pronto',

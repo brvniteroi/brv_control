@@ -2,12 +2,12 @@ import { FlaskConical } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { FONTE_DADOS_DEMO, USAR_BANCO_PLACAS } from './fonteDeDados';
 
-/** Telas do apoio técnico: ainda com dados de demonstração (fase P7), mesmo com as placas ligadas ao banco. */
-const ROTAS_APOIO = ['/placas/fichas', '/placas/erros', '/placas/assistente', '/placas/manuais'];
+/** Telas do apoio técnico que dependem da IA (fase P7b): fichas e manuais já usam o banco real. */
+const ROTAS_APOIO = ['/placas/erros', '/placas/assistente'];
 
 /**
  * Faixa discreta de "Dados de demonstração" (oculta na impressão). Com as placas ligadas ao banco
- * (`USAR_BANCO_PLACAS`), só aparece nas telas do apoio técnico, que ainda usam demonstração.
+ * (`USAR_BANCO_PLACAS`), só aparece nas telas de códigos de erro e do assistente, que esperam a IA.
  */
 export default function FaixaDadosDemoPlacas() {
   const { pathname } = useLocation();
@@ -21,9 +21,9 @@ export default function FaixaDadosDemoPlacas() {
     >
       <div className="flex items-center gap-2">
         <FlaskConical size={14} className="shrink-0 text-amber-700" aria-hidden="true" />
-        <span className="font-semibold">Dados de demonstração</span>
+        <span className="font-semibold">Em preparação</span>
         <span className="hidden text-amber-800/90 sm:inline">
-          — Simulação em memória; esta tela ainda não está ligada ao banco de dados.
+          — A IA desta tela ainda não foi ligada; a consulta ainda não responde.
         </span>
       </div>
     </div>

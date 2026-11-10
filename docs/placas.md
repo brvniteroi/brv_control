@@ -1,6 +1,8 @@
 # Migração do módulo Placas (Reparo de placas) para o BRV Control
 
-Plano de 2026-11-09. **Fase P0 (telas com dados de demonstração) feita, auditada e testada pelo usuário em 2026-11-09; próximo: P1 (banco).** Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
+Plano de 2026-11-09. **Estado em 2026-11-10:** P0 (telas) feita e testada; P1 (banco, services, menu liberado, ajuda F1), ensaio do P2 (importação), etiqueta do P4 e
+P7 (fichas, manuais e IA de códigos de erro/ficha) feitos, com todas as migrations aplicadas. Falta: testar com dados reais, tirar o resto do "modo oficina", PDF real e QR,
+testar a etiqueta, publicar a Edge Function `apoio-tecnico` e a virada (lista em CLAUDE.md, lembrete "terminar as Placas"). Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
 itens da Oficina, importador repetível, virada com o Equipamentos em só leitura. Referência do sistema antigo: `D:\BRV_Equipamentos`
 (telas em `frontend/src/pages/Reparos/`, schema em `schema_reparos.sql`).
 
@@ -39,6 +41,9 @@ de volta para `/oficina` e o menu Placas não aparece para ela. O que as telas d
 `refunded`, `refund_amount`, `refunded_at`, `refund_reason`, `archived`. `quote_amount` guarda o valor do orçamento da placa.
 
 ### 2. Etapas: mapa de/para
+**Atualização de 2026-11-10** (migration `20261110120000_placas_junta_etapas.sql`): Aguardando Peça e Em Reparo viraram uma coluna só, e o Teste em Simulador saiu do quadro.
+Quadro atual: Entrada → Diagnóstico → Em Reparo / Aguardando Peça → Pronto; finais Entregue e Sem Conserto. A tabela abaixo é o plano original.
+
 | Placas hoje | Control |
 |---|---|
 | Entrada / Triagem | `entrada` |
@@ -157,7 +162,7 @@ Também decididos: número da OS com data (`OS-DDMMAA-NNN`), cadastro de cliente
 
 Decididos depois da auditoria das telas (2026-11-09, pontos de `docs/gemini/placas-auditoria.md`):
 6. **Acesso:** a `oficina` (Gustavo) não usa as Placas; o técnico de placas é o Braulio (admin).
-7. **Bloqueio de etapa:** mantido por enquanto. Sem orçamento aprovado (e fora da garantia) a placa não vai para Aguardando Peça, Em Reparo, Teste, Pronto nem Entregue.
+7. **Bloqueio de etapa:** mantido por enquanto. Sem orçamento aprovado (e fora da garantia) a placa não vai para Em Reparo / Aguardando Peça, Pronto nem Entregue (o Teste saiu em 2026-11-10).
 8. **Reembolso:** é a devolução do valor pago pelo cliente (desistência do conserto ou reparo que não deu certo). Caixa de marcar + valor, data e motivo no detalhe da placa,
    só com a marca do financeiro; o valor sai do financeiro das placas (desconta do faturamento). **Sem conserto não gera reembolso.**
 9. **Dias da placa:** contados **desde a entrada**, sem zerar ao mudar de etapa (`diasDesdeEntrada`, campo `days_since_entry`); na finalizada congela na saída. Encalhada = em aberto

@@ -1,8 +1,8 @@
 # Migração do módulo Placas (Reparo de placas) para o BRV Control
 
 Plano de 2026-11-09. **Estado em 2026-11-10:** P0 (telas) feita e testada; P1 (banco, services, menu liberado, ajuda F1), ensaio do P2 (importação), etiqueta do P4 e
-P7 (fichas, manuais e IA de códigos de erro/ficha) feitos, com todas as migrations aplicadas. Falta: testar com dados reais, tirar o resto do "modo oficina", PDF real e QR,
-testar a etiqueta, publicar a Edge Function `apoio-tecnico` e a virada (lista em CLAUDE.md, lembrete "terminar as Placas"). Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
+P7 (fichas, manuais e IA de códigos de erro/ficha) feitos, com todas as migrations aplicadas. Telas com dados reais, etiqueta na Elgin e a Edge Function `apoio-tecnico` testadas pelo usuário. Falta: tirar o resto do "modo oficina", PDF real e QR
+e a virada (lista em CLAUDE.md, lembrete "terminar as Placas"). Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
 itens da Oficina, importador repetível, virada com o Equipamentos em só leitura. Referência do sistema antigo: `D:\BRV_Equipamentos`
 (telas em `frontend/src/pages/Reparos/`, schema em `schema_reparos.sql`).
 

@@ -379,11 +379,19 @@ export async function buscarOsControl(numero: number | string): Promise<BoardCon
 export async function listarTecnicos(): Promise<BoardTechnicianOption[]> {
   const { data, error } = await supabase.rpc('oficina_funcionarios');
   falhar(error);
-  return ((data ?? []) as { id: string; name: string; role: string }[]).map((f) => ({
+  const lista = ((data ?? []) as { id: string; name: string; role: string }[]).map((f) => ({
     id: f.id,
     name: f.name,
     area: f.role === 'oficina' ? ('bancada' as const) : ('campo' as const),
   }));
+  // O técnico de bancada (Braulio Valente) tem cadastro inativo como funcionário de campo, então a função acima não o traz.
+  const { data: bancada } = await supabase.from('employees').select('id, name').ilike('name', '%braulio%valente%');
+  for (const f of (bancada ?? []) as { id: string; name: string }[]) {
+    const i = lista.findIndex((l) => l.id === f.id);
+    if (i >= 0) lista[i].area = 'bancada';
+    else lista.push({ id: f.id, name: f.name, area: 'bancada' as const });
+  }
+  return lista;
 }
 
 export async function criarPlaca(dados: CreateBoardInput): Promise<BoardOrder> {

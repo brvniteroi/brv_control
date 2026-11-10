@@ -62,7 +62,7 @@ const ehGrupo = (e: EntradaMenu): e is GrupoMenu => 'itens' in e;
  * Enquanto for `false`, o grupo "Placas" fica fora do menu (as rotas `/placas...` seguem abrindo por URL para testar).
  * Virar `true` junto com `FONTE_DADOS_DEMO = false`, quando o banco das placas estiver ligado.
  */
-const MOSTRAR_MENU_PLACAS = false;
+const MOSTRAR_MENU_PLACAS = true;
 
 const MENU: EntradaMenu[] = [
   { rota: '/', rotulo: 'Dashboard', icone: LayoutDashboard },

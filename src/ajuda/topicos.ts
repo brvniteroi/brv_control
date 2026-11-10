@@ -787,6 +787,7 @@ Cada placa tem um número próprio com a data de entrada, por exemplo **OS-10112
 6. **Pronto para Entrega**.
 Depois de **Entregue / Faturado** ou **Sem Conserto / Devolvido**, a placa vai para a aba **Finalizadas**.
 - Arraste o cartão para outra coluna, use as setas ← → do cartão ou abra a placa. No celular, mostra uma coluna por vez.
+- No computador, para ver as colunas que ficam à direita, **segure o botão do mouse num espaço vazio do quadro** (fora dos cartões) e **arraste para o lado**: o quadro anda junto, como uma mãozinha. A barra de rolagem de baixo também funciona.
 - **Parceiro** ou **Final** no cartão diz o tipo de cliente. **Garantia** é retorno de um reparo anterior.
 - **Encalhada**: a placa está em aberto há **4 dias ou mais desde a entrada** (a contagem não zera quando muda de etapa).
 ! O banco não deixa seguir para **Aguardando Peça**, **Em Reparo**, **Teste em Simulador**, **Pronto** ou **Entregue** sem o **orçamento aprovado** (exceto garantia). Só uma placa em **Pronto** pode ser entregue.

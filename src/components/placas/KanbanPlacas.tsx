@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd';
 import { ArrowRight, Lock } from 'lucide-react';
 import type { ProfileRole } from '../../types/fsm';
@@ -43,6 +43,26 @@ export default function KanbanPlacas({
     }
     return mapa;
   }, [placas]);
+
+  // Arrastar o fundo do quadro (fora dos cartões e botões) com o mouse rola para os lados, como a "mãozinha".
+  const faixaRef = useRef<HTMLDivElement>(null);
+  const comecarPanoramica = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const faixa = faixaRef.current;
+    if (!faixa || e.button !== 0) return;
+    if ((e.target as HTMLElement).closest('[data-rfd-draggable-id], button, a, input, select, textarea')) return;
+    const xInicial = e.clientX;
+    const rolagemInicial = faixa.scrollLeft;
+    e.preventDefault();
+    const mover = (ev: MouseEvent) => {
+      faixa.scrollLeft = rolagemInicial - (ev.clientX - xInicial);
+    };
+    const soltar = () => {
+      window.removeEventListener('mousemove', mover);
+      window.removeEventListener('mouseup', soltar);
+    };
+    window.addEventListener('mousemove', mover);
+    window.addEventListener('mouseup', soltar);
+  };
 
   const aoSoltar = (resultado: DropResult) => {
     const { destination, source, draggableId } = resultado;
@@ -156,7 +176,11 @@ export default function KanbanPlacas({
       {/* COMPUTADOR (>= md): 6 colunas com arraste @hello-pangea/dnd */}
       <div className="hidden md:block">
         <DragDropContext onDragEnd={aoSoltar}>
-          <div className="flex gap-3 overflow-x-auto pb-3">
+          <div
+            ref={faixaRef}
+            onMouseDown={comecarPanoramica}
+            className="flex cursor-grab gap-3 overflow-x-auto pb-3 active:cursor-grabbing"
+          >
             {ETAPAS_KANBAN_PLACA.map((col) => {
               const lista = porColuna.get(col.etapa) ?? [];
               const estilo = CORES_ETAPA_PLACA[col.etapa];

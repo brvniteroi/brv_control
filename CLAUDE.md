@@ -64,7 +64,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 ## Estado atual (2026-10-29)
 Feito:
 - Estrutura do app, layout, menu e rotas. Única página ainda placeholder (`EmConstrucao`): Estoque.
-  Menu com grupos recolhíveis (`Sidebar.tsx`): Serviços (linha do tempo, calendário, OS) e Cadastros (clientes, equipamentos,
+  Menu (`Sidebar.tsx`, ordem de 2026-11-10: Dashboard, Serviços, Cadastros, Relatórios, Oficina, Placas, Estoque, Ajuda; Equipe fica dentro de Cadastros). Grupos recolhíveis: Serviços (linha do tempo, calendário, OS) e Cadastros (clientes, equipamentos,
   tipos de serviço `pages/TiposServico.tsx`, etiquetas `pages/Etiquetas.tsx`, modelos de formulários) e Relatórios (atividades, gráficos, tipos de serviços, Garantia BRV).
 - Projeto Supabase criado, schema aplicado e RLS conferido (anon recebe 401).
 - Login (`AuthContext`, `Login.tsx`) e rotas protegidas (`ProtectedRoute`, bloqueia `active = FALSE`).

@@ -78,6 +78,29 @@ const MENU: EntradaMenu[] = [
       // { rota: '/pmoc', rotulo: 'PMOC', icone: FileCheck2, apenasEscritorio: true },
     ],
   },
+  {
+    rotulo: 'Cadastros',
+    icone: FolderOpen,
+    itens: [
+      { rota: '/clientes', rotulo: 'Clientes', icone: Users },
+      { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
+      { rota: '/tipos-de-servico', rotulo: 'Tipos de Serviço', icone: ListChecks, apenasEscritorio: true },
+      { rota: '/etiquetas', rotulo: 'Etiquetas', icone: Tag, apenasEscritorio: true },
+      { rota: '/cargos', rotulo: 'Cargos', icone: BriefcaseBusiness, apenasEscritorio: true },
+      { rota: '/formularios', rotulo: 'Modelos de Formulários', icone: FileText, apenasEscritorio: true },
+      { rota: '/equipe', rotulo: 'Equipe', icone: UserCog },
+    ],
+  },
+  {
+    rotulo: 'Relatórios',
+    icone: FileBarChart,
+    itens: [
+      { rota: '/relatorios/atividades', rotulo: 'Atividades', icone: ClipboardCheck, apenasEscritorio: true },
+      { rota: '/relatorios/graficos', rotulo: 'Gráficos', icone: ChartColumn, apenasEscritorio: true },
+      { rota: '/relatorios/tipos-de-servico', rotulo: 'Tipos de Serviços', icone: Layers, apenasEscritorio: true },
+      { rota: '/relatorios/garantia-brv', rotulo: 'Garantia BRV', icone: ShieldCheck, apenasEscritorio: true },
+    ],
+  },
   { rota: '/oficina', rotulo: 'Oficina', icone: Hammer, oficina: true },
   {
     rotulo: 'Placas',
@@ -92,30 +115,7 @@ const MENU: EntradaMenu[] = [
       { rota: '/placas/manuais', rotulo: 'Manuais', icone: FolderOpen, apenasEscritorio: true },
     ],
   },
-  {
-    rotulo: 'Cadastros',
-    icone: FolderOpen,
-    itens: [
-      { rota: '/clientes', rotulo: 'Clientes', icone: Users },
-      { rota: '/equipamentos', rotulo: 'Equipamentos', icone: Snowflake },
-      { rota: '/tipos-de-servico', rotulo: 'Tipos de Serviço', icone: ListChecks, apenasEscritorio: true },
-      { rota: '/etiquetas', rotulo: 'Etiquetas', icone: Tag, apenasEscritorio: true },
-      { rota: '/cargos', rotulo: 'Cargos', icone: BriefcaseBusiness, apenasEscritorio: true },
-      { rota: '/formularios', rotulo: 'Modelos de Formulários', icone: FileText, apenasEscritorio: true },
-    ],
-  },
-  {
-    rotulo: 'Relatórios',
-    icone: FileBarChart,
-    itens: [
-      { rota: '/relatorios/atividades', rotulo: 'Atividades', icone: ClipboardCheck, apenasEscritorio: true },
-      { rota: '/relatorios/graficos', rotulo: 'Gráficos', icone: ChartColumn, apenasEscritorio: true },
-      { rota: '/relatorios/tipos-de-servico', rotulo: 'Tipos de Serviços', icone: Layers, apenasEscritorio: true },
-      { rota: '/relatorios/garantia-brv', rotulo: 'Garantia BRV', icone: ShieldCheck, apenasEscritorio: true },
-    ],
-  },
   { rota: '/estoque', rotulo: 'Estoque', icone: Package },
-  { rota: '/equipe', rotulo: 'Equipe', icone: UserCog },
   { rota: '/ajuda', rotulo: 'Ajuda (F1)', icone: CircleHelp, apenasEscritorio: true },
 ];
 

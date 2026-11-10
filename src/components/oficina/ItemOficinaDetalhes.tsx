@@ -48,7 +48,7 @@ import type {
   UnidadeRecolhida,
 } from '../../types/oficina';
 import {
-  COLUNAS_KANBAN,
+  ETAPAS_KANBAN,
   ROTULO_CANAL,
   ROTULO_ETAPA,
   ROTULO_PECAS,
@@ -590,9 +590,9 @@ export default function ItemOficinaDetalhes({
     const numFormatado = numeroItem(item, totalNaOs);
     const dias = diasNaOficina(item);
 
-    const etapasPermitidas = COLUNAS_KANBAN.filter((c) => podeMover(item, c.etapa, papel));
+    const etapasPermitidas = ETAPAS_KANBAN.filter((c) => podeMover(item, c.etapa, papel));
     const avisosBloqueio = !finalizado
-      ? COLUNAS_KANBAN.map((c) => motivoBloqueio(item, c.etapa)).filter((m): m is string => m !== null)
+      ? ETAPAS_KANBAN.map((c) => motivoBloqueio(item, c.etapa)).filter((m): m is string => m !== null)
       : [];
     const avisoUnicoBloqueio = avisosBloqueio[0] ?? null;
 

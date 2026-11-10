@@ -614,12 +614,10 @@ A **Oficina** acompanha o equipamento (ou parte dele) que a equipe trouxe do cli
 O item usa o **número da OS** em que foi recolhido: "OS 17300". Se saiu mais de uma peça da mesma OS: "OS 17300 · item 2".
 ## As etapas (aba Em andamento)
 1. **Em trânsito**: o técnico recolheu e ainda está trazendo. Ele registra no app de campo, na atividade, pelo botão **Recolher equipamento** (com o que levou, defeito e fotos). O item aparece sozinho nesta coluna.
-2. **Entrada**: chegou na loja. Imprima a etiqueta.
-3. **Diagnóstico**: o técnico da oficina analisa e registra o que precisa ser feito.
-4. **Aguardando orçamento**: o atendimento monta o orçamento no **SicWeb**.
-5. **Aguardando cliente**: orçamento enviado, esperando a resposta.
-6. **Aguardando peça** / **Em reparo**: aprovado; conserto em andamento.
-7. **Pronto**: pronto para voltar ao cliente (consertado ou recusado sem conserto).
+2. **Entrada / Diagnóstico** (uma coluna só): chegou na loja (imprima a etiqueta) e o técnico da oficina analisa e registra o que precisa ser feito. Ao arrastar um item em trânsito para cá ele entra como **Entrada**; os demais, como **Diagnóstico**. Para voltar um item a **Entrada**, abra o item e use **Mover etapa**.
+3. **Aguardando peça / Reparo** (uma coluna só): conserto em andamento. Ao arrastar, o item entra em **Em reparo**; para marcar **Aguardando peça**, abra o item e use **Mover etapa**.
+4. **Pronto**: pronto para voltar ao cliente (consertado ou recusado sem conserto).
+As colunas **Aguardando orçamento** e **Aguardando cliente** só aparecem se ainda houver itens nelas (a fase de orçamento está desligada).
 Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados**.
 - Arraste o cartão para outra coluna ou abra o item e use **Mover etapa**. No celular, use **Mover para...** no cartão.
 - No computador, para ver as colunas que ficam à direita, **segure o botão do mouse num espaço vazio do quadro** (fora dos cartões) e **arraste para o lado**: o quadro anda junto, como uma mãozinha.

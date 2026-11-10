@@ -20,8 +20,8 @@ export const ETAPAS_FINAIS: EtapaOficina[] = ['entregue', 'descarte', 'cancelado
 
 export const ehFinal = (e: EtapaOficina) => ETAPAS_FINAIS.includes(e);
 
-/** Etapas na ordem do Kanban (as finais ficam na lista de finalizados). */
-export const COLUNAS_KANBAN: { etapa: EtapaOficina; rotulo: string; quem: string }[] = [
+/** Etapas reais, na ordem do fluxo (as finais ficam na lista de finalizados). */
+export const ETAPAS_KANBAN: { etapa: EtapaOficina; rotulo: string; quem: string }[] = [
   { etapa: 'em_transito', rotulo: 'Em trânsito', quem: 'Recolhido pelo técnico, ainda não chegou' },
   { etapa: 'entrada', rotulo: 'Entrada', quem: 'Chegou na loja' },
   { etapa: 'diagnostico', rotulo: 'Diagnóstico', quem: 'Oficina' },
@@ -31,6 +31,35 @@ export const COLUNAS_KANBAN: { etapa: EtapaOficina; rotulo: string; quem: string
   { etapa: 'em_reparo', rotulo: 'Em reparo', quem: 'Oficina' },
   { etapa: 'pronto', rotulo: 'Pronto', quem: 'Para devolver ao cliente' },
 ];
+
+/**
+ * Colunas do quadro (2026-11-10): Entrada + Diagnóstico e Aguardando peça + Em reparo aparecem juntas.
+ * As etapas continuam existindo no banco; `etapa` é o id/cor da coluna e `etapas` o que ela mostra.
+ */
+export interface ColunaKanban {
+  etapa: EtapaOficina;
+  etapas: EtapaOficina[];
+  rotulo: string;
+  quem: string;
+}
+
+export const COLUNAS_KANBAN: ColunaKanban[] = [
+  { etapa: 'em_transito', etapas: ['em_transito'], rotulo: 'Em trânsito', quem: 'Recolhido pelo técnico, ainda não chegou' },
+  { etapa: 'entrada', etapas: ['entrada', 'diagnostico'], rotulo: 'Entrada / Diagnóstico', quem: 'Chegou na loja · oficina analisa' },
+  { etapa: 'aguardando_orcamento', etapas: ['aguardando_orcamento'], rotulo: 'Aguardando orçamento', quem: 'Atendimento monta no SicWeb' },
+  { etapa: 'aguardando_cliente', etapas: ['aguardando_cliente'], rotulo: 'Aguardando cliente', quem: 'Orçamento enviado' },
+  { etapa: 'em_reparo', etapas: ['aguardando_peca', 'em_reparo'], rotulo: 'Aguardando peça / Reparo', quem: 'Oficina' },
+  { etapa: 'pronto', etapas: ['pronto'], rotulo: 'Pronto', quem: 'Para devolver ao cliente' },
+];
+
+/** Coluna que mostra o item (pela etapa real dele). */
+export const colunaDaEtapa = (e: EtapaOficina): ColunaKanban | undefined => COLUNAS_KANBAN.find((c) => c.etapas.includes(e));
+
+/** Etapa real que o item assume ao ser solto na coluna. */
+export function etapaDestinoDaColuna(item: Pick<ItemOficina, 'status'>, coluna: ColunaKanban): EtapaOficina {
+  if (coluna.etapa === 'entrada') return item.status === 'em_transito' ? 'entrada' : 'diagnostico';
+  return coluna.etapa;
+}
 
 export const ROTULO_ETAPA: Record<EtapaOficina, string> = {
   em_transito: 'Em trânsito',

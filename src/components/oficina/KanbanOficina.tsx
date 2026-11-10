@@ -5,6 +5,10 @@ import type { ProfileRole } from '../../types/fsm';
 import type { EtapaOficina, ItemOficinaTela } from '../../types/oficina';
 import {
   COLUNAS_KANBAN,
+  EXIGE_ORCAMENTO_OFICINA,
+  colunaDaEtapa,
+  etapaDestinoDaColuna,
+  type ColunaKanban,
   ROTULO_ETAPA,
   descricaoItem,
   motivoBloqueio,
@@ -43,11 +47,23 @@ export default function KanbanOficina({
     const mapa = new Map<EtapaOficina, ItemOficinaTela[]>();
     for (const col of COLUNAS_KANBAN) mapa.set(col.etapa, []);
     for (const item of itens) {
-      const lista = mapa.get(item.status);
+      const lista = mapa.get(colunaDaEtapa(item.status)?.etapa ?? item.status);
       if (lista) lista.push(item);
     }
     return mapa;
   }, [itens]);
+
+  // Com o orçamento desligado, as colunas dessa fase só aparecem se ainda houver item nelas.
+  const colunas = useMemo(
+    () =>
+      COLUNAS_KANBAN.filter(
+        (c) =>
+          EXIGE_ORCAMENTO_OFICINA ||
+          !['aguardando_orcamento', 'aguardando_cliente'].includes(c.etapa) ||
+          (porColuna.get(c.etapa)?.length ?? 0) > 0,
+      ),
+    [porColuna],
+  );
 
   const itemArrastando = useMemo(
     () => (arrastandoId ? itens.find((i) => i.id === arrastandoId) ?? null : null),
@@ -97,7 +113,9 @@ export default function KanbanOficina({
     const item = itens.find((i) => i.id === draggableId);
     if (!item) return;
 
-    const destino = destination.droppableId as EtapaKanban;
+    const colunaDestino = COLUNAS_KANBAN.find((c) => c.etapa === destination.droppableId);
+    if (!colunaDestino) return;
+    const destino = etapaDestinoDaColuna(item, colunaDestino) as EtapaKanban;
     if (!podeMover(item, destino, papel)) {
       const motivo =
         motivoBloqueio(item, destino) ??
@@ -109,19 +127,20 @@ export default function KanbanOficina({
     void onMoverEtapa(item, destino);
   };
 
-  const confirmarMoverCelular = async (destino: EtapaKanban) => {
+  const confirmarMoverCelular = async (coluna: ColunaKanban) => {
     if (!itemMoverCelular) return;
+    const destino = etapaDestinoDaColuna(itemMoverCelular, coluna) as EtapaKanban;
     setMovendoCelular(true);
     try {
       await onMoverEtapa(itemMoverCelular, destino);
-      setEtapaCelular(destino);
+      setEtapaCelular(coluna.etapa);
       setItemMoverCelular(null);
     } finally {
       setMovendoCelular(false);
     }
   };
 
-  const colunaAtivaCelular = COLUNAS_KANBAN.find((c) => c.etapa === etapaCelular) ?? COLUNAS_KANBAN[1];
+  const colunaAtivaCelular = colunas.find((c) => c.etapa === etapaCelular) ?? colunas[1] ?? colunas[0];
   const itensCelular = porColuna.get(colunaAtivaCelular.etapa) ?? [];
 
   return (
@@ -135,7 +154,7 @@ export default function KanbanOficina({
           aria-label="Etapas da oficina"
           className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
         >
-          {COLUNAS_KANBAN.map((col) => {
+          {colunas.map((col) => {
             const qtd = porColuna.get(col.etapa)?.length ?? 0;
             const ativa = col.etapa === colunaAtivaCelular.etapa;
             const estilo = CORES_ETAPA[col.etapa];
@@ -209,16 +228,16 @@ export default function KanbanOficina({
             onMouseDown={comecarPanoramica}
             className="flex cursor-grab items-start gap-3.5 overflow-x-auto pb-4 active:cursor-grabbing"
           >
-            {COLUNAS_KANBAN.map((col) => {
+            {colunas.map((col) => {
               const lista = porColuna.get(col.etapa) ?? [];
               const estilo = CORES_ETAPA[col.etapa];
-              const mesmaColuna = itemArrastando?.status === col.etapa;
+              const mesmaColuna = itemArrastando ? col.etapas.includes(itemArrastando.status) : false;
               const destinoPermitido = itemArrastando
-                ? !mesmaColuna && podeMover(itemArrastando, col.etapa, papel)
+                ? !mesmaColuna && podeMover(itemArrastando, etapaDestinoDaColuna(itemArrastando, col), papel)
                 : true;
               const bloqueio =
                 itemArrastando && !mesmaColuna && !destinoPermitido
-                  ? motivoBloqueio(itemArrastando, col.etapa)
+                  ? motivoBloqueio(itemArrastando, etapaDestinoDaColuna(itemArrastando, col))
                   : null;
 
               return (
@@ -346,10 +365,11 @@ export default function KanbanOficina({
             </div>
 
             <div className="mt-3 max-h-[65dvh] space-y-2 overflow-y-auto">
-              {COLUNAS_KANBAN.filter((c) => c.etapa !== itemMoverCelular.status).map((col) => {
-                const permitido = podeMover(itemMoverCelular, col.etapa, papel);
+              {colunas.filter((c) => !c.etapas.includes(itemMoverCelular.status)).map((col) => {
+                const destinoEtapa = etapaDestinoDaColuna(itemMoverCelular, col);
+                const permitido = podeMover(itemMoverCelular, destinoEtapa, papel);
                 const motivo = !permitido
-                  ? motivoBloqueio(itemMoverCelular, col.etapa) ?? 'Reservado ao escritório'
+                  ? motivoBloqueio(itemMoverCelular, destinoEtapa) ?? 'Reservado ao escritório'
                   : null;
                 const ehRecebimento =
                   itemMoverCelular.status === 'em_transito' && col.etapa === 'entrada';
@@ -359,7 +379,7 @@ export default function KanbanOficina({
                     key={col.etapa}
                     type="button"
                     disabled={!permitido || movendoCelular}
-                    onClick={() => void confirmarMoverCelular(col.etapa as EtapaKanban)}
+                    onClick={() => void confirmarMoverCelular(col)}
                     className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
                       permitido
                         ? 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50 active:bg-blue-50'

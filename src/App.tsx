@@ -24,6 +24,14 @@ import RelatorioGarantia from './pages/RelatorioGarantia';
 import Pmoc from './pages/Pmoc';
 import PmocEditorPage from './pages/PmocEditorPage';
 import PmocModelo from './pages/PmocModelo';
+import PlacasKanban from './pages/PlacasKanban';
+import PlacasClientes from './pages/PlacasClientes';
+import PlacasFinanceiro from './pages/PlacasFinanceiro';
+import PlacasFichas from './pages/PlacasFichas';
+import PlacasErros from './pages/PlacasErros';
+import PlacasAssistente from './pages/PlacasAssistente';
+import PlacasManuais from './pages/PlacasManuais';
+import AcompanhamentoPlaca from './pages/AcompanhamentoPlaca';
 import PortalRoute from './components/portal/PortalRoute';
 import Avaliar from './pages/Avaliar';
 import Ajuda from './pages/Ajuda';
@@ -42,6 +50,8 @@ export default function App() {
         <Route path="/portal/login" element={<PortalLogin />} />
         {/* Avaliação do atendimento: pública, o cliente abre pelo link do WhatsApp */}
         <Route path="/avaliar/:token" element={<Avaliar />} />
+        {/* Acompanhamento público de reparo de placa (sem login, link do comprovante) */}
+        <Route path="/placa/:token" element={<AcompanhamentoPlaca />} />
         <Route path="/portal" element={<PortalRoute />}>
           <Route index element={<PortalHome />} />
         </Route>
@@ -66,6 +76,13 @@ export default function App() {
             <Route path="pmoc/:id" element={<PmocEditorPage />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="oficina" element={<Oficina />} />
+            <Route path="placas" element={<PlacasKanban />} />
+            <Route path="placas/clientes" element={<PlacasClientes />} />
+            <Route path="placas/financeiro" element={<PlacasFinanceiro />} />
+            <Route path="placas/fichas" element={<PlacasFichas />} />
+            <Route path="placas/erros" element={<PlacasErros />} />
+            <Route path="placas/assistente" element={<PlacasAssistente />} />
+            <Route path="placas/manuais" element={<PlacasManuais />} />
             <Route path="equipamentos" element={<Equipamentos />} />
             <Route path="formularios" element={<Formularios />} />
             <Route path="tipos-de-servico" element={<TiposServico />} />

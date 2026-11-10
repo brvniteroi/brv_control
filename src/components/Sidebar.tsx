@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
+  AlertTriangle,
+  BookOpen,
   BriefcaseBusiness,
   CalendarDays,
   CalendarRange,
@@ -9,6 +11,8 @@ import {
   CircleHelp,
   ClipboardCheck,
   ClipboardList,
+  Cpu,
+  DollarSign,
   FileBarChart,
   FileText,
   FolderOpen,
@@ -21,6 +25,7 @@ import {
   Package,
   ShieldCheck,
   Snowflake,
+  Sparkles,
   Tag,
   UserCog,
   Users,
@@ -29,6 +34,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
+import { podeVerFinanceiroPlacas } from '../utils/acessoPlacas';
 
 interface ItemMenu {
   rota: string;
@@ -37,6 +43,8 @@ interface ItemMenu {
   apenasEscritorio?: boolean;
   /** Visível também para o papel 'oficina' (que só vê estes itens) */
   oficina?: boolean;
+  /** Visível apenas para quem tem `podeVerFinanceiroPlacas(profile)` */
+  financeiroPlacas?: boolean;
 }
 
 interface GrupoMenu {
@@ -48,6 +56,13 @@ interface GrupoMenu {
 type EntradaMenu = ItemMenu | GrupoMenu;
 
 const ehGrupo = (e: EntradaMenu): e is GrupoMenu => 'itens' in e;
+
+/**
+ * O módulo Placas ainda usa dados de demonstração (`components/placas/fonteDeDados.ts`, `FONTE_DADOS_DEMO`).
+ * Enquanto for `false`, o grupo "Placas" fica fora do menu (as rotas `/placas...` seguem abrindo por URL para testar).
+ * Virar `true` junto com `FONTE_DADOS_DEMO = false`, quando o banco das placas estiver ligado.
+ */
+const MOSTRAR_MENU_PLACAS = false;
 
 const MENU: EntradaMenu[] = [
   { rota: '/', rotulo: 'Dashboard', icone: LayoutDashboard },
@@ -64,6 +79,19 @@ const MENU: EntradaMenu[] = [
     ],
   },
   { rota: '/oficina', rotulo: 'Oficina', icone: Hammer, oficina: true },
+  {
+    rotulo: 'Placas',
+    icone: Cpu,
+    itens: [
+      { rota: '/placas', rotulo: 'Reparos (Kanban)', icone: Cpu, apenasEscritorio: true, oficina: true },
+      { rota: '/placas/clientes', rotulo: 'Clientes de placas', icone: Users, apenasEscritorio: true, oficina: true },
+      { rota: '/placas/financeiro', rotulo: 'Financeiro', icone: DollarSign, financeiroPlacas: true },
+      { rota: '/placas/fichas', rotulo: 'Fichas técnicas', icone: BookOpen, apenasEscritorio: true, oficina: true },
+      { rota: '/placas/erros', rotulo: 'Códigos de erro', icone: AlertTriangle, apenasEscritorio: true, oficina: true },
+      { rota: '/placas/assistente', rotulo: 'Assistente técnico', icone: Sparkles, apenasEscritorio: true, oficina: true },
+      { rota: '/placas/manuais', rotulo: 'Manuais', icone: FolderOpen, apenasEscritorio: true, oficina: true },
+    ],
+  },
   {
     rotulo: 'Cadastros',
     icone: FolderOpen,
@@ -107,8 +135,11 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
   const [gruposAbertos, setGruposAbertos] = useState<Record<string, boolean>>({});
   const podeGerenciarFormularios = profile?.role === 'admin' || profile?.role === 'escritorio';
   const ehBancada = profile?.role === 'oficina';
-  const visivel = (item: ItemMenu) =>
-    ehBancada ? !!item.oficina : !item.apenasEscritorio || podeGerenciarFormularios;
+  const temFinanceiroPlacas = podeVerFinanceiroPlacas(profile);
+  const visivel = (item: ItemMenu) => {
+    if (item.financeiroPlacas) return temFinanceiroPlacas;
+    return ehBancada ? !!item.oficina : !item.apenasEscritorio || podeGerenciarFormularios;
+  };
 
   return (
     <>
@@ -135,7 +166,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-2">
-          {MENU.map((entrada) => {
+          {MENU.filter((e) => MOSTRAR_MENU_PLACAS || !(ehGrupo(e) && e.rotulo === 'Placas')).map((entrada) => {
             if (!ehGrupo(entrada)) {
               if (!visivel(entrada)) return null;
               const { rota, rotulo, icone: Icone } = entrada;
@@ -168,7 +199,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
                 {aberto && (
                   <div className="mt-1 ml-5 space-y-1 border-l border-white/10 pl-2">
                     {filhos.map(({ rota, rotulo, icone: Icone }) => (
-                      <NavLink key={rota} to={rota} onClick={onFechar} className={classeLink}>
+                      <NavLink key={rota} to={rota} end={rota === '/placas'} onClick={onFechar} className={classeLink}>
                         <Icone size={16} />
                         {rotulo}
                       </NavLink>

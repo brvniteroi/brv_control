@@ -813,7 +813,7 @@ export default function PlacaDetalhes({
 
                       {placa.stalled && (
                         <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-semibold text-rose-800">
-                          Encalhada · {placa.days_in_stage}d
+                          Encalhada · {placa.days_since_entry}d desde a entrada
                         </span>
                       )}
 

@@ -42,7 +42,7 @@ export default function CartaoPlaca({
 }: CartaoPlacaProps) {
   const mostrarOrcamento = ehEscritorioOuAdminPlaca(papel);
   const { anterior, proxima } = etapasAdjacentesKanban(placa.status);
-  const diasCritico = placa.days_in_stage >= DIAS_PLACA_ENCALHADA && placa.status !== 'pronto';
+  const diasCritico = placa.days_since_entry >= DIAS_PLACA_ENCALHADA;
   const infoCliente = CORES_TIPO_CLIENTE_PLACA[placa.customer_kind];
   const infoOrcamento = CORES_ORCAMENTO_PLACA[placa.quote_status];
 
@@ -70,7 +70,7 @@ export default function CartaoPlaca({
         aria-label={`Abrir detalhes da placa ${placa.board_number} de ${placa.customer_name}`}
         className="cursor-pointer text-left focus-visible:rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
       >
-        {/* Linha 1: Número grande + Dias na etapa */}
+        {/* Linha 1: Número grande + Dias desde a entrada */}
         <div className="flex items-start justify-between gap-2">
           <div>
             <span className="font-mono text-sm font-extrabold tracking-tight text-brv-navy">
@@ -89,10 +89,10 @@ export default function CartaoPlaca({
                 ? 'border-rose-200 bg-rose-50 text-rose-700'
                 : 'border-slate-200 bg-slate-50 text-slate-600'
             }`}
-            title="Dias corridos nesta etapa"
+            title="Dias corridos desde a entrada da placa"
           >
             <Clock size={11} aria-hidden="true" />
-            {placa.days_in_stage}d
+            {placa.days_since_entry}d
           </span>
         </div>
 

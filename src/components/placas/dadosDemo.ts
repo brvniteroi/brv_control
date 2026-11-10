@@ -11,7 +11,7 @@ import type {
   ResultadoAssistenteTecnico,
   ResultadoConsultaErro,
 } from '../../types/placas';
-import { diasNaEtapa, gerarNumeroPlaca, placaEncalhada } from './regrasPlacas';
+import { diasDesdeEntrada, gerarNumeroPlaca, placaEncalhada } from './regrasPlacas';
 
 /** Cria Data URL SVG leve para fotos sintéticas da demonstração (sem rede externa). */
 export function criarFotoSvgPlaca(titulo: string, subtitulo: string, corFundo: string): string {
@@ -196,7 +196,7 @@ function montarPlacasDemoIniciais(): BoardOrder[] {
   const num06 = novoNumero(d06Ent);
 
   const d08Ent = diasAtrasIso(9, 14);
-  const d08Etapa = diasAtrasIso(5, 15); // 5 dias em pronto -> NÃO é encalhada (regra: sem ser Pronto)
+  const d08Etapa = diasAtrasIso(5, 15); // 5 dias em pronto (a contagem vale desde a entrada, inclusive em Pronto)
   const num08 = novoNumero(d08Ent);
 
   const d04Ent = diasAtrasIso(8, 9);
@@ -226,7 +226,7 @@ function montarPlacasDemoIniciais(): BoardOrder[] {
   const d01Ent = diasAtrasIso(1, 9);
   const num01 = novoNumero(d01Ent);
 
-  const base: Omit<BoardOrder, 'days_in_stage' | 'stalled'>[] = [
+  const base: Omit<BoardOrder, 'days_since_entry' | 'stalled'>[] = [
     {
       id: 'placa-demo-01',
       board_number: num01,
@@ -1037,7 +1037,7 @@ function montarPlacasDemoIniciais(): BoardOrder[] {
 
   return base.map((p) => ({
     ...p,
-    days_in_stage: diasNaEtapa(p),
+    days_since_entry: diasDesdeEntrada(p),
     stalled: placaEncalhada(p),
   }));
 }

@@ -243,9 +243,9 @@ export interface BoardOrder {
   /** Motivo do reembolso. */
   refund_reason: string | null;
 
-  /** Quantidade inteira de dias na etapa atual (`diasNaEtapa`). */
-  days_in_stage: number;
-  /** Verdadeiro quando está há >= 4 dias na mesma etapa ativa diferente de `pronto`. */
+  /** Dias inteiros desde a entrada; não zera ao mudar de etapa; congela na saída (`diasDesdeEntrada`). */
+  days_since_entry: number;
+  /** Verdadeiro quando está em aberto (inclusive `pronto`) há >= 4 dias desde a entrada. */
   stalled: boolean;
   /** Data/hora ISO de entrada da placa no laboratório. */
   created_at: string;

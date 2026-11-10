@@ -32,7 +32,13 @@ extração de texto dos manuais, importador (placas, clientes 1:1, fotos, fichas
 - `buscarAcompanhamentoPublico(token)` deve ser RPC `security definer` que devolve só o necessário, com limite de tentativas; token longo e revogável.
 - Menu **Placas oculto** em `Sidebar.tsx` (`MOSTRAR_MENU_PLACAS = false`) até ligar ao banco; as rotas abrem por URL. Para ver as telas: entrar em `/placas` (demo) logado como Administrador BRV.
 
+## Decisões do Braulio (2026-11-09)
+1. Bloqueio de etapa: **mantido** por enquanto.
+2. Sem conserto **não** gera reembolso. Reembolso = caixa de marcar + valor (devolução do que o cliente pagou), sai do financeiro. Como já estava no Gemini.
+3. Dias contados **desde a entrada**, sem zerar na troca de etapa; encalhada inclui Pronto (`diasDesdeEntrada`, `days_since_entry`). Ajustado pelo Claude.
+Também: a `oficina` (Gustavo) não tem acesso às Placas (menu e `ProtectedRoute` ajustados). Pontos 4 a 6 ficam para conferir na migração.
+
 ## Próximos passos (ordem)
-1. Braulio testa as telas em `/placas` (demo) e decide os 3 pontos acima (1, 2 e 3).
+1. ~~Braulio testa as telas em `/placas` (demo) e decide os 3 pontos acima~~ (decididos; testar as telas segue valendo).
 2. Ajustes visuais ao Gemini, se houver.
 3. Claude: migration + services + ligação, ajuda F1, importador em simulação, IA e manuais; depois virada.

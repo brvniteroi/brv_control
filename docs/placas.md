@@ -23,7 +23,11 @@ Volume: **78 OS de placa**, 584 históricos, 49 clientes (levantado em 2026-11-0
 ### 1. Mesma tabela da Oficina, `kind = 'placa'`
 `workshop_orders` já tem `kind` ('equipamento' | 'placa'), garantia (`is_warranty`, `warranty_origin_id`), valor (`quote_amount`), técnico de retirada/bancada,
 OS de origem, fotos (`attachments.workshop_order_id`), histórico imutável, etiqueta e Elgin. Reaproveitar: o Kanban, o histórico, as fotos, a
-etiqueta, a ajuda, as regras de papel (`oficina` = Gustavo).
+etiqueta, a ajuda.
+
+**Quem usa (decidido em 2026-11-09):** o técnico de placas é o **Braulio** (sócio, admin). O papel `oficina` (Gustavo) **não tem acesso às Placas**: ele conserta os
+equipamentos que a equipe de campo retira. Placas = só admin e escritório (financeiro só com a marca `board_finance_access`). `ProtectedRoute` manda a `oficina`
+de volta para `/oficina` e o menu Placas não aparece para ela. O que as telas do Gemini ainda têm de "modo oficina" (ex.: "Modo consulta (oficina)") sai no P1.
 
 **Colunas que faltam** (migration nova, 1:1 em `workshop_board_details` para não poluir o item de equipamento):
 `board_code` (código da placa), `error_code`, `replaced_components`, `peripherals`, `no_defect` (sem defeito), `customer_kind` ('instalador' | 'final'),
@@ -44,7 +48,7 @@ etiqueta, a ajuda, as regras de papel (`oficina` = Gustavo).
 ### 3. Clientes
 **Decidido em 2026-11-09 (pedido do usuário): cadastro paralelo, sem misturar com os clientes do Control**, porque a grande maioria são **instaladores parceiros**.
 - **Cadastro próprio:** tabela nova `board_clients` (migração 1:1 de `reparos_clientes`, os 49: nome, telefone, tipo instalador/final, cidade). Tela própria dentro
-  da Oficina (aba/menu "Clientes de placas"), só escritório, admin e oficina. Não aparece em Clientes, na busca de OS nem na linha do tempo do Control.
+  do menu Placas ("Clientes de placas"), só escritório e admin. Não aparece em Clientes, na busca de OS nem na linha do tempo do Control.
   **Sem casamento por nome e sem lista de revisão**: entra como está.
 - **Quem é o cliente do item:** o item de placa tem **ou** `board_client_id` (parceiro, balcão/portador) **ou** `customer_id` (cliente do Control, quando a placa foi
   retirada pela equipe de campo e já tem OS). Nunca os dois. Hoje `customer_id` é obrigatório e copiado da OS; a migration o torna opcional só para `kind = 'placa'`
@@ -102,7 +106,7 @@ Fotos: mesmo caminho dos equipamentos: baixar de `midias/reparos/<id>/` e enviar
 ### 8. Apoio técnico (IA, fichas, manuais, códigos de erro) — **migra junto com as placas** (decidido em 2026-11-09)
 **Menu "Placas" próprio, com tudo dentro** (decidido em 2026-11-09): Reparos (Kanban), Clientes de placas, Financeiro (só escritório/admin), **Fichas técnicas**, **Códigos de erro**,
 **Assistente técnico** e **Manuais**, rotas `/placas`, `/placas/clientes`, `/placas/financeiro`, `/placas/fichas`, `/placas/erros`, `/placas/assistente`, `/placas/manuais` (a página pública do parceiro
-segue `/placa/<token>`). O menu "Oficina" fica só com os equipamentos. O papel `oficina` (Gustavo) vê Oficina e Placas (menos o Financeiro); `ProtectedRoute` já libera `/placas` para ele.
+segue `/placa/<token>`). O menu "Oficina" fica só com os equipamentos. O papel `oficina` (Gustavo) **não vê as Placas** (decisão de 2026-11-09; `ProtectedRoute` só libera `/oficina` para ele).
 
 O que migra: fichas técnicas dos splits (131; **editar e excluir só admin**), manuais de fabricantes (18 PDFs, do bucket do Supabase antigo para a HostGator, com o texto extraído que a IA usa),
 códigos de erro com IA (`consultar-erro`), cadastro de ficha com IA a partir de PDF/TXT (`extrair-ficha`) e o assistente técnico da bancada (`assistente-tecnico`). Ficam de fora o ditado por voz
@@ -120,7 +124,7 @@ briefing em `docs/gemini/placas-briefing.md`.
 | Fase | Entrega | Observação |
 |---|---|---|
 | **P0 Telas (Gemini)** | Todas as telas de placas com dados de demonstração, resumo em `docs/gemini/placas.md`; auditoria do Claude | Antes de qualquer migration |
-| **P1 Banco** (depois do P0) | Migration (`teste`, `workshop_board_details` com `board_number`, `board_clients`, `service_order_id` e `customer_id` opcionais só para placas (exatamente um cliente por item), função do número, RLS: só `oficina`, escritório e admin), regras de etapa para placas, `kind` no Kanban | Colar no SQL Editor |
+| **P1 Banco** (depois do P0) | Migration (`teste`, `workshop_board_details` com `board_number`, `board_clients`, `service_order_id` e `customer_id` opcionais só para placas (exatamente um cliente por item), função do número, RLS: só escritório e admin, **sem `oficina`**; trigger repetindo o bloqueio de etapa sem orçamento aprovado; `created_at` = entrada, imutável), regras de etapa para placas, `kind` no Kanban | Colar no SQL Editor |
 | **P2 Importador** | `scripts/equipamentos/importar-placas.mjs`, repetível e sem sobrescrever o que já mudou no Control; `--simular`; fotos por FTPS; clientes 1:1 para `board_clients` (sem revisão) | Precisa da chave de serviço do Equipamentos no `.env` |
 | **P3 Telas** | Menu **Placas** (Kanban com Teste), nova entrada, detalhes com os campos da placa, orçamento, garantia, comprovante, galeria por token, ajuda F1. Visual com o Gemini (briefing em `docs/gemini/placas.md`), auditoria do Claude | Regra fixa: sem ajuda F1 não está pronto |
 | **P4 Etiqueta e impressos** | Layout da placa na Elgin, termo de garantia, comprovante | Testar na loja |
@@ -145,6 +149,14 @@ Decididas em 2026-11-09:
 Também decididos: número da OS com data (`OS-DDMMAA-NNN`), cadastro de clientes de placas paralelo (3) e design com o Gemini (briefing `docs/gemini/placas-briefing.md`).
 
 4. ~~Apoio técnico~~ **migra junto com as placas, dentro do menu "Placas"** (8).
+
+Decididos depois da auditoria das telas (2026-11-09, pontos de `docs/gemini/placas-auditoria.md`):
+6. **Acesso:** a `oficina` (Gustavo) não usa as Placas; o técnico de placas é o Braulio (admin).
+7. **Bloqueio de etapa:** mantido por enquanto. Sem orçamento aprovado (e fora da garantia) a placa não vai para Aguardando Peça, Em Reparo, Teste, Pronto nem Entregue.
+8. **Reembolso:** é a devolução do valor pago pelo cliente (desistência do conserto ou reparo que não deu certo). Caixa de marcar + valor, data e motivo no detalhe da placa,
+   só com a marca do financeiro; o valor sai do financeiro das placas (desconta do faturamento). **Sem conserto não gera reembolso.**
+9. **Dias da placa:** contados **desde a entrada**, sem zerar ao mudar de etapa (`diasDesdeEntrada`, campo `days_since_entry`); na finalizada congela na saída. Encalhada = em aberto
+   (inclusive Pronto) há 4 dias ou mais desde a entrada. Base para um futuro **relatório de tempo médio de reparo** (entrada → saída).
 
 **Nenhuma decisão aberta** (2026-11-09).
 

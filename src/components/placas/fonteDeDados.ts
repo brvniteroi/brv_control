@@ -59,7 +59,7 @@ import {
   PLACAS_FINALIZADAS_POR_PAGINA,
   ROTULO_ETAPA_PLACA,
   calcularValidadeGarantia,
-  diasNaEtapa,
+  diasDesdeEntrada,
   ehEtapaFinalPlaca,
   garantiaVigente,
   gerarNumeroPlaca,
@@ -119,7 +119,7 @@ function recalcularPlaca(p: BoardOrder): BoardOrder {
     : { ...p };
   return {
     ...atualizada,
-    days_in_stage: diasNaEtapa(atualizada),
+    days_since_entry: diasDesdeEntrada(atualizada),
     stalled: placaEncalhada(atualizada),
   };
 }
@@ -374,7 +374,7 @@ export async function criarPlaca(
     refund_amount: null,
     refunded_at: null,
     refund_reason: null,
-    days_in_stage: 0,
+    days_since_entry: 0,
     stalled: false,
     created_at: agoraIso,
     updated_at: agoraIso,

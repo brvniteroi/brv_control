@@ -227,7 +227,7 @@ export default function FinanceiroPlacas() {
                 {consolidado.qtdEncalhadas}
               </p>
               <p className="mt-1 text-[11px] text-slate-600">
-                Paradas há ≥ 4 dias (exceto Pronto)
+                Em aberto há ≥ 4 dias desde a entrada
               </p>
             </div>
 

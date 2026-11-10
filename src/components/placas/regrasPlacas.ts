@@ -4,7 +4,7 @@ import { valorEmReais } from '../../utils/oficina';
 import { formatarData } from '../../utils/ordens';
 import { ROTULO_CATEGORIA_FOTO } from './cores';
 
-/** Limite de dias na mesma etapa ativa (exceto `pronto`) para marcar a placa como `"Encalhada"`. */
+/** Limite de dias desde a entrada (placa ainda em aberto, inclusive `pronto`) para marcar como `"Encalhada"`. */
 export const DIAS_PLACA_ENCALHADA = 4;
 
 /** Prazo legal de garantia do reparo de placa em dias corridos após a saída (`entregue`). */
@@ -171,13 +171,16 @@ export function proximaSequenciaDiaPlaca(numerosExistentes: readonly string[], d
   return maior + 1;
 }
 
-/** Calcula dias inteiros corridos na etapa atual (para finalizadas, congela na saída). */
-export function diasNaEtapa(
-  placa: Pick<BoardOrder, 'stage_changed_at' | 'created_at' | 'finished_at' | 'status'>,
+/**
+ * Dias inteiros corridos desde a ENTRADA da placa (`created_at`); não zera ao mudar de etapa (decisão do Braulio,
+ * 2026-11-09). Para finalizadas, congela na saída (`finished_at`) = tempo total de reparo, base do futuro relatório
+ * de tempo médio de reparo.
+ */
+export function diasDesdeEntrada(
+  placa: Pick<BoardOrder, 'created_at' | 'finished_at' | 'status'>,
   agoraMs: number = Date.now(),
 ): number {
-  const baseIso = placa.stage_changed_at || placa.created_at;
-  const inicio = new Date(baseIso).getTime();
+  const inicio = new Date(placa.created_at).getTime();
   if (Number.isNaN(inicio)) return 0;
   const fim =
     ehEtapaFinalPlaca(placa.status) && placa.finished_at
@@ -187,18 +190,15 @@ export function diasNaEtapa(
 }
 
 /**
- * Placa há 4 dias ou mais na mesma etapa ativa (sem ser `pronto` nem finalizada/arquivada) = `"Encalhada"`.
+ * Placa em aberto (inclusive `pronto`, ainda não entregue) há 4 dias ou mais desde a entrada = `"Encalhada"`.
  */
 export function placaEncalhada(
-  placa: Pick<
-    BoardOrder,
-    'status' | 'stage_changed_at' | 'created_at' | 'finished_at' | 'archived' | 'cancelled_entry'
-  >,
+  placa: Pick<BoardOrder, 'status' | 'created_at' | 'finished_at' | 'archived' | 'cancelled_entry'>,
   agoraMs: number = Date.now(),
 ): boolean {
   if (placa.archived || placa.cancelled_entry) return false;
-  if (ehEtapaFinalPlaca(placa.status) || placa.status === 'pronto') return false;
-  return diasNaEtapa(placa, agoraMs) >= DIAS_PLACA_ENCALHADA;
+  if (ehEtapaFinalPlaca(placa.status)) return false;
+  return diasDesdeEntrada(placa, agoraMs) >= DIAS_PLACA_ENCALHADA;
 }
 
 /** Soma 90 dias corridos à data de saída (`finished_at`) para obter a validade da garantia legal. */
@@ -497,7 +497,7 @@ export interface ConsolidadoFinanceiroPlacas {
   /** Cartão 3: Soma dos orçamentos das placas ativas na bancada (em aberto). */
   valorBancadaAberto: number;
   qtdBancadaAberta: number;
-  /** Cartão 4: Placas ativas paradas há >= 4 dias (exceto `pronto`). */
+  /** Cartão 4: Placas em aberto há >= 4 dias desde a entrada (inclusive `pronto`). */
   qtdEncalhadas: number;
   /** Cartão 5: Total faturado líquido no ano selecionado. */
   totalAno: number;

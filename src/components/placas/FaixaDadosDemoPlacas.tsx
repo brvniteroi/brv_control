@@ -1,9 +1,18 @@
 import { FlaskConical } from 'lucide-react';
-import { FONTE_DADOS_DEMO } from './fonteDeDados';
+import { useLocation } from 'react-router-dom';
+import { FONTE_DADOS_DEMO, USAR_BANCO_PLACAS } from './fonteDeDados';
 
-/** Faixa discreta exibida no topo das telas de Placas enquanto `FONTE_DADOS_DEMO` for `true` (oculta na impressão). */
+/** Telas do apoio técnico: ainda com dados de demonstração (fase P7), mesmo com as placas ligadas ao banco. */
+const ROTAS_APOIO = ['/placas/fichas', '/placas/erros', '/placas/assistente', '/placas/manuais'];
+
+/**
+ * Faixa discreta de "Dados de demonstração" (oculta na impressão). Com as placas ligadas ao banco
+ * (`USAR_BANCO_PLACAS`), só aparece nas telas do apoio técnico, que ainda usam demonstração.
+ */
 export default function FaixaDadosDemoPlacas() {
+  const { pathname } = useLocation();
   if (!FONTE_DADOS_DEMO) return null;
+  if (USAR_BANCO_PLACAS && !ROTAS_APOIO.some((r) => pathname.startsWith(r))) return null;
 
   return (
     <div
@@ -14,10 +23,9 @@ export default function FaixaDadosDemoPlacas() {
         <FlaskConical size={14} className="shrink-0 text-amber-700" aria-hidden="true" />
         <span className="font-semibold">Dados de demonstração</span>
         <span className="hidden text-amber-800/90 sm:inline">
-          — Simulação em memória para revisão antes da migração ao banco de dados.
+          — Simulação em memória; esta tela ainda não está ligada ao banco de dados.
         </span>
       </div>
     </div>
   );
 }
-

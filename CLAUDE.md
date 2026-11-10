@@ -174,12 +174,15 @@ tipo da OS de devolução continua sendo escolhido pelo escritório na hora. Có
 Para rodar o importador no PC da empresa seria preciso `EQUIP_SERVICE_ROLE_KEY` no `.env` de lá (não deve ser mais necessário).
 Ao concluir, apagar este lembrete.
 
-**LEMBRETE (2026-11-10): começar a fase P1 das Placas no PC da empresa** (lembrar o usuário logo no início da conversa). Estado: telas (P0)
-prontas, auditadas e testadas; todas as decisões tomadas (`docs/placas.md`, itens 1 a 9; auditoria em `docs/gemini/placas-auditoria.md`). Antes: `git pull`
-e confirmar se a migration `20261109120000_acesso_financeiro_placas.sql` já foi colada no SQL Editor. P1: migration `board_*` (etapa `teste`,
-`workshop_board_details` com `board_number` e função do número com trava, `board_clients`, OS/cliente opcionais só para placas, RLS só admin/escritório
-sem `oficina`, colunas financeiras só com `tem_financeiro_placas()`, trigger do bloqueio de etapa, token público e RPC do acompanhamento), `services/placas.ts`,
-trocar `fonteDeDados.ts`, tirar o "modo oficina" das telas, ajuda F1 (`src/ajuda/topicos.ts`). Ao concluir, apagar este lembrete.
+**LEMBRETE (2026-11-10): terminar a fase P1 das Placas** (lembrar o usuário logo no início da conversa). **Feito em 2026-11-10 (commitado):** migration
+`20261110100000_placas_base.sql` (tabelas próprias `board_clients`, `board_orders`, `board_finance`, `board_photos`, `board_events`, `board_number_seq`; número `OS-DDMMAA-NNN`
+com trava; regras de etapa, financeiro só com `tem_financeiro_placas()`, histórico imutável, RLS só admin/escritório, função pública `placa_acompanhamento(token)`),
+`src/services/placas.ts`, `fonteDeDados.ts` ligada ao banco (`USAR_BANCO_PLACAS = true`; fichas, manuais, erros, assistente, PDF e etiqueta seguem em demonstração) e o
+script de verificação `supabase/verificacao/placas_base.sql` (ROLLBACK). **Falta (nesta ordem):** (1) o usuário **colar `20261110100000_placas_base.sql` no SQL Editor** e depois colar
+`supabase/verificacao/placas_base.sql` (todas as linhas "OK", nada gravado); (2) testar as telas em `/placas` com dados reais; (3) ligar `MOSTRAR_MENU_PLACAS = true` em `Sidebar.tsx`;
+(4) ajuda F1 das Placas (`src/ajuda/topicos.ts`, nomes de botões em `docs/gemini/placas.md` seção 9; regra fixa); (5) tirar o "modo oficina" das telas (o papel `oficina` não usa Placas);
+(6) P2: importador `scripts/equipamentos/importar-placas.mjs` com `--simular` (78 OS, 49 clientes, fotos; atualizar `board_number_seq` com o maior número do dia); (7) P4 (etiqueta ZPL, PDF, QR)
+e P7 (fichas, manuais, IA). Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-10, NOITE): repetir o teste do APK com tela apagada** (lembrar o usuário logo no início da conversa). Em 2026-11-09 o APK
 já estava instalado nos técnicos Alberto, Emerson e Marcus (têm token em `push_fcm_tokens`; o Bruno Brum, conta técnica do usuário, ainda só

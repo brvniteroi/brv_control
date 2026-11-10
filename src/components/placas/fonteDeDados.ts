@@ -37,6 +37,7 @@ import type {
   SituacaoImpressoraPlaca,
   UpdateBoardFields,
 } from '../../types/placas';
+import * as real from '../../services/placas';
 import { valorEmReais } from '../../utils/oficina';
 import { limparDocumento } from '../../utils/documento';
 import { formatarTelefone } from '../../utils/telefone';
@@ -71,6 +72,13 @@ import {
 
 /** Enquanto `true`, exibe a faixa discreta `"Dados de demonstração"` nas telas do módulo Placas. */
 export const FONTE_DADOS_DEMO = true;
+
+/**
+ * Placas, clientes de placas, orçamento, financeiro, fotos, histórico e página pública vêm do banco
+ * (services/placas.ts, migration 20261110100000_placas_base.sql). Fichas técnicas, manuais, códigos de erro,
+ * assistente, PDF e etiqueta ainda usam dados de demonstração (fase P7/P4). Para voltar tudo à demonstração: false.
+ */
+export const USAR_BANCO_PLACAS = true;
 
 const TAMANHO_MAX_MANUAL_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -169,7 +177,7 @@ function combinaBuscaPlaca(p: BoardOrder, termo: string): boolean {
 // 1. PLACAS (KANBAN, FINALIZADAS, DETALHE, ETAPAS, ORÇAMENTO, REEMBOLSO)
 // ============================================================================
 
-export async function listarPlacas(filtro: BoardListFilter): Promise<BoardListResult> {
+async function listarPlacasDemo(filtro: BoardListFilter): Promise<BoardListResult> {
   await atraso(100);
   const todas = memoriaPlacas.filter((p) => !p.cancelled_entry).map(recalcularPlaca);
 
@@ -237,13 +245,13 @@ export async function listarPlacas(filtro: BoardListFilter): Promise<BoardListRe
   };
 }
 
-export async function buscarPlaca(id: string): Promise<BoardOrder | null> {
+async function buscarPlacaDemo(id: string): Promise<BoardOrder | null> {
   await atraso(80);
   const encontrada = memoriaPlacas.find((p) => p.id === id);
   return encontrada ? recalcularPlaca(encontrada) : null;
 }
 
-export async function criarPlaca(
+async function criarPlacaDemo(
   dados: CreateBoardInput,
   atorNome = 'Atendimento BRV',
 ): Promise<BoardOrder> {
@@ -422,7 +430,7 @@ export async function criarPlaca(
   return nova;
 }
 
-export async function atualizarPlaca(
+async function atualizarPlacaDemo(
   id: string,
   campos: UpdateBoardFields,
   opcoes?: { papel?: ProfileRole; atorNome?: string },
@@ -532,7 +540,7 @@ export async function atualizarPlaca(
   return recalculada;
 }
 
-export async function moverPlaca(
+async function moverPlacaDemo(
   id: string,
   etapa: BoardStage,
   extra?: MoveBoardExtra,
@@ -604,7 +612,7 @@ export async function moverPlaca(
   return atualizada;
 }
 
-export async function registrarOrcamento(
+async function registrarOrcamentoDemo(
   id: string,
   dados: BoardQuoteInput,
   atorNome = 'Escritório BRV',
@@ -663,7 +671,7 @@ export async function registrarOrcamento(
   return atualizada;
 }
 
-export async function registrarEnvioOrcamento(
+async function registrarEnvioOrcamentoDemo(
   id: string,
   atorNome = 'Escritório BRV',
 ): Promise<BoardOrder> {
@@ -703,7 +711,7 @@ export async function registrarEnvioOrcamento(
   return atualizada;
 }
 
-export async function registrarRespostaOrcamento(
+async function registrarRespostaOrcamentoDemo(
   id: string,
   dados: BoardQuoteResponseInput,
   atorNome = 'Escritório BRV',
@@ -746,7 +754,7 @@ export async function registrarRespostaOrcamento(
   return atualizada;
 }
 
-export async function registrarReembolso(
+async function registrarReembolsoDemo(
   id: string,
   dados: BoardRefundInput,
   atorNome = 'Braulio',
@@ -796,7 +804,7 @@ export async function registrarReembolso(
   return atualizada;
 }
 
-export async function arquivarPlaca(id: string, atorNome = 'Escritório BRV'): Promise<BoardOrder> {
+async function arquivarPlacaDemo(id: string, atorNome = 'Escritório BRV'): Promise<BoardOrder> {
   await atraso(100);
   const idx = memoriaPlacas.findIndex((p) => p.id === id);
   if (idx === -1) throw new Error('Placa não encontrada.');
@@ -828,7 +836,7 @@ export async function arquivarPlaca(id: string, atorNome = 'Escritório BRV'): P
   return atualizada;
 }
 
-export async function cancelarPlaca(
+async function cancelarPlacaDemo(
   id: string,
   motivo: string,
   atorNome = 'Escritório BRV',
@@ -869,7 +877,7 @@ export async function cancelarPlaca(
   return atualizada;
 }
 
-export async function reabrirPlaca(
+async function reabrirPlacaDemo(
   id: string,
   opcoes?: { papel?: ProfileRole; atorNome?: string },
 ): Promise<BoardOrder> {
@@ -913,7 +921,7 @@ export async function reabrirPlaca(
   return atualizada;
 }
 
-export async function gerarNovoLinkAcompanhamento(
+async function gerarNovoLinkAcompanhamentoDemo(
   id: string,
   atorNome = 'Escritório BRV',
 ): Promise<BoardOrder> {
@@ -948,7 +956,7 @@ export async function gerarNovoLinkAcompanhamento(
   return atualizada;
 }
 
-export async function anotarNoHistorico(
+async function anotarNoHistoricoDemo(
   id: string,
   nota: string,
   atorNome = 'Usuário BRV',
@@ -971,7 +979,7 @@ export async function anotarNoHistorico(
   });
 }
 
-export async function historicoDaPlaca(id: string): Promise<BoardEvent[]> {
+async function historicoDaPlacaDemo(id: string): Promise<BoardEvent[]> {
   await atraso(70);
   return memoriaEventos
     .filter((e) => e.board_order_id === id)
@@ -982,14 +990,14 @@ export async function historicoDaPlaca(id: string): Promise<BoardEvent[]> {
 // 2. FOTOS DA PLACA
 // ============================================================================
 
-export async function fotosDaPlaca(id: string): Promise<BoardPhoto[]> {
+async function fotosDaPlacaDemo(id: string): Promise<BoardPhoto[]> {
   await atraso(70);
   return memoriaFotos
     .filter((f) => f.board_order_id === id)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function anexarFotoPlaca(
+async function anexarFotoPlacaDemo(
   arquivo: File,
   id: string,
   categoria: BoardPhotoCategory,
@@ -1019,7 +1027,7 @@ export async function anexarFotoPlaca(
   return novaFoto;
 }
 
-export async function excluirFotoPlaca(fotoId: string): Promise<void> {
+async function excluirFotoPlacaDemo(fotoId: string): Promise<void> {
   await atraso(90);
   memoriaFotos = memoriaFotos.filter((f) => f.id !== fotoId);
 }
@@ -1047,7 +1055,7 @@ function montarClienteComContagem(
   };
 }
 
-export async function listarClientesPlacas(filtro?: {
+async function listarClientesPlacasDemo(filtro?: {
   busca?: string;
   tipo?: 'todos' | BoardCustomerKind;
 }): Promise<BoardClient[]> {
@@ -1071,7 +1079,7 @@ export async function listarClientesPlacas(filtro?: {
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 }
 
-export async function salvarClientePlaca(dados: BoardClientInput): Promise<BoardClient> {
+async function salvarClientePlacaDemo(dados: BoardClientInput): Promise<BoardClient> {
   await atraso(130);
   if (!dados.name.trim()) {
     throw new Error('Informe o nome do cliente ou parceiro instalador.');
@@ -1121,7 +1129,7 @@ export async function salvarClientePlaca(dados: BoardClientInput): Promise<Board
   return montarClienteComContagem(criado);
 }
 
-export async function excluirClientePlaca(id: string): Promise<void> {
+async function excluirClientePlacaDemo(id: string): Promise<void> {
   await atraso(110);
   const vinculadas = memoriaPlacas.filter(
     (p) => !p.cancelled_entry && p.board_client_id === id,
@@ -1134,7 +1142,7 @@ export async function excluirClientePlaca(id: string): Promise<void> {
   memoriaClientes = memoriaClientes.filter((c) => c.id !== id);
 }
 
-export async function placasDoCliente(clienteId: string): Promise<BoardOrder[]> {
+async function placasDoClienteDemo(clienteId: string): Promise<BoardOrder[]> {
   await atraso(80);
   return memoriaPlacas
     .filter((p) => !p.cancelled_entry && p.board_client_id === clienteId)
@@ -1142,7 +1150,7 @@ export async function placasDoCliente(clienteId: string): Promise<BoardOrder[]> 
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function buscarOsControl(numero: number | string): Promise<BoardControlOsLookup | null> {
+async function buscarOsControlDemo(numero: number | string): Promise<BoardControlOsLookup | null> {
   await atraso(140);
   const numLimpo = Number.parseInt(String(numero).replace(/\D/g, ''), 10);
   if (Number.isNaN(numLimpo)) return null;
@@ -1160,7 +1168,7 @@ export async function buscarOsControl(numero: number | string): Promise<BoardCon
   };
 }
 
-export async function listarTecnicos(): Promise<BoardTechnicianOption[]> {
+async function listarTecnicosDemo(): Promise<BoardTechnicianOption[]> {
   await atraso(60);
   return [...TECNICOS_DEMO_PLACAS];
 }
@@ -1169,7 +1177,7 @@ export async function listarTecnicos(): Promise<BoardTechnicianOption[]> {
 // 4. FINANCEIRO DAS PLACAS
 // ============================================================================
 
-export async function listarPlacasParaFinanceiro(ano: number): Promise<BoardOrder[]> {
+async function listarPlacasParaFinanceiroDemo(ano: number): Promise<BoardOrder[]> {
   await atraso(110);
   return memoriaPlacas
     .filter((p) => {
@@ -1454,7 +1462,7 @@ export async function excluirManual(id: string, papel: ProfileRole = 'admin'): P
 // 6. ACOMPANHAMENTO PÚBLICO (`/placa/:token`) — DADOS ESTRITAMENTE SEGUROS
 // ============================================================================
 
-export async function buscarAcompanhamentoPublico(
+async function buscarAcompanhamentoPublicoDemo(
   token: string,
 ): Promise<BoardPublicTracking | null> {
   await atraso(140);
@@ -1609,3 +1617,111 @@ export async function situacaoImpressora(): Promise<SituacaoImpressoraPlaca> {
   };
 }
 
+
+// ---------------------------------------------------------------------
+// Funções ligadas ao banco (com a demonstração como reserva)
+// ---------------------------------------------------------------------
+
+export function listarPlacas(...args: Parameters<typeof listarPlacasDemo>): ReturnType<typeof listarPlacasDemo> {
+  return USAR_BANCO_PLACAS ? real.listarPlacas(...(args as unknown as Parameters<typeof real.listarPlacas>)) : listarPlacasDemo(...args);
+}
+
+export function buscarPlaca(...args: Parameters<typeof buscarPlacaDemo>): ReturnType<typeof buscarPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.buscarPlaca(...(args as unknown as Parameters<typeof real.buscarPlaca>)) : buscarPlacaDemo(...args);
+}
+
+export function criarPlaca(...args: Parameters<typeof criarPlacaDemo>): ReturnType<typeof criarPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.criarPlaca(...(args as unknown as Parameters<typeof real.criarPlaca>)) : criarPlacaDemo(...args);
+}
+
+export function atualizarPlaca(...args: Parameters<typeof atualizarPlacaDemo>): ReturnType<typeof atualizarPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.atualizarPlaca(...(args as unknown as Parameters<typeof real.atualizarPlaca>)) : atualizarPlacaDemo(...args);
+}
+
+export function moverPlaca(...args: Parameters<typeof moverPlacaDemo>): ReturnType<typeof moverPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.moverPlaca(...(args as unknown as Parameters<typeof real.moverPlaca>)) : moverPlacaDemo(...args);
+}
+
+export function registrarOrcamento(...args: Parameters<typeof registrarOrcamentoDemo>): ReturnType<typeof registrarOrcamentoDemo> {
+  return USAR_BANCO_PLACAS ? real.registrarOrcamento(...(args as unknown as Parameters<typeof real.registrarOrcamento>)) : registrarOrcamentoDemo(...args);
+}
+
+export function registrarEnvioOrcamento(...args: Parameters<typeof registrarEnvioOrcamentoDemo>): ReturnType<typeof registrarEnvioOrcamentoDemo> {
+  return USAR_BANCO_PLACAS ? real.registrarEnvioOrcamento(...(args as unknown as Parameters<typeof real.registrarEnvioOrcamento>)) : registrarEnvioOrcamentoDemo(...args);
+}
+
+export function registrarRespostaOrcamento(...args: Parameters<typeof registrarRespostaOrcamentoDemo>): ReturnType<typeof registrarRespostaOrcamentoDemo> {
+  return USAR_BANCO_PLACAS ? real.registrarRespostaOrcamento(...(args as unknown as Parameters<typeof real.registrarRespostaOrcamento>)) : registrarRespostaOrcamentoDemo(...args);
+}
+
+export function registrarReembolso(...args: Parameters<typeof registrarReembolsoDemo>): ReturnType<typeof registrarReembolsoDemo> {
+  return USAR_BANCO_PLACAS ? real.registrarReembolso(...(args as unknown as Parameters<typeof real.registrarReembolso>)) : registrarReembolsoDemo(...args);
+}
+
+export function arquivarPlaca(...args: Parameters<typeof arquivarPlacaDemo>): ReturnType<typeof arquivarPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.arquivarPlaca(...(args as unknown as Parameters<typeof real.arquivarPlaca>)) : arquivarPlacaDemo(...args);
+}
+
+export function cancelarPlaca(...args: Parameters<typeof cancelarPlacaDemo>): ReturnType<typeof cancelarPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.cancelarPlaca(...(args as unknown as Parameters<typeof real.cancelarPlaca>)) : cancelarPlacaDemo(...args);
+}
+
+export function reabrirPlaca(...args: Parameters<typeof reabrirPlacaDemo>): ReturnType<typeof reabrirPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.reabrirPlaca(...(args as unknown as Parameters<typeof real.reabrirPlaca>)) : reabrirPlacaDemo(...args);
+}
+
+export function gerarNovoLinkAcompanhamento(...args: Parameters<typeof gerarNovoLinkAcompanhamentoDemo>): ReturnType<typeof gerarNovoLinkAcompanhamentoDemo> {
+  return USAR_BANCO_PLACAS ? real.gerarNovoLinkAcompanhamento(...(args as unknown as Parameters<typeof real.gerarNovoLinkAcompanhamento>)) : gerarNovoLinkAcompanhamentoDemo(...args);
+}
+
+export function anotarNoHistorico(...args: Parameters<typeof anotarNoHistoricoDemo>): ReturnType<typeof anotarNoHistoricoDemo> {
+  return USAR_BANCO_PLACAS ? real.anotarNoHistorico(...(args as unknown as Parameters<typeof real.anotarNoHistorico>)) : anotarNoHistoricoDemo(...args);
+}
+
+export function historicoDaPlaca(...args: Parameters<typeof historicoDaPlacaDemo>): ReturnType<typeof historicoDaPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.historicoDaPlaca(...(args as unknown as Parameters<typeof real.historicoDaPlaca>)) : historicoDaPlacaDemo(...args);
+}
+
+export function fotosDaPlaca(...args: Parameters<typeof fotosDaPlacaDemo>): ReturnType<typeof fotosDaPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.fotosDaPlaca(...(args as unknown as Parameters<typeof real.fotosDaPlaca>)) : fotosDaPlacaDemo(...args);
+}
+
+export function anexarFotoPlaca(...args: Parameters<typeof anexarFotoPlacaDemo>): ReturnType<typeof anexarFotoPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.anexarFotoPlaca(...(args as unknown as Parameters<typeof real.anexarFotoPlaca>)) : anexarFotoPlacaDemo(...args);
+}
+
+export function excluirFotoPlaca(...args: Parameters<typeof excluirFotoPlacaDemo>): ReturnType<typeof excluirFotoPlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.excluirFotoPlaca(...(args as unknown as Parameters<typeof real.excluirFotoPlaca>)) : excluirFotoPlacaDemo(...args);
+}
+
+export function listarClientesPlacas(...args: Parameters<typeof listarClientesPlacasDemo>): ReturnType<typeof listarClientesPlacasDemo> {
+  return USAR_BANCO_PLACAS ? real.listarClientesPlacas(...(args as unknown as Parameters<typeof real.listarClientesPlacas>)) : listarClientesPlacasDemo(...args);
+}
+
+export function salvarClientePlaca(...args: Parameters<typeof salvarClientePlacaDemo>): ReturnType<typeof salvarClientePlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.salvarClientePlaca(...(args as unknown as Parameters<typeof real.salvarClientePlaca>)) : salvarClientePlacaDemo(...args);
+}
+
+export function excluirClientePlaca(...args: Parameters<typeof excluirClientePlacaDemo>): ReturnType<typeof excluirClientePlacaDemo> {
+  return USAR_BANCO_PLACAS ? real.excluirClientePlaca(...(args as unknown as Parameters<typeof real.excluirClientePlaca>)) : excluirClientePlacaDemo(...args);
+}
+
+export function placasDoCliente(...args: Parameters<typeof placasDoClienteDemo>): ReturnType<typeof placasDoClienteDemo> {
+  return USAR_BANCO_PLACAS ? real.placasDoCliente(...(args as unknown as Parameters<typeof real.placasDoCliente>)) : placasDoClienteDemo(...args);
+}
+
+export function buscarOsControl(...args: Parameters<typeof buscarOsControlDemo>): ReturnType<typeof buscarOsControlDemo> {
+  return USAR_BANCO_PLACAS ? real.buscarOsControl(...(args as unknown as Parameters<typeof real.buscarOsControl>)) : buscarOsControlDemo(...args);
+}
+
+export function listarTecnicos(...args: Parameters<typeof listarTecnicosDemo>): ReturnType<typeof listarTecnicosDemo> {
+  return USAR_BANCO_PLACAS ? real.listarTecnicos(...(args as unknown as Parameters<typeof real.listarTecnicos>)) : listarTecnicosDemo(...args);
+}
+
+export function listarPlacasParaFinanceiro(...args: Parameters<typeof listarPlacasParaFinanceiroDemo>): ReturnType<typeof listarPlacasParaFinanceiroDemo> {
+  return USAR_BANCO_PLACAS ? real.listarPlacasParaFinanceiro(...(args as unknown as Parameters<typeof real.listarPlacasParaFinanceiro>)) : listarPlacasParaFinanceiroDemo(...args);
+}
+
+export function buscarAcompanhamentoPublico(...args: Parameters<typeof buscarAcompanhamentoPublicoDemo>): ReturnType<typeof buscarAcompanhamentoPublicoDemo> {
+  return USAR_BANCO_PLACAS ? real.buscarAcompanhamentoPublico(...(args as unknown as Parameters<typeof real.buscarAcompanhamentoPublico>)) : buscarAcompanhamentoPublicoDemo(...args);
+}

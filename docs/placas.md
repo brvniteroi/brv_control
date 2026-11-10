@@ -20,7 +20,12 @@ Volume: **78 OS de placa**, 584 históricos, 49 clientes (levantado em 2026-11-0
 
 ## Como encaixa no Control
 
-### 1. Mesma tabela da Oficina, `kind = 'placa'`
+### 1. Tabelas próprias do banco (decidido em 2026-11-10; o plano original era reaproveitar `workshop_orders`)
+**Atualização de 2026-11-10:** as placas ganharam tabelas próprias (`board_clients`, `board_orders`, `board_finance`, `board_photos`, `board_events`, `board_number_seq`, migration
+`20261110100000_placas_base.sql`) em vez de `kind = 'placa'` em `workshop_orders`: não mexe na Oficina que o Gustavo usa, combina com as telas do Gemini e o financeiro fica numa tabela
+à parte (`board_finance`, só quem passa em `tem_financeiro_placas()`), o que resolve "só o Braulio vê" sem truque. O texto abaixo descreve o plano original; vale o que está nesta atualização.
+
+### 1 (plano original). Mesma tabela da Oficina, `kind = 'placa'`
 `workshop_orders` já tem `kind` ('equipamento' | 'placa'), garantia (`is_warranty`, `warranty_origin_id`), valor (`quote_amount`), técnico de retirada/bancada,
 OS de origem, fotos (`attachments.workshop_order_id`), histórico imutável, etiqueta e Elgin. Reaproveitar: o Kanban, o histórico, as fotos, a
 etiqueta, a ajuda.

@@ -29,7 +29,6 @@ import PlacasClientes from './pages/PlacasClientes';
 import PlacasFinanceiro from './pages/PlacasFinanceiro';
 import PlacasFichas from './pages/PlacasFichas';
 import PlacasErros from './pages/PlacasErros';
-import PlacasAssistente from './pages/PlacasAssistente';
 import PlacasManuais from './pages/PlacasManuais';
 import AcompanhamentoPlaca from './pages/AcompanhamentoPlaca';
 import PortalRoute from './components/portal/PortalRoute';
@@ -81,7 +80,6 @@ export default function App() {
             <Route path="placas/financeiro" element={<PlacasFinanceiro />} />
             <Route path="placas/fichas" element={<PlacasFichas />} />
             <Route path="placas/erros" element={<PlacasErros />} />
-            <Route path="placas/assistente" element={<PlacasAssistente />} />
             <Route path="placas/manuais" element={<PlacasManuais />} />
             <Route path="equipamentos" element={<Equipamentos />} />
             <Route path="formularios" element={<Formularios />} />

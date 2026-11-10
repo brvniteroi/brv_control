@@ -20,7 +20,6 @@ import {
   RotateCcw,
   Save,
   ShieldCheck,
-  Sparkles,
   Tag,
   X,
 } from 'lucide-react';
@@ -68,7 +67,6 @@ import FotosPlaca from './FotosPlaca';
 import HistoricoPlaca from './HistoricoPlaca';
 import ModalDialogoPlacas from './ModalDialogoPlacas';
 import OrcamentoPlacaDocumento from './OrcamentoPlacaDocumento';
-import PainelAssistenteTecnico from './PainelAssistenteTecnico';
 import {
   ETAPAS_KANBAN_PLACA,
   ROTULO_ETAPA_PLACA,
@@ -146,7 +144,6 @@ export default function PlacaDetalhes({
   const [diagnosticoTecnico, setDiagnosticoTecnico] = useState('');
   const [componentesTrocados, setComponentesTrocados] = useState('');
   const [salvandoBancada, setSalvandoBancada] = useState(false);
-  const [modalAssistenteAberto, setModalAssistenteAberto] = useState(false);
 
   // Estado editável — Seção 4: Orçamento (apenas escritório/admin)
   const [valorOrcamentoTexto, setValorOrcamentoTexto] = useState('');
@@ -291,7 +288,6 @@ export default function PlacaDetalhes({
     verOrcamentoDoc ||
     verTermoGarantia ||
     verEtiqueta ||
-    modalAssistenteAberto ||
     modalRespostaAberto ||
     modalNovoLinkAberto ||
     modalEntregarAberto ||
@@ -1199,16 +1195,6 @@ export default function PlacaDetalhes({
                     <div className="flex flex-wrap items-center gap-2">
                       {!somenteLeitura && (
                         <button
-                          type="button"
-                          onClick={() => setModalAssistenteAberto(true)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-800 hover:bg-indigo-100"
-                        >
-                          <Sparkles size={13} aria-hidden="true" />
-                          <span>Consultar assistente técnico</span>
-                        </button>
-                      )}
-                      {!somenteLeitura && (
-                        <button
                           type="submit"
                           disabled={salvandoBancada}
                           className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
@@ -1932,36 +1918,6 @@ export default function PlacaDetalhes({
         placa={verEtiqueta ? placa : null}
         onFechar={() => setVerEtiqueta(false)}
       />
-
-      {/* Modal: Assistente Técnico dentro do detalhe da placa */}
-      <ModalDialogoPlacas
-        aberto={modalAssistenteAberto}
-        onFechar={() => setModalAssistenteAberto(false)}
-        titulo="Assistente técnico de bancada"
-        subtitulo={placa ? `${placa.board_number} · ${placa.brand_model}` : undefined}
-        larguraMax="max-w-3xl"
-      >
-        {placa && (
-          <PainelAssistenteTecnico
-            compacto
-            valoresIniciais={{
-              marca: placa.brand_model.split(/\s+/)[0] ?? '',
-              codigoErro: codigoErro || placa.error_code || '',
-              modeloPlaca: codigoPlaca || placa.board_code,
-              sintoma: defeitoReclamado || placa.reported_defect,
-            }}
-            onUsarNaPlaca={(textoGerado) => {
-              setDiagnosticoTecnico((atual) =>
-                atual.trim() ? `${atual.trim()}\n\n${textoGerado}` : textoGerado,
-              );
-              setModalAssistenteAberto(false);
-              notificarSucesso(
-                'Resumo do assistente copiado para o Diagnóstico técnico. Clique em "Salvar bancada" para gravar.',
-              );
-            }}
-          />
-        )}
-      </ModalDialogoPlacas>
 
       {/* Modal: Registrar resposta do orçamento */}
       <ModalDialogoPlacas

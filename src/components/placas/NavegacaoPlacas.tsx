@@ -5,7 +5,6 @@ import {
   Cpu,
   DollarSign,
   FolderOpen,
-  Sparkles,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -27,7 +26,6 @@ const ABAS_PLACAS: readonly ItemAbaPlacas[] = [
   { rota: '/placas/financeiro', rotulo: 'Financeiro', icone: DollarSign, apenasFinanceiro: true },
   { rota: '/placas/fichas', rotulo: 'Fichas técnicas', icone: BookOpen },
   { rota: '/placas/erros', rotulo: 'Códigos de erro', icone: AlertTriangle },
-  { rota: '/placas/assistente', rotulo: 'Assistente técnico', icone: Sparkles },
   { rota: '/placas/manuais', rotulo: 'Manuais', icone: FolderOpen },
 ];
 

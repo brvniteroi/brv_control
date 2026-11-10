@@ -28,7 +28,6 @@ import type {
   BoardRefundInput,
   BoardStage,
   BoardTechnicianOption,
-  AssistenteTecnicoInput,
   ConsultaCodigoErroInput,
   CreateBoardInput,
   ExtracaoFichaManualResultado,
@@ -38,7 +37,6 @@ import type {
   PlacaFichaInput,
   PlacaFichaTecnica,
   PlacaManual,
-  ResultadoAssistenteTecnico,
   ResultadoConsultaErro,
   UpdateBoardFields,
 } from '../types/placas';
@@ -964,10 +962,4 @@ export async function consultarCodigoErro(dados: ConsultaCodigoErroInput): Promi
     codigo_ou_sintoma: dados.consulta.trim(),
     consultado_em: new Date().toISOString(),
   };
-}
-
-export async function assistenteTecnico(dados: AssistenteTecnicoInput): Promise<ResultadoAssistenteTecnico> {
-  if (!dados.marca.trim()) throw new Error('Informe a marca do equipamento ou da placa.');
-  if (!dados.sintoma.trim() && !dados.codigoErro.trim()) throw new Error('Informe o código de erro ou descreva o sintoma observado na bancada.');
-  return chamarApoioTecnico<ResultadoAssistenteTecnico>({ acao: 'assistente', ...dados });
 }

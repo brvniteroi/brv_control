@@ -33,7 +33,6 @@ export type TelaAjuda =
   | 'placas-financeiro'
   | 'placas-fichas'
   | 'placas-erros'
-  | 'placas-assistente'
   | 'placas-manuais';
 
 export interface Topico {
@@ -88,7 +87,6 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   'placas-financeiro': 'Financeiro das placas',
   'placas-fichas': 'Fichas técnicas',
   'placas-erros': 'Códigos de erro',
-  'placas-assistente': 'Assistente técnico',
   'placas-manuais': 'Manuais',
 };
 
@@ -121,7 +119,7 @@ O menu fica à esquerda. No celular, toque no ícone ☰ no alto para abrir.
 - **Cadastros**: **Clientes**, **Equipamentos**, **Tipos de Serviço**, **Etiquetas**, **Cargos**, **Modelos de Formulários** e **Equipe** (funcionários e, para o administrador, os usuários do sistema).
 - **Relatórios**: atividades por técnico, gráficos, tipos de serviço e Garantia BRV.
 - **Oficina**: equipamentos recolhidos para conserto na loja, da entrada à devolução.
-- **Placas**: reparo de placas eletrônicas do laboratório (Kanban, clientes de placas e, só para quem tem acesso, o financeiro) e o apoio técnico (fichas, códigos de erro, assistente e manuais).
+- **Placas**: reparo de placas eletrônicas do laboratório (Kanban, clientes de placas e, só para quem tem acesso, o financeiro) e o apoio técnico (fichas, códigos de erro e manuais).
 Clique no nome de um grupo (Serviços, Cadastros, Relatórios, Placas) para abrir ou fechar a lista.
 `,
   },
@@ -894,7 +892,6 @@ Na seção **Acompanhamento do cliente**: **Copiar link**, **Enviar pelo WhatsAp
     texto: `
 - **Fotos**: **Anexar fotos** (várias de uma vez) e filtre por **Antes (entrada)**, **Depois (reparo/teste)** e **Outros**. Clique na foto para ampliar. Cada foto guarda a etapa em que foi tirada.
 - **Bancada**: **Código de erro**, **Diagnóstico técnico de bancada** e **Componentes trocados**. Clique em **Salvar bancada**.
-- **Consultar assistente técnico**, na Bancada, sugere hipóteses e testes; **Usar na placa** leva a sugestão para o diagnóstico. É só uma sugestão: confirme na bancada.
 - **Histórico**: linha do tempo com tudo o que aconteceu. Use **Anotar no histórico** para escrever uma nota. Notas não podem ser apagadas.
 `,
   },
@@ -958,21 +955,6 @@ Consulta de fichas técnicas por fabricante, linha, modelo ou capacidade (BTUs).
 2. Clique em **Pesquisar código**.
 O resultado traz o significado, as causas prováveis, o que verificar, os componentes envolvidos e o aviso de segurança. O selo diz a fonte: **Manual do fabricante** ou **Pesquisa da IA**.
 ! **Sugestão da IA: confirme na bancada.** Nunca troque componente só pelo que a IA disse.
-! Esta tela ainda mostra **respostas de exemplo**. A consulta real (manuais e IA) entra na próxima etapa.
-`,
-  },
-  {
-    id: 'placas-assistente',
-    titulo: 'Assistente técnico da bancada',
-    secao: 'Placas',
-    telas: ['placas-assistente'],
-    palavras: 'assistente tecnico ia diagnostico hipotese sintoma bancada teste medir',
-    texto: `
-Ajuda a investigar um defeito. Preencha **Marca**, **Código de erro**, **Modelo / código da placa** e o **Sintoma observado na bancada**, e clique em **Gerar diagnóstico**.
-- O resultado traz as hipóteses por probabilidade (**Alta**, **Média**, **Baixa**), os testes sugeridos e os componentes a medir.
-- Aberto a partir de uma placa, o botão **Usar na placa** leva o resultado para o diagnóstico dela.
-! **Sugestão da IA: confirme na bancada.**
-! Esta tela ainda mostra **respostas de exemplo**.
 `,
   },
   {
@@ -986,7 +968,6 @@ Lista dos manuais usados nas consultas de erro e no cadastro de fichas. Busque p
 - **Enviar manual** (administrador e escritório): escolha o PDF ou TXT, o fabricante e o título.
 - Selo **Texto extraído**: o sistema leu o conteúdo e a consulta de erros pode usá-lo. **Sem texto extraído**: o arquivo só serve para abrir.
 - **Abrir em nova aba** mostra o arquivo. **Excluir** só o administrador.
-! Esta tela ainda mostra **manuais de exemplo**. Os manuais reais serão importados na próxima etapa.
 `,
   },
 

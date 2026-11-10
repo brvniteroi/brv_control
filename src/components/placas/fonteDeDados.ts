@@ -4,7 +4,6 @@
 
 import type { ProfileRole } from '../../types/fsm';
 import type {
-  AssistenteTecnicoInput,
   BoardClient,
   BoardClientInput,
   BoardControlOsLookup,
@@ -32,7 +31,6 @@ import type {
   PlacaFichaInput,
   PlacaFichaTecnica,
   PlacaManual,
-  ResultadoAssistenteTecnico,
   ResultadoConsultaErro,
   SituacaoImpressoraPlaca,
   UpdateBoardFields,
@@ -52,7 +50,6 @@ import {
   PLACAS_DEMO_INICIAL,
   TECNICOS_DEMO_PLACAS,
   gerarExtracaoFichaDemo,
-  obterRespostaAssistenteDemo,
   obterRespostaErroDemo,
 } from './dadosDemo';
 import {
@@ -1372,28 +1369,6 @@ async function consultarCodigoErroDemo(
   return obterRespostaErroDemo(dados.marca, dados.modelo, dados.consulta);
 }
 
-/**
- * TODO(Claude): ligar à Edge Function `assistente-tecnico` (Gemini especialista em bancada).
- * Na demonstração aguarda 1,5 s e devolve hipóteses, testes de bancada e componentes a medir.
- */
-async function assistenteTecnicoDemo(
-  dados: AssistenteTecnicoInput,
-): Promise<ResultadoAssistenteTecnico> {
-  if (!dados.marca.trim()) {
-    throw new Error('Informe a marca do equipamento ou da placa.');
-  }
-  if (!dados.sintoma.trim() && !dados.codigoErro.trim()) {
-    throw new Error('Informe o código de erro ou descreva o sintoma observado na bancada.');
-  }
-  await atraso(1500);
-  return obterRespostaAssistenteDemo(
-    dados.marca,
-    dados.codigoErro,
-    dados.modeloPlaca,
-    dados.sintoma,
-  );
-}
-
 async function listarManuaisDemo(filtro?: {
   busca?: string;
   fabricante?: string;
@@ -1820,6 +1795,3 @@ export function consultarCodigoErro(...args: Parameters<typeof consultarCodigoEr
   return USAR_BANCO_PLACAS ? real.consultarCodigoErro(args[0]) : consultarCodigoErroDemo(...args);
 }
 
-export function assistenteTecnico(...args: Parameters<typeof assistenteTecnicoDemo>): ReturnType<typeof assistenteTecnicoDemo> {
-  return USAR_BANCO_PLACAS ? real.assistenteTecnico(args[0]) : assistenteTecnicoDemo(...args);
-}

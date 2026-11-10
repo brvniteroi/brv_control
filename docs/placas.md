@@ -110,11 +110,11 @@ Fotos: mesmo caminho dos equipamentos: baixar de `midias/reparos/<id>/` e enviar
 
 ### 8. Apoio técnico (IA, fichas, manuais, códigos de erro) — **migra junto com as placas** (decidido em 2026-11-09)
 **Menu "Placas" próprio, com tudo dentro** (decidido em 2026-11-09): Reparos (Kanban), Clientes de placas, Financeiro (só escritório/admin), **Fichas técnicas**, **Códigos de erro**,
-**Assistente técnico** e **Manuais**, rotas `/placas`, `/placas/clientes`, `/placas/financeiro`, `/placas/fichas`, `/placas/erros`, `/placas/assistente`, `/placas/manuais` (a página pública do parceiro
+**Manuais**, rotas `/placas`, `/placas/clientes`, `/placas/financeiro`, `/placas/fichas`, `/placas/erros`, `/placas/manuais` (a página pública do parceiro
 segue `/placa/<token>`). O menu "Oficina" fica só com os equipamentos. O papel `oficina` (Gustavo) **não vê as Placas** (decisão de 2026-11-09; `ProtectedRoute` só libera `/oficina` para ele).
 
 O que migra: fichas técnicas dos splits (131; **editar e excluir só admin**), manuais de fabricantes (18 PDFs, do bucket do Supabase antigo para a HostGator, com o texto extraído que a IA usa),
-códigos de erro com IA (`consultar-erro`), cadastro de ficha com IA a partir de PDF/TXT (`extrair-ficha`) e o assistente técnico da bancada (`assistente-tecnico`). Ficam de fora o ditado por voz
+códigos de erro com IA (`consultar-erro`), cadastro de ficha com IA a partir de PDF/TXT (`extrair-ficha`) (o assistente técnico da bancada foi **descartado em 2026-11-10**, decisão do usuário). Ficam de fora o ditado por voz
 (`interpretar-voz`) e a leitura de foto da nova placa; entram depois, se fizerem falta.
 - **IA:** as Edge Functions (Gemini) são do Claude: nascem de novo no projeto do Control, com `GEMINI_API_KEY` em Secrets e **login obrigatório** (a do sistema antigo só conferia o usuário, sem papel).
   Usam as fichas e os manuais como contexto. Resposta sempre rotulada "Sugestão da IA: confirme na bancada". Limitar uso por usuário para não estourar a cota da chave.

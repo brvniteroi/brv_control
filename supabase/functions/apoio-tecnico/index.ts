@@ -1,7 +1,6 @@
-// Edge Function do apoio técnico das Placas (IA com o Gemini): três ações numa função só.
-//   acao = 'erro'       consulta de código de erro (lê primeiro os textos de board_manuals; sem texto, pesquisa na internet)
-//   acao = 'assistente' assistente de bancada (hipóteses, testes com multímetro, componentes a medir)
-//   acao = 'ficha'      leitura de manual PDF/TXT e preenchimento da ficha técnica (envio por multipart/form-data)
+// Edge Function do apoio técnico das Placas (IA com o Gemini): duas ações numa função só.
+//   acao = 'erro'  consulta de código de erro (lê primeiro os textos de board_manuals; sem texto, pesquisa na internet)
+//   acao = 'ficha' leitura de manual PDF/TXT e preenchimento da ficha técnica (envio por multipart/form-data)
 //
 // Só admin e escritório ativos chamam (Verify JWT ligado + conferência do papel aqui). Limite de uso por pessoa por hora
 // (tabela board_ai_usage). Segredo no Supabase: GEMINI_API_KEY (opcional: GEMINI_MODEL, padrão gemini-flash-latest).
@@ -58,7 +57,7 @@ Deno.serve(async (req) => {
     const form = ehForm ? await req.formData() : null;
     const corpo = form ? null : await req.json();
     const acao = String(form ? form.get('acao') : corpo?.acao ?? '');
-    if (!['erro', 'assistente', 'ficha'].includes(acao)) return responder(400, { erro: 'Ação inválida.' });
+    if (!['erro', 'ficha'].includes(acao)) return responder(400, { erro: 'Ação inválida.' });
 
     // Limite de uso por pessoa por hora (protege a cota da chave)
     const desde = new Date(Date.now() - 3_600_000).toISOString();
@@ -73,7 +72,6 @@ Deno.serve(async (req) => {
     await admin.from('board_ai_usage').insert({ user_id: sessao.user.id, action: acao });
 
     if (acao === 'erro') return responder(200, await consultarErro(admin, chave, corpo));
-    if (acao === 'assistente') return responder(200, await assistente(chave, corpo));
     return responder(200, await extrairFicha(chave, form!));
   } catch (e) {
     console.error('apoio-tecnico:', e);
@@ -180,47 +178,6 @@ Se o código NÃO constar na fonte oficial, devolva "encontrado": false, "signif
     fonte_tipo: temManual ? 'manual_fabricante' : 'pesquisa_ia',
     fonte_descricao: String(resposta.fonte_descricao ?? (temManual ? 'Manuais guardados no sistema' : 'Pesquisa da IA em sites oficiais')),
     encontrado: resposta.encontrado !== false,
-  };
-}
-
-// ---------------------------------------------------------------------
-// Assistente de bancada
-// ---------------------------------------------------------------------
-async function assistente(chave: string, c: Record<string, string>) {
-  const marca = String(c?.marca ?? '').trim();
-  const codigoErro = String(c?.codigoErro ?? '').trim();
-  const modeloPlaca = String(c?.modeloPlaca ?? '').trim();
-  const sintoma = String(c?.sintoma ?? '').trim();
-  if (!marca) throw new Error('Informe a marca do equipamento ou da placa.');
-  if (!codigoErro && !sintoma) throw new Error('Informe o código de erro ou descreva o sintoma.');
-
-  const sistema = `Você é um engenheiro eletrônico experiente em reparo de placas de ar-condicionado (inverter, piso-teto, cassete, VRF, multi-split). Responda SOMENTE em português do Brasil, de forma prática, para o técnico na bancada. São sugestões: não afirme certeza que não tem; se não souber o significado de um código para a marca, diga que é hipótese de bancada.
-Responda SOMENTE com um objeto JSON válido (sem markdown) com exatamente estas chaves:
-{
-  "resumo_diagnostico": "o que normalmente causa essa falha no circuito",
-  "hipoteses": [{ "titulo": "", "probabilidade": "Alta" | "Média" | "Baixa", "explicacao": "" }],
-  "testes_bancada": [{ "passo": 1, "instrumento_escala": "ex.: Multímetro, escala de diodo", "ponto_medicao": "", "leitura_normal": "", "sinal_defeito": "" }],
-  "componentes_medir": [{ "componente": "", "funcao": "", "falha_tipica": "" }],
-  "observacoes": ["cuidados, ex.: descarregar o barramento DC antes de manusear"]
-}
-Ordene as hipóteses da mais para a menos provável.`;
-
-  const pergunta = `Marca: ${marca}\nModelo/part number da placa: ${modeloPlaca || 'não informado'}\nCódigo de erro: ${codigoErro || 'nenhum'}\nSintoma na bancada: ${sintoma || 'não informado'}`;
-  const r = lerJson(await gemini(chave, [{ text: pergunta }], { sistema, json: true }));
-  const prob = (p: unknown) => (['Alta', 'Média', 'Baixa'].includes(String(p)) ? String(p) : 'Média');
-  const arr = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? v : []);
-  return {
-    resumo_diagnostico: String(r.resumo_diagnostico ?? ''),
-    hipoteses: arr(r.hipoteses).map((h) => ({ titulo: String(h.titulo ?? ''), probabilidade: prob(h.probabilidade), explicacao: String(h.explicacao ?? '') })),
-    testes_bancada: arr(r.testes_bancada).map((t, i) => ({
-      passo: Number(t.passo) || i + 1,
-      instrumento_escala: String(t.instrumento_escala ?? ''),
-      ponto_medicao: String(t.ponto_medicao ?? ''),
-      leitura_normal: String(t.leitura_normal ?? ''),
-      sinal_defeito: String(t.sinal_defeito ?? ''),
-    })),
-    componentes_medir: arr(r.componentes_medir).map((x) => ({ componente: String(x.componente ?? ''), funcao: String(x.funcao ?? ''), falha_tipica: String(x.falha_tipica ?? '') })),
-    observacoes: lista(r.observacoes),
   };
 }
 

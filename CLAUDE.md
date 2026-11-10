@@ -174,6 +174,13 @@ tipo da OS de devolução continua sendo escolhido pelo escritório na hora. Có
 Para rodar o importador no PC da empresa seria preciso `EQUIP_SERVICE_ROLE_KEY` no `.env` de lá (não deve ser mais necessário).
 Ao concluir, apagar este lembrete.
 
+**LEMBRETE (2026-11-10): começar a fase P1 das Placas no PC da empresa** (lembrar o usuário logo no início da conversa). Estado: telas (P0)
+prontas, auditadas e testadas; todas as decisões tomadas (`docs/placas.md`, itens 1 a 9; auditoria em `docs/gemini/placas-auditoria.md`). Antes: `git pull`
+e confirmar se a migration `20261109120000_acesso_financeiro_placas.sql` já foi colada no SQL Editor. P1: migration `board_*` (etapa `teste`,
+`workshop_board_details` com `board_number` e função do número com trava, `board_clients`, OS/cliente opcionais só para placas, RLS só admin/escritório
+sem `oficina`, colunas financeiras só com `tem_financeiro_placas()`, trigger do bloqueio de etapa, token público e RPC do acompanhamento), `services/placas.ts`,
+trocar `fonteDeDados.ts`, tirar o "modo oficina" das telas, ajuda F1 (`src/ajuda/topicos.ts`). Ao concluir, apagar este lembrete.
+
 **LEMBRETE (2026-11-10, amanhã): fazer o teste do APK com tela apagada** (lembrar o usuário logo no início da conversa). Em 2026-11-09 o APK
 já estava instalado nos técnicos Alberto, Emerson e Marcus (têm token em `push_fcm_tokens`; o Bruno Brum, conta técnica do usuário, ainda só
 no navegador), mas o teste não foi conclusivo. Roteiro: técnico parado (Alberto), Mapa "Online" com o app aberto, apagar a tela ~10 min sem mexer,
@@ -231,7 +238,7 @@ Pendente, nesta ordem:
    link público (`/placa/<token>`) enviado no comprovante de entrada, financeiro das placas próprio e **só para o Braulio** (marca `profiles.board_finance_access`, migration `20261109120000_acesso_financeiro_placas.sql`, **a colar no SQL Editor**; helper `utils/acessoPlacas.ts`), aproveitando o dashboard do sistema antigo, **migração dos dados só no fim, com telas
    prontas, testadas e simulações**. Telas: briefing para o Gemini em `docs/gemini/placas-briefing.md` (dados de demonstração em `src/components/placas/fonteDeDados.ts`; resumo em
    `docs/gemini/placas.md`, que o Claude **audita** antes de criar migration/services/importador). O apoio técnico (fichas técnicas, manuais, códigos de erro e assistente com IA) migra junto, dentro do **menu "Placas"** (rotas `/placas...`). **A `oficina` (Gustavo) não acessa as Placas**: o técnico de placas é o Braulio (admin); só admin e escritório. Nenhuma decisão em aberto no plano.
-   **Telas do Gemini prontas e auditadas em 2026-11-09** (rotas `/placas...` e `/placa/:token`, dados de demonstração; resumo `docs/gemini/placas.md`, auditoria `docs/gemini/placas-auditoria.md`). Menu "Placas" **oculto** em `Sidebar.tsx` (`MOSTRAR_MENU_PLACAS = false`) até ligar ao banco; as rotas abrem por URL. **Decididos em 2026-11-09** (ver `docs/placas.md`, itens 6 a 9): bloqueio de etapa sem orçamento aprovado mantido; sem conserto não gera reembolso (reembolso = caixa + valor devolvido, só no financeiro); dias contados desde a entrada sem zerar (`diasDesdeEntrada`, base do futuro relatório de tempo médio de reparo). **Pendente do usuário:** testar as telas. **Depois, Claude:** migration `board_*`, services, ajuda F1, importador em simulação, IA/manuais, PDF, QR e etiqueta.
+   **Telas do Gemini prontas e auditadas em 2026-11-09** (rotas `/placas...` e `/placa/:token`, dados de demonstração; resumo `docs/gemini/placas.md`, auditoria `docs/gemini/placas-auditoria.md`). Menu "Placas" **oculto** em `Sidebar.tsx` (`MOSTRAR_MENU_PLACAS = false`) até ligar ao banco; as rotas abrem por URL. **Decididos em 2026-11-09** (ver `docs/placas.md`, itens 6 a 9): bloqueio de etapa sem orçamento aprovado mantido; sem conserto não gera reembolso (reembolso = caixa + valor devolvido, só no financeiro); dias contados desde a entrada sem zerar (`diasDesdeEntrada`, base do futuro relatório de tempo médio de reparo). **Telas testadas e aprovadas pelo usuário em 2026-11-09.** **Próximo passo (Claude, fase P1 de `docs/placas.md`), retomar no PC da empresa em 2026-11-10:** migration `board_*`, services, ajuda F1, importador em simulação, IA/manuais, PDF, QR e etiqueta.
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.
 

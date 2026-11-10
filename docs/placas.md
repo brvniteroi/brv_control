@@ -1,6 +1,6 @@
 # Migração do módulo Placas (Reparo de placas) para o BRV Control
 
-Plano de 2026-11-09. **Nada implementado.** Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
+Plano de 2026-11-09. **Fase P0 (telas com dados de demonstração) feita, auditada e testada pelo usuário em 2026-11-09; próximo: P1 (banco).** Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
 itens da Oficina, importador repetível, virada com o Equipamentos em só leitura. Referência do sistema antigo: `D:\BRV_Equipamentos`
 (telas em `frontend/src/pages/Reparos/`, schema em `schema_reparos.sql`).
 

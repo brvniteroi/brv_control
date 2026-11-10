@@ -39,6 +39,6 @@ extração de texto dos manuais, importador (placas, clientes 1:1, fotos, fichas
 Também: a `oficina` (Gustavo) não tem acesso às Placas (menu e `ProtectedRoute` ajustados). Pontos 4 a 6 ficam para conferir na migração.
 
 ## Próximos passos (ordem)
-1. ~~Braulio testa as telas em `/placas` (demo) e decide os 3 pontos acima~~ (decididos; testar as telas segue valendo).
+1. ~~Braulio testa as telas em `/placas` (demo) e decide os 3 pontos acima~~ (decididos e telas testadas em 2026-11-09).
 2. Ajustes visuais ao Gemini, se houver.
 3. Claude: migration + services + ligação, ajuda F1, importador em simulação, IA e manuais; depois virada.

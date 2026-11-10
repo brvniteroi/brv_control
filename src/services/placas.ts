@@ -4,6 +4,9 @@
 // reembolso) fica em board_finance, que só quem tem a marca do perfil lê: sem ela os campos vêm vazios.
 import { supabase } from './supabase';
 import { compactarImagem, enviarParaHostgator } from './anexos';
+import type { PedidoImpressao } from '../types/oficina';
+import { gerarZplPlaca } from '../utils/etiquetaPlaca';
+import type { LarguraEtiqueta } from '../utils/etiquetaOficina';
 import type { PersonType } from '../types/fsm';
 import type {
   BoardClient,
@@ -697,6 +700,30 @@ export async function salvarClientePlaca(dados: BoardClientInput): Promise<Board
 export async function excluirClientePlaca(id: string): Promise<void> {
   const { error } = await supabase.from('board_clients').delete().eq('id', id);
   falhar(error);
+}
+
+// ---------------------------------------------------------------------
+// Etiqueta na Elgin (mesma fila e mesmo agente da Oficina: migration 20261110110000_fila_impressao_placas.sql)
+// ---------------------------------------------------------------------
+
+/** Manda a etiqueta da placa para a fila. Acompanhe com acompanharPedido() de services/oficina. */
+export async function pedirEtiquetaPlacaNaFila(
+  placa: BoardOrder,
+  opcoes: { copias?: number; largura?: LarguraEtiqueta } = {},
+): Promise<PedidoImpressao> {
+  const copias = Math.min(10, Math.max(1, Math.round(opcoes.copias ?? 1)));
+  const { data, error } = await supabase
+    .from('print_jobs')
+    .insert({
+      kind: 'etiqueta_placa',
+      board_order_id: placa.id,
+      payload: gerarZplPlaca(placa, { largura: opcoes.largura, copias }),
+      copies: copias,
+    })
+    .select()
+    .single();
+  falhar(error);
+  return data as PedidoImpressao;
 }
 
 // ---------------------------------------------------------------------

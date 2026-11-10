@@ -38,6 +38,7 @@ import type {
   UpdateBoardFields,
 } from '../../types/placas';
 import * as real from '../../services/placas';
+import { acompanharPedido, situacaoImpressora as situacaoElgin } from '../../services/oficina';
 import { valorEmReais } from '../../utils/oficina';
 import { limparDocumento } from '../../utils/documento';
 import { formatarTelefone } from '../../utils/telefone';
@@ -1593,6 +1594,7 @@ async function gerarPdfTermoDemo(id: string): Promise<Blob> {
 async function pedirEtiquetaPlacaDemo(
   id: string,
   copias: number,
+  _largura?: 100 | 80,
 ): Promise<PedidoEtiquetaPlacaResult> {
   await atraso(250);
   const placa = memoriaPlacas.find((p) => p.id === id);
@@ -1640,23 +1642,34 @@ export function gerarPdfTermo(...args: Parameters<typeof gerarPdfTermoDemo>): Re
   return gerarPdfTermoDemo(...args);
 }
 
-/** Etiqueta da placa na Elgin: o layout e a fila ainda não existem para placas (fase P4). */
-export function pedirEtiquetaPlaca(...args: Parameters<typeof pedirEtiquetaPlacaDemo>): ReturnType<typeof pedirEtiquetaPlacaDemo> {
-  if (USAR_BANCO_PLACAS) {
-    return Promise.resolve({
-      id: '',
-      status: 'falhou' as const,
-      mensagem: 'A impressão direta na Elgin ainda vai ser ligada para as placas. Use "Imprimir pelo navegador".',
-    });
+/**
+ * Etiqueta da placa na Elgin, pela fila da loja (mesmo agente da Oficina). Espera até 60 s o resultado:
+ * impressa, falhou (com o motivo) ou sem resposta do servidor da loja.
+ */
+export async function pedirEtiquetaPlaca(id: string, copias: number, largura: 100 | 80 = 100): Promise<PedidoEtiquetaPlacaResult> {
+  if (!USAR_BANCO_PLACAS) return pedirEtiquetaPlacaDemo(id, copias, largura);
+  const placa = await real.buscarPlaca(id);
+  if (!placa) throw new Error('Placa não encontrada para imprimir a etiqueta.');
+  const pedido = await real.pedirEtiquetaPlacaNaFila(placa, { copias, largura });
+  const final = (await acompanharPedido(pedido.id)) ?? pedido;
+  if (final.status === 'impressa') {
+    return { id: final.id, status: 'impressa', mensagem: `Etiqueta impressa na Elgin (${final.copies} ${final.copies === 1 ? 'cópia' : 'cópias'}).` };
   }
-  return pedirEtiquetaPlacaDemo(...args);
+  if (final.status === 'falhou' || final.status === 'cancelada') {
+    return { id: final.id, status: 'falhou', mensagem: `Não imprimiu: ${final.error || 'o pedido foi cancelado'}. Tente de novo ou use "Imprimir pelo navegador".` };
+  }
+  return {
+    id: final.id,
+    status: 'pendente',
+    mensagem: 'O servidor da loja não respondeu em 1 minuto. O pedido continua na fila e sai quando o servidor voltar; se for urgente, use "Imprimir pelo navegador".',
+  };
 }
 
-export function situacaoImpressora(...args: Parameters<typeof situacaoImpressoraDemo>): ReturnType<typeof situacaoImpressoraDemo> {
-  if (USAR_BANCO_PLACAS) {
-    return Promise.resolve({ online: false, printer_name: 'Elgin (impressão direta de placas ainda não ligada)', last_seen_at: null });
-  }
-  return situacaoImpressoraDemo(...args);
+/** Situação real da Elgin (o agente da loja manda um sinal de vida; sem sinal há 90 s = servidor desligado). */
+export async function situacaoImpressora(): Promise<SituacaoImpressoraPlaca> {
+  if (!USAR_BANCO_PLACAS) return situacaoImpressoraDemo();
+  const { online, agente } = await situacaoElgin();
+  return { online, printer_name: agente?.printer ?? 'Elgin', last_seen_at: agente?.last_seen_at ?? null };
 }
 
 export function listarPlacas(...args: Parameters<typeof listarPlacasDemo>): ReturnType<typeof listarPlacasDemo> {

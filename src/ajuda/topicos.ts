@@ -875,12 +875,13 @@ No rodapé da placa:
     texto: `
 Na placa, no alto: **Comprovante** e **Etiqueta**.
 - **Comprovante**: documento A4 com os dados da entrada, os termos e o **link de acompanhamento**. **Imprimir comprovante** ou **Enviar o link pelo WhatsApp**.
-- **Etiqueta**: escolha **100 × 50 mm** ou **80 × 50 mm**, a **Quantidade de cópias** e clique em **Imprimir pelo navegador**.
+- **Etiqueta**: escolha **100 × 50 mm** ou **80 × 50 mm**, a **Quantidade de cópias** e clique em **Imprimir na Elgin**. A tela mostra se a Elgin está pronta e, depois, **Etiqueta impressa** ou o motivo da falha. A etiqueta leva o número, o cliente, o telefone, o equipamento, o modelo, o código da placa, o defeito e um QR que abre a placa.
+- Sem sinal do servidor da loja (computador desligado ou sem internet), use **Imprimir pelo navegador** (no Chrome, em Margens, escolha **Nenhuma**).
 ## Link de acompanhamento do parceiro
 Na seção **Acompanhamento do cliente**: **Copiar link**, **Enviar pelo WhatsApp**, **Abrir página pública** e **Gerar novo link**.
 - O parceiro abre o link, **sem senha**, e vê o número, o equipamento, a etapa atual com as datas, as fotos e a situação do orçamento. **Não** vê valores, diagnóstico interno nem reembolso.
 - **Gerar novo link** faz o link antigo parar de funcionar (use se o link foi para a pessoa errada).
-! A impressão da etiqueta direto na Elgin pelo sistema ainda vai ser ligada; por enquanto use **Imprimir pelo navegador**.
+> Etiqueta saiu cortada, torta ou com etiqueta em branco no meio? Veja o tópico "A etiqueta não saiu na Elgin" nas Dúvidas comuns.
 `,
   },
   {

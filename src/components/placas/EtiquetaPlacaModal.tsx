@@ -126,7 +126,7 @@ export default function EtiquetaPlacaModal({ placa, onFechar }: EtiquetaPlacaMod
     setRetornoElgin(null);
     setErroElgin(null);
     try {
-      const resp = await pedirEtiquetaPlaca(placa.id, copias);
+      const resp = await pedirEtiquetaPlaca(placa.id, copias, formato === '80x50' ? 80 : 100);
       setRetornoElgin(resp.mensagem);
     } catch (e) {
       setErroElgin(e instanceof Error ? e.message : 'Não foi possível enviar para a Elgin.');

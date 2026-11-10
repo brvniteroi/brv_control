@@ -36,7 +36,8 @@ do BRV Equipamentos, que **continuam funcionando** enquanto o Equipamentos estiv
   Opcionais no `.env`: `MARGEM_ESQUERDA_MM` (3), `PASSO_ETIQUETA_MM` (53), `PAUSA_ENTRE_COPIAS_MS` (1500).
 - Várias cópias saem uma por vez (trabalhos separados), nunca com `^PQ` maior que 1.
 - Etiqueta em branco no meio = sensor desajustado: parar o agente, `npm run calibrar` (envia `~JC`; a Elgin avança
-  algumas etiquetas) e iniciar de novo. Trocar de rolo também pede calibrar.
+  algumas etiquetas; depois grava a calibração na impressora com `^JUS`, para não perder ao desligar) e iniciar de novo. Trocar de rolo também pede calibrar.
+  Sem parar o agente também dá: o Claude manda `~JC` e `^XA^JUS^XZ` pela fila (foi assim em 2026-11-10, e resolveu a etiqueta em branco).
 
 ## Conferir qual agente está rodando (v1.1.0 em diante)
 - O sinal de vida (tabela `print_agents`, coluna `info`) informa a versão, a margem esquerda, o passo do rolo, o PID e a data do arquivo em uso;

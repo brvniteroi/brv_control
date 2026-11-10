@@ -151,8 +151,15 @@ process.on('unhandledRejection', (e) => log('Erro não tratado:', e?.message ?? 
 if (process.argv.includes('--calibrar')) {
   // Recalibra o sensor de etiquetas (~JC): a Elgin avança algumas etiquetas e aprende o tamanho/espaço do rolo.
   // Usar com o rolo certo colocado e a tampa fechada. Corrige etiqueta em branco entre as impressas.
+  // Depois grava a calibração na memória da impressora (^JUS) para ela não perder ao desligar (2026-11-10).
   imprimir('~JC\r\n')
-    .then((via) => { log('Calibração enviada pela', via, '- a impressora deve avançar algumas etiquetas'); process.exit(0); })
+    .then(async (via) => {
+      log('Calibração enviada pela', via, '- a impressora deve avançar algumas etiquetas');
+      await pausa(20_000);
+      await imprimir('^XA\r\n^JUS\r\n^XZ\r\n');
+      log('Calibração gravada na impressora (^JUS)');
+      process.exit(0);
+    })
     .catch((e) => { log('Calibração FALHOU:', e.message); process.exit(1); });
 } else if (process.argv.includes('--teste-local')) {
   const zpl = [

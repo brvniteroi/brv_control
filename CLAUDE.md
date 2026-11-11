@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261110150000` (2026-11-10) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261111110000` (2026-11-11) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -185,7 +185,7 @@ manter atualizada). Quadro das placas (migration `20261110120000_placas_junta_et
 a etapa Teste em Simulador saiu. **Conferido pelo usuário em 2026-11-10:** telas em `/placas` testadas com dados reais; etiqueta de placa configurada e imprimindo na Elgin; Edge Function
 `apoio-tecnico` publicada e funcionando. **Falta:** (b) ~~tirar o resto do "modo oficina"~~ (feito em 2026-11-11: aviso "Modo consulta (oficina)", checagem na demonstração e comentários; o papel `oficina` não usa Placas);
 (c) ~~PDF do orçamento~~ **resolvido por link em 2026-11-11** (o `wa.me` só leva texto): migration `20261111100000_placas_orcamento_link.sql`
-(**a colar no SQL Editor**; `board_orders.quote_token`, separado do `public_token` do acompanhamento; canal `link`; `board_enviar_orcamento_link` marca enviado e devolve o token;
+(aplicada em 2026-11-11; `board_orders.quote_token`, separado do `public_token` do acompanhamento; canal `link`; `board_enviar_orcamento_link` marca enviado e devolve o token;
 públicas `placa_orcamento_ver`/`placa_orcamento_aprovar`, só aprovam orçamento `enviado` dentro da validade, contada do envio; o nome digitado vai para o histórico via `board.ator_nome`
 em `board_ator()`). Página pública `/orcamento-placa/:token` (`pages/OrcamentoPlacaPublico.tsx`: mesma folha `components/placas/FolhaOrcamentoPlaca.tsx`, "Salvar em PDF / Imprimir",
 nome + "Li e concordo" + **Aprovar orçamento**; recusa e dúvidas pelo botão do WhatsApp). Botão "Enviar pelo WhatsApp (link para aprovar)" no detalhe e na folha
@@ -193,7 +193,7 @@ nome + "Li e concordo" + **Aprovar orçamento**; recusa e dúvidas pelo botão d
 Realtime: a aprovação aparece ao reabrir a placa. **Garantia (decidido em 2026-11-11):** termo **só impresso na retirada** (saiu o "Enviar pelo WhatsApp"
 do termo); retorno em garantia **só com a placa original entregue e garantia vigente** (vencida = placa normal com orçamento; sem garantia "avulsa"), também para placa de campo
 (lista as placas do cliente da OS, `placasDoClienteControl`); garantia definida na entrada não muda depois; o retorno, ao ser entregue, ganha **novos 90 dias** da nova saída (termo
-cita a placa original). Banco: migration `20261111110000_placas_garantia_vigente.sql` (**a colar no SQL Editor**; refaz `board_orders_preenche` e cria `board_orders_garantia_fixa`).
+cita a placa original). Banco: migration `20261111110000_placas_garantia_vigente.sql` (aplicada em 2026-11-11; refaz `board_orders_preenche` e cria `board_orders_garantia_fixa`).
 Cláusulas de perda da garantia **unificadas** no orçamento e no termo (`PERDA_GARANTIA_PLACA` em `textosJuridicosPlacas.ts`: selo, raio, sobretensão, água/líquidos,
 maresia/umidade, insetos, terceiros). Falta: QR no comprovante; (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
 lançava no Equipamentos): backup das tabelas antigas em `scripts/equipamentos/dados/backup-placas-equipamentos-2026-11-10.json` (gitignored; 81 OS, 49 clientes, 620

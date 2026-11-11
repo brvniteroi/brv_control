@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { ArrowLeft, MessageCircle, Printer, QrCode, Tag, X } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Printer, Tag, X } from 'lucide-react';
 import type { BoardOrder } from '../../types/placas';
 import { formatarDataHora } from '../../utils/ordens';
 import { formatarTelefone } from '../../utils/telefone';
@@ -212,21 +212,12 @@ export default function ComprovanteEntradaDocumento({
             </table>
           </section>
 
-          {/* Acompanhamento Online (QR placeholder + Link) */}
+          {/* Acompanhamento online (só o link; QR descartado pelo Braulio em 2026-11-11) */}
           <section className="mt-4">
             <div className="placas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
               2. Acompanhamento em Tempo Real pelo Parceiro / Cliente
             </div>
-            <div className="flex items-center gap-4 border border-t-0 border-slate-300 p-4 text-xs">
-              {/* TODO(Claude): renderizar QR Code real para `linkAcompanhamento` (sem biblioteca instalada hoje) */}
-              <div
-                aria-label="Espaço reservado para QR Code"
-                className="flex h-22 w-22 shrink-0 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-400 bg-slate-50 text-center text-slate-600"
-              >
-                <QrCode size={26} aria-hidden="true" />
-                <span className="mt-1 font-mono text-[10px] font-bold">QR</span>
-              </div>
-
+            <div className="border border-t-0 border-slate-300 p-4 text-xs">
               <div className="min-w-0 space-y-1">
                 <p className="font-bold text-slate-900">
                   Acompanhe a etapa atual, fotos de bancada e situação do orçamento sem precisar de senha:

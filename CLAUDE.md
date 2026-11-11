@@ -175,7 +175,7 @@ tipo da OS de devolução continua sendo escolhido pelo escritório na hora. Có
 Para rodar o importador no PC da empresa seria preciso `EQUIP_SERVICE_ROLE_KEY` no `.env` de lá (não deve ser mais necessário).
 Ao concluir, apagar este lembrete.
 
-**LEMBRETE (2026-11-10): terminar as Placas** (lembrar o usuário logo no início da conversa). **Todas as migrations até `20261110150000` foram aplicadas
+**PLACAS: módulo concluído em 2026-11-11** (não é mais lembrete; fica como registro do que foi feito e das decisões). **Todas as migrations até `20261110150000` foram aplicadas
 (usuário confirmou em 2026-11-10).** **Feito em 2026-11-10 (commitado):** migration
 `20261110100000_placas_base.sql` (tabelas próprias `board_clients`, `board_orders`, `board_finance`, `board_photos`, `board_events`, `board_number_seq`; número `OS-DDMMAA-NNN`
 com trava; regras de etapa, financeiro só com `tem_financeiro_placas()`, histórico imutável, RLS só admin/escritório, função pública `placa_acompanhamento(token)`),
@@ -195,7 +195,7 @@ do termo); retorno em garantia **só com a placa original entregue e garantia vi
 (lista as placas do cliente da OS, `placasDoClienteControl`); garantia definida na entrada não muda depois; o retorno, ao ser entregue, ganha **novos 90 dias** da nova saída (termo
 cita a placa original). Banco: migration `20261111110000_placas_garantia_vigente.sql` (aplicada em 2026-11-11; refaz `board_orders_preenche` e cria `board_orders_garantia_fixa`).
 Cláusulas de perda da garantia **unificadas** no orçamento e no termo (`PERDA_GARANTIA_PLACA` em `textosJuridicosPlacas.ts`: selo, raio, sobretensão, água/líquidos,
-maresia/umidade, insetos, terceiros). Falta: QR no comprovante; (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
+maresia/umidade, insetos, terceiros). QR no comprovante **descartado pelo usuário** (2026-11-11; o comprovante leva só o link); (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
 lançava no Equipamentos): backup das tabelas antigas em `scripts/equipamentos/dados/backup-placas-equipamentos-2026-11-10.json` (gitignored; 81 OS, 49 clientes, 620
 históricos), importação final (79 de 81 regravadas; OS-221026-001 e OS-031126-001 já mexidas no Control, mantidas; fotos já estavam) e `scripts/equipamentos/somente-leitura-placas.sql` **aplicado no projeto BRV Equipamentos** (2026-11-10; trava placas, clientes,
 histórico, fichas e manuais; o sistema antigo está todo só leitura). O Equipamentos e o XAMPP da loja podem ser desligados quando o usuário quiser (as etiquetas já saem pelo agente do Control). Histórico do que foi feito:
@@ -263,7 +263,7 @@ Pendente, nesta ordem:
    vazias (`KanbanOficina.tsx`, `utils/oficina.ts`); `scripts/equipamentos/recuperar-fotos-oficina.mjs` recupera as fotos falsas (545 bytes) a partir da pasta
    `uploads` do sistema antigo. Fases 2 e 3, pendências e o uso em paralelo
    com o Equipamentos em `docs/oficina.md`. Ler antes de continuar.
-   **Migração das Placas** (reparo de placas do Equipamentos para o Control): plano em `docs/placas.md` (2026-11-09); **banco, telas, importação de ensaio, etiqueta e apoio técnico feitos em 2026-11-10** (o que falta está no LEMBRETE "terminar as Placas", acima). Decidido: número próprio `OS-DDMMAA-NNN` (OS do Control só
+   **Migração das Placas** (reparo de placas do Equipamentos para o Control): plano em `docs/placas.md` (2026-11-09); **módulo concluído e virada feita (2026-11-10 e 11)**; detalhes e decisões no bloco "PLACAS: módulo concluído", acima. Decidido: número próprio `OS-DDMMAA-NNN` (OS do Control só
    quando a equipe de campo retira a placa), cadastro de clientes de placas paralelo (`board_clients`), orçamento feito no Control com PDF pelo WhatsApp, parceiro acompanha por
    link público (`/placa/<token>`) enviado no comprovante de entrada, financeiro das placas próprio e **só para o Braulio** (marca `profiles.board_finance_access`, migration `20261109120000_acesso_financeiro_placas.sql`, aplicada; helper `utils/acessoPlacas.ts`), aproveitando o dashboard do sistema antigo, **migração dos dados só no fim, com telas
    prontas, testadas e simulações**. Telas: briefing para o Gemini em `docs/gemini/placas-briefing.md` (dados de demonstração em `src/components/placas/fonteDeDados.ts`; resumo em

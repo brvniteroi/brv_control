@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  CheckCircle2,
   Clock,
   Cpu,
   RotateCcw,
@@ -45,6 +46,9 @@ export default function CartaoPlaca({
   const diasCritico = placa.days_since_entry >= DIAS_PLACA_ENCALHADA;
   const infoCliente = CORES_TIPO_CLIENTE_PLACA[placa.customer_kind];
   const infoOrcamento = CORES_ORCAMENTO_PLACA[placa.quote_status];
+  // Orçamento aprovado e o reparo ainda não começou: pede ação do escritório
+  const aprovadaAguardandoReparo =
+    mostrarOrcamento && !placa.is_warranty && placa.quote_status === 'aprovado' && (placa.status === 'entrada' || placa.status === 'diagnostico');
 
   const acionarPasso = (destino: BoardStage) => {
     const bloqueio = motivoBloqueioPlaca(placa, destino, papel);
@@ -56,7 +60,7 @@ export default function CartaoPlaca({
   };
 
   return (
-    <article className="group flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs transition hover:border-blue-300 hover:shadow-sm">
+    <article className={`group flex flex-col justify-between rounded-xl border bg-white p-3.5 shadow-2xs transition hover:border-blue-300 hover:shadow-sm ${aprovadaAguardandoReparo ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-slate-200'}`}>
       <div
         onClick={() => onAbrir(placa.id)}
         onKeyDown={(e) => {
@@ -148,6 +152,13 @@ export default function CartaoPlaca({
             <span className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
               <RotateCcw size={11} aria-hidden="true" />
               Reembolsada
+            </span>
+          )}
+
+          {aprovadaAguardandoReparo && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
+              <CheckCircle2 size={11} aria-hidden="true" />
+              Aprovado, iniciar reparo
             </span>
           )}
 

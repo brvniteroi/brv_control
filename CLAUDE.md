@@ -191,8 +191,8 @@ a etapa Teste em Simulador saiu. **Conferido pelo usuário em 2026-11-10:** tela
 públicas `placa_orcamento_ver`/`placa_orcamento_aprovar`, só aprovam orçamento `enviado` dentro da validade, contada do envio; o nome digitado vai para o histórico via `board.ator_nome`
 em `board_ator()`). Página pública `/orcamento-placa/:token` (`pages/OrcamentoPlacaPublico.tsx`: mesma folha `components/placas/FolhaOrcamentoPlaca.tsx`, "Salvar em PDF / Imprimir",
 nome + "Li e concordo" + **Aprovar orçamento**; recusa e dúvidas pelo botão do WhatsApp). Botão "Enviar pelo WhatsApp (link para aprovar)" no detalhe e na folha
-(`enviarOrcamentoPorLink`; a aba do WhatsApp abre já no clique, `prepararJanelaWhatsApp`, para o navegador não bloquear). Ajuda F1 `placas-orcamento` atualizada. As Placas não têm
-Realtime: a aprovação aparece ao reabrir a placa. **Garantia (decidido em 2026-11-11):** termo **só impresso na retirada** (saiu o "Enviar pelo WhatsApp"
+(`enviarOrcamentoPorLink`; a aba do WhatsApp abre já no clique, `prepararJanelaWhatsApp`, para o navegador não bloquear). Ajuda F1 `placas-orcamento` atualizada. O quadro das Placas atualiza por Realtime
+(2026-11-11, migration `20261111120000_placas_realtime.sql`, **a colar no SQL Editor**): placa com orçamento aprovado em Entrada/Diagnóstico ganha borda verde e o selo "Aprovado, iniciar reparo" (`CartaoPlaca.tsx`); sem aviso por sino/e-mail. **Garantia (decidido em 2026-11-11):** termo **só impresso na retirada** (saiu o "Enviar pelo WhatsApp"
 do termo); retorno em garantia **só com a placa original entregue e garantia vigente** (vencida = placa normal com orçamento; sem garantia "avulsa"), também para placa de campo
 (lista as placas do cliente da OS, `placasDoClienteControl`); garantia definida na entrada não muda depois; o retorno, ao ser entregue, ganha **novos 90 dias** da nova saída (termo
 cita a placa original). Banco: migration `20261111110000_placas_garantia_vigente.sql` (aplicada em 2026-11-11; refaz `board_orders_preenche` e cria `board_orders_garantia_fixa`).

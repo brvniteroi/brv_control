@@ -833,7 +833,7 @@ O orçamento da placa é feito aqui no sistema (diferente dos equipamentos, que 
 - **Recusado**: finalize como **Sem Conserto / Devolvido**.
 ! O link só aceita aprovação dentro da **validade** (conta a partir do envio). Vencido, o cliente vê o aviso e fala com a BRV; reenvie o orçamento para renovar a data.
 ! Pelo link o cliente só aprova. Recusa e dúvidas chegam pelo WhatsApp (botão na página) e você registra em **Registrar resposta**.
-! A aprovação pelo link aparece ao reabrir a placa (o quadro não atualiza sozinho).
+- Quando o cliente aprova o orçamento pelo link, o quadro atualiza sozinho: a placa ganha borda verde e o selo **Aprovado, iniciar reparo** (enquanto estiver em Entrada ou Diagnóstico). Ao mover para o reparo, o destaque some.
 ! O link do orçamento é diferente do link de acompanhamento do comprovante: o de acompanhamento não mostra valores.
 ! Retorno em **garantia** não tem orçamento.
 ! Só administrador e escritório veem o orçamento e o valor.

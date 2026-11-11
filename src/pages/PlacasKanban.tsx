@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -24,6 +24,7 @@ import NavegacaoPlacas from '../components/placas/NavegacaoPlacas';
 import NovaPlacaModal from '../components/placas/NovaPlacaModal';
 import PlacaDetalhes from '../components/placas/PlacaDetalhes';
 import { useAuth } from '../contexts/useAuth';
+import { supabase } from '../services/supabase';
 import type {
   BoardListFilter,
   BoardListResult,
@@ -68,6 +69,7 @@ export default function PlacasKanban() {
   const [carregando, setCarregando] = useState(true);
   const [erroCarga, setErroCarga] = useState<string | null>(null);
   const [chaveRecarga, setChaveRecarga] = useState(0);
+  const recargaSilenciosa = useRef(false); // recarga vinda do Realtime: não pisca o quadro
 
   const [impressora, setImpressora] = useState<SituacaoImpressoraPlaca | null>(null);
   const [avisoBloqueio, setAvisoBloqueio] = useState<string | null>(null);
@@ -99,7 +101,8 @@ export default function PlacasKanban() {
     Promise.resolve()
       .then(() => {
         if (cancelado) return null;
-        setCarregando(true);
+        if (!recargaSilenciosa.current) setCarregando(true);
+        recargaSilenciosa.current = false;
         setErroCarga(null);
         return listarPlacas({
           aba,
@@ -127,6 +130,25 @@ export default function PlacasKanban() {
       cancelado = true;
     };
   }, [aba, busca, recorte, desfecho, anoFinalizadas, paginaFinalizadas, chaveRecarga]);
+
+  // Quadro ao vivo: qualquer mudança em board_orders (inclusive aprovação do cliente pelo link) recarrega em silêncio
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const canal = supabase
+      .channel('rt:board_orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'board_orders' }, () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          recargaSilenciosa.current = true;
+          setChaveRecarga((n) => n + 1);
+        }, 600);
+      })
+      .subscribe();
+    return () => {
+      clearTimeout(timer);
+      supabase.removeChannel(canal);
+    };
+  }, []);
 
   const abrirDetalhePlaca = (id: string) => {
     const proximo = new URLSearchParams(searchParams);

@@ -25,3 +25,6 @@ scripts/sicweb/dados/
 android-assinatura/
 android/local.properties
 android/app/google-services.json
+
+# Backups (bancos e fotos)
+backups-brv/

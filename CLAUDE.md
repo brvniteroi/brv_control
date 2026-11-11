@@ -58,8 +58,12 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Projeto gratuito é pausado após 1 semana sem uso (não ocorre com uso diário).
 - **Backup é o único motivo para contratar o Pro**: o gratuito não tem backup automático confiável. Pro ≈ US$ 25/mês por organização
   com crédito para 1 projeto; com 2 projetos ≈ US$ 35/mês (conferir na tela de upgrade). Traz backup diário (7 dias), 8 GB de banco,
-  250 GB de egress e sem pausa. Recomendação: Pro. Alternativa sem custo: backup próprio diário (pg_dump dos dois projetos para o
-  Google Drive/HD externo), que depende do computador ligado. **Decisão pendente do usuário.**
+  250 GB de egress e sem pausa. **Decisão do usuário (2026-11-11): backup próprio, sem contratar o Pro.** `scripts/backup/backup.mjs` (só o `brv-control`;
+  o BRV Equipamentos vai ser desligado) faz `pg_dump -Fc` dos schemas `public` e `auth` (guarda 14 dias) e espelha por FTPS as fotos de `api/uploads/`
+  (menos `fc`, que já está em `scripts/field-control/dados`; reconecta sozinho se a HostGator derrubar). Saída em `D:backups-brv` (`banco/`, `fotos/`, `backup.log`),
+  `BACKUP_PASTA_EXTRA` copia os dumps para outra pasta (Google Drive/HD externo: **ainda não configurado**). Tarefa "BRV Control - Backup" no Agendador do
+  PC da empresa, todo dia 23h (só roda com o PC ligado). Precisa no `.env`: `BACKUP_DB_URL_CONTROL` (Session pooler, porta 5432, senha do banco).
+  `pg_dump` 17 em `C:PostgreSQL17bin`. Restaurar: `pg_restore --no-owner -d <url> arquivo.dump`. Pendente: cópia fora do PC (Drive/HD).
 
 ## Estado atual (2026-10-29)
 Feito:

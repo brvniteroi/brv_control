@@ -1612,6 +1612,16 @@ export function gerarPdfOrcamento(...args: Parameters<typeof gerarPdfOrcamentoDe
   return gerarPdfOrcamentoDemo(...args);
 }
 
+/**
+ * Envia o orçamento por link (o wa.me só leva texto): marca como enviado e devolve o link público
+ * `/orcamento-placa/<token>`, onde o cliente vê, salva em PDF e aprova.
+ */
+export async function enviarOrcamentoPorLink(id: string, atorNome: string): Promise<{ placa: BoardOrder; link: string }> {
+  if (USAR_BANCO_PLACAS) return real.enviarOrcamentoPorLink(id);
+  const placa = await registrarEnvioOrcamentoDemo(id, atorNome);
+  return { placa, link: real.linkOrcamentoPlaca('demonstracao-sem-banco') };
+}
+
 export function gerarPdfTermo(...args: Parameters<typeof gerarPdfTermoDemo>): ReturnType<typeof gerarPdfTermoDemo> {
   if (USAR_BANCO_PLACAS) return Promise.reject(new PdfIndisponivelError());
   return gerarPdfTermoDemo(...args);

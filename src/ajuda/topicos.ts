@@ -819,17 +819,22 @@ A placa entra na coluna **Entrada / Triagem** e o **Comprovante de entrada** abr
     titulo: 'Fazer e enviar o orçamento da placa',
     secao: 'Placas',
     telas: ['placa'],
-    palavras: 'orcamento valor proposta pdf whatsapp aprovado recusado resposta cliente parecer validade',
+    palavras: 'orcamento valor proposta pdf whatsapp link aprovar aprovado recusado resposta cliente parecer validade',
     texto: `
 O orçamento da placa é feito aqui no sistema (diferente dos equipamentos, que usam o SicWeb).
 1. Abra a placa e vá em **Orçamento**.
 2. Preencha **Valor do orçamento (R$)**, **Validade (dias corridos)**, **CPF / CNPJ no orçamento**, **Endereço do cliente (para o PDF)** e o **Parecer técnico para a proposta**.
 3. Clique em **Salvar orçamento**.
-4. **Ver/Imprimir orçamento** mostra a proposta em A4: use **Imprimir / Salvar PDF**.
-5. **Enviar PDF pelo WhatsApp** abre a conversa com a mensagem pronta e marca a placa como **Orçamento enviado**. Por enquanto o PDF não anexa sozinho: salve-o antes em **Imprimir / Salvar PDF** e anexe na conversa. No celular, o sistema ainda vai passar a anexar o arquivo direto.
-6. Quando o cliente responder, clique em **Registrar resposta**: **Aprovado** ou **Recusado**, o **Canal da resposta** (WhatsApp, telefone, presencial ou e-mail) e **Salvar resposta**.
+4. **Ver/Imprimir orçamento** mostra a proposta em A4: use **Imprimir / Salvar PDF** se quiser o arquivo.
+5. **Enviar pelo WhatsApp (link para aprovar)** abre a conversa com o resumo do orçamento e um **link**, e marca a placa como **Orçamento enviado**. Não é preciso anexar nada.
+6. Pelo link, o cliente vê o mesmo orçamento, salva em PDF e clica em **Aprovar orçamento** (informa o nome e marca que concorda com as condições). A placa passa para **Aprovado** sozinha, com o canal **Link do orçamento** e o nome no histórico.
+7. Se o cliente responder de outro jeito (mensagem, telefone, balcão), clique em **Registrar resposta**: **Aprovado** ou **Recusado**, o **Canal da resposta** e **Salvar resposta**.
 - **Aprovado**: a placa pode seguir para **Em Reparo / Aguardando Peça** e as próximas etapas.
 - **Recusado**: finalize como **Sem Conserto / Devolvido**.
+! O link só aceita aprovação dentro da **validade** (conta a partir do envio). Vencido, o cliente vê o aviso e fala com a BRV; reenvie o orçamento para renovar a data.
+! Pelo link o cliente só aprova. Recusa e dúvidas chegam pelo WhatsApp (botão na página) e você registra em **Registrar resposta**.
+! A aprovação pelo link aparece ao reabrir a placa (o quadro não atualiza sozinho).
+! O link do orçamento é diferente do link de acompanhamento do comprovante: o de acompanhamento não mostra valores.
 ! Retorno em **garantia** não tem orçamento.
 ! Só administrador e escritório veem o orçamento e o valor.
 `,

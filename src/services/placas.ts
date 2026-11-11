@@ -19,6 +19,7 @@ import type {
   BoardOrder,
   BoardPhoto,
   BoardPhotoCategory,
+  BoardPublicQuote,
   BoardPublicStageStep,
   BoardPublicTracking,
   BoardQuoteChannel,
@@ -505,6 +506,37 @@ export async function registrarEnvioOrcamento(id: string): Promise<BoardOrder> {
   const mudar: Record<string, unknown> = { quote_sent_at: new Date().toISOString() };
   if (atual.quote_status === 'nao_feito' || atual.quote_status === 'enviado') mudar.quote_status = 'enviado';
   return atualizar(id, mudar);
+}
+
+/** Endereço público do orçamento (o token é o `quote_token`, diferente do link de acompanhamento). */
+export function linkOrcamentoPlaca(token: string): string {
+  return `${window.location.origin}/orcamento-placa/${token}`;
+}
+
+/**
+ * Envio do orçamento por link: marca como enviado (o banco confere valor e parecer) e devolve o link
+ * que vai na mensagem do WhatsApp. Resposta já registrada não volta para "enviado": só reenvia o link.
+ */
+export async function enviarOrcamentoPorLink(id: string): Promise<{ placa: BoardOrder; link: string }> {
+  const { data, error } = await supabase.rpc('board_enviar_orcamento_link', { p_id: id });
+  falhar(error);
+  return { placa: await placaOuErro(id), link: linkOrcamentoPlaca(data as string) };
+}
+
+// ---------- Página pública do orçamento (/orcamento-placa/:token, sem login) ----------
+
+export async function verOrcamentoPublico(token: string): Promise<BoardPublicQuote | null> {
+  const limpo = token.trim();
+  if (!limpo) return null;
+  const { data, error } = await supabase.rpc('placa_orcamento_ver', { p_token: limpo });
+  falhar(error);
+  return (data as BoardPublicQuote | null) ?? null;
+}
+
+export async function aprovarOrcamentoPublico(token: string, nome: string): Promise<BoardPublicQuote> {
+  const { data, error } = await supabase.rpc('placa_orcamento_aprovar', { p_token: token.trim(), p_nome: nome.trim() });
+  falhar(error);
+  return data as BoardPublicQuote;
 }
 
 export function registrarRespostaOrcamento(id: string, dados: BoardQuoteResponseInput): Promise<BoardOrder> {

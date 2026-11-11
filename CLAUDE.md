@@ -184,7 +184,13 @@ com trava; regras de etapa, financeiro só com `tem_financeiro_placas()`, histó
 manter atualizada). Quadro das placas (migration `20261110120000_placas_junta_etapas.sql`): Entrada → Diagnóstico → **Em Reparo / Aguardando Peça** (juntas) → Pronto;
 a etapa Teste em Simulador saiu. **Conferido pelo usuário em 2026-11-10:** telas em `/placas` testadas com dados reais; etiqueta de placa configurada e imprimindo na Elgin; Edge Function
 `apoio-tecnico` publicada e funcionando. **Falta:** (b) tirar o resto do "modo oficina" (`ClientesPlacas.tsx`, `fonteDeDados.ts`; o papel `oficina` não usa Placas);
-(c) PDF real (orçamento e termo; hoje Imprimir/Salvar PDF + WhatsApp) e QR no comprovante; (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
+(c) ~~PDF do orçamento~~ **resolvido por link em 2026-11-11** (o `wa.me` só leva texto): migration `20261111100000_placas_orcamento_link.sql`
+(**a colar no SQL Editor**; `board_orders.quote_token`, separado do `public_token` do acompanhamento; canal `link`; `board_enviar_orcamento_link` marca enviado e devolve o token;
+públicas `placa_orcamento_ver`/`placa_orcamento_aprovar`, só aprovam orçamento `enviado` dentro da validade, contada do envio; o nome digitado vai para o histórico via `board.ator_nome`
+em `board_ator()`). Página pública `/orcamento-placa/:token` (`pages/OrcamentoPlacaPublico.tsx`: mesma folha `components/placas/FolhaOrcamentoPlaca.tsx`, "Salvar em PDF / Imprimir",
+nome + "Li e concordo" + **Aprovar orçamento**; recusa e dúvidas pelo botão do WhatsApp). Botão "Enviar pelo WhatsApp (link para aprovar)" no detalhe e na folha
+(`enviarOrcamentoPorLink`; a aba do WhatsApp abre já no clique, `prepararJanelaWhatsApp`, para o navegador não bloquear). Ajuda F1 `placas-orcamento` atualizada. As Placas não têm
+Realtime: a aprovação aparece ao reabrir a placa. Falta: termo de garantia (mesmo caminho, se o usuário quiser) e QR no comprovante; (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
 lançava no Equipamentos): backup das tabelas antigas em `scripts/equipamentos/dados/backup-placas-equipamentos-2026-11-10.json` (gitignored; 81 OS, 49 clientes, 620
 históricos), importação final (79 de 81 regravadas; OS-221026-001 e OS-031126-001 já mexidas no Control, mantidas; fotos já estavam) e `scripts/equipamentos/somente-leitura-placas.sql` **aplicado no projeto BRV Equipamentos** (2026-11-10; trava placas, clientes,
 histórico, fichas e manuais; o sistema antigo está todo só leitura). O Equipamentos e o XAMPP da loja podem ser desligados quando o usuário quiser (as etiquetas já saem pelo agente do Control). Histórico do que foi feito:

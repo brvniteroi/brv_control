@@ -17,8 +17,8 @@ export type BoardQuoteStatus = 'nao_feito' | 'enviado' | 'aprovado' | 'recusado'
 /** Classificação do cliente da placa: instalador parceiro ou consumidor final. */
 export type BoardCustomerKind = 'instalador' | 'final';
 
-/** Canal pelo qual o cliente respondeu ao orçamento da placa. */
-export type BoardQuoteChannel = 'whatsapp' | 'telefone' | 'presencial' | 'email';
+/** Canal pelo qual o cliente respondeu ao orçamento da placa (`link` = aprovou na página pública `/orcamento-placa/:token`). */
+export type BoardQuoteChannel = 'whatsapp' | 'telefone' | 'presencial' | 'email' | 'link';
 
 /** Categoria das fotos da placa no laboratório. */
 export type BoardPhotoCategory = 'antes' | 'depois' | 'outros';
@@ -481,6 +481,40 @@ export interface BoardPublicTracking {
   steps: BoardPublicStageStep[];
   /** Fotos públicas da placa (sem observações internas). */
   photos: Pick<BoardPhoto, 'id' | 'category' | 'public_url' | 'caption' | 'created_at'>[];
+}
+
+/**
+ * Orçamento visto pelo cliente na página pública `/orcamento-placa/:token` (função `placa_orcamento_ver`).
+ * Tem os dados da folha do orçamento; nada de diagnóstico interno, financeiro ou histórico.
+ */
+export interface BoardPublicQuote {
+  board_number: string;
+  status: BoardStage;
+  customer_name: string;
+  customer_phone: string | null;
+  customer_kind: BoardCustomerKind;
+  customer_document: string | null;
+  customer_person_type: PersonType;
+  customer_address: string | null;
+  equipment_type: string;
+  brand_model: string;
+  board_code: string;
+  peripherals: string | null;
+  reported_defect: string;
+  error_code: string | null;
+  quote_technical_opinion: string | null;
+  quote_amount: number | null;
+  quote_validity_days: number;
+  quote_status: BoardQuoteStatus;
+  /** Data ISO do envio (= emissão da proposta). */
+  quote_sent_at: string | null;
+  /** Data ISO limite da proposta (envio + validade). */
+  quote_valid_until: string | null;
+  /** Enviado e com a validade vencida (não aceita mais aprovação). */
+  quote_expired: boolean;
+  quote_responded_at: string | null;
+  quote_response_channel: BoardQuoteChannel | null;
+  quote_response_notes: string | null;
 }
 
 /** Ficha técnica de ar-condicionado split (`fichas_tecnicas_split`, espelhando as 34 colunas do schema). */

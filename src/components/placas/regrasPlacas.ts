@@ -391,6 +391,7 @@ export function textoWhatsAppOrcamentoPlaca(
     BoardOrder,
     'board_number' | 'customer_name' | 'brand_model' | 'board_code' | 'quote_amount' | 'quote_validity_days'
   >,
+  linkOrcamento?: string,
 ): string {
   const valor = placa.quote_amount != null ? valorEmReais(placa.quote_amount) : 'sob consulta';
   const entrada = placa.quote_amount != null ? valorEmReais(placa.quote_amount / 2) : '50%';
@@ -400,8 +401,29 @@ export function textoWhatsAppOrcamentoPlaca(
   return (
     `Olá, ${placa.customer_name}! Segue a proposta de orçamento do laboratório BRV Niterói referente à placa ${placa.board_number} (${placa.brand_model} · Cód. ${placa.board_code}).\n` +
     `Valor total: ${valor} (${condicao}).\n` +
-    `Validade da proposta: ${placa.quote_validity_days || 10} dias corridos.`
+    `Validade da proposta: ${placa.quote_validity_days || 10} dias corridos.` +
+    (linkOrcamento
+      ? `\n\nVeja o orçamento completo, salve em PDF e aprove por este link:\n${linkOrcamento}`
+      : '')
   );
+}
+
+/**
+ * Abre a aba do WhatsApp JÁ no clique (antes de esperar o banco), porque o navegador bloqueia `window.open`
+ * feito depois de um `await`. `ir(url)` leva a aba para a conversa; `cancelar()` fecha se der erro.
+ */
+export function prepararJanelaWhatsApp(): { ir: (url: string) => void; cancelar: () => void } {
+  const janela = window.open('', '_blank');
+  if (janela) janela.opener = null;
+  return {
+    ir: (url) => {
+      if (janela && !janela.closed) janela.location.href = url;
+      else window.open(url, '_blank', 'noopener,noreferrer');
+    },
+    cancelar: () => {
+      if (janela && !janela.closed) janela.close();
+    },
+  };
 }
 
 /** Mensagem padrão para envio do termo de garantia de 90 dias pelo WhatsApp (seção 3.6). */

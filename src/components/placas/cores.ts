@@ -119,6 +119,7 @@ export const ROTULO_CANAL_ORCAMENTO: Record<BoardQuoteChannel, string> = {
   telefone: 'Telefone',
   presencial: 'Presencial',
   email: 'E-mail',
+  link: 'Link do orçamento (cliente aprovou)',
 };
 
 export const ROTULO_CATEGORIA_FOTO: Record<BoardPhotoCategory, string> = {

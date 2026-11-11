@@ -51,14 +51,13 @@ import {
   atualizarPlaca,
   buscarPlaca,
   cancelarPlaca,
+  enviarOrcamentoPorLink,
   fotosDaPlaca,
   gerarNovoLinkAcompanhamento,
-  gerarPdfOrcamento,
   historicoDaPlaca,
   listarTecnicos,
   moverPlaca,
   reabrirPlaca,
-  registrarEnvioOrcamento,
   registrarOrcamento,
   registrarReembolso,
   registrarRespostaOrcamento,
@@ -79,6 +78,7 @@ import {
   montarLinkWhatsAppPlaca,
   motivoBloqueioPlaca,
   podeMoverPlaca,
+  prepararJanelaWhatsApp,
   textoWhatsAppEntradaPlaca,
   textoWhatsAppOrcamentoPlaca,
   ehTecnicoBancadaPlacas,
@@ -464,53 +464,17 @@ export default function PlacaDetalhes({
       return;
     }
     setEnviandoPdfWhats(true);
+    // O wa.me só leva texto: a mensagem leva o link do orçamento, onde o cliente vê, salva em PDF e aprova
+    const janela = prepararJanelaWhatsApp();
     try {
-      const pdfBlob = await gerarPdfOrcamento(placa.id);
-      const nomeArq = `Orcamento_${placa.board_number}.pdf`;
-      const arquivo = new File([pdfBlob], nomeArq, { type: 'application/pdf' });
-      const msg = textoWhatsAppOrcamentoPlaca(placa);
-
-      let compartilhouNativo = false;
-      if (
-        typeof navigator !== 'undefined' &&
-        typeof navigator.canShare === 'function' &&
-        navigator.canShare({ files: [arquivo] })
-      ) {
-        try {
-          await navigator.share({
-            title: `Orçamento ${placa.board_number}`,
-            text: msg,
-            files: [arquivo],
-          });
-          compartilhouNativo = true;
-        } catch (errShare) {
-          if (errShare instanceof DOMException && errShare.name === 'AbortError') {
-            setEnviandoPdfWhats(false);
-            return;
-          }
-        }
-      }
-
-      if (!compartilhouNativo) {
-        const urlBlob = URL.createObjectURL(pdfBlob);
-        const ancora = document.createElement('a');
-        ancora.href = urlBlob;
-        ancora.download = nomeArq;
-        document.body.appendChild(ancora);
-        ancora.click();
-        ancora.remove();
-        setTimeout(() => URL.revokeObjectURL(urlBlob), 4000);
-        window.open(montarLinkWhatsAppPlaca(placa.customer_phone, msg), '_blank', 'noopener,noreferrer');
-      }
-
-      const atualizada = await registrarEnvioOrcamento(placa.id, atorNome);
+      const { placa: atualizada, link } = await enviarOrcamentoPorLink(placa.id, atorNome);
+      janela.ir(montarLinkWhatsAppPlaca(atualizada.customer_phone, textoWhatsAppOrcamentoPlaca(atualizada, link)));
       await aplicarPlacaAtualizada(
         atualizada,
-        compartilhouNativo
-          ? 'PDF do orçamento compartilhado e marcado como enviado.'
-          : 'PDF do orçamento baixado, WhatsApp aberto e envio registrado.',
+        'WhatsApp aberto com o link do orçamento. Quando o cliente aprovar pelo link, o orçamento passa para "Aprovado" (aparece ao reabrir a placa).',
       );
     } catch (err) {
+      janela.cancelar();
       notificarErro(err instanceof Error ? err.message : 'Erro ao preparar envio do orçamento.');
     } finally {
       setEnviandoPdfWhats(false);
@@ -1478,7 +1442,7 @@ export default function PlacaDetalhes({
                                       ) : (
                                         <MessageCircle size={14} aria-hidden="true" />
                                       )}
-                                      <span>Enviar PDF pelo WhatsApp</span>
+                                      <span>Enviar pelo WhatsApp (link para aprovar)</span>
                                     </button>
 
                                     <button

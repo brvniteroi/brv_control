@@ -31,6 +31,7 @@ import PlacasFichas from './pages/PlacasFichas';
 import PlacasErros from './pages/PlacasErros';
 import PlacasManuais from './pages/PlacasManuais';
 import AcompanhamentoPlaca from './pages/AcompanhamentoPlaca';
+import OrcamentoPlacaPublico from './pages/OrcamentoPlacaPublico';
 import PortalRoute from './components/portal/PortalRoute';
 import Avaliar from './pages/Avaliar';
 import Ajuda from './pages/Ajuda';
@@ -51,6 +52,8 @@ export default function App() {
         <Route path="/avaliar/:token" element={<Avaliar />} />
         {/* Acompanhamento público de reparo de placa (sem login, link do comprovante) */}
         <Route path="/placa/:token" element={<AcompanhamentoPlaca />} />
+        {/* Orçamento de placa: público, o cliente vê, salva em PDF e aprova (link da mensagem do orçamento) */}
+        <Route path="/orcamento-placa/:token" element={<OrcamentoPlacaPublico />} />
         <Route path="/portal" element={<PortalRoute />}>
           <Route index element={<PortalHome />} />
         </Route>

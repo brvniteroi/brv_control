@@ -26,6 +26,7 @@ import {
   listarClientesPlacas,
   listarTecnicos,
   placasDoCliente,
+  placasDoClienteControl,
   salvarClientePlaca,
 } from './fonteDeDados';
 import ModalDialogoPlacas from './ModalDialogoPlacas';
@@ -142,19 +143,26 @@ export default function NovaPlacaModal({
     };
   }, [aberto]);
 
-  // Carrega placas entregues do cliente selecionado quando "Retorno em garantia" está marcado
+  // Retorno em garantia: lista só as placas ENTREGUES do cliente com a garantia de 90 dias ainda vigente
+  // (vencida entra como placa normal, com orçamento). Balcão = cliente de placas; campo = cliente da OS do Control.
+  const clienteControlId = origem === 'campo' ? (osEncontrada?.customer_id ?? null) : null;
   useEffect(() => {
-    if (!aberto || !ehGarantia || origem !== 'balcao' || !clienteSelecionadoId) return;
+    if (!aberto || !ehGarantia) return;
+    if (origem === 'balcao' ? !clienteSelecionadoId : !clienteControlId) return;
     let cancelado = false;
     Promise.resolve()
       .then(() => {
         if (!cancelado) setCarregandoGarantias(true);
-        return placasDoCliente(clienteSelecionadoId);
+        return origem === 'balcao'
+          ? placasDoCliente(clienteSelecionadoId)
+          : placasDoClienteControl(clienteControlId as string);
       })
       .then((lista) => {
         if (cancelado) return;
-        const entregues = lista.filter((p) => p.status === 'entregue');
-        setPlacasEntreguesCliente(entregues);
+        const vigentes = lista.filter((p) => p.status === 'entregue' && garantiaVigente(p.finished_at));
+        setPlacasEntreguesCliente(vigentes);
+        // Trocou de cliente: a origem escolhida antes não vale mais
+        setOrigemGarantiaId((atual) => (vigentes.some((p) => p.id === atual) ? atual : ''));
       })
       .catch(() => {
         if (!cancelado) setPlacasEntreguesCliente([]);
@@ -166,7 +174,7 @@ export default function NovaPlacaModal({
     return () => {
       cancelado = true;
     };
-  }, [aberto, ehGarantia, origem, clienteSelecionadoId]);
+  }, [aberto, ehGarantia, origem, clienteSelecionadoId, clienteControlId]);
 
   // Libera URLs temporárias de miniatura ao desmontar
   useEffect(() => {
@@ -348,6 +356,12 @@ export default function NovaPlacaModal({
       setErroFormulario('Descreva o defeito reclamado ou marque "Sem defeito aparente".');
       return;
     }
+    if (ehGarantia && !origemGarantiaId) {
+      setErroFormulario(
+        'Retorno em garantia precisa da placa original entregue, com a garantia de 90 dias vigente. Sem ela, desmarque "Retorno em garantia" (entra com orçamento).',
+      );
+      return;
+    }
 
     setSalvando(true);
     try {
@@ -368,7 +382,7 @@ export default function NovaPlacaModal({
           error_code: codigoErro.trim() || null,
           no_apparent_defect: semDefeitoAparente,
           is_warranty: ehGarantia,
-          warranty_origin_id: ehGarantia && origemGarantiaId ? origemGarantiaId : null,
+          warranty_origin_id: ehGarantia ? origemGarantiaId : null,
           entry_photos: fotosEntrada.map((f) => ({ file: f.file })),
         },
         atorNome,
@@ -986,13 +1000,11 @@ export default function NovaPlacaModal({
               <p className="font-semibold text-violet-950">
                 Vincular à placa entregue original (garantia legal de 90 dias, isenta de novo orçamento)
               </p>
-              {origem === 'campo' ? (
+              {(origem === 'balcao' ? !clienteSelecionadoId : !clienteControlId) ? (
                 <p className="text-violet-800">
-                  Entrada em garantia vinculada à OS de campo selecionada.
-                </p>
-              ) : !clienteSelecionadoId ? (
-                <p className="text-violet-800">
-                  Selecione primeiro o cliente de placas acima para listar as placas já entregues a ele.
+                  {origem === 'balcao'
+                    ? 'Selecione primeiro o cliente de placas acima para listar as placas já entregues a ele.'
+                    : 'Consulte primeiro a OS do Control acima para listar as placas já entregues ao cliente dela.'}
                 </p>
               ) : carregandoGarantias ? (
                 <p className="inline-flex items-center gap-1.5 text-violet-800">
@@ -1001,7 +1013,8 @@ export default function NovaPlacaModal({
                 </p>
               ) : placasEntreguesCliente.length === 0 ? (
                 <p className="text-violet-800">
-                  Este cliente não possui placas entregues anteriores no cadastro (você ainda pode registrar como garantia avulsa).
+                  Este cliente não tem placa entregue com a garantia de 90 dias vigente. Garantia vencida (ou sem placa original)
+                  entra como placa normal: desmarque "Retorno em garantia".
                 </p>
               ) : (
                 <div>
@@ -1018,19 +1031,12 @@ export default function NovaPlacaModal({
                     className="w-full rounded-lg border border-violet-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-violet-600 focus:outline-none"
                   >
                     <option value="">Selecionar placa entregue de origem...</option>
-                    {placasEntreguesCliente.map((pl) => {
-                      const vigente = garantiaVigente(pl.finished_at);
-                      const ate = calcularValidadeGarantia(pl.finished_at);
-                      return (
-                        <option key={pl.id} value={pl.id}>
-                          {pl.board_number} · {pl.brand_model} ({pl.board_code}) · Saída{' '}
-                          {formatarData(pl.finished_at)} ·{' '}
-                          {vigente
-                            ? `Garantia vigente até ${formatarData(ate)}`
-                            : `Garantia vencida em ${formatarData(ate)}`}
-                        </option>
-                      );
-                    })}
+                    {placasEntreguesCliente.map((pl) => (
+                      <option key={pl.id} value={pl.id}>
+                        {pl.board_number} · {pl.brand_model} ({pl.board_code}) · Saída {formatarData(pl.finished_at)} ·
+                        Garantia até {formatarData(calcularValidadeGarantia(pl.finished_at))}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}

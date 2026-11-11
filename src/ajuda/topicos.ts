@@ -864,10 +864,13 @@ No rodapé da placa:
     telas: ['placa'],
     palavras: 'garantia termo 90 dias retorno voltou defeito de novo validade',
     texto: `
-- Toda placa **entregue** tem **garantia de 90 dias** a contar da data de saída. A validade aparece na placa (**Garantia vigente** ou **Garantia expirada**).
-- **Termo de garantia**: abre o termo em A4 com os componentes trocados, a validade e as condições. **Imprimir termo** ou **Enviar pelo WhatsApp**.
+- Toda placa **entregue** tem **garantia de 90 dias** a contar da data de saída. A validade aparece na placa (**Garantia vigente** ou **Garantia expirada**) e na página de acompanhamento do cliente.
+- **Termo de garantia**: abre o termo em A4 com os componentes trocados, a validade e as condições. Use **Imprimir termo** e entregue na retirada, com a assinatura do cliente (o termo não vai pelo WhatsApp).
 - Preencha **Componentes trocados (sai no Termo de Garantia)** na seção Bancada antes de entregar.
-- Se a placa voltar dentro do prazo, registre uma **Nova placa** marcando **Retorno em garantia** e escolhendo a **Placa original entregue**. Ela não passa por orçamento, e a original abre pelo link **Abrir placa original**.
+- Se a placa voltar dentro do prazo, registre uma **Nova placa** marcando **Retorno em garantia** e escolhendo a **Placa original entregue** (vale para cliente de balcão e para placa retirada em campo, depois de consultar a OS). Ela não passa por orçamento, e a original abre pelo link **Abrir placa original**.
+! Só aparecem placas **entregues com a garantia vigente**. Garantia vencida, ou sem a placa original, entra como placa normal, com orçamento: desmarque **Retorno em garantia**.
+! Retorno em garantia é definido na entrada e não muda depois.
+- Quando a placa que voltou em garantia é entregue de novo, o serviço refeito ganha **novos 90 dias** a partir da nova saída; o termo dela sai como **Isento (retorno em garantia)** e cita a placa original.
 `,
   },
   {

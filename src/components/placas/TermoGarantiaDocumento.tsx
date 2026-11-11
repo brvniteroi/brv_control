@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { ArrowLeft, MessageCircle, Printer, ShieldCheck, X } from 'lucide-react';
+import { ArrowLeft, Printer, ShieldCheck, X } from 'lucide-react';
 import type { ProfileRole } from '../../types/fsm';
 import type { BoardOrder } from '../../types/placas';
 import { formatarDocumento } from '../../utils/documento';
@@ -7,13 +7,7 @@ import { valorEmReais } from '../../utils/oficina';
 import { formatarData } from '../../utils/ordens';
 import { formatarTelefone } from '../../utils/telefone';
 import { EMPRESA_BRV } from '../pmoc/empresa';
-import {
-  calcularValidadeGarantia,
-  ehEscritorioOuAdminPlaca,
-  montarLinkWhatsAppPlaca,
-  textoWhatsAppGarantiaPlaca,
-  valorReceitaPlaca,
-} from './regrasPlacas';
+import { calcularValidadeGarantia, ehEscritorioOuAdminPlaca, valorReceitaPlaca } from './regrasPlacas';
 import { CLAUSULAS_TERMO_GARANTIA } from './textosJuridicosPlacas';
 
 interface TermoGarantiaDocumentoProps {
@@ -47,11 +41,6 @@ export default function TermoGarantiaDocumento({
     ? formatarDocumento(placa.customer_document, placa.customer_person_type)
     : 'Não informado';
 
-  const urlWhatsApp = montarLinkWhatsAppPlaca(
-    placa.customer_phone,
-    textoWhatsAppGarantiaPlaca(placa),
-  );
-
   return createPortal(
     <div
       role="dialog"
@@ -77,7 +66,8 @@ export default function TermoGarantiaDocumento({
               Termo de Garantia de Reparo · {placa.board_number}
             </h1>
             <p className="text-xs text-slate-500">
-              Garantia legal de 90 dias a contar da data de saída ({formatarData(placa.finished_at)}).
+              Garantia legal de 90 dias a contar da data de saída ({formatarData(placa.finished_at)}). Imprima e entregue
+              na retirada, com a assinatura do cliente.
             </p>
           </div>
         </div>
@@ -89,18 +79,8 @@ export default function TermoGarantiaDocumento({
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700"
           >
             <Printer size={15} aria-hidden="true" />
-            Imprimir
+            Imprimir termo
           </button>
-
-          <a
-            href={urlWhatsApp}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700"
-          >
-            <MessageCircle size={15} aria-hidden="true" />
-            Enviar pelo WhatsApp
-          </a>
 
           <button
             type="button"
@@ -203,6 +183,15 @@ export default function TermoGarantiaDocumento({
                     <span className="font-mono font-bold">{placa.board_code}</span>
                   </td>
                 </tr>
+                {placa.is_warranty && (
+                  <tr>
+                    <td colSpan={2} className="border border-slate-300 px-3 py-2">
+                      <strong>Retorno em garantia</strong> da placa{' '}
+                      <span className="font-mono font-bold">{placa.warranty_origin_number ?? '—'}</span>. O serviço refeito
+                      tem nova garantia de 90 dias a partir desta saída, restrita ao que foi refeito.
+                    </td>
+                  </tr>
+                )}
                 {mostrarValor && (
                   <tr>
                     <td colSpan={2} className="border border-slate-300 px-3 py-2">

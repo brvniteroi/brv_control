@@ -1740,6 +1740,11 @@ export function excluirClientePlaca(...args: Parameters<typeof excluirClientePla
   return USAR_BANCO_PLACAS ? real.excluirClientePlaca(...(args as unknown as Parameters<typeof real.excluirClientePlaca>)) : excluirClientePlacaDemo(...args);
 }
 
+/** Placas de um cliente do Control (retirada em campo); na demonstração não há. */
+export function placasDoClienteControl(customerId: string): Promise<BoardOrder[]> {
+  return USAR_BANCO_PLACAS ? real.placasDoClienteControl(customerId) : Promise.resolve([]);
+}
+
 export function placasDoCliente(...args: Parameters<typeof placasDoClienteDemo>): ReturnType<typeof placasDoClienteDemo> {
   return USAR_BANCO_PLACAS ? real.placasDoCliente(...(args as unknown as Parameters<typeof real.placasDoCliente>)) : placasDoClienteDemo(...args);
 }

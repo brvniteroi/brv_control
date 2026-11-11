@@ -306,6 +306,17 @@ export async function placasDoCliente(clienteId: string): Promise<BoardOrder[]> 
   return ((data ?? []) as unknown as LinhaPlaca[]).map(paraPlaca);
 }
 
+/** Placas de um cliente do Control (placa retirada em campo, com OS): usado no retorno em garantia. */
+export async function placasDoClienteControl(customerId: string): Promise<BoardOrder[]> {
+  const { data, error } = await supabase
+    .from('board_orders')
+    .select(SELECT_PLACA)
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false });
+  falhar(error);
+  return ((data ?? []) as unknown as LinhaPlaca[]).map(paraPlaca);
+}
+
 /** Placas em aberto + entregues no ano + reembolsadas no ano (quem não tem a marca do financeiro recebe os valores vazios). */
 export async function listarPlacasParaFinanceiro(ano: number): Promise<BoardOrder[]> {
   const inicio = `${ano}-01-01T00:00:00-03:00`;

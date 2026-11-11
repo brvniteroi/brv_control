@@ -1,7 +1,6 @@
 import type { Attachment, ProfileRole } from '../../types/fsm';
 import type { BoardOrder, BoardPhoto, BoardStage, PlacaFichaTecnica } from '../../types/placas';
 import { valorEmReais } from '../../utils/oficina';
-import { formatarData } from '../../utils/ordens';
 import { ROTULO_CATEGORIA_FOTO } from './cores';
 
 /** Limite de dias desde a entrada (placa ainda em aberto, inclusive `pronto`) para marcar como `"Encalhada"`. */
@@ -424,21 +423,6 @@ export function prepararJanelaWhatsApp(): { ir: (url: string) => void; cancelar:
       if (janela && !janela.closed) janela.close();
     },
   };
-}
-
-/** Mensagem padrão para envio do termo de garantia de 90 dias pelo WhatsApp (seção 3.6). */
-export function textoWhatsAppGarantiaPlaca(
-  placa: Pick<
-    BoardOrder,
-    'board_number' | 'customer_name' | 'brand_model' | 'board_code' | 'finished_at' | 'replaced_components'
-  >,
-): string {
-  const validade = calcularValidadeGarantia(placa.finished_at);
-  return (
-    `Olá, ${placa.customer_name}! Confirmamos a entrega da placa ${placa.board_number} (${placa.brand_model} · Cód. ${placa.board_code}).\n` +
-    `Garantia legal BRV Niterói: 90 dias (válida até ${formatarData(validade)}), restrita aos componentes reparados/substituídos (${placa.replaced_components || 'conforme laudo de bancada'}).\n` +
-    `Guarde o número ${placa.board_number} e mantenha o lacre de bancada intacto.`
-  );
 }
 
 // ============================================================================

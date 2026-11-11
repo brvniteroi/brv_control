@@ -208,7 +208,7 @@ export interface BoardOrder {
 
   /** Estado atual do orçamento (`nao_feito`, `enviado`, `aprovado`, `recusado`). */
   quote_status: BoardQuoteStatus;
-  /** Valor total orçado em reais (oculto para o papel `oficina` e na página pública). */
+  /** Valor total orçado em reais (só escritório/admin; fora da página pública de acompanhamento). */
   quote_amount: number | null;
   /** Prazo de validade da proposta comercial em dias corridos (padrão 10). */
   quote_validity_days: number;
@@ -329,7 +329,7 @@ export interface BoardEvent {
   new_value: string | null;
   /** Nota ou resumo legível do evento. */
   note: string | null;
-  /** Papel ou marca de visibilidade (eventos de orçamento/reembolso são ocultados para `oficina`). */
+  /** Visibilidade do evento: `todos`, `escritorio` (orçamento) ou `financeiro` (reembolso/cobrado, só com a marca). */
   visibility: 'todos' | 'escritorio' | 'financeiro';
   /** Nome do usuário que realizou a ação. */
   actor_name: string;

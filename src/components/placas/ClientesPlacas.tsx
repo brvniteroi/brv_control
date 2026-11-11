@@ -242,7 +242,7 @@ export default function ClientesPlacas() {
           </div>
         </div>
 
-        {podeEditar ? (
+        {podeEditar && (
           <button
             type="button"
             onClick={abrirNovoCliente}
@@ -251,10 +251,6 @@ export default function ClientesPlacas() {
             <Plus size={16} aria-hidden="true" />
             <span>Novo cliente</span>
           </button>
-        ) : (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-            Modo consulta (oficina)
-          </span>
         )}
       </div>
 

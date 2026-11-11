@@ -1234,7 +1234,7 @@ export default function PlacaDetalhes({
                   </div>
                 </form>
 
-                {/* 4. Orçamento — OMITIDO COMPLETAMENTE PARA `oficina` */}
+                {/* 4. Orçamento — só escritório/admin */}
                 {ehEscritorioOuAdmin && (
                   <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1779,7 +1779,7 @@ export default function PlacaDetalhes({
             )}
           </div>
 
-          {/* 10. Rodapé de ações — OMITIDO COMPLETAMENTE PARA `oficina` */}
+          {/* 10. Rodapé de ações — só escritório/admin */}
           {placa && ehEscritorioOuAdmin && (
             <footer className="border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
               {!somenteLeitura ? (

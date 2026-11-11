@@ -183,7 +183,7 @@ com trava; regras de etapa, financeiro só com `tem_financeiro_placas()`, histó
 `supabase/verificacao/placas_base.sql` (ROLLBACK) **passou**, menu liberado (`MOSTRAR_MENU_PLACAS = true`), ajuda F1 feita (seção "Placas" em `src/ajuda/topicos.ts`;
 manter atualizada). Quadro das placas (migration `20261110120000_placas_junta_etapas.sql`): Entrada → Diagnóstico → **Em Reparo / Aguardando Peça** (juntas) → Pronto;
 a etapa Teste em Simulador saiu. **Conferido pelo usuário em 2026-11-10:** telas em `/placas` testadas com dados reais; etiqueta de placa configurada e imprimindo na Elgin; Edge Function
-`apoio-tecnico` publicada e funcionando. **Falta:** (b) tirar o resto do "modo oficina" (`ClientesPlacas.tsx`, `fonteDeDados.ts`; o papel `oficina` não usa Placas);
+`apoio-tecnico` publicada e funcionando. **Falta:** (b) ~~tirar o resto do "modo oficina"~~ (feito em 2026-11-11: aviso "Modo consulta (oficina)", checagem na demonstração e comentários; o papel `oficina` não usa Placas);
 (c) ~~PDF do orçamento~~ **resolvido por link em 2026-11-11** (o `wa.me` só leva texto): migration `20261111100000_placas_orcamento_link.sql`
 (**a colar no SQL Editor**; `board_orders.quote_token`, separado do `public_token` do acompanhamento; canal `link`; `board_enviar_orcamento_link` marca enviado e devolve o token;
 públicas `placa_orcamento_ver`/`placa_orcamento_aprovar`, só aprovam orçamento `enviado` dentro da validade, contada do envio; o nome digitado vai para o histórico via `board.ator_nome`

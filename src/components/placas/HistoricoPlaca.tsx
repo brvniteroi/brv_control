@@ -31,7 +31,7 @@ export default function HistoricoPlaca({
 
   const ehEscritorio = ehEscritorioOuAdminPlaca(papel);
 
-  // Filtra eventos que o papel atual não deve enxergar (orçamento p/ oficina; reembolso/cobrado p/ quem não tem marca)
+  // Filtra eventos que o usuário não deve enxergar (orçamento só escritório/admin; reembolso/cobrado só com a marca do financeiro)
   const visiveis = eventos.filter((ev) => {
     if (ev.visibility === 'financeiro') return podeVerFinanceiro;
     if (ev.visibility === 'escritorio') return ehEscritorio;

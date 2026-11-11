@@ -442,7 +442,6 @@ async function atualizarPlacaDemo(
     throw new Error('Placa finalizada está em modo somente leitura.');
   }
 
-  const papel = opcoes?.papel ?? 'admin';
   const atorNome = opcoes?.atorNome ?? 'Usuário BRV';
   const copia: BoardOrder = { ...atual };
 
@@ -524,8 +523,8 @@ async function atualizarPlacaDemo(
     copia.replaced_components = campos.replaced_components?.trim() || null;
   }
 
-  // Papel `oficina` nunca altera valor cobrado/orçamento/reembolso
-  if (campos.charged_amount !== undefined && papel !== 'oficina') {
+  // Valor cobrado (no banco real fica em board_finance, só para quem tem o financeiro das placas)
+  if (campos.charged_amount !== undefined) {
     const antesFmt = copia.charged_amount != null ? valorEmReais(copia.charged_amount) : '—';
     const depoisFmt = campos.charged_amount != null ? valorEmReais(campos.charged_amount) : '—';
     registrarSeMudou('charged_amount', antesFmt, depoisFmt, 'financeiro');

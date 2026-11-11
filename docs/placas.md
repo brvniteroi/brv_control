@@ -2,7 +2,7 @@
 
 Plano de 2026-11-09. **Estado em 2026-11-10:** P0 (telas) feita e testada; P1 (banco, services, menu liberado, ajuda F1), ensaio do P2 (importação), etiqueta do P4 e
 P7 (fichas, manuais e IA de códigos de erro/ficha) feitos, com todas as migrations aplicadas. Telas com dados reais, etiqueta na Elgin e a Edge Function `apoio-tecnico` testadas pelo usuário. **Virada feita em 2026-11-10 à noite** (backup + importação final;
-`scripts/equipamentos/somente-leitura-placas.sql` aplicado no projeto BRV Equipamentos: sistema antigo todo só leitura). Falta: tirar o resto do "modo oficina", PDF real e QR (lista em CLAUDE.md, lembrete "terminar as Placas"). Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
+`scripts/equipamentos/somente-leitura-placas.sql` aplicado no projeto BRV Equipamentos: sistema antigo todo só leitura). Orçamento por link com aprovação do cliente e limpeza do "modo oficina" feitos em 2026-11-11. Falta: QR no comprovante e termo de garantia (lista em CLAUDE.md, lembrete "terminar as Placas"). Segue o que já foi feito com os equipamentos (ver `docs/oficina.md`): mesma tabela de
 itens da Oficina, importador repetível, virada com o Equipamentos em só leitura. Referência do sistema antigo: `D:\BRV_Equipamentos`
 (telas em `frontend/src/pages/Reparos/`, schema em `schema_reparos.sql`).
 
@@ -34,7 +34,7 @@ etiqueta, a ajuda.
 
 **Quem usa (decidido em 2026-11-09):** o técnico de placas é o **Braulio** (sócio, admin). O papel `oficina` (Gustavo) **não tem acesso às Placas**: ele conserta os
 equipamentos que a equipe de campo retira. Placas = só admin e escritório (financeiro só com a marca `board_finance_access`). `ProtectedRoute` manda a `oficina`
-de volta para `/oficina` e o menu Placas não aparece para ela. O que as telas do Gemini ainda têm de "modo oficina" (ex.: "Modo consulta (oficina)") sai no P1.
+de volta para `/oficina` e o menu Placas não aparece para ela. O "modo oficina" que as telas do Gemini tinham (ex.: "Modo consulta (oficina)") foi retirado em 2026-11-11.
 
 **Colunas que faltam** (migration nova, 1:1 em `workshop_board_details` para não poluir o item de equipamento):
 `board_code` (código da placa), `error_code`, `replaced_components`, `peripherals`, `no_defect` (sem defeito), `customer_kind` ('instalador' | 'final'),

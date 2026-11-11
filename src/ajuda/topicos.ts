@@ -617,7 +617,7 @@ O item usa o **número da OS** em que foi recolhido: "OS 17300". Se saiu mais de
 2. **Entrada / Diagnóstico** (uma coluna só): chegou na loja (imprima a etiqueta) e o técnico da oficina analisa e registra o que precisa ser feito. Ao arrastar um item em trânsito para cá ele entra como **Entrada**; os demais, como **Diagnóstico**. Para voltar um item a **Entrada**, abra o item e use **Mover etapa**.
 3. **Aguardando peça / Reparo** (uma coluna só): conserto em andamento. Ao arrastar, o item entra em **Em reparo**; para marcar **Aguardando peça**, abra o item e use **Mover etapa**.
 4. **Pronto**: pronto para voltar ao cliente (consertado ou recusado sem conserto).
-As colunas **Aguardando orçamento** e **Aguardando cliente** só aparecem se ainda houver itens nelas (a fase de orçamento está desligada).
+A coluna **Aguardando orçamento** fica sempre visível: arraste para lá o equipamento que o atendimento precisa orçar no SicWeb (vale direto da Entrada). **Aguardando cliente** só aparece se ainda houver itens nela (a aprovação do cliente não é exigida).
 Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados**.
 - Arraste o cartão para outra coluna ou abra o item e use **Mover etapa**. No celular, use **Mover para...** no cartão.
 - No computador, para ver as colunas que ficam à direita, **segure o botão do mouse num espaço vazio do quadro** (fora dos cartões) e **arraste para o lado**: o quadro anda junto, como uma mãozinha.

@@ -152,6 +152,8 @@ const PASSOS_BANCADA: [EtapaOficina, EtapaOficina][] = [
   ['diagnostico', 'entrada'],
   ['diagnostico', 'aguardando_orcamento'],
   ['aguardando_orcamento', 'diagnostico'],
+  ['entrada', 'aguardando_orcamento'],
+  ['aguardando_orcamento', 'entrada'],
   ['aguardando_peca', 'em_reparo'],
   ['em_reparo', 'aguardando_peca'],
   ['em_reparo', 'pronto'],

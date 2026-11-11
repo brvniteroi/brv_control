@@ -53,13 +53,14 @@ export default function KanbanOficina({
     return mapa;
   }, [itens]);
 
-  // Com o orçamento desligado, as colunas dessa fase só aparecem se ainda houver item nelas.
+  // Com o orçamento desligado, "Aguardando cliente" só aparece se ainda houver item nela; "Aguardando orçamento" fica sempre visível
+  // (a oficina manda para lá o que o atendimento precisa orçar no SicWeb).
   const colunas = useMemo(
     () =>
       COLUNAS_KANBAN.filter(
         (c) =>
           EXIGE_ORCAMENTO_OFICINA ||
-          !['aguardando_orcamento', 'aguardando_cliente'].includes(c.etapa) ||
+          c.etapa !== 'aguardando_cliente' ||
           (porColuna.get(c.etapa)?.length ?? 0) > 0,
       ),
     [porColuna],

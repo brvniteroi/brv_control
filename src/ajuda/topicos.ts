@@ -638,7 +638,7 @@ Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados
 1. Em **Oficina**, clique em **Nova entrada**.
 2. Escolha a origem:
 - **Da OS**: o equipamento saiu de uma visita. Digite o **Número da OS** e clique em **Buscar OS**. Cliente, técnico e relato vêm sozinhos.
-- **Balcão (sem visita)**: o cliente trouxe na loja. Escolha o **Cliente** e o **Endereço do cliente**. O sistema cria a OS junto.
+- **Balcão (sem visita)**: o cliente trouxe na loja. Escolha o **Cliente** e o **Endereço do cliente**. Cliente novo: digite o nome na busca e clique em **Cadastrar "nome" como novo cliente**; ao salvar o cadastro, ele já volta selecionado. O sistema cria a OS junto.
 3. Preencha **Tipo de equipamento**, **O que veio** (evaporadora, condensadora, as duas, aparelho inteiro), marca, modelo, tensão, **Acessórios** (controle, suporte...) e o **Defeito relatado**.
 4. Em **Conferência na chegada**, anote o estado em que chegou (amassado, sem tampa...).
 5. Deixe **Já chegou na loja** marcado se o equipamento está aqui. Desmarcado, ele fica **Em trânsito**.

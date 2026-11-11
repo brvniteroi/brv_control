@@ -17,10 +17,12 @@ import {
   entradaBalcao,
   listarTecnicosOficina,
 } from '../../services/oficina';
+import { buscarClientePorId } from '../../services/clientes';
 import { listarEnderecosDoCliente } from '../../services/ordens';
 import type { Customer, CustomerAddress } from '../../types/fsm';
 import type { NovoItemOficina, OsParaOficina, UnidadeRecolhida } from '../../types/oficina';
 import { ROTULO_UNIDADE, TENSOES, TIPOS_EQUIPAMENTO } from '../../utils/oficina';
+import ClienteDetalhes from '../clientes/ClienteDetalhes';
 import SeletorCliente from '../ordens/SeletorCliente';
 
 type CaminhoEntrada = 'os' | 'balcao';
@@ -67,6 +69,8 @@ export default function NovaEntradaModal({
   const [cliente, setCliente] = useState<{ id: string; name: string } | null>(null);
   const [enderecos, setEnderecos] = useState<CustomerAddress[]>([]);
   const [enderecoId, setEnderecoId] = useState('');
+  const [nomeNovoCliente, setNomeNovoCliente] = useState<string | null>(null); // cadastro completo aberto por cima
+  const [clienteCriadoId, setClienteCriadoId] = useState<string | null>(null);
 
   // Equipamento
   const [tipoEquipamento, setTipoEquipamento] = useState('');
@@ -156,6 +160,18 @@ export default function NovaEntradaModal({
     setEnderecoId('');
   };
 
+  const fecharCadastroCliente = async () => {
+    setNomeNovoCliente(null);
+    if (!clienteCriadoId) return;
+    const c = await buscarClientePorId(clienteCriadoId);
+    if (c) {
+      setCliente({ id: c.id, name: c.name });
+      setEnderecos([]);
+      setEnderecoId('');
+    }
+    setClienteCriadoId(null);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErroSalvar(null);
@@ -231,7 +247,7 @@ export default function NovaEntradaModal({
       ref={dialogRef}
       onCancel={(e) => {
         e.preventDefault();
-        if (!salvando) onFechar();
+        if (!salvando && nomeNovoCliente === null) onFechar();
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !salvando) onFechar();
@@ -239,6 +255,11 @@ export default function NovaEntradaModal({
       aria-labelledby="titulo-nova-entrada"
       className="m-auto max-h-[92dvh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl backdrop:bg-slate-950/55 backdrop:backdrop-blur-xs"
     >
+      {nomeNovoCliente !== null && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-slate-50 text-left">
+          <ClienteDetalhes clienteId="novo" nomeInicial={nomeNovoCliente} onFechar={fecharCadastroCliente} onSalvo={setClienteCriadoId} />
+        </div>
+      )}
       {/* Cabeçalho */}
       <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
         <div className="flex items-center gap-2.5">
@@ -448,7 +469,7 @@ export default function NovaEntradaModal({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <span className="block text-xs font-semibold text-slate-700">Cliente *</span>
-                <SeletorCliente valor={cliente} onChange={escolherClienteBalcao} />
+                <SeletorCliente valor={cliente} onChange={escolherClienteBalcao} onCadastrarNovo={setNomeNovoCliente} />
               </div>
               <div>
                 <label htmlFor="entrada-balcao-end" className="block text-xs font-semibold text-slate-700">

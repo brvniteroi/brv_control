@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, UserPlus, X } from 'lucide-react';
 import { listarClientes } from '../../services/clientes';
 import type { Customer } from '../../types/fsm';
 
@@ -8,9 +8,11 @@ interface SeletorClienteProps {
   valor: { id: string; name: string } | null;
   onChange: (cliente: Customer | null) => void;
   desabilitado?: boolean;
+  /** Se informado, mostra "Cadastrar como novo cliente" na lista quando há busca digitada. */
+  onCadastrarNovo?: (nome: string) => void;
 }
 
-export default function SeletorCliente({ valor, onChange, desabilitado }: SeletorClienteProps) {
+export default function SeletorCliente({ valor, onChange, desabilitado, onCadastrarNovo }: SeletorClienteProps) {
   const [busca, setBusca] = useState('');
   const [resultados, setResultados] = useState<Customer[]>([]);
   const [aberto, setAberto] = useState(false);
@@ -91,6 +93,21 @@ export default function SeletorCliente({ valor, onChange, desabilitado }: Seleto
               </button>
             </li>
           ))}
+          {onCadastrarNovo && !carregando && busca.trim().length >= 2 && (
+            <li>
+              <button
+                type="button"
+                // mouseDown dispara antes do blur do campo, que fecharia a lista
+                onMouseDown={() => {
+                  onCadastrarNovo(busca.trim());
+                  setAberto(false);
+                }}
+                className="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-left text-sm font-semibold text-blue-600 hover:bg-blue-50"
+              >
+                <UserPlus size={14} /> Cadastrar "{busca.trim()}" como novo cliente
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>

@@ -194,7 +194,8 @@ Realtime: a aprovação aparece ao reabrir a placa. **Garantia (decidido em 2026
 do termo); retorno em garantia **só com a placa original entregue e garantia vigente** (vencida = placa normal com orçamento; sem garantia "avulsa"), também para placa de campo
 (lista as placas do cliente da OS, `placasDoClienteControl`); garantia definida na entrada não muda depois; o retorno, ao ser entregue, ganha **novos 90 dias** da nova saída (termo
 cita a placa original). Banco: migration `20261111110000_placas_garantia_vigente.sql` (**a colar no SQL Editor**; refaz `board_orders_preenche` e cria `board_orders_garantia_fixa`).
-Pendente de decisão: unificar as cláusulas do orçamento e do termo (o orçamento cita selo e infiltração de água; o termo cita maresia). Falta: QR no comprovante; (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
+Cláusulas de perda da garantia **unificadas** no orçamento e no termo (`PERDA_GARANTIA_PLACA` em `textosJuridicosPlacas.ts`: selo, raio, sobretensão, água/líquidos,
+maresia/umidade, insetos, terceiros). Falta: QR no comprovante; (f) ~~virada~~ **feita em 2026-11-10 à noite** (o usuário já não
 lançava no Equipamentos): backup das tabelas antigas em `scripts/equipamentos/dados/backup-placas-equipamentos-2026-11-10.json` (gitignored; 81 OS, 49 clientes, 620
 históricos), importação final (79 de 81 regravadas; OS-221026-001 e OS-031126-001 já mexidas no Control, mantidas; fotos já estavam) e `scripts/equipamentos/somente-leitura-placas.sql` **aplicado no projeto BRV Equipamentos** (2026-11-10; trava placas, clientes,
 histórico, fichas e manuais; o sistema antigo está todo só leitura). O Equipamentos e o XAMPP da loja podem ser desligados quando o usuário quiser (as etiquetas já saem pelo agente do Control). Histórico do que foi feito:

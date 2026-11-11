@@ -1,5 +1,12 @@
-// Textos institucionais e cláusulas jurídicas copiados LITERALMENTE dos modais do sistema anterior
-// (`ModalOrcamentoPlaca.jsx`, `ModalComprovanteEntrada.jsx` e `ModalTermoGarantia.jsx`) para revisão do Braulio.
+// Textos institucionais e cláusulas jurídicas copiados dos modais do sistema anterior
+// (`ModalOrcamentoPlaca.jsx`, `ModalComprovanteEntrada.jsx` e `ModalTermoGarantia.jsx`), revisados pelo Braulio.
+
+/**
+ * Causas que fazem a garantia perder a validade: MESMA lista no orçamento e no termo (decisão do Braulio, 2026-11-11).
+ * Mudou aqui, muda nos dois documentos.
+ */
+export const PERDA_GARANTIA_PLACA =
+  'rompimento do selo/lacre de garantia de bancada; descarga atmosférica (raio); sobretensão da rede elétrica externa; infiltração de água/líquidos; oxidação por maresia/umidade excessiva; infestação de insetos/lagartixas; ou intervenção de terceiros não autorizados';
 
 /** Chave PIX exibida no quadro de condições comerciais do orçamento de placa. */
 export const CHAVE_PIX_ORCAMENTO_PLACA = 'brvloja@brvniteroi.com.br';
@@ -23,8 +30,7 @@ export const CLAUSULAS_ORCAMENTO_PLACA: readonly { titulo: string; texto: string
   },
   {
     titulo: '3. Condições de Validade:',
-    texto:
-      'A garantia perderá vigência caso ocorra: rompimento do selo/lacre de garantia de bancada; descargas atmosféricas (raios); sobretensão da rede elétrica externa; infiltração de água/líquidos; infestação de insetos/lagartixas ou intervenção de terceiros não autorizados.',
+    texto: `A garantia perderá vigência caso ocorra: ${PERDA_GARANTIA_PLACA}.`,
   },
   {
     titulo: '4. Cláusula de Abandono (90 Dias):',
@@ -43,7 +49,7 @@ export const CLAUSULAS_COMPROVANTE_ENTRADA: readonly string[] = [
 /** Cláusulas jurídicas literais do termo de garantia de 90 dias (`ModalTermoGarantia.jsx`). */
 export const CLAUSULAS_TERMO_GARANTIA: readonly string[] = [
   '1. A garantia cobre exclusivamente os componentes substituídos e o circuito reparado descritos neste termo pelo prazo legal de 90 (noventa) dias (Art. 26 do CDC).',
-  '2. A garantia perderá total validade em caso de: descarga atmosférica (raio), sobretensão da rede elétrica externa, infestação de insetos/lagartixas, oxidação por maresia/umidade excessiva ou intervenção de terceiros não autorizados.',
+  `2. A garantia perderá total validade em caso de: ${PERDA_GARANTIA_PLACA}.`,
   '3. Para acionamento de garantia, é obrigatório apresentar este número de Ordem de Serviço e o selo de bancada intacto.',
 ];
 

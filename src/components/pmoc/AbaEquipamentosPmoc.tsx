@@ -1,7 +1,7 @@
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useMemo, useState } from 'react';
+import BotoesFoto from '../comum/BotoesFoto';
 import {
   AlertTriangle,
-  Camera,
   Check,
   ExternalLink,
   ImagePlus,
@@ -223,9 +223,7 @@ export default function AbaEquipamentosPmoc({
     );
   };
 
-  const handleUploadFoto = async (eqId: string, e: ChangeEvent<HTMLInputElement>) => {
-    const arquivo = e.target.files?.[0];
-    e.target.value = '';
+  const handleUploadFoto = async (eqId: string, arquivo: File | undefined) => {
     if (!arquivo) return;
 
     onErro(null);
@@ -488,16 +486,12 @@ export default function AbaEquipamentosPmoc({
                               className="h-11 w-16 cursor-pointer rounded-lg border border-slate-200 object-cover transition hover:opacity-90"
                             />
                             <div className="flex items-center gap-2 text-[10px]">
-                              <label className="cursor-pointer font-semibold text-blue-600 hover:underline">
-                                Trocar
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  disabled={enviandoEstaFoto}
-                                  onChange={(e) => void handleUploadFoto(eq.id, e)}
-                                  className="sr-only"
-                                />
-                              </label>
+                              <BotoesFoto
+                                tamanho="mini"
+                                multiplo={false}
+                                enviando={enviandoEstaFoto}
+                                onArquivos={(arquivos) => void handleUploadFoto(eq.id, arquivos[0])}
+                              />
                               <button
                                 type="button"
                                 onClick={() =>
@@ -513,21 +507,12 @@ export default function AbaEquipamentosPmoc({
                             </div>
                           </div>
                         ) : (
-                          <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-dashed border-slate-300 px-2.5 py-2 text-[11px] font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600">
-                            {enviandoEstaFoto ? (
-                              <Loader2 size={13} className="animate-spin" aria-hidden="true" />
-                            ) : (
-                              <Camera size={13} aria-hidden="true" />
-                            )}
-                            <span>{enviandoEstaFoto ? 'Enviando...' : 'Foto'}</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              disabled={enviandoEstaFoto}
-                              onChange={(e) => void handleUploadFoto(eq.id, e)}
-                              className="sr-only"
-                            />
-                          </label>
+                          <BotoesFoto
+                            tamanho="mini"
+                            multiplo={false}
+                            enviando={enviandoEstaFoto}
+                            onArquivos={(arquivos) => void handleUploadFoto(eq.id, arquivos[0])}
+                          />
                         )}
                       </td>
 

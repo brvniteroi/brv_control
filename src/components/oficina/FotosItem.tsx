@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
-import { Camera, ExternalLink, Film, ImagePlus, Loader2, X } from 'lucide-react';
+import { useState } from 'react';
+import BotoesFoto from '../comum/BotoesFoto';
+import { Camera, ExternalLink, Film, X } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
 import { excluirAnexo } from '../../services/anexos';
 import { anexarFotoItem } from '../../services/oficina';
@@ -121,7 +122,6 @@ export default function FotosItem({
 }: FotosItemProps) {
   const { profile } = useAuth();
   const ehAdmin = profile?.role === 'admin';
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const [categoriaManual, setCategoriaManual] = useState<AttachmentCategory | null>(null);
   const [legenda, setLegenda] = useState('');
@@ -173,29 +173,12 @@ export default function FotosItem({
         </div>
 
         {!somenteLeitura && (
-          <button
-            type="button"
-            disabled={!!enviando}
-            onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-2xs transition hover:bg-blue-700 disabled:opacity-60"
-          >
-            {enviando ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
-            {enviando ? `Enviando ${enviando.feitas + 1} de ${enviando.total}...` : 'Adicionar fotos'}
-          </button>
+          <BotoesFoto
+            onArquivos={(arquivos) => void enviarArquivos(arquivos)}
+            enviando={!!enviando}
+            textoEnviando={enviando ? `Enviando ${enviando.feitas + 1} de ${enviando.total}...` : undefined}
+          />
         )}
-
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            const selecionados = Array.from(e.target.files ?? []);
-            e.target.value = '';
-            void enviarArquivos(selecionados);
-          }}
-        />
       </div>
 
       {!somenteLeitura && (

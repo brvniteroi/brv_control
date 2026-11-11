@@ -1,7 +1,8 @@
-import { useId, useMemo, useState, type ChangeEvent } from 'react';
-import { Camera, ImagePlus, Loader2, Trash2, ZoomIn } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
+import { Camera, Trash2, ZoomIn } from 'lucide-react';
 import type { BoardPhoto, BoardPhotoCategory } from '../../types/placas';
 import { formatarDataHora } from '../../utils/ordens';
+import BotoesFoto from '../comum/BotoesFoto';
 import VisualizadorFotos from '../ordens/VisualizadorFotos';
 import { ROTULO_CATEGORIA_FOTO } from './cores';
 import { anexarFotoPlaca, excluirFotoPlaca } from './fonteDeDados';
@@ -31,7 +32,6 @@ export default function FotosPlaca({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [indiceAmpliada, setIndiceAmpliada] = useState<number | null>(null);
-  const inputId = useId();
   const legendaId = useId();
 
   const filtradas = useMemo(
@@ -44,9 +44,7 @@ export default function FotosPlaca({
     [filtradas],
   );
 
-  const handleSelecionarArquivos = async (e: ChangeEvent<HTMLInputElement>) => {
-    const arquivos = Array.from(e.target.files ?? []);
-    e.target.value = '';
+  const handleSelecionarArquivos = async (arquivos: File[]) => {
     if (arquivos.length === 0) return;
 
     setEnviando(true);
@@ -115,27 +113,12 @@ export default function FotosPlaca({
                   placeholder="Ex.: Trilha reconstituída e envernizada"
                   className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-800"
                 />
-                <label
-                  htmlFor={inputId}
-                  className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 ${
-                    enviando ? 'pointer-events-none opacity-60' : ''
-                  }`}
-                >
-                  {enviando ? (
-                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
-                  ) : (
-                    <ImagePlus size={14} aria-hidden="true" />
-                  )}
-                  <span>Enviar fotos</span>
-                  <input
-                    id={inputId}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => void handleSelecionarArquivos(e)}
-                    className="sr-only"
-                  />
-                </label>
+                <BotoesFoto
+                  className="shrink-0"
+                  onArquivos={(arquivos) => void handleSelecionarArquivos(arquivos)}
+                  enviando={enviando}
+                  textoEnviando="Enviando…"
+                />
               </div>
             </div>
           </div>

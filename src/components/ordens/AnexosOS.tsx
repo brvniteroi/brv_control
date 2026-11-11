@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
-import { Camera, ExternalLink, Film, ImagePlus, Loader2, X } from 'lucide-react';
+import { useState } from 'react';
+import { Camera, ExternalLink, Film, X } from 'lucide-react';
+import BotoesFoto from '../comum/BotoesFoto';
 import { useAuth } from '../../contexts/useAuth';
 import { anexarFoto, excluirAnexo } from '../../services/anexos';
 import type { Attachment } from '../../types/fsm';
@@ -76,7 +77,6 @@ interface AnexosOSProps {
 export default function AnexosOS({ ordemId, anexos, onAlterado }: AnexosOSProps) {
   const { profile } = useAuth();
   const ehAdmin = profile?.role === 'admin';
-  const entradaRef = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState<{ feitas: number; total: number } | null>(null);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
   const [fotoAberta, setFotoAberta] = useState<number | null>(null);
@@ -117,26 +117,11 @@ export default function AnexosOS({ ordemId, anexos, onAlterado }: AnexosOSProps)
       <div className="flex items-center gap-2 text-slate-800">
         <Camera size={18} className="text-blue-600" />
         <h2 className="text-base font-bold">Fotos e anexos ({anexos.length})</h2>
-        <button
-          type="button"
-          onClick={() => entradaRef.current?.click()}
-          disabled={!!enviando}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
-        >
-          {enviando ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
-          {enviando ? `Enviando ${enviando.feitas + 1} de ${enviando.total}…` : 'Adicionar fotos'}
-        </button>
-        <input
-          ref={entradaRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            const arquivos = Array.from(e.target.files ?? []);
-            e.target.value = '';
-            void adicionar(arquivos);
-          }}
+        <BotoesFoto
+          className="ml-auto"
+          onArquivos={(arquivos) => void adicionar(arquivos)}
+          enviando={!!enviando}
+          textoEnviando={enviando ? `Enviando ${enviando.feitas + 1} de ${enviando.total}…` : undefined}
         />
       </div>
 

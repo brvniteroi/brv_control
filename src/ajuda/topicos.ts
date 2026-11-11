@@ -336,7 +336,7 @@ O único caso que é sempre manual é o cancelamento (veja "Cancelar uma OS").
     palavras: 'foto imagem anexo galeria',
     texto: `
 - As fotos que o técnico tira no celular aparecem sozinhas na OS.
-- Para incluir fotos pelo escritório, clique em **Adicionar fotos**. Dá para escolher várias de uma vez (só imagens).
+- Para incluir fotos pelo escritório, use **Tirar foto** (abre a câmera do celular) ou **Galeria** (dá para escolher várias de uma vez; só imagens).
 - Clique numa foto para ampliar. Use as setas para passar as fotos.
 - Só o administrador pode excluir foto (X vermelho). Não dá para desfazer.
 `,
@@ -680,7 +680,7 @@ Abra o item clicando no cartão.
 - **Equipamento**: corrija os dados do aparelho e clique em **Salvar equipamento**.
 - **Oficina**: **Técnico da oficina**, **Situação das peças**, **Diagnóstico**, **Peças necessárias** e **Serviço executado**. Clique em **Salvar oficina**.
 - No celular, os botões **Salvar** aparecem também no fim de cada parte, e os textos longos (como o relato do técnico de campo) abrem inteiros.
-- **Fotos**: clique em **Adicionar fotos** (pode escolher várias). A **Categoria das próximas fotos** já vem sugerida pela etapa (antes na chegada, depois no conserto).
+- **Fotos**: use **Tirar foto** (câmera do celular) ou **Galeria** (pode escolher várias). A **Categoria das próximas fotos** já vem sugerida pela etapa (antes na chegada, depois no conserto).
 - **Histórico**: escreva em **Anotar no histórico** e clique em **Salvar anotação**. Em uma alteração, **Ver antes e depois** mostra o valor antigo.
 - Diagnóstico pronto: mova para **Aguardando orçamento**. O atendimento é avisado pelo quadro.
 > O técnico da oficina não mexe em orçamento, resposta do cliente, descarte, devolução nem cancelamento. Isso é do escritório.
@@ -807,7 +807,7 @@ Depois de **Entregue / Faturado** ou **Sem Conserto / Devolvido**, a placa vai p
 3. Preencha **Tipo de equipamento**, **Marca / modelo**, **Código da placa (part number)**, **Defeito reclamado** e, se souber, o **Código de erro**.
 4. Em **Periféricos / acessórios entregues junto** anote o que veio com a placa (sensores, display, chicote, motor).
 5. Marque **Sem defeito aparente** se foi deixada só para teste. Marque **Retorno em garantia** e escolha a **Placa original entregue** se for garantia.
-6. Use **Selecionar fotos** para as fotos da entrada.
+6. Use **Tirar foto** ou **Galeria** para as fotos da entrada.
 7. Clique em **Registrar entrada e gerar comprovante**.
 A placa entra na coluna **Entrada / Triagem** e o **Comprovante de entrada** abre para imprimir ou enviar o link ao cliente.
 > Placa de parceiro **não cria OS** no BRV Control. O cliente de placas é um cadastro à parte dos clientes do sistema.

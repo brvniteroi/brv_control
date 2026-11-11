@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { Camera, Loader2, RefreshCw, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Loader2, RefreshCw, Trash2, X } from 'lucide-react';
+import BotoesFoto from '../comum/BotoesFoto';
 import { anexarFoto } from '../../services/anexos';
 import { buscarAnexosPorIds } from '../../services/formularios';
 import type { Attachment } from '../../types/fsm';
@@ -27,7 +28,6 @@ export default function CampoFoto({
   const [arquivosPendentes, setArquivosPendentes] = useState<File[]>([]);
   const [fotoAmpliadaUrl, setFotoAmpliadaUrl] = useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Carrega anexos existentes a partir dos IDs
   useEffect(() => {
@@ -86,15 +86,7 @@ export default function CampoFoto({
     } finally {
       setEnviando(false);
       setProgressoTexto('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    processarArquivos(files);
   };
 
   const removerFoto = (idParaRemover: string) => {
@@ -158,38 +150,12 @@ export default function CampoFoto({
 
       {/* Botão de Adicionar Fotos */}
       {!desabilitado && (
-        <div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            capture="environment"
-            onChange={handleFileChange}
-            disabled={enviando}
-            className="hidden"
-            id={`input-foto-${taskId}`}
-          />
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={enviando}
-            className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 py-4 px-4 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:bg-blue-50/40 disabled:opacity-50"
-          >
-            {enviando ? (
-              <>
-                <Loader2 size={18} className="animate-spin text-blue-600" />
-                <span className="text-blue-600">{progressoTexto || 'Enviando foto...'}</span>
-              </>
-            ) : (
-              <>
-                <Camera size={20} className="text-slate-500" />
-                <span>Tirar foto ou escolher da galeria</span>
-              </>
-            )}
-          </button>
-        </div>
+        <BotoesFoto
+          tamanho="grande"
+          onArquivos={(arquivos) => void processarArquivos(arquivos)}
+          enviando={enviando}
+          textoEnviando={progressoTexto || 'Enviando foto...'}
+        />
       )}
 
       {/* Modal Simples de Foto Ampliada */}

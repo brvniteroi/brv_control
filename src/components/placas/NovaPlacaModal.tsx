@@ -1,8 +1,8 @@
-import { useEffect, useId, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useState, type FormEvent } from 'react';
+import BotoesFoto from '../comum/BotoesFoto';
 import {
   AlertTriangle,
   CheckCircle2,
-  ImagePlus,
   Loader2,
   Plus,
   Search,
@@ -275,8 +275,7 @@ export default function NovaPlacaModal({
     }
   };
 
-  const handleSelecionarFotos = (e: ChangeEvent<HTMLInputElement>) => {
-    const arquivos = Array.from(e.target.files ?? []);
+  const handleSelecionarFotos = (arquivos: File[]) => {
     if (arquivos.length === 0) return;
 
     const novas: PreviaFotoEntrada[] = [];
@@ -289,7 +288,6 @@ export default function NovaPlacaModal({
       });
     }
     setFotosEntrada((prev) => [...prev, ...novas]);
-    e.target.value = '';
   };
 
   const handleRemoverFoto = (idLocal: string) => {
@@ -1055,17 +1053,7 @@ export default function NovaPlacaModal({
                 Registre o estado físico da placa, trilhas, etiquetas e conectores recebidos.
               </span>
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-              <ImagePlus size={15} aria-hidden="true" />
-              <span>Selecionar fotos</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleSelecionarFotos}
-                className="sr-only"
-              />
-            </label>
+            <BotoesFoto onArquivos={handleSelecionarFotos} />
           </div>
 
           {fotosEntrada.length > 0 && (

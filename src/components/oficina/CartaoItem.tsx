@@ -114,12 +114,12 @@ export default function CartaoItem({
       onClick={interativoComoBloco ? () => onAbrir(item.id) : undefined}
       title={ehBalcao ? 'Entrada de balcão (cliente trouxe à loja)' : undefined}
       className={`group rounded-xl border p-3.5 shadow-2xs transition ${
-        ehBalcao ? 'bg-sky-50' : 'bg-white'
+        ehBalcao ? 'bg-sky-100' : 'bg-white'
       } ${interativoComoBloco ? 'cursor-grab active:cursor-grabbing' : ''} ${
         arrastando
           ? 'rotate-1 border-blue-400 shadow-lg ring-2 ring-blue-500/20'
           : ehBalcao
-            ? 'border-sky-200 hover:border-blue-300 hover:shadow-xs'
+            ? 'border-sky-300 hover:border-blue-400 hover:shadow-xs'
             : 'border-slate-200 hover:border-blue-300 hover:shadow-xs'
       }`}
     >

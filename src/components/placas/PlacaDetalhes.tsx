@@ -56,6 +56,7 @@ import {
   gerarNovoLinkAcompanhamento,
   historicoDaPlaca,
   listarTecnicos,
+  marcarPlacaSemDefeito,
   moverPlaca,
   reabrirPlaca,
   registrarOrcamento,
@@ -77,10 +78,12 @@ import {
   linkPublicoPlaca,
   montarLinkWhatsAppPlaca,
   motivoBloqueioPlaca,
+  podeMarcarSemDefeito,
   podeMoverPlaca,
   prepararJanelaWhatsApp,
   textoWhatsAppEntradaPlaca,
   textoWhatsAppOrcamentoPlaca,
+  textoWhatsAppSemDefeitoPlaca,
   ehTecnicoBancadaPlacas,
 } from './regrasPlacas';
 import TermoGarantiaDocumento from './TermoGarantiaDocumento';
@@ -158,6 +161,10 @@ export default function PlacaDetalhes({
 
   // Modal Registrar Resposta do Orçamento
   const [modalRespostaAberto, setModalRespostaAberto] = useState(false);
+  // "Placa sem defeito": janela do valor da avaliação em bancada
+  const [modalSemDefeitoAberto, setModalSemDefeitoAberto] = useState(false);
+  const [valorSemDefeitoTexto, setValorSemDefeitoTexto] = useState('');
+  const [marcandoSemDefeito, setMarcandoSemDefeito] = useState(false);
   const [decisaoResposta, setDecisaoResposta] = useState<'aprovado' | 'recusado'>('aprovado');
   const [canalResposta, setCanalResposta] = useState<BoardQuoteChannel>('whatsapp');
   const [obsResposta, setObsResposta] = useState('');
@@ -290,6 +297,7 @@ export default function PlacaDetalhes({
     verTermoGarantia ||
     verEtiqueta ||
     modalRespostaAberto ||
+    modalSemDefeitoAberto ||
     modalNovoLinkAberto ||
     modalEntregarAberto ||
     modalSemConsertoAberto ||
@@ -347,6 +355,44 @@ export default function PlacaDetalhes({
       notificarErro(err instanceof Error ? err.message : 'Erro ao mover placa.');
     } finally {
       setMovendoEtapa(false);
+    }
+  };
+
+  const abrirModalSemDefeito = () => {
+    if (!placa) return;
+    // Sugere o valor já guardado (se alguém abriu e desistiu antes); garantia não cobra
+    setValorSemDefeitoTexto(placa.quote_amount != null && placa.quote_amount > 0 ? String(placa.quote_amount).replace('.', ',') : '');
+    setModalSemDefeitoAberto(true);
+  };
+
+  /** "Placa sem defeito": vai direto para Pronto (sem orçamento) e abre o WhatsApp com a mensagem ao cliente. */
+  const handleConfirmarSemDefeito = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!placa || !podeMarcarSemDefeito(placa, papel)) return;
+    let valor: number | null = null;
+    if (!placa.is_warranty) {
+      valor = Number.parseFloat(valorSemDefeitoTexto.replace(',', '.'));
+      if (!Number.isFinite(valor) || valor <= 0) {
+        notificarErro('Informe o valor da avaliação em bancada (maior que zero).');
+        return;
+      }
+    }
+    setMarcandoSemDefeito(true);
+    // A aba do WhatsApp abre já no clique: o navegador bloqueia janela aberta depois de esperar o banco
+    const janela = prepararJanelaWhatsApp();
+    try {
+      const atualizada = await marcarPlacaSemDefeito(placa.id, valor, { papel, atorNome });
+      janela.ir(montarLinkWhatsAppPlaca(atualizada.customer_phone, textoWhatsAppSemDefeitoPlaca(atualizada)));
+      setModalSemDefeitoAberto(false);
+      await aplicarPlacaAtualizada(
+        atualizada,
+        'Placa liberada em Pronto, sem orçamento. WhatsApp aberto com a mensagem ao cliente: sem defeito e valor da avaliação.',
+      );
+    } catch (err) {
+      janela.cancelar();
+      notificarErro(err instanceof Error ? err.message : 'Erro ao marcar a placa como sem defeito.');
+    } finally {
+      setMarcandoSemDefeito(false);
     }
   };
 
@@ -960,7 +1006,46 @@ export default function PlacaDetalhes({
                         );
                       })}
                     </div>
+
+                    {podeMarcarSemDefeito(placa, papel) && (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                        <button
+                          type="button"
+                          onClick={abrirModalSemDefeito}
+                          disabled={movendoEtapa}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                        >
+                          <CheckCircle2 size={13} aria-hidden="true" />
+                          <span>Placa sem defeito</span>
+                        </button>
+                        <p className="mt-1.5 text-[11px] text-emerald-900">
+                          Testou em bancada e não achou defeito? A placa vai direto para <strong>Pronto</strong>, sem
+                          orçamento nem aprovação do cliente, e o WhatsApp abre com o aviso e o valor da avaliação em bancada.
+                        </p>
+                      </div>
+                    )}
                   </section>
+                )}
+
+                {placa.no_defect_found && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-900">
+                    <span className="inline-flex items-center gap-2 font-semibold">
+                      <CheckCircle2 size={15} className="shrink-0 text-emerald-600" aria-hidden="true" />
+                      {placa.is_warranty
+                        ? 'Placa sem defeito (retorno em garantia, sem cobrança).'
+                        : `Placa sem defeito. Avaliação em bancada: ${placa.quote_amount != null ? valorEmReais(placa.quote_amount) : '—'}.`}
+                    </span>
+                    {ehEscritorioOuAdmin && (
+                      <a
+                        href={montarLinkWhatsAppPlaca(placa.customer_phone, textoWhatsAppSemDefeitoPlaca(placa))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-emerald-800 underline hover:text-emerald-950"
+                      >
+                        Reenviar mensagem pelo WhatsApp
+                      </a>
+                    )}
+                  </div>
                 )}
 
                 {/* 2. Equipamento e placa */}
@@ -1234,8 +1319,8 @@ export default function PlacaDetalhes({
                   </div>
                 </form>
 
-                {/* 4. Orçamento — só escritório/admin */}
-                {ehEscritorioOuAdmin && (
+                {/* 4. Orçamento — só escritório/admin (placa sem defeito não tem orçamento: o valor vai no aviso acima) */}
+                {ehEscritorioOuAdmin && !placa.no_defect_found && (
                   <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -1984,6 +2069,68 @@ export default function PlacaDetalhes({
             >
               {salvandoResposta && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
               <span>Salvar resposta</span>
+            </button>
+          </div>
+        </form>
+      </ModalDialogoPlacas>
+
+      {/* Modal: Placa sem defeito (valor da avaliação em bancada) */}
+      <ModalDialogoPlacas
+        aberto={modalSemDefeitoAberto}
+        onFechar={() => setModalSemDefeitoAberto(false)}
+        titulo="Placa sem defeito"
+        subtitulo="A placa vai direto para Pronto, sem orçamento e sem aprovação do cliente."
+      >
+        <form onSubmit={handleConfirmarSemDefeito} noValidate className="space-y-4">
+          {placa?.is_warranty ? (
+            <p className="rounded-xl border border-violet-200 bg-violet-50/70 p-3 text-xs text-violet-900">
+              Retorno em garantia: <strong>não há cobrança</strong>. O WhatsApp avisa o cliente que a placa não
+              apresentou defeito e já está pronta.
+            </p>
+          ) : (
+            <div>
+              <label
+                htmlFor={`${idBase}-sem-defeito-valor`}
+                className="mb-1 block text-xs font-semibold text-slate-700"
+              >
+                Valor da avaliação em bancada (R$) *
+              </label>
+              <input
+                id={`${idBase}-sem-defeito-valor`}
+                type="text"
+                inputMode="decimal"
+                autoFocus
+                value={valorSemDefeitoTexto}
+                onChange={(e) => setValorSemDefeitoTexto(e.target.value)}
+                placeholder="Ex.: 80,00"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                Este valor vai na mensagem ao cliente e fica como sugestão na hora de registrar a saída.
+              </p>
+            </div>
+          )}
+
+          <p className="text-xs text-slate-600">
+            Ao confirmar, o WhatsApp abre com a mensagem: a placa <strong>não apresentou defeito</strong>
+            {placa?.is_warranty ? '' : ', o valor da avaliação em bancada'} e que já pode ser retirada.
+          </p>
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setModalSemDefeitoAberto(false)}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={marcandoSemDefeito}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {marcandoSemDefeito && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
+              <span>Liberar em Pronto e avisar no WhatsApp</span>
             </button>
           </div>
         </form>

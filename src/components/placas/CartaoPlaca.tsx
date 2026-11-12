@@ -162,7 +162,14 @@ export default function CartaoPlaca({
             </span>
           )}
 
-          {mostrarOrcamento && !placa.is_warranty && (
+          {placa.no_defect_found && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-400 bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-900">
+              <CheckCircle2 size={11} aria-hidden="true" />
+              Sem defeito
+            </span>
+          )}
+
+          {mostrarOrcamento && !placa.is_warranty && !placa.no_defect_found && (
             <span
               className={`inline-block rounded-md border px-2 py-0.5 text-[10px] font-semibold ${infoOrcamento.selo}`}
             >

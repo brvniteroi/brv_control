@@ -190,6 +190,11 @@ export interface BoardOrder {
   reported_defect: string;
   /** Marcação de placa deixada para teste preventivo sem defeito visível inicial. */
   no_apparent_defect: boolean;
+  /**
+   * Testada em bancada e sem defeito: vai direto para Pronto, sem orçamento nem aprovação do cliente.
+   * O valor da avaliação em bancada fica em `quote_amount` (garantia não cobra).
+   */
+  no_defect_found?: boolean;
   /** UUID do colaborador que retirou/recebeu a placa. */
   pickup_technician_id: string | null;
   /** Nome do colaborador que retirou/recebeu a placa. */

@@ -6,6 +6,7 @@ import { supabase } from './supabase';
 import { compactarImagem, enviarParaHostgator } from './anexos';
 import type { PedidoImpressao } from '../types/oficina';
 import { gerarZplPlaca } from '../utils/etiquetaPlaca';
+import { valorEmReais } from '../utils/oficina';
 import type { LarguraEtiqueta } from '../utils/etiquetaOficina';
 import type { PersonType } from '../types/fsm';
 import type {
@@ -105,6 +106,7 @@ interface LinhaPlaca {
   peripherals: string | null;
   reported_defect: string;
   no_apparent_defect: boolean;
+  no_defect_found: boolean;
   pickup_employee_id: string | null;
   bench_employee_id: string | null;
   error_code: string | null;
@@ -177,6 +179,7 @@ function paraPlaca(l: LinhaPlaca): BoardOrder {
     peripherals: l.peripherals,
     reported_defect: l.reported_defect,
     no_apparent_defect: l.no_apparent_defect,
+    no_defect_found: l.no_defect_found ?? false,
     pickup_technician_id: l.pickup_employee_id,
     pickup_technician_name: l.pickup?.name ?? null,
     bench_technician_id: l.bench_employee_id,
@@ -493,6 +496,30 @@ export async function moverPlaca(id: string, etapa: BoardStage, extra: MoveBoard
   if (etapa === 'sem_conserto') mudar.unrepaired_reason = extra.unrepaired_reason?.trim() || null;
   await atualizar(id, mudar);
   if (extra.charged_amount !== undefined && extra.charged_amount !== null) await gravarFinanceiro(id, { charged_amount: extra.charged_amount });
+  return placaOuErro(id);
+}
+
+/**
+ * "Placa sem defeito": testada em bancada, vai direto para Pronto sem orçamento nem aprovação do cliente.
+ * O valor da avaliação em bancada fica em `quote_amount` (retorno em garantia não cobra: `valor` = null).
+ * Uma única gravação: o banco confere a etapa, o valor e dispensa a aprovação (migration 20261112100000).
+ */
+export async function marcarSemDefeito(id: string, valor: number | null): Promise<BoardOrder> {
+  const atual = await placaOuErro(id);
+  const mudar: Record<string, unknown> = { no_defect_found: true, status: 'pronto' };
+  if (!atual.is_warranty) {
+    if (valor == null || !Number.isFinite(valor) || valor <= 0) throw new Error('Informe o valor da avaliação em bancada.');
+    mudar.quote_amount = valor;
+  }
+  await atualizar(id, mudar);
+  const nota = atual.is_warranty
+    ? 'Placa testada em bancada: não apresentou defeito (retorno em garantia, sem cobrança). Liberada em Pronto sem orçamento.'
+    : `Placa testada em bancada: não apresentou defeito. Avaliação em bancada: ${valorEmReais(valor as number)}. Liberada em Pronto sem orçamento.`;
+  try {
+    await anotarNoHistorico(id, nota);
+  } catch {
+    // a etapa já mudou e o histórico automático registrou; a nota é só o detalhe do valor
+  }
   return placaOuErro(id);
 }
 

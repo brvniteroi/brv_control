@@ -63,6 +63,7 @@ import {
   garantiaVigente,
   gerarNumeroPlaca,
   motivoBloqueioPlaca,
+  podeMarcarSemDefeito,
   placaEncalhada,
   proximaSequenciaDiaPlaca,
   semAcento,
@@ -606,6 +607,51 @@ async function moverPlacaDemo(
     created_at: agoraIso,
   });
 
+  return atualizada;
+}
+
+/** Demonstração de "Placa sem defeito": vai direto para Pronto, sem orçamento (o banco real faz o mesmo por trigger). */
+async function marcarSemDefeitoDemo(
+  id: string,
+  valor: number | null,
+  opcoes?: { papel?: ProfileRole; atorNome?: string },
+): Promise<BoardOrder> {
+  await atraso(130);
+  const idx = memoriaPlacas.findIndex((p) => p.id === id);
+  if (idx === -1) throw new Error('Placa não encontrada.');
+  const atual = memoriaPlacas[idx];
+  if (!podeMarcarSemDefeito(atual, opcoes?.papel ?? 'admin')) {
+    throw new Error('Esta placa não pode ser marcada como sem defeito agora.');
+  }
+  if (!atual.is_warranty && (valor == null || !Number.isFinite(valor) || valor <= 0)) {
+    throw new Error('Informe o valor da avaliação em bancada.');
+  }
+  const atorNome = opcoes?.atorNome ?? 'Usuário BRV';
+  const agoraIso = new Date().toISOString();
+  const atualizada = recalcularPlaca({
+    ...atual,
+    no_defect_found: true,
+    status: 'pronto',
+    quote_amount: atual.is_warranty ? atual.quote_amount : valor,
+    stage_changed_at: agoraIso,
+    updated_at: agoraIso,
+  });
+  memoriaPlacas[idx] = atualizada;
+  registrarEventoMemoria({
+    board_order_id: id,
+    event_type: 'mudanca_etapa',
+    from_stage: atual.status,
+    to_stage: 'pronto',
+    field_name: null,
+    old_value: ROTULO_ETAPA_PLACA[atual.status],
+    new_value: ROTULO_ETAPA_PLACA.pronto,
+    note: atual.is_warranty
+      ? 'Placa testada em bancada: não apresentou defeito (retorno em garantia, sem cobrança).'
+      : `Placa testada em bancada: não apresentou defeito. Avaliação em bancada: ${valorEmReais(valor as number)}.`,
+    visibility: 'todos',
+    actor_name: atorNome,
+    created_at: agoraIso,
+  });
   return atualizada;
 }
 
@@ -1682,6 +1728,14 @@ export function registrarOrcamento(...args: Parameters<typeof registrarOrcamento
 
 export function registrarEnvioOrcamento(...args: Parameters<typeof registrarEnvioOrcamentoDemo>): ReturnType<typeof registrarEnvioOrcamentoDemo> {
   return USAR_BANCO_PLACAS ? real.registrarEnvioOrcamento(...(args as unknown as Parameters<typeof real.registrarEnvioOrcamento>)) : registrarEnvioOrcamentoDemo(...args);
+}
+
+export function marcarPlacaSemDefeito(
+  id: string,
+  valor: number | null,
+  opcoes?: { papel?: ProfileRole; atorNome?: string },
+): Promise<BoardOrder> {
+  return USAR_BANCO_PLACAS ? real.marcarSemDefeito(id, valor) : marcarSemDefeitoDemo(id, valor, opcoes);
 }
 
 export function registrarRespostaOrcamento(...args: Parameters<typeof registrarRespostaOrcamentoDemo>): ReturnType<typeof registrarRespostaOrcamentoDemo> {

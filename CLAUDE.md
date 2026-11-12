@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261111130000` (2026-11-11) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261112100000` (2026-11-12) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -273,6 +273,12 @@ Pendente, nesta ordem:
    **Telas do Gemini prontas e auditadas em 2026-11-09** (rotas `/placas...` e `/placa/:token`, dados de demonstração; resumo `docs/gemini/placas.md`, auditoria `docs/gemini/placas-auditoria.md`). Menu "Placas" **liberado em 2026-11-10** (`MOSTRAR_MENU_PLACAS = true` em `Sidebar.tsx`) depois que o banco passou na verificação. **Decididos em 2026-11-09** (ver `docs/placas.md`, itens 6 a 9): bloqueio de etapa sem orçamento aprovado mantido; sem conserto não gera reembolso (reembolso = caixa + valor devolvido, só no financeiro); dias contados desde a entrada sem zerar (`diasDesdeEntrada`, base do futuro relatório de tempo médio de reparo). **Telas testadas e aprovadas pelo usuário em 2026-11-09.**
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.
+
+**Placa sem defeito (2026-11-12, pedido do usuário):** botão "Placa sem defeito" no detalhe da placa (`PlacaDetalhes.tsx`, só escritório/admin, em Entrada/Diagnóstico): pede o valor da avaliação em bancada
+(garantia não cobra), manda a placa direto para **Pronto** sem orçamento nem aprovação e abre o WhatsApp (`textoWhatsAppSemDefeitoPlaca` em `regrasPlacas.ts`: não apresentou defeito + valor + pronta para retirada).
+O valor fica em `board_orders.quote_amount` (a saída já sugere esse valor) e a marca em `board_orders.no_defect_found` (migration `20261112100000_placas_sem_defeito.sql`, aplicada em 2026-11-12; refaz
+`board_orders_regras`: a marca só vale com a mudança para Pronto, dispensa o orçamento só para Pronto/Entregue, e voltar para Entrada/Diagnóstico a limpa). Verificação com ROLLBACK em `supabase/verificacao/placas_sem_defeito.sql`
+(rodada pelo usuário em 2026-11-12: TUDO CERTO, 10 verificações). Cartão com selo "Sem defeito" (`CartaoPlaca.tsx`); a seção Orçamento some nessa placa. Serviço `marcarSemDefeito` em `services/placas.ts`. Ajuda F1 atualizada (`placas-como-funciona`).
 
 Dashboard (2026-11-12): o cartão "Em andamento" e a legenda da composição mostram quantas das OS em andamento são de balcão (tipo "Oficina (balcão)",
 `balcaoEmAndamento` em `services/dashboard.ts`; OS de balcão nasce `em_andamento` e fica assim enquanto o item está na oficina).

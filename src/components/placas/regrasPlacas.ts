@@ -225,7 +225,7 @@ export function ehEscritorioOuAdminPlaca(papel: ProfileRole | undefined): boolea
 export function motivoBloqueioPlaca(
   placa: Pick<
     BoardOrder,
-    'status' | 'archived' | 'cancelled_entry' | 'quote_status' | 'is_warranty'
+    'status' | 'archived' | 'cancelled_entry' | 'quote_status' | 'is_warranty' | 'no_defect_found'
   >,
   destino: BoardStage,
   papel: ProfileRole | undefined,
@@ -250,7 +250,14 @@ export function motivoBloqueioPlaca(
   }
 
   const exigeAprovacao: BoardStage[] = ['aguardando_peca', 'em_reparo', 'teste', 'pronto', 'entregue'];
-  if (exigeAprovacao.includes(destino) && !placa.is_warranty && placa.quote_status !== 'aprovado') {
+  // Placa sem defeito (testada em bancada) dispensa o orçamento só para Pronto e Entregue
+  const dispensaPorSemDefeito = placa.no_defect_found === true && (destino === 'pronto' || destino === 'entregue');
+  if (
+    exigeAprovacao.includes(destino) &&
+    !placa.is_warranty &&
+    !dispensaPorSemDefeito &&
+    placa.quote_status !== 'aprovado'
+  ) {
     if (placa.quote_status === 'recusado') {
       return 'O orçamento foi recusado pelo cliente; finalize como Sem Conserto / Devolvido.';
     }
@@ -264,11 +271,28 @@ export function motivoBloqueioPlaca(
   return null;
 }
 
+/**
+ * "Placa sem defeito" (testada em bancada): só escritório/admin, na Entrada ou no Diagnóstico, sem estar
+ * finalizada, arquivada ou cancelada. Leva direto para Pronto, sem orçamento.
+ */
+export function podeMarcarSemDefeito(
+  placa: Pick<BoardOrder, 'status' | 'archived' | 'cancelled_entry' | 'no_defect_found'>,
+  papel: ProfileRole | undefined,
+): boolean {
+  return (
+    ehEscritorioOuAdminPlaca(papel) &&
+    !placa.archived &&
+    !placa.cancelled_entry &&
+    !placa.no_defect_found &&
+    (placa.status === 'entrada' || placa.status === 'diagnostico')
+  );
+}
+
 /** Verdadeiro se `papel` pode mover `placa` para `destino`. */
 export function podeMoverPlaca(
   placa: Pick<
     BoardOrder,
-    'status' | 'archived' | 'cancelled_entry' | 'quote_status' | 'is_warranty'
+    'status' | 'archived' | 'cancelled_entry' | 'quote_status' | 'is_warranty' | 'no_defect_found'
   >,
   destino: BoardStage,
   papel: ProfileRole | undefined,
@@ -404,6 +428,27 @@ export function textoWhatsAppOrcamentoPlaca(
     (linkOrcamento
       ? `\n\nVeja o orçamento completo, salve em PDF e aprove por este link:\n${linkOrcamento}`
       : '')
+  );
+}
+
+/**
+ * Mensagem ao cliente quando a placa foi testada em bancada e não apresentou defeito: avisa que já está pronta e
+ * informa o valor da avaliação em bancada (retorno em garantia não cobra).
+ */
+export function textoWhatsAppSemDefeitoPlaca(
+  placa: Pick<
+    BoardOrder,
+    'board_number' | 'customer_name' | 'brand_model' | 'board_code' | 'quote_amount' | 'is_warranty' | 'public_token'
+  >,
+): string {
+  const cobranca = placa.is_warranty
+    ? 'Por ser retorno em garantia, não há cobrança.'
+    : `Valor da avaliação em bancada: ${placa.quote_amount != null ? valorEmReais(placa.quote_amount) : 'a combinar'} (pagamento via PIX na retirada).`;
+  return (
+    `Olá, ${placa.customer_name}! Aqui é o laboratório da BRV Niterói, sobre a placa ${placa.board_number} (${placa.brand_model} · Cód. ${placa.board_code}).\n` +
+    `Depois dos testes em bancada, a placa não apresentou defeito.\n` +
+    `${cobranca}\n` +
+    `Ela já está pronta para retirada. Acompanhe por aqui: ${linkPublicoPlaca(placa.public_token)}`
   );
 }
 

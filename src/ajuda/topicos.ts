@@ -789,7 +789,12 @@ Depois de **Entregue / Faturado** ou **Sem Conserto / Devolvido**, a placa vai p
 - No computador, para ver as colunas que ficam à direita, **segure o botão do mouse num espaço vazio do quadro** (fora dos cartões) e **arraste para o lado**: o quadro anda junto, como uma mãozinha. A barra de rolagem de baixo também funciona.
 - **Parceiro** ou **Final** no cartão diz o tipo de cliente. **Garantia** é retorno de um reparo anterior.
 - **Encalhada**: a placa está em aberto há **4 dias ou mais desde a entrada** (a contagem não zera quando muda de etapa).
-! O banco não deixa seguir para **Em Reparo / Aguardando Peça**, **Pronto** ou **Entregue** sem o **orçamento aprovado** (exceto garantia). Só uma placa em **Pronto** pode ser entregue.
+! O banco não deixa seguir para **Em Reparo / Aguardando Peça**, **Pronto** ou **Entregue** sem o **orçamento aprovado** (exceto garantia e **Placa sem defeito**). Só uma placa em **Pronto** pode ser entregue.
+## Placa sem defeito
+Testou em bancada e a placa **não tem defeito**? Abra a placa (ainda em **Entrada** ou **Diagnóstico**) e clique em **Placa sem defeito**:
+1. Digite o **valor da avaliação em bancada** (retorno em garantia não cobra).
+2. Clique em **Liberar em Pronto e avisar no WhatsApp**.
+A placa vai **direto para Pronto**, sem orçamento e sem aprovação do cliente, e o WhatsApp abre com a mensagem: a placa não apresentou defeito, o valor da avaliação e que já pode ser retirada. O cartão ganha o selo **Sem defeito** e o valor fica como sugestão ao registrar a saída. Se a aba do WhatsApp não abrir, use **Reenviar mensagem pelo WhatsApp** na própria placa. Para voltar atrás (achou defeito depois), mova a placa de volta para **Diagnóstico**: a marca some e o orçamento normal volta a valer.
 > Tudo o que muda fica no **Histórico** da placa (quem fez, quando e o que mudou). Ninguém apaga o histórico.
 `,
     veja: ['placas-nova-entrada', 'placas-orcamento', 'placas-finalizar'],

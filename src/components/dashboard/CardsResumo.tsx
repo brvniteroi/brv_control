@@ -65,7 +65,15 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
             <span className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
               {resumo.porStatus.em_andamento}
             </span>
-            <p className="mt-0.5 text-[11px] text-slate-400">Em execução no momento</p>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              {resumo.balcaoEmAndamento > 0
+                ? `${resumo.balcaoEmAndamento} de balcão (oficina)${
+                    resumo.porStatus.em_andamento > resumo.balcaoEmAndamento
+                      ? `, ${resumo.porStatus.em_andamento - resumo.balcaoEmAndamento} em campo`
+                      : ''
+                  }`
+                : 'Em execução no momento'}
+            </p>
           </div>
         </button>
 
@@ -195,6 +203,9 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
               <span className="h-2 w-2 rounded-full bg-amber-500" />
               Em andamento:{' '}
               <strong className="text-slate-700">{resumo.porStatus.em_andamento}</strong>
+              {resumo.balcaoEmAndamento > 0 && (
+                <span className="text-slate-500"> (balcão: {resumo.balcaoEmAndamento})</span>
+              )}
             </span>
           </div>
         </div>

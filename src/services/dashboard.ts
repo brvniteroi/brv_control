@@ -12,6 +12,8 @@ export interface ResumoOrdens {
   urgentes: number;
   /** OS concluídas nos últimos 30 dias. */
   concluidas30dias: number;
+  /** Das OS em andamento, quantas são de balcão (equipamento trazido à oficina, sem visita de campo). */
+  balcaoEmAndamento: number;
 }
 
 export interface AtividadeDoDia {
@@ -76,11 +78,21 @@ export async function carregarDashboard(): Promise<DadosDashboard> {
 
   const statusTodos: ServiceOrderStatus[] = [...STATUS_ABERTOS, 'concluida', 'cancelada'];
 
-  const [contagens, atrasadas, urgentes, concluidas30dias, atividades, destaque] = await Promise.all([
+  const [contagens, atrasadas, urgentes, concluidas30dias, balcaoEmAndamento, atividades, destaque] = await Promise.all([
     Promise.all(statusTodos.map((s) => contar((q) => q.eq('status', s)))),
     contar((q) => q.in('status', STATUS_ABERTOS).lt('due_date', hoje)),
     contar((q) => q.in('status', STATUS_ABERTOS).in('priority', ['alta', 'urgente'])),
     contar((q) => q.eq('status', 'concluida').gte('completed_at', ha30dias)),
+    // OS de balcão = tipo "Oficina (balcão)" (o mesmo nome que `oficina_entrada_balcao` procura)
+    supabase
+      .from('service_orders')
+      .select('id, service_type:service_types!inner(name)', { count: 'exact', head: true })
+      .eq('status', 'em_andamento')
+      .ilike('service_type.name', 'oficina (balcão)')
+      .then(({ count, error }) => {
+        if (error) throw error;
+        return count ?? 0;
+      }),
     supabase
       .from('tasks')
       .select(
@@ -109,7 +121,7 @@ export async function carregarDashboard(): Promise<DadosDashboard> {
   ) as Record<ServiceOrderStatus, number>;
 
   return {
-    resumo: { porStatus, atrasadas, urgentes, concluidas30dias },
+    resumo: { porStatus, atrasadas, urgentes, concluidas30dias, balcaoEmAndamento },
     atividadesHoje: (atividades.data ?? []) as unknown as AtividadeDoDia[],
     precisamAtencao: (destaque.data ?? []) as unknown as OrdemDestaque[],
   };

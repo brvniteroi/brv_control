@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Manual: OS de Placas – BRV Control</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 18mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #111; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 4px; color: #fff; }
+  h2 { font-size: 15pt; color: #0b1f3a; border-bottom: 2px solid #0b1f3a; padding-bottom: 3px; margin: 22px 0 8px; break-after: avoid; }
+  h3 { font-size: 12pt; margin: 14px 0 4px; color: #0b1f3a; break-after: avoid; }
+  p { margin: 5px 0; }
+  ul, ol { margin: 5px 0 5px 20px; padding: 0; }
+  li { margin: 3px 0; }
+  .nova-pagina { break-before: page; }
+  .caixa { border: 1.5px solid #888; border-radius: 6px; padding: 8px 11px; margin: 9px 0; break-inside: avoid; }
+  .aviso { border-color: #b45309; background: #fff7e6; }
+  .dica { border-color: #1d4ed8; background: #eef4ff; }
+  .ok { border-color: #15803d; background: #ecfdf3; }
+  .caixa b.t { display: block; margin-bottom: 2px; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #f2f2f2; padding: 0 3px; border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; margin: 7px 0; font-size: 9.8pt; }
+  th, td { border: 1px solid #777; padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #e6ebf2; }
+  tr { break-inside: avoid; }
+  .capa-faixa { background: #0b1f3a; color: #fff; padding: 22px 20px; border-radius: 8px; margin-bottom: 14px; }
+  .capa-faixa .sub { color: #cfd8e6; margin: 0; font-size: 11pt; }
+  .etapas { display: flex; gap: 6px; margin: 8px 0; }
+  .etapas div { flex: 1; border: 1.5px solid #0b1f3a; border-radius: 6px; padding: 6px 7px; font-size: 9.5pt; text-align: center; background: #f4f7fb; }
+  .etapas div b { display: block; color: #0b1f3a; }
+  .passo { margin: 10px 0 4px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="capa-faixa">
+  <h1>Manual: OS de Placas</h1>
+  <p class="sub">BRV Control · módulo Placas (laboratório de placas eletrônicas) · versão de 12/11/2026</p>
+</div>
+
+<h2>1. O que é e quem acessa</h2>
+<p>O menu <b>Placas</b> cuida das placas eletrônicas de ar-condicionado que chegam ao laboratório, quase sempre de <b>instaladores parceiros</b>. Este manual explica como abrir uma nova OS de placa e tudo o que existe dentro dela.</p>
+<ul>
+  <li><b>Quem usa:</b> só <b>administrador</b> e <b>escritório</b>. Técnicos de campo e o papel Oficina (Gustavo) não acessam. O técnico de bancada das placas é o Braulio.</li>
+  <li><b>Financeiro:</b> o valor cobrado, o reembolso e a tela Financeiro só aparecem para quem tem a marca de acesso ao financeiro das placas (hoje, só o Braulio).</li>
+  <li><b>Número próprio:</b> cada placa recebe o número <b>OS-DDMMAA-NNN</b>. Exemplo: <b>OS-101126-001</b> é a primeira placa do dia 10/11/26. Não é o número de OS do BRV Control.</li>
+  <li><b>Cliente de placas:</b> é um cadastro à parte dos clientes do sistema. A mesma pessoa pode estar nos dois cadastros, sem misturar.</li>
+</ul>
+
+<h2>2. Criar uma nova OS de placa</h2>
+<p>Em <b>Placas</b>, clique em <b>Nova placa</b>. Abre a janela <i>"Nova entrada de placa"</i>, com os blocos abaixo.</p>
+
+<h3>2.1 Origem da entrada</h3>
+<table>
+  <tr><th style="width:24%">Origem</th><th>Como preencher</th></tr>
+  <tr><td><b>Balcão / portador</b><br>(o parceiro trouxe a placa)</td><td>
+    Busque o <b>cliente de placas</b> na lista (a busca ignora acento).<br>
+    Se ele não existe: clique em <b>Novo cliente</b>, preencha nome, telefone, tipo e cidade e clique em <b>Salvar e selecionar cliente</b>.<br>
+    O tipo é <b>Parceiro instalador</b> ou <b>Cliente final</b>. Dá para ajustar o tipo e a cidade só para esta placa.</td></tr>
+  <tr><td><b>Retirada pela equipe de campo</b></td><td>
+    Digite o <b>Número da OS no BRV Control</b> e clique em <b>Buscar OS</b>.<br>
+    Vêm da OS: o cliente, o relato da visita e o técnico em campo. O cliente entra como <b>Cliente final</b>.<br>
+    Se já existe placa nessa OS, aparece um aviso.</td></tr>
+</table>
+
+<h3>2.2 Dados do equipamento</h3>
+<table>
+  <tr><th style="width:34%">Campo</th><th>Regra</th></tr>
+  <tr><td>Tipo de equipamento</td><td>Opcional (há sugestões; se ficar vazio vira "Split Inverter").</td></tr>
+  <tr><td><b>Marca / modelo</b></td><td><b>Obrigatório.</b></td></tr>
+  <tr><td><b>Código da placa (part number)</b></td><td><b>Obrigatório.</b> É o código gravado na placa eletrônica.</td></tr>
+  <tr><td>Código de erro</td><td>Opcional.</td></tr>
+  <tr><td>Periféricos / acessórios entregues junto</td><td>Anote o que veio com a placa: sensores, display, chicote, motor.</td></tr>
+  <tr><td><b>Defeito reclamado</b></td><td><b>Obrigatório</b>, a menos que marque "Sem defeito aparente".</td></tr>
+  <tr><td>Técnico de bancada responsável</td><td>Já vem preenchido com o Braulio.</td></tr>
+</table>
+
+<h3>2.3 Marcações</h3>
+<ul>
+  <li><b>Sem defeito aparente:</b> a placa foi deixada só para teste. O campo de defeito passa a ser opcional.</li>
+  <li><b>Retorno em garantia:</b> exige escolher a <b>Placa original entregue</b>. Só aparecem placas <b>entregues com a garantia de 90 dias vigente</b>. Se a garantia venceu, ou não há a placa original, a placa entra como normal, com orçamento (desmarque a caixa). <b>A garantia é definida na entrada e não muda depois.</b></li>
+</ul>
+
+<h3>2.4 Fotos da entrada</h3>
+<p>Botões <b>Tirar foto</b> (câmera) e <b>Galeria</b>. As fotos entram na categoria <b>Antes</b>.</p>
+
+<h3>2.5 Registrar</h3>
+<p>Clique em <b>Registrar entrada e gerar comprovante</b>. Em seguida:</p>
+<ul>
+  <li>A placa nasce na etapa <b>Entrada / Triagem</b>, com orçamento "não feito".</li>
+  <li>O sistema gera o número e um <b>link público de acompanhamento</b>, e o histórico já registra a entrada.</li>
+  <li>O <b>Comprovante de entrada</b> abre sozinho, com atalho para imprimir a <b>Etiqueta</b>.</li>
+  <li>Se alguma foto não subir, a placa fica registrada e o sistema avisa. Anexe a foto de novo pelo detalhe da placa.</li>
+</ul>
+<div class="caixa dica"><b class="t">Placa de parceiro não cria OS no BRV Control</b>Só placas retiradas pela equipe de campo têm também uma OS do Control (a que você informou no campo "Número da OS").</div>
+
+<h2 class="nova-pagina">3. O quadro (Kanban)</h2>
+<div class="etapas">
+  <div><b>1. Entrada / Triagem</b>chegou; confira, registre e imprima o comprovante</div>
+  <div><b>2. Diagnóstico / Orçamento</b>análise na bancada e orçamento</div>
+  <div><b>3. Em Reparo / Aguardando Peça</b>na bancada; o teste no simulador faz parte</div>
+  <div><b>4. Pronto para Entrega</b>aguardando retirada</div>
+</div>
+<p>Depois de <b>Entregue / Faturado</b> ou <b>Sem Conserto / Devolvido</b>, a placa vai para a aba <b>Finalizadas</b> (com filtros por desfecho e por ano).</p>
+<ul>
+  <li><b>Mover uma placa:</b> arraste o cartão, use as setas ← → do cartão ou o botão "Mudar etapa" no detalhe. No celular existe o botão <b>Mover para...</b></li>
+  <li><b>Selos do cartão:</b> <b>Parceiro</b> ou <b>Final</b> (tipo de cliente); <b>Garantia</b>; <b>Encalhada</b> (em aberto há 4 dias ou mais desde a entrada, sem zerar ao mudar de etapa); <b>Reembolsada</b>; <b>Sem defeito</b>; a situação do orçamento; e <b>Aprovado, iniciar reparo</b> (borda verde, quando o cliente aprova pelo link e a placa ainda está em Entrada ou Diagnóstico).</li>
+  <li>O quadro <b>atualiza sozinho</b>, sem precisar recarregar a página.</li>
+  <li>No computador, para ver colunas à direita, segure o botão do mouse num espaço vazio do quadro e arraste para o lado.</li>
+</ul>
+
+<h2>4. Dentro da placa (o detalhe)</h2>
+<p>Clique no cartão para abrir o painel lateral. Em geral as seções aparecem nesta ordem.</p>
+
+<h3>4.1 No alto: comprovante, etiqueta e termo</h3>
+<ul>
+  <li><b>Comprovante:</b> documento A4 com os dados da entrada, os termos e o link de acompanhamento. Dá para imprimir ou enviar o link pelo WhatsApp.</li>
+  <li><b>Etiqueta:</b> escolha <b>100 × 50 mm</b> ou <b>80 × 50 mm</b>, a <b>quantidade de cópias</b> e clique em <b>Imprimir na Elgin</b>. A tela mostra se a impressora está pronta e o resultado. A etiqueta leva número, cliente, telefone, equipamento, modelo, código da placa, defeito e um QR que abre a placa. Sem sinal do servidor da loja, use <b>Imprimir pelo navegador</b> (no Chrome, margens "Nenhuma").</li>
+  <li><b>Termo de garantia:</b> aparece depois que a placa é entregue.</li>
+</ul>
+
+<h3>4.2 Mudar etapa na bancada</h3>
+<p>Botões com as etapas. Os que não podem ser usados mostram um cadeado e, ao passar o mouse, o motivo.</p>
+<div class="caixa ok"><b class="t">Botão "Placa sem defeito" (em Entrada ou Diagnóstico)</b>
+Para a placa que foi testada em bancada e <b>não tem defeito</b>:
+<ol>
+  <li>Clique em <b>Placa sem defeito</b> e digite o <b>valor da avaliação em bancada</b> (retorno em garantia não cobra).</li>
+  <li>Clique em <b>Liberar em Pronto e avisar no WhatsApp</b>.</li>
+  <li>A placa vai <b>direto para Pronto</b>, sem orçamento e sem aprovação do cliente. O WhatsApp abre com a mensagem: a placa não apresentou defeito, o valor da avaliação (pagamento via PIX na retirada) e que já pode ser retirada.</li>
+  <li>Aparece um aviso verde com <b>Reenviar mensagem pelo WhatsApp</b>, caso o navegador tenha bloqueado a aba.</li>
+  <li>Para desfazer (achou defeito depois), volte a placa para <b>Diagnóstico</b>: a marca some e o orçamento normal volta a valer.</li>
+</ol>
+O valor da avaliação fica como sugestão ao registrar a saída. A seção Orçamento não aparece nessa placa.</div>
+
+<h3>4.3 Equipamento e placa</h3>
+<p>Tipo, marca/modelo, código da placa, periféricos, defeito reclamado, "sem defeito aparente na entrada" e os técnicos. Clique em <b>Salvar equipamento</b>. Cada alteração entra no histórico.</p>
+
+<h3>4.4 Bancada</h3>
+<p><b>Código de erro</b>, <b>Diagnóstico técnico de bancada</b> (interno: não aparece para o cliente) e <b>Componentes trocados</b> (esta lista sai no Termo de Garantia, então preencha antes de entregar). Clique em <b>Salvar bancada</b>.</p>
+
+<h3>4.5 Orçamento (só escritório e administrador)</h3>
+<p>O orçamento da placa é feito aqui no sistema. Não existe em retorno em garantia nem em placa marcada "sem defeito".</p>
+<ol>
+  <li>Preencha <b>Valor</b>, <b>Validade (dias corridos)</b>, <b>CPF / CNPJ</b>, <b>Endereço do cliente</b> e o <b>Parecer técnico</b>, e clique em <b>Salvar orçamento</b>. Para poder enviar, o banco exige valor e parecer.</li>
+  <li><b>Ver / Imprimir orçamento:</b> mostra a proposta em A4, com opção de salvar em PDF.</li>
+  <li><b>Enviar pelo WhatsApp (link para aprovar):</b> abre a conversa com o resumo e um <b>link</b>, e marca a placa como <b>Orçamento enviado</b>. Não é preciso anexar nada.</li>
+  <li><b>Pelo link,</b> o cliente vê o orçamento, salva em PDF e clica em <b>Aprovar orçamento</b> (informa o nome e marca "Li e concordo"). A placa passa para <b>Aprovado</b> sozinha, com o canal "Link do orçamento" e o nome no histórico.</li>
+  <li>Se o cliente responder de outro jeito (mensagem, telefone, balcão), clique em <b>Registrar resposta</b>: <b>Aprovado</b> ou <b>Recusado</b>, o canal (WhatsApp, telefone, presencial, e-mail) e uma observação.</li>
+</ol>
+<ul>
+  <li><b>Aprovado:</b> a placa pode seguir para Em Reparo / Aguardando Peça e as próximas etapas.</li>
+  <li><b>Recusado:</b> finalize como <b>Sem Conserto / Devolvido</b>.</li>
+  <li>O link só aceita aprovação dentro da <b>validade</b>, que conta a partir do envio. Vencido, reenvie o orçamento para renovar a data.</li>
+  <li>Pelo link o cliente só aprova. Recusa e dúvidas chegam pelo WhatsApp e você registra em "Registrar resposta".</li>
+  <li>Valor de até <b>R$ 250,00</b> não exige sinal (PIX na retirada). Acima disso vale sinal de 50% e a política de execução.</li>
+  <li>O link do orçamento é diferente do link de acompanhamento: o de acompanhamento <b>não mostra valores</b>.</li>
+</ul>
+
+<h3>4.6 Fotos</h3>
+<p><b>Anexar fotos</b> (várias de uma vez), com filtro por <b>Antes (entrada)</b>, <b>Depois (reparo/teste)</b> e <b>Outros</b>. Clique na foto para ampliar. Cada foto guarda a etapa em que foi tirada.</p>
+
+<h3>4.7 Acompanhamento do cliente</h3>
+<p>Botões <b>Copiar link</b>, <b>Enviar pelo WhatsApp</b>, <b>Abrir página pública</b> e <b>Gerar novo link</b>.</p>
+<ul>
+  <li>O parceiro abre o link <b>sem senha</b> e vê: número, equipamento, etapa atual com as datas, fotos e a situação do orçamento. <b>Não</b> vê valores, diagnóstico interno nem reembolso.</li>
+  <li><b>Gerar novo link</b> faz o link antigo parar de funcionar. Use se o link foi para a pessoa errada.</li>
+</ul>
+
+<h3>4.8 Financeiro e reembolso (acesso restrito)</h3>
+<ul>
+  <li><b>Valor efetivamente cobrado (R$)</b> e <b>Salvar valor cobrado</b>: é o que entra no faturamento. Sem ele vale o valor do orçamento (ou da avaliação, em placa sem defeito).</li>
+  <li><b>Reembolsada</b> (desconta do faturamento líquido): informe o valor reembolsado, a data e o motivo e clique em <b>Salvar reembolso</b>.</li>
+  <li><b>Sem conserto não gera reembolso.</b></li>
+</ul>
+<p>Na tela <b>Financeiro</b> (menu Placas) há: faturamento do mês, ticket médio, valor na bancada em aberto, placas encalhadas, total do ano, gráfico mês a mês e ranking de marcas e defeitos.</p>
+
+<h3>4.9 Histórico</h3>
+<p>Linha do tempo com tudo o que aconteceu: quem fez, quando e o que mudou. Use <b>Anotar no histórico</b> para escrever uma nota. <b>Ninguém apaga o histórico</b>, nem as notas.</p>
+
+<h3>4.10 Rodapé: encerrar a placa</h3>
+<table>
+  <tr><th style="width:28%">Ação</th><th>Regra</th></tr>
+  <tr><td><b>Entregue / Faturado</b></td><td>Só de <b>Pronto</b>. Informe a data de saída (hoje, por padrão). Inicia a <b>garantia de 90 dias</b>.</td></tr>
+  <tr><td><b>Sem Conserto / Devolvido</b></td><td>Informe o <b>motivo</b>. Usado quando o cliente recusa o orçamento ou não há conserto.</td></tr>
+  <tr><td><b>Arquivar</b></td><td>Tira da lista sem apagar o histórico.</td></tr>
+  <tr><td><b>Cancelar entrada</b></td><td>Para registro feito por engano. Informe o motivo.</td></tr>
+  <tr><td><b>Reabrir</b></td><td><b>Só o administrador.</b> Entregue volta para Pronto; sem conserto volta para Diagnóstico.</td></tr>
+</table>
+<p>Placa finalizada fica só para consulta.</p>
+
+<h2 class="nova-pagina">5. Regras que o banco de dados impõe</h2>
+<p>Estas regras valem mesmo que alguém tente burlar a tela:</p>
+<ul>
+  <li>Para ir a <b>Em Reparo / Aguardando Peça</b> ou a <b>Pronto</b> é preciso <b>orçamento aprovado</b>. Exceções: retorno em garantia, e "Placa sem defeito" (que dispensa só para Pronto e Entregue).</li>
+  <li>Orçamento recusado: só finaliza como Sem Conserto / Devolvido.</li>
+  <li>Só uma placa em <b>Pronto</b> pode ser entregue.</li>
+  <li><b>Sem Conserto</b> exige o motivo; <b>cancelar</b> exige o motivo.</li>
+  <li>O número, a data de entrada e o link público não mudam (o link só muda em "Gerar novo link").</li>
+  <li>Placa finalizada só pode ser arquivada; reabrir é do administrador.</li>
+  <li>Retorno em garantia não tem orçamento.</li>
+</ul>
+
+<h2>6. Garantia</h2>
+<ul>
+  <li>Toda placa <b>entregue</b> tem <b>90 dias</b> de garantia a contar da saída. A validade aparece na placa (<i>Garantia vigente</i> ou <i>Garantia expirada</i>) e na página de acompanhamento do cliente.</li>
+  <li>O <b>Termo de garantia</b> mostra os componentes trocados, a validade e as condições. É <b>impresso na retirada</b>, com assinatura do cliente (não vai pelo WhatsApp).</li>
+  <li>As cláusulas de perda da garantia são as mesmas no orçamento e no termo: selo violado, raio, sobretensão, água ou líquidos, maresia ou umidade, insetos e intervenção de terceiros.</li>
+  <li>Se a placa voltar dentro do prazo, registre uma <b>Nova placa</b> com <b>Retorno em garantia</b> e a placa original. Ela não passa por orçamento. Ao ser entregue de novo, o serviço refeito ganha <b>novos 90 dias</b>, e o termo sai como <i>Isento (retorno em garantia)</i>, citando a placa original.</li>
+</ul>
+
+<h2>7. Três fluxos típicos</h2>
+<table>
+  <tr><th style="width:22%">Situação</th><th>Passo a passo</th></tr>
+  <tr><td><b>Reparo normal</b></td><td>Nova placa → comprovante e etiqueta → Diagnóstico (bancada) → orçamento e WhatsApp → cliente aprova pelo link → Em Reparo → Pronto → Entregue (termo impresso).</td></tr>
+  <tr><td><b>Placa sem defeito</b></td><td>Nova placa → teste em bancada → <b>Placa sem defeito</b> + valor da avaliação → Pronto e WhatsApp → Entregue.</td></tr>
+  <tr><td><b>Cliente recusa</b></td><td>Orçamento enviado → cliente recusa (pelo WhatsApp) → <b>Registrar resposta: Recusado</b> → <b>Sem Conserto / Devolvido</b>, com o motivo.</td></tr>
+</table>
+
+<div class="caixa dica"><b class="t">Dúvidas durante o uso</b>Aperte <b>F1</b> em qualquer tela do módulo Placas para abrir a ajuda da tela, com busca. O mesmo conteúdo está no manual completo, em <b>Ajuda</b> no menu.</div>
+
+</body>
+</html>

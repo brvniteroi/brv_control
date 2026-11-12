@@ -35,6 +35,9 @@ export default function CartaoItem({
   const mostrarValorOrcamento =
     item.status === 'aguardando_cliente' && item.quote_amount != null && item.quote_amount !== '';
 
+  // Balcão = sem técnico de retirada (o cliente trouxe à loja); fundo azul claro para diferenciar das retiradas de campo
+  const ehBalcao = !item.pickup_employee_id;
+
   const miolo = (
     <>
       {/* Linha 1: Número grande + Dias na loja */}
@@ -109,12 +112,15 @@ export default function CartaoItem({
   return (
     <div
       onClick={interativoComoBloco ? () => onAbrir(item.id) : undefined}
-      className={`group rounded-xl border bg-white p-3.5 shadow-2xs transition ${
-        interativoComoBloco ? 'cursor-grab active:cursor-grabbing' : ''
-      } ${
+      title={ehBalcao ? 'Entrada de balcão (cliente trouxe à loja)' : undefined}
+      className={`group rounded-xl border p-3.5 shadow-2xs transition ${
+        ehBalcao ? 'bg-sky-50' : 'bg-white'
+      } ${interativoComoBloco ? 'cursor-grab active:cursor-grabbing' : ''} ${
         arrastando
           ? 'rotate-1 border-blue-400 shadow-lg ring-2 ring-blue-500/20'
-          : 'border-slate-200 hover:border-blue-300 hover:shadow-xs'
+          : ehBalcao
+            ? 'border-sky-200 hover:border-blue-300 hover:shadow-xs'
+            : 'border-slate-200 hover:border-blue-300 hover:shadow-xs'
       }`}
     >
       {interativoComoBloco ? (

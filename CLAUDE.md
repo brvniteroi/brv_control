@@ -286,6 +286,8 @@ Pendente, nesta ordem:
 
 Dashboard (2026-11-12): o cartão "Em andamento" e a legenda da composição mostram quantas das OS em andamento são de balcão (tipo "Oficina (balcão)",
 `balcaoEmAndamento` em `services/dashboard.ts`; OS de balcão nasce `em_andamento` e fica assim enquanto o item está na oficina).
+No Kanban da Oficina, o cartão de balcão (item sem `pickup_employee_id`) tem fundo azul claro (`CartaoItem.tsx`). Os 2 itens antigos `BALCAO-53` e `BALCAO-61`
+ganharam as OS 17381 e 17382 em 2026-11-12 (OS criada direto no banco, `legacy_reference` mantida).
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no

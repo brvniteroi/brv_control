@@ -38,7 +38,7 @@ function dump(nome, url) {
   mkdirSync(pasta, { recursive: true })
   const arq = join(pasta, `${nome}-${dia}.dump`)
   // schemas public (dados do sistema) e auth (logins); formato custom, restaura com pg_restore
-  const r = spawnSync(PG_DUMP, ['--dbname', url, '-Fc', '--no-owner', '--no-privileges', '-n', 'public', '-n', 'auth', '-f', arq], { encoding: 'utf8' })
+  const r = spawnSync(PG_DUMP, ['--dbname', url, '-Fc', '--no-owner', '-n', 'public', '-n', 'auth', '-f', arq], { encoding: 'utf8' })
   if (r.status !== 0) {
     rmSync(arq, { force: true })
     log(`FALHOU ${nome}: ${(r.stderr || r.error?.message || '').split('\n')[0]}`)

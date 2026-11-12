@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Manual de Restauração do Backup – BRV Control</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 18mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #111; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 4px; color: #0b1f3a; }
+  h2 { font-size: 15pt; color: #0b1f3a; border-bottom: 2px solid #0b1f3a; padding-bottom: 3px; margin: 22px 0 8px; break-after: avoid; }
+  h3 { font-size: 12pt; margin: 14px 0 4px; color: #0b1f3a; break-after: avoid; }
+  p { margin: 5px 0; }
+  ul, ol { margin: 5px 0 5px 20px; padding: 0; }
+  li { margin: 3px 0; }
+  .sub { color: #444; font-size: 11pt; margin-bottom: 14px; }
+  .nova-pagina { break-before: page; }
+  .caixa { border: 1.5px solid #888; border-radius: 6px; padding: 8px 11px; margin: 9px 0; break-inside: avoid; }
+  .aviso { border-color: #b45309; background: #fff7e6; }
+  .perigo { border-color: #b91c1c; background: #fdecec; }
+  .dica { border-color: #1d4ed8; background: #eef4ff; }
+  .caixa b.t { display: block; margin-bottom: 2px; }
+  pre { font-family: Consolas, "Courier New", monospace; font-size: 9pt; background: #f2f2f2; border: 1px solid #bbb; border-radius: 4px; padding: 7px 9px; margin: 6px 0; white-space: pre-wrap; word-break: break-all; break-inside: avoid; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #f2f2f2; padding: 0 3px; border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; margin: 7px 0; font-size: 9.8pt; }
+  th, td { border: 1px solid #777; padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #e6ebf2; }
+  tr { break-inside: avoid; }
+  .passo { margin: 10px 0 4px; font-weight: 700; }
+  .chk { font-size: 12pt; }
+  .linha { border-bottom: 1px solid #333; display: inline-block; min-width: 180px; }
+  .capa-faixa { background: #0b1f3a; color: #fff; padding: 22px 20px; border-radius: 8px; margin-bottom: 14px; }
+  .capa-faixa h1 { color: #fff; }
+  .capa-faixa .sub { color: #cfd8e6; margin: 0; }
+  .peq { font-size: 9pt; color: #444; }
+</style>
+</head>
+<body>
+
+<div class="capa-faixa">
+  <h1>Manual de Restauração do Backup</h1>
+  <p class="sub">BRV Control · control.brvniteroi.com.br · versão de 12/11/2026</p>
+</div>
+
+<p><b>Para que serve este manual:</b> se o servidor da HostGator ou o banco de dados (Supabase) perderem os dados, este passo a passo explica como recolocar tudo no ar usando as cópias de segurança. Foi escrito para ser seguido com calma, de cima para baixo, sem precisar entender de programação. Em qualquer passo, você pode pedir ajuda ao Claude Code (veja a página "Como pedir ajuda").</p>
+
+<div class="caixa perigo"><b class="t">Regra de ouro</b>
+Nunca apague, mova ou sobrescreva as cópias de segurança (a pasta <code>D:\backups-brv</code>) antes de ter certeza de que tudo foi restaurado e está funcionando. Ao restaurar o banco, prefira sempre um projeto novo e vazio no Supabase, em vez de escrever em cima do projeto estragado.</div>
+
+<h2>1. Onde estão as cópias de segurança</h2>
+<p>O backup roda sozinho no computador da empresa (<b>DESKTOP-PKGLS0I</b>), de <b>segunda a sexta às 9h</b> (tarefa "BRV Control - Backup" do Agendador de Tarefas do Windows). O computador precisa estar ligado; se estiver desligado às 9h, o backup roda assim que ligar.</p>
+<table>
+  <tr><th style="width:22%">O que</th><th style="width:38%">Onde fica</th><th>Observação</th></tr>
+  <tr><td><b>Banco de dados</b> (clientes, OS, atividades, logins, placas, oficina...)</td><td><code>D:\backups-brv\banco\control\control-AAAA-MM-DD.dump</code></td><td>Um arquivo por dia, de uns 14 MB. Guarda os últimos 14 dias. Escolha o mais recente.</td></tr>
+  <tr><td><b>Fotos</b> das OS, placas e oficina</td><td><code>D:\backups-brv\fotos\</code></td><td>Espelho da pasta <code>api/uploads</code> do servidor (pastas AAAA/MM e placas). Só acrescenta o que é novo.</td></tr>
+  <tr><td><b>Fotos antigas do Field Control</b></td><td><code>D:\brv-control\scripts\field-control\dados\fotos</code></td><td>14 GB. <b>Não entram no backup diário</b>; existem só nesta pasta do computador da empresa.</td></tr>
+  <tr><td><b>Código do sistema</b></td><td>GitHub: github.com/brvniteroi/brv_control (privado)</td><td>Todo o programa, as migrations do banco e as Edge Functions. Fora do computador.</td></tr>
+  <tr><td><b>Registro do backup</b></td><td><code>D:\backups-brv\backup.log</code></td><td>Cada execução anota "OK" ou "FALHOU". A última linha deve ser <i>TERMINOU sem problemas</i>.</td></tr>
+</table>
+
+<div class="caixa aviso"><b class="t">Atenção: ponto frágil</b>
+As cópias estão <b>somente dentro do computador da empresa</b>. Se ele for roubado, queimar ou o disco falhar, o backup vai junto. Falta configurar a cópia fora do computador (Google Drive ou HD externo): é a opção <code>BACKUP_PASTA_EXTRA</code> no arquivo <code>.env</code>. Peça ao Claude Code para configurar.</div>
+
+<h3>Conferência semanal (1 minuto)</h3>
+<p>Abra <code>D:\backups-brv\backup.log</code> e veja se as últimas linhas dizem <i>OK control</i> e <i>TERMINOU sem problemas</i> com a data de hoje ou do último dia útil. Veja também se existe um arquivo <code>.dump</code> recente e com cerca de 14 MB (um arquivo de poucos KB está quebrado).</p>
+
+<h2>2. O que ficou de fora do backup (e onde recuperar)</h2>
+<p>O backup guarda os <i>dados</i>. Algumas configurações e senhas ficam em outros lugares e precisam ser recriadas à mão numa restauração completa:</p>
+<table>
+  <tr><th style="width:30%">Item</th><th>Onde recuperar</th></tr>
+  <tr><td>Arquivo <code>.env</code> do projeto (chaves)</td><td>Existe no PC da empresa e no de casa. O modelo é o <code>.env.example</code>. As chaves vêm do Supabase (Project Settings &gt; API), do Google Cloud (Maps) e do cPanel (FTP).</td></tr>
+  <tr><td>Pasta <code>android-assinatura</code> (chave do aplicativo Android)</td><td>Cópias no PC de casa, pen drive e Google Drive. Sem ela não dá para atualizar o aplicativo já instalado nos celulares.</td></tr>
+  <tr><td>Segredos do GitHub</td><td>GitHub &gt; repositório &gt; Settings &gt; Secrets and variables &gt; Actions. <b>O GitHub não mostra o valor depois de salvo</b>: só dá para substituir. Guarde as senhas em um gerenciador de senhas ou em papel.<br>
+  Nomes: <code>FTP_SERVER</code>, <code>FTP_USERNAME</code>, <code>FTP_PASSWORD</code>, <code>VITE_SUPABASE_URL</code>, <code>VITE_SUPABASE_ANON_KEY</code>, <code>VITE_GOOGLE_MAPS_API_KEY</code>, <code>AVALIACAO_SEGREDO</code>, <code>ANDROID_KEYSTORE_BASE64</code>, <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code>, <code>ANDROID_KEY_PASSWORD</code>, <code>GOOGLE_SERVICES_JSON_BASE64</code>.</td></tr>
+  <tr><td>Segredos das Edge Functions</td><td>Supabase &gt; Edge Functions &gt; Secrets. Nomes: <code>GEMINI_API_KEY</code> (Google AI Studio), <code>FIREBASE_SERVICE_ACCOUNT</code> (arquivo <code>android-assinatura\firebase-conta-servico.json</code>), <code>EQUIPAMENTOS_SEGREDO</code> (do servidor do BRV Equipamentos). Os outros (<code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>) o Supabase cria sozinho.</td></tr>
+  <tr><td>Configurações do Authentication do Supabase</td><td>Site URL, URLs de redirecionamento e modelos de e-mail. Se o projeto antigo ainda abrir, anote as telas antes de abandoná-lo.</td></tr>
+  <tr><td>Agente da impressora Elgin (servidor da loja, 192.168.1.9)</td><td>Pasta <code>C:\brv-agente-impressora\agente-impressora</code> e tarefa "BRV Control - Impressora". Código em <code>scripts\agente-impressora</code> do projeto, com o <code>LEIA-ME.md</code>.</td></tr>
+  <tr><td>Tarefas do Agendador de Tarefas (backup)</td><td>Recriar conforme a seção "Se o computador da empresa for perdido".</td></tr>
+  <tr><td>Domínio, DNS e e-mail (SPF, DKIM, DMARC)</td><td>Painel da HostGator. Só importa se a conta da HostGator inteira for perdida.</td></tr>
+</table>
+
+<h2 class="nova-pagina">3. O que foi perdido? Escolha o caso</h2>
+<table>
+  <tr><th style="width:5%">Caso</th><th style="width:38%">Sintoma</th><th>Vá para</th></tr>
+  <tr><td><b>A</b></td><td>O site abre em branco, dá erro, ou as <b>fotos não aparecem</b> (aparece "imagem quebrada"), mas os dados (clientes, OS) estão normais.</td><td>Seção 4 – Restaurar o servidor da HostGator</td></tr>
+  <tr><td><b>B</b></td><td>O site abre, mas <b>não entra, está vazio</b>, ou dados sumiram / foram apagados por engano.</td><td>Seção 5 – Restaurar o banco de dados</td></tr>
+  <tr><td><b>C</b></td><td>O computador da empresa quebrou ou foi perdido (e com ele a pasta de backups).</td><td>Seção 6</td></tr>
+  <tr><td><b>D</b></td><td>Perdeu tudo (HostGator e Supabase).</td><td>Faça a seção 5 e depois a 4, nessa ordem.</td></tr>
+</table>
+<div class="caixa dica"><b class="t">Dica</b>Antes de qualquer coisa, confira se não é só um problema passageiro: abra o site em outro navegador/celular, veja a página de status do Supabase e da HostGator, e olhe a aba "Actions" do GitHub para ver se o último deploy deu erro. Muitos casos se resolvem sozinhos.</div>
+
+<h2>4. Caso A – Restaurar o servidor da HostGator</h2>
+<p>O servidor guarda o <b>aplicativo</b> (as páginas do site), a pasta <code>api</code> (envio de fotos e e-mail de avaliação) e as <b>fotos</b>. O aplicativo é refeito pelo GitHub; as fotos voltam das cópias.</p>
+
+<p class="passo">Passo 1 – Garantir a conta FTP e o subdomínio (só se a conta foi recriada)</p>
+<ul>
+  <li>No cPanel da HostGator, o subdomínio <b>control.brvniteroi.com.br</b> precisa existir, com o certificado SSL (HTTPS) ativo.</li>
+  <li>Deve existir uma <b>conta FTP presa à pasta desse subdomínio</b> (a raiz da conta FTP é a raiz do aplicativo).</li>
+  <li>Se usuário ou senha do FTP mudaram, atualize os segredos <code>FTP_SERVER</code>, <code>FTP_USERNAME</code> e <code>FTP_PASSWORD</code> no GitHub e as mesmas três linhas no <code>.env</code> do PC.</li>
+</ul>
+
+<p class="passo">Passo 2 – Reenviar o aplicativo e a pasta api (deploy)</p>
+<ol>
+  <li>Abra <b>github.com/brvniteroi/brv_control</b> &gt; aba <b>Actions</b>.</li>
+  <li>Clique em <b>"Deploy (control.brvniteroi.com.br)"</b> &gt; botão <b>Run workflow</b> &gt; <b>Run workflow</b>.</li>
+  <li>Espere ficar verde (cerca de 2 a 4 minutos). Isso compila o site, gera o <code>config.php</code> a partir dos segredos e envia tudo por FTPS.</li>
+  <li>Abra <b>https://control.brvniteroi.com.br</b> e confira que a tela de login aparece.</li>
+</ol>
+<div class="caixa aviso"><b class="t">Se o deploy ficar vermelho</b>Abra a execução, veja a linha com erro. "Falta a variável..." = algum segredo do GitHub está vazio. Erro de login no FTP = senha do FTP errada.</div>
+
+<p class="passo">Passo 3 – Devolver as fotos</p>
+<p>O deploy <b>não</b> traz as fotos de volta. Use um programa de FTP, como o <b>FileZilla</b> (gratuito, filezilla-project.org):</p>
+<ol>
+  <li>Conexão: servidor <code>ftp.brvniteroi.com.br</code> (o mesmo do <code>FTP_SERVER</code>), usuário e senha do FTP, porta 21, criptografia <b>"Exigir FTP explícito sobre TLS"</b>. Se aparecer aviso de certificado, aceite (o certificado é da HostGator).</li>
+  <li>Lado esquerdo (seu computador): abra <code>D:\backups-brv\fotos</code>.</li>
+  <li>Lado direito (servidor): abra a pasta <code>api/uploads</code> (se não existir, o deploy do passo 2 a cria).</li>
+  <li>Selecione <b>tudo dentro</b> de <code>fotos</code> (as pastas de anos como 2026, a pasta placas etc.) e arraste para <code>api/uploads</code>. Pode levar de alguns minutos a algumas horas, conforme o tamanho.</li>
+  <li><b>Não apague nem substitua</b> o arquivo <code>.htaccess</code> de dentro de <code>api/uploads</code>: ele é do deploy e protege a pasta. Se perguntar "arquivo já existe", escolha pular os que já existem.</li>
+</ol>
+<p><b>Fotos antigas do Field Control</b> (pasta <code>api/uploads/fc</code>): no PC da empresa, abra o PowerShell na pasta do projeto e rode:</p>
+<pre>cd D:\brv-control
+Remove-Item scripts\field-control\dados\fotos_enviadas.ndjson
+node --env-file=.env scripts/field-control/enviar-fotos.mjs</pre>
+<div class="caixa aviso"><b class="t">Importante</b>O <code>Remove-Item</code> acima é necessário: esse arquivo é a "lista do que já foi enviado". Se ele ficar, o programa acha que tudo já está no servidor e pula todas as fotos.</div>
+
+<p class="passo">Passo 4 – Aplicativo Android (só se a pasta app/ sumiu)</p>
+<p>No GitHub &gt; Actions &gt; <b>"APK do app de campo (Android)"</b> &gt; Run workflow. Ele recompila e republica o aplicativo em <code>/app/brv-control.apk</code>. Precisa dos segredos <code>ANDROID_*</code> e <code>GOOGLE_SERVICES_JSON_BASE64</code>.</p>
+
+<p class="passo">Passo 5 – Testar</p>
+<p><span class="chk">☐</span> A tela de login abre pelo HTTPS. &nbsp; <span class="chk">☐</span> Abrir uma OS antiga e ver as fotos. &nbsp; <span class="chk">☐</span> Anexar uma foto nova a uma OS de teste. &nbsp; <span class="chk">☐</span> Abrir uma foto antiga do Field Control.</p>
+
+<h2 class="nova-pagina">5. Caso B – Restaurar o banco de dados (Supabase)</h2>
+<p>O arquivo <code>.dump</code> é uma "fotografia" completa do banco no dia: <b>todas as tabelas do sistema</b> (esquema <code>public</code>), as <b>regras de acesso e permissões</b> e os <b>logins dos usuários</b> (esquema <code>auth</code>, com as senhas já criptografadas; os usuários continuam com as mesmas senhas).</p>
+<div class="caixa dica"><b class="t">O que o .dump NÃO traz</b>As Edge Functions, os segredos, as configurações do Authentication e a lista de tabelas do Realtime. Estes passos recriam cada um deles.</div>
+<div class="caixa aviso"><b class="t">Dumps antigos</b>Os arquivos anteriores a <b>12/11/2026</b> foram feitos sem as permissões de acesso. Se só tiver um desses, após restaurar siga a conferência de segurança do passo 10 com muito cuidado. Os dumps novos já trazem tudo.</div>
+
+<h3>Antes de começar: preparar o computador</h3>
+<ul>
+  <li>No PC da empresa, o <b>PostgreSQL 17</b> já está instalado em <code>C:\PostgreSQL17\bin</code> (é de lá que vêm o <code>pg_dump</code> do backup e o <code>pg_restore</code> desta restauração). Em outro computador, instale o PostgreSQL 17 e marque apenas "Command Line Tools".</li>
+  <li>Abra o <b>PowerShell</b>. Todos os comandos abaixo são para o PowerShell.</li>
+</ul>
+
+<p class="passo">Passo 1 – Criar um projeto novo no Supabase</p>
+<ol>
+  <li>Entre em <b>supabase.com/dashboard</b> &gt; <b>New project</b>.</li>
+  <li>Nome: <code>brv-control</code>. Região: <b>South America (São Paulo)</b>. Defina uma <b>senha do banco</b> forte e <b>anote em papel</b> (você vai precisar dela daqui a pouco).</li>
+  <li>O plano gratuito permite 2 projetos ativos. Se já houver 2, pause ou exclua um (por exemplo o do BRV Equipamentos, que será desligado, ou o projeto estragado depois de salvar o que puder dele).</li>
+  <li>Espere o projeto terminar de criar (1 a 2 minutos). Anote o <b>identificador do projeto</b> (os 20 caracteres no endereço, tipo <code>abcdefghijklmnopqrst</code>).</li>
+</ol>
+
+<p class="passo">Passo 2 – Ligar as extensões</p>
+<p>No projeto novo: <b>Database &gt; Extensions</b>. Procure e ative as três (deixe o esquema <code>extensions</code>): <b>pg_net</b>, <b>pg_trgm</b> e <b>unaccent</b>.</p>
+
+<p class="passo">Passo 3 – Pegar o endereço de conexão</p>
+<ol>
+  <li>No projeto novo, clique em <b>Connect</b> (topo da tela) &gt; <b>Session pooler</b> (porta 5432).</li>
+  <li>Copie o endereço. Ele tem esta forma: <code>postgresql://postgres.IDENTIFICADOR:[YOUR-PASSWORD]@aws-...pooler.supabase.com:5432/postgres</code></li>
+  <li>Troque <code>[YOUR-PASSWORD]</code> pela senha do passo 1. Se a senha tiver símbolos como <code>@ # / : ?</code>, eles precisam ser codificados (<code>@</code> vira <code>%40</code>, <code>#</code> vira <code>%23</code>, <code>/</code> vira <code>%2F</code>). Senha só com letras e números evita o problema.</li>
+</ol>
+<p>No PowerShell, guarde o endereço numa variável (ele fica só na memória daquela janela) e aponte para o programa:</p>
+<pre>$env:Path += ";C:\PostgreSQL17\bin"
+$url = "COLE_AQUI_O_ENDERECO_COMPLETO_COM_A_SENHA"
+$dump = "D:\backups-brv\banco\control\control-AAAA-MM-DD.dump"   # troque pela data do arquivo mais recente</pre>
+
+<p class="passo">Passo 4 – Conferir o arquivo antes de usar</p>
+<pre>pg_restore --list $dump | Select-Object -First 12</pre>
+<p>Deve listar o cabeçalho (<i>Archive created at...</i>) e as primeiras linhas, sem mensagem de erro. Se disser "file is not valid" ou parecido, o arquivo está quebrado: tente o dump do dia anterior.</p>
+
+<p class="passo">Passo 5 – Restaurar os usuários (logins)</p>
+<p>Vem primeiro, para que as tabelas do sistema encontrem seus usuários:</p>
+<pre>pg_restore --no-owner --data-only -n auth -t users -t identities -d $url $dump</pre>
+<p>Não deve aparecer erro. Se o comando terminar sem mensagem, deu certo.</p>
+
+<p class="passo">Passo 6 – Restaurar as tabelas do sistema</p>
+<pre>pg_restore --no-owner -n public -d $url $dump</pre>
+<p>Demora de 1 a 5 minutos. É <b>normal</b> aparecer poucas mensagens de erro como <i>schema "public" already exists</i> (o esquema já existe no projeto novo). Qualquer outro erro: anote o texto e peça ajuda (não repita o comando sem conferir, pois duplicaria dados).</p>
+
+<p class="passo">Passo 7 – Religar as atualizações ao vivo (Realtime)</p>
+<p>No Supabase: <b>SQL Editor</b> &gt; New query &gt; cole e clique em <b>Run</b>:</p>
+<pre>ALTER PUBLICATION supabase_realtime ADD TABLE
+  public.attachments, public.board_orders, public.print_jobs,
+  public.service_order_tags, public.service_orders, public.tasks,
+  public.technician_locations, public.technician_presence,
+  public.workshop_orders;</pre>
+
+<p class="passo">Passo 8 – Apontar o aviso do técnico para o projeto novo</p>
+<p>A tabela de configuração dos avisos (push) guarda o endereço do projeto antigo. No SQL Editor, troque <code>NOVO_ID</code> pelo identificador do projeto novo:</p>
+<pre>UPDATE public.push_config
+   SET function_url = 'https://NOVO_ID.supabase.co/functions/v1/notificar-tecnico';</pre>
+
+<p class="passo">Passo 9 – Conferir se os dados voltaram</p>
+<p>No SQL Editor:</p>
+<pre>select 'usuarios' as item, count(*) from auth.users
+union all select 'clientes', count(*) from public.customers
+union all select 'ordens de servico', count(*) from public.service_orders
+union all select 'maior numero de OS', max(number) from public.service_orders;</pre>
+<p>Compare com o sistema que você conhecia: em 12/11/2026 eram <b>11 usuários</b> e a numeração das OS passava de 17.380. O número de usuários e de OS deve ser igual ou muito próximo do último dia do backup.</p>
+
+<p class="passo">Passo 10 – Conferência de segurança (não pule)</p>
+<p>No SQL Editor, rode:</p>
+<pre>-- 1) Deve dar 0: visitantes sem login não podem ler nenhuma tabela
+select count(distinct table_name) as tabelas_abertas_ao_publico
+  from information_schema.role_table_grants
+ where table_schema = 'public' and grantee = 'anon';
+
+-- 2) Deve dar nenhuma linha: toda tabela precisa ter RLS ligado
+select c.relname as tabela_sem_rls
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+ where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;</pre>
+<div class="caixa perigo"><b class="t">Se a consulta 1 mostrar um número maior que 0</b>As permissões não voltaram completas e o banco ficou mais aberto que o normal. Rode já, no SQL Editor:
+<pre>REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon;</pre>
+e peça ajuda ao Claude Code para conferir as funções (a página pública <i>/avaliar</i>, <i>/placa</i> e <i>/orcamento-placa</i> usam funções que <b>devem</b> continuar liberadas para visitantes: <code>avaliacao_ver</code>, <code>avaliacao_enviar</code>, <code>placa_acompanhamento</code>, <code>placa_orcamento_ver</code> e <code>placa_orcamento_aprovar</code>).</div>
+
+<p class="passo">Passo 11 – Publicar as Edge Functions</p>
+<p>No projeto novo: <b>Edge Functions &gt; Deploy a new function</b> (ou "Via Editor"). Crie as quatro, com <b>exatamente</b> estes nomes, colando o conteúdo do arquivo <code>supabase\functions\NOME\index.ts</code> do projeto (D:\brv-control):</p>
+<table>
+  <tr><th>Nome</th><th>Verify JWT</th><th>Segredos que ela usa</th></tr>
+  <tr><td><code>gerenciar-usuario</code></td><td>deixar o padrão do painel (ligado)</td><td>nenhum extra</td></tr>
+  <tr><td><code>apoio-tecnico</code></td><td><b>Ligado</b></td><td><code>GEMINI_API_KEY</code></td></tr>
+  <tr><td><code>notificar-tecnico</code></td><td><b>DESLIGADO</b></td><td><code>FIREBASE_SERVICE_ACCOUNT</code></td></tr>
+  <tr><td><code>consultar-os</code></td><td><b>DESLIGADO</b></td><td><code>EQUIPAMENTOS_SEGREDO</code></td></tr>
+</table>
+<p>Depois, em <b>Edge Functions &gt; Secrets</b>, crie os segredos da tabela (veja a seção 2 para saber de onde vem cada valor).</p>
+
+<p class="passo">Passo 12 – Apontar o sistema para o projeto novo</p>
+<p>O endereço e as chaves mudaram. Pegue-os em <b>Project Settings &gt; API</b> do projeto novo (Project URL e a chave <i>anon / publishable</i>; <b>nunca</b> use a <i>service_role</i> no GitHub).</p>
+<ol>
+  <li>GitHub &gt; Settings &gt; Secrets and variables &gt; Actions: atualize <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code>.</li>
+  <li>No <code>.env</code> do PC da empresa e do de casa: <code>VITE_SUPABASE_URL</code>, <code>VITE_SUPABASE_ANON_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> e <code>BACKUP_DB_URL_CONTROL</code> (para o backup continuar funcionando!).</li>
+  <li>Rode o <b>Deploy</b> (Actions &gt; Deploy &gt; Run workflow), como no Caso A, passo 2.</li>
+  <li>Servidor da loja: o agente da impressora guarda <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> no arquivo <code>.env</code> da pasta dele (<code>C:\brv-agente-impressora\agente-impressora</code>); atualize os dois e reinicie a tarefa "BRV Control - Impressora". O login do agente (impressora@...) é restaurado junto com os usuários.</li>
+  <li>Se o BRV Equipamentos ainda estiver em uso: o <code>control-proxy.php</code> dele aponta para a função <code>consultar-os</code>; atualize o endereço.</li>
+  <li>Supabase &gt; Authentication &gt; URL Configuration: <b>Site URL</b> = <code>https://control.brvniteroi.com.br</code>, e repita as demais opções do projeto antigo (URLs de redirecionamento etc.).</li>
+</ol>
+
+<p class="passo">Passo 13 – Testar</p>
+<p>
+<span class="chk">☐</span> Entrar com seu usuário e senha de sempre. &nbsp;
+<span class="chk">☐</span> Abrir uma OS, um cliente e uma placa. &nbsp;
+<span class="chk">☐</span> Criar e excluir uma atividade de teste. &nbsp;
+<span class="chk">☐</span> Entrar com um técnico no celular e ver a agenda (todos terão que entrar de novo: as sessões antigas não existem mais). &nbsp;
+<span class="chk">☐</span> Criar uma atividade de hoje para um técnico com o app fechado e ver se chega o aviso. &nbsp;
+<span class="chk">☐</span> Abrir um link público de avaliação. &nbsp;
+<span class="chk">☐</span> Rodar o backup e ver se dá OK: <code>node scripts/backup/backup.mjs --so-banco</code></p>
+
+<h3>Se só algumas informações foram apagadas por engano</h3>
+<p>Não é preciso restaurar tudo. O projeto atual continua funcionando; recupere só a tabela afetada, gerando um arquivo de texto legível a partir do dump de antes do erro (exemplo para a tabela de clientes):</p>
+<pre>pg_restore --data-only -n public -t customers -f "$env:USERPROFILE\Desktop\clientes.sql" $dump</pre>
+<p>Esse arquivo <b>não deve ser rodado inteiro</b> em cima do banco atual (duplicaria registros). Entregue-o ao Claude Code para extrair e reinserir só as linhas que sumiram.</p>
+
+<h2 class="nova-pagina">6. Se o computador da empresa for perdido</h2>
+<p>Sem o computador, <b>as cópias de segurança também se perdem</b>, a menos que exista a cópia externa (Drive ou HD) que ainda precisa ser configurada. Para voltar a ter backups em outro computador:</p>
+<ol>
+  <li>Instale o <b>Git</b>, o <b>Node.js 24</b> e o <b>PostgreSQL 17</b> (só "Command Line Tools").</li>
+  <li>Baixe o código: <code>git clone https://github.com/brvniteroi/brv_control.git D:\brv-control</code> e rode <code>npm install</code> na pasta.</li>
+  <li>Copie o <code>.env</code> do PC de casa para <code>D:\brv-control</code>. Confira que tem <code>BACKUP_DB_URL_CONTROL</code>, <code>FTP_SERVER</code>, <code>FTP_USERNAME</code> e <code>FTP_PASSWORD</code>.</li>
+  <li>Teste manualmente: <code>node scripts/backup/backup.mjs</code>. Deve terminar com "TERMINOU sem problemas".</li>
+  <li>Agende (PowerShell <b>como administrador</b>), de segunda a sexta às 9h:
+<pre>$node = (Get-Command node).Source   # no PC da empresa é D:\node.exe
+$acao = New-ScheduledTaskAction -Execute $node -Argument "scripts\backup\backup.mjs" -WorkingDirectory "D:\brv-control"
+$gatilho = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday -At 9:00
+$config = New-ScheduledTaskSettingsSet -StartWhenAvailable
+Register-ScheduledTask -TaskName "BRV Control - Backup" -Action $acao -Trigger $gatilho -Settings $config</pre></li>
+  <li>Copie também a pasta <code>android-assinatura</code> de volta (pen drive, Google Drive ou PC de casa).</li>
+</ol>
+<div class="caixa dica"><b class="t">Prevenção</b>Peça ao Claude Code para configurar a cópia externa dos backups (Google Drive ou HD) e copie, de tempos em tempos, a pasta <code>scripts\field-control\dados\fotos</code> (fotos antigas do Field, 14 GB) para um HD externo.</div>
+
+<h2>7. Como pedir ajuda ao Claude Code</h2>
+<p>Abra o Claude Code na pasta do projeto (<code>D:\brv-control</code>) e escreva algo assim, trocando o que for preciso:</p>
+<div class="caixa"><i>"Perdi o banco do Supabase (ou: perdi os arquivos da HostGator). Leia o CLAUDE.md e o docs/manual-restauracao-backup.pdf (ou .html) e me ajude a restaurar a partir do backup mais recente em D:\backups-brv. Estou no passo ___ e apareceu este erro: ___"</i></div>
+<p>Cole o texto completo da mensagem de erro. <b>Nunca</b> cole senhas e chaves em lugares públicos; no Claude Code, prefira dizer onde a chave está em vez de colá-la.</p>
+
+<h2>8. Glossário rápido</h2>
+<table>
+  <tr><td style="width:24%"><b>Dump (.dump)</b></td><td>Arquivo com uma cópia completa do banco de dados em um dia.</td></tr>
+  <tr><td><b>pg_dump / pg_restore</b></td><td>Programas do PostgreSQL: o primeiro cria o dump (usado pelo backup); o segundo devolve o dump para um banco.</td></tr>
+  <tr><td><b>Supabase</b></td><td>Serviço onde ficam o banco de dados, os logins e as funções do sistema.</td></tr>
+  <tr><td><b>HostGator</b></td><td>Servidor do site (control.brvniteroi.com.br) e das fotos.</td></tr>
+  <tr><td><b>Session pooler</b></td><td>Tipo de endereço de conexão do Supabase usado pelo backup e pela restauração.</td></tr>
+  <tr><td><b>Deploy</b></td><td>Publicar o sistema no servidor. Acontece sozinho ao enviar mudanças ao GitHub, ou manualmente em Actions &gt; Run workflow.</td></tr>
+  <tr><td><b>Segredo (secret)</b></td><td>Senha ou chave guardada fora do código, no GitHub ou no Supabase.</td></tr>
+  <tr><td><b>RLS</b></td><td>Regra do banco que decide quem pode ver cada linha; é o que impede visitantes de ler dados.</td></tr>
+  <tr><td><b>Edge Function</b></td><td>Pequeno programa que roda dentro do Supabase (avisos, criação de usuários, apoio técnico).</td></tr>
+</table>
+
+<h2>9. Minhas anotações (preencha à mão)</h2>
+<p class="peq">Não escreva senhas completas aqui se este papel puder ser visto por outras pessoas. Anote onde cada uma está guardada.</p>
+<table>
+  <tr><td style="width:45%">Onde está guardada a senha do banco do Supabase</td><td>&nbsp;</td></tr>
+  <tr><td>Onde está guardada a senha do FTP da HostGator</td><td>&nbsp;</td></tr>
+  <tr><td>Onde está guardada a senha do cPanel / HostGator</td><td>&nbsp;</td></tr>
+  <tr><td>Onde está guardada a senha do GitHub</td><td>&nbsp;</td></tr>
+  <tr><td>Onde está a cópia da pasta android-assinatura</td><td>&nbsp;</td></tr>
+  <tr><td>Onde está a cópia externa dos backups</td><td>&nbsp;</td></tr>
+  <tr><td>Data do último teste de restauração</td><td>&nbsp;</td></tr>
+</table>
+<div class="caixa dica"><b class="t">Faça um ensaio</b>Uma vez, com calma (por exemplo quando o projeto do BRV Equipamentos for desligado e liberar uma vaga), siga a seção 5 inteira num projeto novo de teste e depois apague-o. Um backup só é de confiança depois de restaurado com sucesso ao menos uma vez.</div>
+
+</body>
+</html>

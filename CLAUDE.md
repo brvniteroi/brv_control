@@ -63,7 +63,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
   (menos `fc`, que já está em `scripts/field-control/dados`; reconecta sozinho se a HostGator derrubar). Saída em `D:/backups-brv` (`banco/`, `fotos/`, `backup.log`),
   `BACKUP_PASTA_EXTRA` copia os dumps para outra pasta (Google Drive/HD externo: **ainda não configurado**). Tarefa "BRV Control - Backup" no Agendador do
   PC da empresa, segunda a sexta, 9h (o log e o nome dos dumps usam o horário local desde 2026-11-12; antes era UTC, 3 h à frente) (configurado em 2026-11-12; roda ao ligar o PC se ele estava desligado às 9h; só roda com o PC ligado). Precisa no `.env`: `BACKUP_DB_URL_CONTROL` (Session pooler, porta 5432, senha do banco).
-  `pg_dump` 17 em `C:/PostgreSQL17/bin`. Restaurar: `pg_restore --no-owner -d <url> arquivo.dump`. Pendente: cópia fora do PC (Drive/HD).
+  `pg_dump` 17 em `C:/PostgreSQL17/bin`. Restaurar: passo a passo completo e imprimível em `docs/manual-restauracao-backup.pdf` (fonte `.html`; 2026-11-12): primeiro `pg_restore --no-owner --data-only -n auth -t users -t identities`, depois `pg_restore --no-owner -n public`, num projeto Supabase novo (extensões pg_net, pg_trgm, unaccent; refazer Realtime, `push_config.function_url`, Edge Functions e segredos). Desde 2026-11-12 o dump traz as permissões (GRANT/REVOKE; antes usava `--no-privileges` e o dump restaurado deixava o `anon` com acesso: conferir com a consulta do manual). Dumps anteriores a 2026-11-12 não têm permissões. Pendente: cópia fora do PC (Drive/HD) e um ensaio de restauração (precisa de uma vaga de projeto livre).
 
 ## Estado atual (2026-10-29)
 Feito:

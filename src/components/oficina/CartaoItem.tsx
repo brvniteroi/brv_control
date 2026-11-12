@@ -112,7 +112,13 @@ export default function CartaoItem({
   return (
     <div
       onClick={interativoComoBloco ? () => onAbrir(item.id) : undefined}
-      title={ehBalcao ? 'Entrada de balcão (cliente trouxe à loja)' : undefined}
+      title={
+        ehBalcao
+          ? 'Entrada de balcão (cliente trouxe à loja)'
+          : item.pickup_employee_name
+            ? `Recolhido por ${item.pickup_employee_name}`
+            : undefined
+      }
       className={`group rounded-xl border p-3.5 shadow-2xs transition ${
         ehBalcao ? 'bg-sky-100' : 'bg-white'
       } ${interativoComoBloco ? 'cursor-grab active:cursor-grabbing' : ''} ${

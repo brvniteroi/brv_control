@@ -62,7 +62,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
   o BRV Equipamentos vai ser desligado) faz `pg_dump -Fc` dos schemas `public` e `auth` (guarda 14 dias) e espelha por FTPS as fotos de `api/uploads/`
   (menos `fc`, que já está em `scripts/field-control/dados`; reconecta sozinho se a HostGator derrubar). Saída em `D:/backups-brv` (`banco/`, `fotos/`, `backup.log`),
   `BACKUP_PASTA_EXTRA` copia os dumps para outra pasta (Google Drive/HD externo: **ainda não configurado**). Tarefa "BRV Control - Backup" no Agendador do
-  PC da empresa, todo dia 23h (só roda com o PC ligado). Precisa no `.env`: `BACKUP_DB_URL_CONTROL` (Session pooler, porta 5432, senha do banco).
+  PC da empresa, segunda a sexta, 9h (configurado em 2026-11-12; roda ao ligar o PC se ele estava desligado às 9h; só roda com o PC ligado). Precisa no `.env`: `BACKUP_DB_URL_CONTROL` (Session pooler, porta 5432, senha do banco).
   `pg_dump` 17 em `C:/PostgreSQL17/bin`. Restaurar: `pg_restore --no-owner -d <url> arquivo.dump`. Pendente: cópia fora do PC (Drive/HD).
 
 ## Estado atual (2026-10-29)
@@ -161,16 +161,6 @@ Feito:
 - Divisão de trabalho: o Gemini cuida do visual; o trabalho técnico é feito pelo Claude.
 - Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
-
-**LEMBRETE (2026-11-12, NO PC DA EMPRESA): mudar o horário do backup** (lembrar o usuário logo no início da conversa). Pedido do usuário em
-2026-11-11: a tarefa "BRV Control - Backup" passa de todo dia 23h para **segunda a sexta às 9h** (sábado e domingo o sistema não é usado).
-No PowerShell **como administrador**:
-`$t = Get-ScheduledTask -TaskName "BRV Control - Backup"; $t.Triggers = @(New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday -At 9:00); $t.Settings.StartWhenAvailable = $true; $t | Set-ScheduledTask`
-e conferir com `Get-ScheduledTaskInfo -TaskName "BRV Control - Backup" | Select-Object NextRunTime` (deve dar o próximo dia útil às 09:00).
-`StartWhenAvailable` = roda ao ligar o PC se ele estava desligado às 9h. Se der erro de usuário/senha, fazer pela tela (Propriedades > Disparadores:
-Semanalmente 09:00 seg-sex; Configurações: "Executar a tarefa assim que possível após uma inicialização agendada ter sido perdida"). Aproveitar e ver
-no `D:\backups-brv\backup.log` quanto tempo levou o primeiro backup (o usuário perguntou; o log não grava a hora de início). Ao concluir, trocar
-"todo dia 23h" por "seg a sex, 9h" na seção do backup e apagar este lembrete.
 
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 

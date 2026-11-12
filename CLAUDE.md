@@ -62,7 +62,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
   o BRV Equipamentos vai ser desligado) faz `pg_dump -Fc` dos schemas `public` e `auth` (guarda 14 dias) e espelha por FTPS as fotos de `api/uploads/`
   (menos `fc`, que já está em `scripts/field-control/dados`; reconecta sozinho se a HostGator derrubar). Saída em `D:/backups-brv` (`banco/`, `fotos/`, `backup.log`),
   `BACKUP_PASTA_EXTRA` copia os dumps para outra pasta (Google Drive/HD externo: **ainda não configurado**). Tarefa "BRV Control - Backup" no Agendador do
-  PC da empresa, segunda a sexta, 9h (configurado em 2026-11-12; roda ao ligar o PC se ele estava desligado às 9h; só roda com o PC ligado). Precisa no `.env`: `BACKUP_DB_URL_CONTROL` (Session pooler, porta 5432, senha do banco).
+  PC da empresa, segunda a sexta, 9h (o log e o nome dos dumps usam o horário local desde 2026-11-12; antes era UTC, 3 h à frente) (configurado em 2026-11-12; roda ao ligar o PC se ele estava desligado às 9h; só roda com o PC ligado). Precisa no `.env`: `BACKUP_DB_URL_CONTROL` (Session pooler, porta 5432, senha do banco).
   `pg_dump` 17 em `C:/PostgreSQL17/bin`. Restaurar: `pg_restore --no-owner -d <url> arquivo.dump`. Pendente: cópia fora do PC (Drive/HD).
 
 ## Estado atual (2026-10-29)

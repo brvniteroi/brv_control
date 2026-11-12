@@ -24,14 +24,16 @@ const soFotos = args.includes('--so-fotos')
 
 mkdirSync(PASTA, { recursive: true })
 const logArq = join(PASTA, 'backup.log')
-const agora = () => new Date().toISOString().replace('T', ' ').slice(0, 19)
+// Horário local do PC (toISOString dá UTC, 3 h à frente do Brasil)
+const local = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString()
+const agora = () => local().replace('T', ' ').slice(0, 19)
 const log = (m) => { const l = `[${agora()}] ${m}`; console.log(l); appendFileSync(logArq, l + '\n') }
 let falhas = 0
 const conferirNome = (host, cert) => (checkServerIdentity(host, cert) === undefined ? undefined : checkServerIdentity('ftp.hostgator.com.br', cert))
 
 function dump(nome, url) {
   if (!url) { log(`PULOU ${nome}: falta a URL no .env`); falhas++; return }
-  const dia = new Date().toISOString().slice(0, 10)
+  const dia = local().slice(0, 10)
   const pasta = join(PASTA, 'banco', nome)
   mkdirSync(pasta, { recursive: true })
   const arq = join(pasta, `${nome}-${dia}.dump`)

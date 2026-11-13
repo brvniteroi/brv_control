@@ -5,6 +5,7 @@ import { carregarDashboard, type DadosDashboard } from '../services/dashboard';
 import CardsResumo from '../components/dashboard/CardsResumo';
 import AtividadesHoje from '../components/dashboard/AtividadesHoje';
 import PrecisamAtencao from '../components/dashboard/PrecisamAtencao';
+import CartaoBackup from '../components/dashboard/CartaoBackup';
 
 function formatarDataHojeExtenso(): string {
   try {
@@ -157,6 +158,9 @@ export default function Dashboard() {
           </div>
         </>
       ) : null}
+
+      {/* Backup: só o administrador (situação, PC da empresa online e o botão "Fazer backup agora") */}
+      {profile?.role === 'admin' && <CartaoBackup />}
     </div>
   );
 }

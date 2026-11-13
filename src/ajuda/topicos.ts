@@ -147,6 +147,13 @@ Clique no nome de um grupo (Serviços, Cadastros, Relatórios, Placas) para abri
 - **Atividades de Hoje**: todas as visitas do dia. Nas concluídas aparecem as estrelas da avaliação, por onde o cliente respondeu (e-mail ou WhatsApp) e o comentário. Quando o cliente ainda não respondeu, aparece "Avaliação pedida..., aguardando".
 - **Precisam de Atenção**: OS atrasadas ou com prioridade alta/urgente. Clique para abrir.
 > A página se atualiza sozinha a cada 2 minutos e quando você volta para a aba.
+## Backup do sistema (só administrador)
+No fim do Dashboard, o administrador vê o cartão **Backup do sistema**:
+- **Último backup concluído**: data, hora e se foi o **agendado** (segunda a sexta, 9h) ou **pedido pelo botão**. Fica vermelho se o último falhou ou se passou de 4 dias sem backup.
+- **PC da empresa online/offline**: o backup roda no PC da empresa e só funciona com ele ligado.
+- **Fazer backup agora**: pede um backup na hora (banco e fotos). O botão mostra **Aguardando o PC...** e depois **Backup em andamento...**; o resultado aparece sozinho, em geral em menos de um minuto. Só um pedido por vez.
+- Se falhar, use **Ver detalhes da falha** e avise o suporte.
+! O arquivo do backup fica no PC da empresa (pasta de backups). Este botão não envia o arquivo para outro lugar.
 `,
   },
 

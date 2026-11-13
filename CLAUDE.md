@@ -280,6 +280,8 @@ O valor fica em `board_orders.quote_amount` (a saída já sugere esse valor) e a
 `board_orders_regras`: a marca só vale com a mudança para Pronto, dispensa o orçamento só para Pronto/Entregue, e voltar para Entrada/Diagnóstico a limpa). Verificação com ROLLBACK em `supabase/verificacao/placas_sem_defeito.sql`
 (rodada pelo usuário em 2026-11-12: TUDO CERTO, 10 verificações). Cartão com selo "Sem defeito" (`CartaoPlaca.tsx`); a seção Orçamento some nessa placa. Serviço `marcarSemDefeito` em `services/placas.ts`. Ajuda F1 atualizada (`placas-como-funciona`).
 
+**Códigos de erro para técnico e oficina (2026-11-13, pedido do usuário):** a consulta (`pages/PlacasErros.tsx`, prop `simples`: sem menu de Placas e sem botões de exemplo) também está em `/campo/erros` (botão "Erros" no cabeçalho do app de campo, `CampoLayout.tsx`; só com internet) e em `/codigos-de-erro` (item só do papel `oficina`, `soBancada` em `Sidebar.tsx`). Edge Function `apoio-tecnico`: `tecnico` e `oficina` só fazem a ação `erro`, com limite de **6 consultas/hora por pessoa** (admin/escritório seguem com 40 e as duas ações); **a função precisa ser republicada** no Supabase (colar `supabase/functions/apoio-tecnico/index.ts`, Verify JWT ligado). Sem migration; sem APK novo (o app abre o site).
+
 Dashboard (2026-11-12): o cartão "Em andamento" e a legenda da composição mostram quantas das OS em andamento são de balcão (tipo "Oficina (balcão)",
 `balcaoEmAndamento` em `services/dashboard.ts`; OS de balcão nasce `em_andamento` e fica assim enquanto o item está na oficina).
 No Kanban da Oficina, o cartão de balcão (item sem `pickup_employee_id`) tem fundo azul claro (`CartaoItem.tsx`). Os 2 itens antigos `BALCAO-53` e `BALCAO-61`

@@ -29,7 +29,11 @@ const MARCAS_SUGERIDAS = [
   'Consul',
 ] as const;
 
-export default function PlacasErros() {
+/**
+ * Consulta de códigos de erro. No modo `simples` (técnico de campo e técnico da oficina) some o menu de Placas
+ * e os botões de exemplo (que gastariam a cota de consultas por hora).
+ */
+export default function PlacasErros({ simples = false }: { simples?: boolean }) {
   const idBase = useId();
 
   const [marca, setMarca] = useState('');
@@ -91,7 +95,7 @@ export default function PlacasErros() {
 
   return (
     <div className="space-y-5">
-      <NavegacaoPlacas />
+      {!simples && <NavegacaoPlacas />}
 
       {/* Cabeçalho */}
       <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs">
@@ -118,7 +122,7 @@ export default function PlacasErros() {
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Nova consulta rápida
           </span>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className={`flex flex-wrap items-center gap-1.5 ${simples ? 'hidden' : ''}`}>
             <span className="text-[11px] text-slate-400">Testar exemplos:</span>
             <button
               type="button"

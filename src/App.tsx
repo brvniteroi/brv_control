@@ -63,6 +63,8 @@ export default function App() {
           <Route path="campo" element={<CampoLayout />}>
             <Route index element={<CampoAgenda />} />
             <Route path="atividade/:id" element={<CampoAtividade />} />
+            {/* Consulta de códigos de erro (IA), só com internet: 6 consultas por hora por técnico */}
+            <Route path="erros" element={<PlacasErros simples />} />
           </Route>
 
           <Route element={<Layout />}>
@@ -78,6 +80,8 @@ export default function App() {
             <Route path="pmoc/:id" element={<PmocEditorPage />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="oficina" element={<Oficina />} />
+            {/* Consulta de códigos de erro para o técnico da oficina (Gustavo): sem o resto do módulo Placas */}
+            <Route path="codigos-de-erro" element={<PlacasErros simples />} />
             <Route path="placas" element={<PlacasKanban />} />
             <Route path="placas/clientes" element={<PlacasClientes />} />
             <Route path="placas/financeiro" element={<PlacasFinanceiro />} />

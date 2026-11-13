@@ -42,6 +42,8 @@ interface ItemMenu {
   apenasEscritorio?: boolean;
   /** Visível também para o papel 'oficina' (que só vê estes itens) */
   oficina?: boolean;
+  /** Visível SÓ para o papel 'oficina' (o escritório já tem o item equivalente em outro grupo) */
+  soBancada?: boolean;
   /** Visível apenas para quem tem `podeVerFinanceiroPlacas(profile)` */
   financeiroPlacas?: boolean;
 }
@@ -101,6 +103,7 @@ const MENU: EntradaMenu[] = [
     ],
   },
   { rota: '/oficina', rotulo: 'Oficina', icone: Hammer, oficina: true },
+  { rota: '/codigos-de-erro', rotulo: 'Códigos de erro', icone: AlertTriangle, oficina: true, soBancada: true },
   {
     rotulo: 'Placas',
     icone: Cpu,
@@ -136,6 +139,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
   const temFinanceiroPlacas = podeVerFinanceiroPlacas(profile);
   const visivel = (item: ItemMenu) => {
     if (item.financeiroPlacas) return temFinanceiroPlacas;
+    if (item.soBancada) return ehBancada;
     return ehBancada ? !!item.oficina : !item.apenasEscritorio || podeGerenciarFormularios;
   };
 

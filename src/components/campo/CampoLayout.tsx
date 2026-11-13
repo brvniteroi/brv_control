@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { AlertTriangle, Bell, BellOff, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw, Star } from 'lucide-react';
+import { AlertTriangle, Bell, BellOff, CloudOff, CloudUpload, KeyRound, LogOut, MapPinOff, RefreshCw, Search, Star } from 'lucide-react';
 import { ativarPush, desligarPushDoLogin, estadoPush, type EstadoPush } from '../../services/push';
 import { minhasAvaliacoes, type MinhasAvaliacoes } from '../../services/avaliacoes';
 import MinhasAvaliacoesModal from './MinhasAvaliacoesModal';
@@ -183,6 +183,14 @@ export default function CampoLayout() {
                 : '—'}
             </button>
           )}
+          <Link
+            to="/campo/erros"
+            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold text-blue-100 hover:bg-white/10"
+            aria-label="Consultar código de erro"
+          >
+            <Search size={16} />
+            <span>Erros</span>
+          </Link>
           <button type="button" onClick={() => setSenhaAberta(true)} className="rounded-lg p-2 text-blue-100 hover:bg-white/10" aria-label="Trocar senha">
             <KeyRound size={18} />
           </button>

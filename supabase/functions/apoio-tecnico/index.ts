@@ -2,15 +2,21 @@
 //   acao = 'erro'  consulta de código de erro (lê primeiro os textos de board_manuals; sem texto, pesquisa na internet)
 //   acao = 'ficha' leitura de manual PDF/TXT e preenchimento da ficha técnica (envio por multipart/form-data)
 //
-// Só admin e escritório ativos chamam (Verify JWT ligado + conferência do papel aqui). Limite de uso por pessoa por hora
-// (tabela board_ai_usage). Segredo no Supabase: GEMINI_API_KEY (opcional: GEMINI_MODEL, padrão gemini-flash-latest).
+// Quem chama (Verify JWT ligado + conferência do papel aqui):
+//   - admin e escritório ativos: as duas ações, até 40 consultas por hora por pessoa;
+//   - técnico de campo e técnico da oficina (Gustavo) ativos: SÓ a ação 'erro' (código de erro), até 6 por hora por pessoa.
+// O limite por pessoa/hora usa a tabela board_ai_usage e protege a cota da chave. Segredo no Supabase: GEMINI_API_KEY
+// (opcional: GEMINI_MODEL, padrão gemini-flash-latest).
 // Publicar: Supabase > Edge Functions > Deploy a new function > nome `apoio-tecnico` (colar este arquivo).
 // SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já existem no ambiente das funções.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 
 const ORIGENS = ['https://control.brvniteroi.com.br', 'http://localhost:5173'];
-const LIMITE_POR_HORA = 40;
+const LIMITE_POR_HORA = 40; // admin e escritório
+const LIMITE_CAMPO_POR_HORA = 6; // técnico de campo e oficina (só consulta de código de erro)
+const PAPEIS_ESCRITORIO = ['admin', 'escritorio'];
+const PAPEIS_CAMPO = ['tecnico', 'oficina'];
 const MAX_ARQUIVO = 20 * 1024 * 1024;
 const MAX_TEXTO_MANUAIS = 60_000;
 
@@ -41,12 +47,14 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Quem chama: admin ou escritório ativo
+    // Quem chama: admin/escritório (tudo) ou técnico/oficina (só código de erro), sempre ativo
     const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
     const { data: sessao, error: erroSessao } = await admin.auth.getUser(token);
     if (erroSessao || !sessao.user) return responder(401, { erro: 'Sessão inválida. Entre novamente.' });
     const { data: perfil } = await admin.from('profiles').select('role, active').eq('id', sessao.user.id).maybeSingle();
-    if (!perfil?.active || !['admin', 'escritorio'].includes(perfil.role)) {
+    const ehEscritorio = !!perfil?.active && PAPEIS_ESCRITORIO.includes(perfil.role);
+    const ehCampo = !!perfil?.active && PAPEIS_CAMPO.includes(perfil.role);
+    if (!ehEscritorio && !ehCampo) {
       return responder(403, { erro: 'Seu perfil não pode usar o apoio técnico.' });
     }
 
@@ -58,16 +66,21 @@ Deno.serve(async (req) => {
     const corpo = form ? null : await req.json();
     const acao = String(form ? form.get('acao') : corpo?.acao ?? '');
     if (!['erro', 'ficha'].includes(acao)) return responder(400, { erro: 'Ação inválida.' });
+    // Técnico e oficina só consultam código de erro (ler manual para criar ficha é do escritório)
+    if (!ehEscritorio && acao !== 'erro') {
+      return responder(403, { erro: 'Seu perfil só pode consultar códigos de erro.' });
+    }
 
-    // Limite de uso por pessoa por hora (protege a cota da chave)
+    // Limite de uso por pessoa por hora (protege a cota da chave): 40 no escritório, 6 em campo/oficina
+    const limite = ehEscritorio ? LIMITE_POR_HORA : LIMITE_CAMPO_POR_HORA;
     const desde = new Date(Date.now() - 3_600_000).toISOString();
     const { count } = await admin
       .from('board_ai_usage')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', sessao.user.id)
       .gte('created_at', desde);
-    if ((count ?? 0) >= LIMITE_POR_HORA) {
-      return responder(429, { erro: `Limite de ${LIMITE_POR_HORA} consultas por hora atingido. Tente de novo mais tarde.` });
+    if ((count ?? 0) >= limite) {
+      return responder(429, { erro: `Limite de ${limite} consultas por hora atingido. Tente de novo mais tarde.` });
     }
     await admin.from('board_ai_usage').insert({ user_id: sessao.user.id, action: acao });
 

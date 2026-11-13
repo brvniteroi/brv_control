@@ -969,6 +969,11 @@ Consulta de fichas técnicas por fabricante, linha, modelo ou capacidade (BTUs).
 2. Clique em **Pesquisar código**.
 O resultado traz o significado, as causas prováveis, o que verificar, os componentes envolvidos e o aviso de segurança. O selo diz a fonte: **Manual do fabricante** ou **Pesquisa da IA**.
 ! **Sugestão da IA: confirme na bancada.** Nunca troque componente só pelo que a IA disse.
+## Quem pode consultar
+- **Administrador e escritório**: em **Placas > Códigos de erro**, até **40 consultas por hora** por pessoa.
+- **Técnico da oficina (Gustavo)**: item **Códigos de erro** no menu, até **6 consultas por hora**.
+- **Técnicos de campo**: botão **Erros** no alto do app de campo, até **6 consultas por hora**. Precisa de internet (não funciona offline).
+Ao atingir o limite, aparece o aviso e a consulta volta a funcionar na hora seguinte.
 `,
   },
   {

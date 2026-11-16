@@ -1,0 +1,146 @@
+TESTE ELGIN - O QUE CONFERIR QUANDO A ETIQUETA NAO IMPRIME
+BRV Control - impressora Elgin L42PRO no servidor da loja (192.168.1.9)
+Criado em 2026-11-16, depois de uma parada real do agente (ver "Historico" no fim)
+
+COMO FUNCIONA (em 3 linhas)
+- A tela (PC, celular) pede a etiqueta e o pedido vai para uma fila no Supabase.
+- O AGENTE (programa Node.js no servidor da loja) pega o pedido e manda para a Elgin.
+- Se o agente estiver parado, a tela diz "Servidor da loja sem sinal" e o pedido fica
+  "pendente" e expira em 30 min (nao sai depois). Entao: reimprimir pela tela.
+
+TODOS os comandos abaixo: PowerShell COMO ADMINISTRADOR, no servidor da loja
+(a tarefa roda como SYSTEM; sem administrador nao da para iniciar/parar).
+
+------------------------------------------------------------------------------
+PASSO 0 - A IMPRESSORA ESTA OK? (30 segundos, sem computador)
+------------------------------------------------------------------------------
+[ ] Elgin ligada, luz verde fixa (sem piscar vermelho/laranja)
+[ ] Tem etiqueta no rolo e a tampa esta bem fechada
+[ ] Cabo de rede ligado (IP fixo 192.168.1.22)
+Se estiver tudo isso, o problema quase sempre e o AGENTE: siga adiante.
+
+------------------------------------------------------------------------------
+PASSO 1 - O SERVIDOR TEM INTERNET?
+------------------------------------------------------------------------------
+[ ] Abra https://control.brvniteroi.com.br no navegador do servidor.
+Sem internet o agente nao alcanca o Supabase. Resolva a rede primeiro.
+
+------------------------------------------------------------------------------
+PASSO 2 - O AGENTE ESTA RODANDO?
+------------------------------------------------------------------------------
+    Get-Process node
+
+- Apareceu UM processo "node"  -> o agente roda. Va para o PASSO 5.
+- "Nao e possivel localizar um processo com o nome node" -> agente PARADO. Passo 3.
+- Apareceu MAIS DE UM "node" -> um deles e antigo. Finalize a tarefa (passo 4,
+  "Stop"), confira com Get-Process node que sumiram todos e inicie de novo.
+
+------------------------------------------------------------------------------
+PASSO 3 - VER A SITUACAO DA TAREFA
+------------------------------------------------------------------------------
+    Get-ScheduledTask -TaskName "BRV Control - Impressora" | Get-ScheduledTaskInfo
+
+Olhe estes campos:
+- LastRunTime     : quando rodou pela ultima vez
+- LastTaskResult  : 0 = terminou normal | 267009 = rodando agora
+                    267014 = encerrada pelo usuario/sistema (desligou, reiniciou
+                    ou alguem clicou em Finalizar)
+- NextRunTime     : vazio e normal (a tarefa sobe "ao ligar o servidor")
+
+Depois veja o que o agente escreveu antes de parar:
+    Get-Content C:\brv-agente-impressora\agente-impressora\agente.log -Tail 30
+
+Erros comuns no log:
+- "fetch failed" / "ENOTFOUND"  -> sem internet ou DNS
+- "Invalid login credentials"   -> senha do agente mudou: ajustar AGENTE_SENHA no .env
+- "ECONNREFUSED 192.168.1.22"   -> Elgin desligada/sem rede (o agente usa o Windows
+                                    como principal e a rede como reserva)
+- "node nao reconhecido"        -> Node.js sumiu do servidor (reinstalar, ver Passo 7)
+
+------------------------------------------------------------------------------
+PASSO 4 - LIGAR / REINICIAR O AGENTE
+------------------------------------------------------------------------------
+Ligar:
+    Start-ScheduledTask -TaskName "BRV Control - Impressora"
+    Start-Sleep 5
+    Get-Process node
+
+Reiniciar (se estiver rodando mas sem sinal):
+    Stop-ScheduledTask  -TaskName "BRV Control - Impressora"
+    Get-Process node        (nao deve sobrar nenhum; se sobrar, Stop-Process -Name node -Force)
+    Start-ScheduledTask -TaskName "BRV Control - Impressora"
+    Start-Sleep 5
+    Get-Process node        (deve haver UM so)
+
+Se a tarefa "inicia" mas o node some na hora, rode na mao para ver o erro na tela:
+    cd C:\brv-agente-impressora\agente-impressora
+    node agente.mjs
+(deixe a janela aberta para testar; Ctrl+C para sair; depois volte ao Passo 4)
+
+------------------------------------------------------------------------------
+PASSO 5 - CONFERIR O SINAL DE VIDA E A VERSAO
+------------------------------------------------------------------------------
+[ ] Na tela Oficina (ou Placas), o aviso deve ser "Pronta" (sinal nos ultimos 90 s).
+Pelo banco (peca ao Claude): tabela print_agents. Deve mostrar:
+    version 1.2.0 | margem_esquerda_mm 4 | altura_etiqueta_mm 50 | ll_pontos 400
+    last_seen_at com menos de 1 minuto
+Se a versao ou os numeros forem outros, o arquivo agente.mjs do servidor esta
+DIFERENTE do projeto (aconteceu em 2026-11-10): copiar o agente.mjs do projeto
+(scripts\agente-impressora\agente.mjs) e reiniciar (Passo 4).
+
+------------------------------------------------------------------------------
+PASSO 6 - TESTE DE IMPRESSAO (aceite)
+------------------------------------------------------------------------------
+[ ] Na tela Oficina: "Imprimir etiqueta de teste". A tela vai de "Pronta" para
+    "Etiqueta impressa".
+[ ] Imprima 5 etiquetas seguidas: todas completas, texto NAO encostado na borda
+    esquerda, NENHUMA em branco.
+Para ler a impressora sem imprimir:
+    cd C:\brv-agente-impressora\agente-impressora
+    node agente.mjs --status
+O 4o numero da 1a linha do ~HS e o comprimento medido da etiqueta:
+    400 a 406 = OK | 1259 = calibracao perdida (ver "Etiqueta em branco")
+
+------------------------------------------------------------------------------
+ETIQUETA EM BRANCO OU ENCOSTADA (impressora imprime, mas sai errado)
+------------------------------------------------------------------------------
+1) SENSOR DE ESPACO: tem que ficar no CENTRO, embaixo da etiqueta (nao na faixa
+   lateral de 3 mm). E a causa real das brancas em 2026-11-10. Ao trocar o rolo,
+   conferir de novo. Limpar com alcool isopropilico.
+2) Recalibrar: node agente.mjs --calibrar  (manda ~JC pela rede, nao grava)
+   e fazer 5 testes. So se der 5 de 5 certos: node agente.mjs --gravar-config
+3) Margem encostada: conferir MARGEM_ESQUERDA_MM=4 no .env do agente e se o
+   agente.mjs e o do projeto (Passo 5).
+4) Impressora sem fita: se for etiqueta termica sem fita, o modo correto e
+   DIRECT THERMAL (hoje esta THERMAL-TRANSFER, com fita).
+
+------------------------------------------------------------------------------
+PASSO 7 - A TAREFA NAO SOBE SOZINHA QUANDO O SERVIDOR LIGA
+------------------------------------------------------------------------------
+Confira o gatilho:
+    (Get-ScheduledTask -TaskName "BRV Control - Impressora").Triggers
+    (Get-ScheduledTask -TaskName "BRV Control - Impressora").Settings | Format-List Enabled, *Battery*
+    (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+- Deve existir gatilho "Na inicializacao" (MSFT_TaskBootTrigger) e Enabled = True.
+- Se faltar, recrie: botao direito em instalar-tarefa.cmd > Executar como
+  administrador (pasta C:\brv-agente-impressora\agente-impressora).
+- Se o "node" nao existir mais: reinstalar Node.js 22 LTS (nodejs.org, .msi),
+  conferir "node -v", e rodar o instalar-tarefa.cmd de novo.
+
+------------------------------------------------------------------------------
+CONTINGENCIA ENQUANTO NAO RESOLVE
+------------------------------------------------------------------------------
+- Na tela da Oficina, "Imprimir pelo navegador" (Chrome, Margens: Nenhuma).
+- Pedido que expirou (mais de 30 min na fila): reimprimir pela tela.
+
+------------------------------------------------------------------------------
+HISTORICO
+------------------------------------------------------------------------------
+- 2026-11-09: agente instalado no servidor; tarefa "BRV Control - Impressora".
+- 2026-11-10: etiquetas em branco = sensor de espaco na faixa lateral (centralizado
+  = 5 de 5 testes ok); agente antigo no servidor trazia margem encostada.
+- 2026-11-11: agente 1.2.0 conferido igual ao do projeto, teste de aceite ok.
+- 2026-11-15 (domingo, ~15h): o agente parou de dar sinal; a tarefa ficou com
+  LastTaskResult 267014 e NextRunTime vazio, sem node rodando. Em 2026-11-16 as
+  etiquetas pedidas ficaram "pendentes" (0 tentativas) ate expirar. Causa a
+  confirmar (servidor reiniciado sem a tarefa subir sozinha?).

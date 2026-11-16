@@ -692,6 +692,8 @@ export default function PlacaDetalhes({
         atualizada,
         'Placa marcada como Entregue / Faturado! Garantia legal de 90 dias iniciada.',
       );
+      // O termo é impresso no ato da entrega, antes de entregar a placa ao cliente: abre já pronto para imprimir
+      setVerTermoGarantia(true);
     } catch (err) {
       notificarErro(err instanceof Error ? err.message : 'Erro ao registrar entrega.');
     } finally {

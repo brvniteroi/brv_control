@@ -96,8 +96,9 @@ interface PlacaDetalhesProps {
   onListaAlterada: () => void;
 }
 
-function hojeIsoCurto(): string {
-  const d = new Date();
+/** `AAAA-MM-DD` no horário local (hoje, ou a data de um ISO, ex. a entrada da placa). */
+function hojeIsoCurto(iso?: string): string {
+  const d = iso ? new Date(iso) : new Date();
   const a = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const dia = String(d.getDate()).padStart(2, '0');
@@ -2189,6 +2190,8 @@ export default function PlacaDetalhes({
               type="date"
               required
               value={dataSaidaEntrega}
+              min={placa ? hojeIsoCurto(placa.created_at) : undefined}
+              max={hojeIsoCurto()}
               onChange={(e) => setDataSaidaEntrega(e.target.value)}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
             />

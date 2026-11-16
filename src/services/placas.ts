@@ -490,9 +490,24 @@ export async function atualizarPlaca(id: string, campos: UpdateBoardFields): Pro
   return placaOuErro(id);
 }
 
+/**
+ * Data de saída escolhida na tela (`AAAA-MM-DD`, sem hora) -> instante a gravar.
+ * Mandar só a data fazia o banco ler meia-noite UTC = 21h do dia ANTERIOR em Niterói: a saída aparecia um dia antes e,
+ * com entrada no mesmo dia, o banco recusava ("A saída não pode ser antes da entrada"). Hoje = agora (o banco usa NOW());
+ * dia passado = fim daquele dia no horário local (nunca fica antes de uma entrada do mesmo dia).
+ */
+function instanteDaSaida(data: string | undefined): string | undefined {
+  if (!data || data.includes('T')) return data;
+  const agora = new Date();
+  const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+  if (data >= hoje) return undefined;
+  return new Date(`${data}T23:59:00`).toISOString();
+}
+
 export async function moverPlaca(id: string, etapa: BoardStage, extra: MoveBoardExtra = {}): Promise<BoardOrder> {
   const mudar: Record<string, unknown> = { status: etapa };
-  if (extra.finished_at) mudar.finished_at = extra.finished_at;
+  const saida = instanteDaSaida(extra.finished_at);
+  if (saida) mudar.finished_at = saida;
   if (etapa === 'sem_conserto') mudar.unrepaired_reason = extra.unrepaired_reason?.trim() || null;
   await atualizar(id, mudar);
   if (extra.charged_amount !== undefined && extra.charged_amount !== null) await gravarFinanceiro(id, { charged_amount: extra.charged_amount });

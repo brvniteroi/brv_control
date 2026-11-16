@@ -862,7 +862,7 @@ O orçamento da placa é feito aqui no sistema (diferente dos equipamentos, que 
     palavras: 'entregue faturado sem conserto devolvido arquivar cancelar reabrir pronto saida',
     texto: `
 No rodapé da placa:
-- **Entregue / Faturado**: só com a placa em **Pronto**. Informe a data de saída (hoje, por padrão). A garantia de 90 dias conta daqui.
+- **Entregue / Faturado**: só com a placa em **Pronto**. Informe a data de saída (hoje, por padrão; dá para escolher um dia anterior, desde a entrada da placa, mas não um dia futuro). A garantia de 90 dias conta daqui.
 - **Sem Conserto / Devolvido**: o cliente recusou o orçamento ou não há conserto. Informe o **motivo**. Sem conserto **não gera reembolso**.
 - **Arquivar**: tira da lista sem apagar o histórico.
 - **Cancelar entrada**: registro feito por engano. Informe o motivo.

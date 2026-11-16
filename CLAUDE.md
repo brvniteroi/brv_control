@@ -78,6 +78,7 @@ Feito:
   telefone/e-mail para `customers`), CPF/CNPJ (inclusive alfanumérico) validado em `utils/documento.ts`.
   Busca de cliente ignora acento: coluna gerada `customers.busca` (nome, fantasia, e-mail via `public.sem_acento`) +
   `semAcento()` no termo; migration `20261101130000_busca_sem_acento.sql` (aplicada).
+  Lista de clientes: ao passar o mouse na linha aparece o endereço (dica nativa, `title`; `listarClientes` busca os endereços ativos da página, principal primeiro; 2026-11-16).
   Vários endereços por cliente (`EnderecosAdicionais.tsx`; um é o principal, os demais aparecem na escolha do
   endereço ao criar a OS via `service_orders.address_id`). Migrations de clientes:
   `20261029120000_clientes_salvar.sql`, `20261029130000_enderecos_cliente.sql`.

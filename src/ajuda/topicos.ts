@@ -187,6 +187,7 @@ No fim do Dashboard, o administrador vê o cartão **Backup do sistema**:
 1. Em **Cadastros > Clientes**, digite na busca: nome, nome fantasia, e-mail, telefone ou CPF/CNPJ.
 2. Clique em **Abrir** na linha do cliente.
 - A busca ignora acentos: "joao" encontra "João".
+- Para ver o endereço sem abrir o cadastro, **passe o mouse sobre a linha do cliente**: aparece a dica com o endereço (se houver mais de um, todos, o principal primeiro).
 - Os filtros **Ativos**, **Arquivados** e **Todos** mudam quais clientes aparecem.
 `,
   },

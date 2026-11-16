@@ -219,6 +219,7 @@ export default function Clientes() {
                   <tr
                     key={cli.id}
                     onClick={() => setClienteSelecionadoId(cli.id)}
+                    title={cli.enderecos.length > 0 ? cli.enderecos.join('\n') : 'Sem endereço cadastrado'}
                     className="cursor-pointer transition hover:bg-slate-50/80"
                   >
                     {/* Cliente: Avatar + Nome */}

@@ -13,6 +13,15 @@ export const CLIENTES_POR_PAGINA = 50;
 export interface ClienteLista extends Customer {
   /** Conclusão da OS concluída mais recente (null = nunca atendido). */
   ultimo_atendimento: string | null;
+  /** Endereços ativos em texto (o principal primeiro), para a dica ao passar o mouse na lista. */
+  enderecos: string[];
+}
+
+/** Endereço em uma linha: "Rua X, 10 - apto 2 - Bairro - Cidade/UF - CEP 00000-000". */
+export function enderecoEmTexto(e: Pick<CustomerAddress, 'street' | 'number' | 'complement' | 'district' | 'city' | 'state' | 'zip_code'>): string {
+  const via = [e.street, e.number].filter(Boolean).join(', ');
+  const cidade = [e.city, e.state].filter(Boolean).join('/');
+  return [via, e.complement, e.district, cidade, e.zip_code ? `CEP ${e.zip_code}` : null].filter(Boolean).join(' - ');
 }
 
 export interface PaginaClientes {
@@ -103,7 +112,28 @@ export async function listarClientes(
     if (erroDatas) console.error('Último atendimento:', erroDatas.message);
     for (const d of datas ?? []) ultimos.set(d.customer_id, d.ultimo_atendimento);
   }
-  return { itens: clientes.map((c) => ({ ...c, ultimo_atendimento: ultimos.get(c.id) ?? null })), total: count ?? 0 };
+
+  // Endereços ativos só dos clientes desta página (dica ao passar o mouse); se falhar, a lista aparece sem a dica
+  const enderecos = new Map<string, string[]>();
+  if (clientes.length > 0) {
+    const { data: ends, error: erroEnds } = await supabase
+      .from('customer_addresses')
+      .select('customer_id, street, number, complement, district, city, state, zip_code')
+      .eq('active', true)
+      .in('customer_id', clientes.map((c) => c.id))
+      .order('is_primary', { ascending: false })
+      .order('created_at', { ascending: true });
+    if (erroEnds) console.error('Endereços da lista:', erroEnds.message);
+    for (const e of ends ?? []) {
+      const texto = enderecoEmTexto(e);
+      if (!texto) continue;
+      enderecos.set(e.customer_id, [...(enderecos.get(e.customer_id) ?? []), texto]);
+    }
+  }
+  return {
+    itens: clientes.map((c) => ({ ...c, ultimo_atendimento: ultimos.get(c.id) ?? null, enderecos: enderecos.get(c.id) ?? [] })),
+    total: count ?? 0,
+  };
 }
 
 export async function buscarClientePorId(id: string): Promise<ClienteCompleto | null> {

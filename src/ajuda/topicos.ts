@@ -1219,7 +1219,7 @@ Para o plano ficar **Vigente**, o sistema exige: endereço, responsável técnic
     texto: `
 - O responsável técnico é escolhido na lista de funcionários. O **CPF** e o **registro profissional** vêm do cadastro dele (**Equipe**, dados pessoais, que só o administrador edita). Se estiverem vazios, peça ao administrador para preencher lá.
 - Registro **CFT** usa o termo **TRT**; registro **CREA** usa **ART**. O nome do termo muda sozinho conforme a escolha.
-- Informe o **número do TRT** e anexe o arquivo do termo (**PDF** de até 10 MB ou imagem). Ele sai na última página do documento.
+- Informe o **número do TRT** e anexe o arquivo do termo (**PDF** de até 10 MB ou imagem). Na última página do documento sai um cartão com o nome do arquivo e o número do TRT: se for **imagem**, ela aparece inteira; se for **PDF**, o conteúdo **não** é impresso junto (o arquivo fica guardado no plano). Envie o PDF do TRT ao cliente em separado.
 > O nome, o CPF e o registro ficam guardados no plano como estavam ao salvar. Se o cadastro do funcionário mudar depois, escolha o responsável de novo no plano.
 `,
   },

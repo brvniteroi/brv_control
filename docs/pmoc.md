@@ -30,6 +30,9 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   o checklist só funciona online (a conclusão da atividade é barrada pelo banco se o checklist não foi preenchido); aparelho que sai do plano some da visita,
   mas o histórico e a página pública continuam. **Testes na prática pendentes** (ver lembrete do CLAUDE.md): OS do mês, checklist no celular, relatório por WhatsApp,
   etiqueta na Elgin e leitura do QR.
+- **Modelo do Split Hi-Wall enxugado em 2026-11-17** (direto no banco, a pedido do usuário): saíram as tarefas de correias, resistência do cárter, nível de óleo do
+  compressor e pressostatos (eram de equipamento grande, vindas do Field); ficou com 18. Vale só para aparelhos incluídos depois; planos já criados mantêm as tarefas.
+  Cassete, Split Piso-Teto e VRF seguem com as 22.
 
 ## O que é o PMOC para a BRV
 

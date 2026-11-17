@@ -45,7 +45,15 @@ const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyl
 const soData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' });
 
 export const formatarDataHora = (iso: string | null | undefined) => (iso ? dataHora.format(new Date(iso)) : '—');
-export const formatarData = (iso: string | null | undefined) => (iso ? soData.format(new Date(iso)) : '—');
+/**
+ * Data para exibir. Coluna DATE chega como `AAAA-MM-DD`, e `new Date('AAAA-MM-DD')` é meia-noite UTC = 21h do dia
+ * anterior em Niterói (prazo da OS, reembolso etc. apareciam um dia antes): data sem hora é lida no horário local.
+ */
+export const formatarData = (iso: string | null | undefined) => {
+  if (!iso) return '—';
+  const so = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  return soData.format(so ? new Date(Number(so[1]), Number(so[2]) - 1, Number(so[3])) : new Date(iso));
+};
 
 const dois = (n: number) => String(n).padStart(2, '0');
 

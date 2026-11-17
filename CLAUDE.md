@@ -163,6 +163,14 @@ Feito:
 - Migração do Field Control: docs em `API_field_control.docx`. Só depois do sistema pronto
   (ver pontos em aberto na memória do projeto). A chave vai em `FIELD_CONTROL_API_KEY` no `.env`.
 
+**LEMBRETE (2026-11-17, PC DA EMPRESA): continuar o PMOC** (lembrar o usuário logo no início da conversa). Em 2026-11-16 (PC de casa) a fase 1
+ficou pronta, aplicada e verificada (ver `docs/pmoc.md`, "Estado da fase 1"). Amanhã: (1) `git pull`; (2) **teste na prática da fase 1**: criar um plano
+em Serviços > PMOC com ambiente, 2 aparelhos (um do cadastro e um por "Adicionar linha manual"), anexar um **PDF** como TRT, marcar Vigente, salvar
+e imprimir pelo Documento (conferir se o PDF do TRT abre: depende do `.htaccess` novo na HostGator); se for plano de teste, o Claude apaga pelo banco;
+(3) **passar ao Gemini** o briefing `docs/gemini/pmoc-fase2-briefing.md` (telas das fases 2 e 3: Gerar OS do mês, painel do mês, checklist no app,
+relatório por link, página pública do aparelho); (4) quando o Gemini entregar `docs/gemini/pmoc-fase2.md`, o **Claude audita** e faz banco, services,
+a OS do mês, a etiqueta ZPL e a ajuda F1. Pendente do usuário: ligar para os laboratórios de qualidade do ar (item 11 do plano). Ao concluir, apagar este lembrete.
+
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 
 **OFICINA E IMPRESSORA: implantação concluída em 2026-11-11** (não é mais lembrete; fica como registro e referência do agente da Elgin):

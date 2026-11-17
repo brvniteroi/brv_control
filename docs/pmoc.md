@@ -38,7 +38,8 @@ termo de responsabilidade é o **TRT** (não CREA/ART).
   de tarefas por tipo de aparelho (`PmocModelo.tsx`). Regras de tela em `src/components/pmoc/regrasPmoc.ts`; dados de demonstração em
   `src/components/pmoc/fonteDeDados.ts` e `dadosDemo.ts` (somem ao recarregar a página).
 - **No banco, reaproveitável:**
-  - `equipments` (cadastro de aparelhos do cliente, com endereço) já tem a coluna `qr_code TEXT UNIQUE` reservada para etiqueta patrimonial/PMOC.
+  - `equipments` (cadastro de aparelhos do cliente, com endereço) tem `qr_code TEXT UNIQUE`, mas é o número de patrimônio digitado à mão
+    (não serve de token da página pública; ver item 7).
   - `form_responses` (motor de formulários) já tem `equipment_id`; `attachments` aceita foto ligada a `equipment_id`.
   - `service_order_equipments` liga OS a equipamentos.
   - `funcionario_dados` (desde 2026-11-08) tem CPF e registro profissional do técnico (RLS **só admin**).
@@ -112,7 +113,9 @@ desligado, sem acesso etc.) e com o **nome de quem acompanhou a visita** (sem as
 
 ### 7. QR Code por equipamento e página pública
 
-- Cada aparelho do plano ganha um token em `equipments.qr_code` (aleatório, não adivinhável; trocar o token invalida a etiqueta antiga).
+- Cada aparelho do plano ganha um token **numa coluna nova** (ex.: `equipments.public_token`; aleatório, não adivinhável; trocar o token
+  invalida a etiqueta antiga). **Não usar `equipments.qr_code`**: ele já é um campo editável à mão no cadastro do equipamento ("Etiqueta / QR Code
+  (Patrimônio / PMOC)", em `EquipamentoDetalhes.tsx`), e o código da página pública não pode ser digitado nem adivinhado.
 - **Etiqueta na Elgin** pela fila de impressão que já existe: logo/nome BRV, identificador (`AR-SR-0001`), ambiente, "Manutenção PMOC" e o QR.
 - **Página pública** `/equipamento/<token>` (sem login, celular), por uma função do banco que só enxerga aquele aparelho: nome fantasia do cliente,
   local e ambiente, identificador, tipo e BTU; plano vigente (código, vigência, responsável técnico com registro e TRT); **últimas manutenções**
@@ -157,6 +160,14 @@ São Gonçalo só para aparecer na busca. Critérios para escolher: acreditaçã
 
 Descartados por ficarem longe (só listam a cidade no site): LABOAR (Salvador/BA) e Laboratório Proxy (Piracicaba/SP).
 Próximo passo: o usuário liga para o Lab Agua e a Acqua Air perguntando acreditação, NBR 17037, preço por ponto de coleta e prazo do laudo.
+
+## Telas das fases 2 e 3 com o Gemini (2026-11-16)
+
+Briefing em `docs/gemini/pmoc-fase2-briefing.md`: modal "Gerar OS do mês" (técnico, data, hora, duração), painel "PMOC do mês" + cartão no
+Dashboard, checklist por aparelho no app de campo (com o nome de quem acompanhou na conclusão), relatório mensal público `/relatorio-pmoc/:token`
+com envio pelo WhatsApp, página pública do aparelho `/equipamento/:token` e pré-visualização da etiqueta. Ele trabalha com funções de demonstração
+em `fonteDeDados.ts` e grava o resumo em `docs/gemini/pmoc-fase2.md`; o Claude **audita** e depois faz migration, services, a OS do mês, a
+etiqueta ZPL e a ajuda F1.
 
 ## Fases
 

@@ -1,8 +1,8 @@
 // Única camada de acesso a dados consumida pelas telas do módulo PMOC.
-// Hoje opera sobre o estado em memória inicializado a partir de `dadosDemo.ts`.
-// Quando o Claude criar as tabelas/migrations e `src/services/pmoc.ts`, basta trocar o corpo
-// destas funções e passar `FONTE_DADOS_DEMO` para `false`, sem precisar alterar os componentes visuais.
+// Com `USAR_BANCO_PMOC = true` (fase 1 de docs/pmoc.md, 2026-11-16) cada função repassa para `src/services/pmoc.ts`;
+// com `false`, volta ao estado em memória de `dadosDemo.ts` (some ao recarregar a página).
 
+import * as real from '../../services/pmoc';
 import {
   AMBIENTES_INICIAIS_DEMO,
   EQUIPAMENTOS_INICIAIS_DEMO,
@@ -32,8 +32,11 @@ import type {
   PmocTaskTemplateRow,
 } from '../../types/pmoc';
 
+/** Liga as telas ao banco (tabelas `pmoc_*`). */
+export const USAR_BANCO_PMOC = true;
+
 /** Enquanto `true`, as telas exibem a faixa discreta "Dados de demonstração". */
-export const FONTE_DADOS_DEMO = true;
+export const FONTE_DADOS_DEMO = !USAR_BANCO_PMOC;
 
 // Estado mutável em memória durante a sessão do navegador
 let planosMemoria: PmocPlan[] = structuredClone(PLANOS_INICIAIS_DEMO);
@@ -105,6 +108,7 @@ function resumirPlano(plano: PmocPlan): PmocPlanSummary {
 
 /** Lista todos os planos PMOC com resumo de equipamentos, próxima visita e atrasos. */
 export async function listarPlanos(): Promise<PmocPlanSummary[]> {
+  if (USAR_BANCO_PMOC) return real.listarPlanos();
   await pausaSimulada();
   return [...planosMemoria]
     .sort((a, b) => b.start_date.localeCompare(a.start_date))
@@ -113,6 +117,7 @@ export async function listarPlanos(): Promise<PmocPlanSummary[]> {
 
 /** Busca um plano PMOC pelo `id` (ou `null` quando inexistente). */
 export async function buscarPlano(id: string): Promise<PmocPlan | null> {
+  if (USAR_BANCO_PMOC) return real.buscarPlano(id);
   await pausaSimulada();
   const achado = planosMemoria.find((p) => p.id === id);
   return achado ? structuredClone(achado) : null;
@@ -153,6 +158,7 @@ export async function salvarPlano(dados: PmocPlanInput): Promise<PmocPlan> {
 
 /** Lista os ambientes climatizados de um plano na ordem configurada. */
 export async function listarAmbientes(planId: string): Promise<PmocEnvironment[]> {
+  if (USAR_BANCO_PMOC) return real.listarAmbientes(planId);
   await pausaSimulada();
   return ambientesMemoria
     .filter((a) => a.plan_id === planId)
@@ -214,6 +220,7 @@ export async function salvarAmbientes(
 
 /** Lista os equipamentos vinculados a um plano PMOC na ordem configurada. */
 export async function listarEquipamentosDoPlano(planId: string): Promise<PmocPlanEquipment[]> {
+  if (USAR_BANCO_PMOC) return real.listarEquipamentosDoPlano(planId);
   await pausaSimulada();
   return equipamentosMemoria
     .filter((e) => e.plan_id === planId)
@@ -325,6 +332,7 @@ function escolherModeloPorTipo(tipoEquipamento: string): PmocTaskTemplate | unde
 
 /** Busca todas as tarefas do cronograma dos equipamentos de um plano. */
 export async function buscarCronograma(planId: string): Promise<PmocEquipmentTask[]> {
+  if (USAR_BANCO_PMOC) return real.buscarCronograma(planId);
   await pausaSimulada();
   return tarefasMemoria
     .filter((t) => t.plan_id === planId)
@@ -370,6 +378,7 @@ export async function salvarCronograma(
 
 /** Lista todos os registros de execução mensal de um plano PMOC. */
 export async function listarExecucoes(planId: string): Promise<PmocEquipmentMonthExecution[]> {
+  if (USAR_BANCO_PMOC) return real.listarExecucoes(planId);
   await pausaSimulada();
   return execucoesMemoria
     .filter((x) => x.plan_id === planId)
@@ -384,6 +393,7 @@ export async function gerarOsDoMes(
   planId: string,
   referenceMonth: string,
 ): Promise<PmocGenerateOsResult> {
+  if (USAR_BANCO_PMOC) return real.gerarOsDoMes();
   await pausaSimulada();
   const plano = planosMemoria.find((p) => p.id === planId);
   if (!plano) throw new Error('Plano PMOC não encontrado.');
@@ -521,6 +531,7 @@ export async function buscarRelatorioMensal(
   planId: string,
   referenceMonth: string,
 ): Promise<PmocMonthlyReport | null> {
+  if (USAR_BANCO_PMOC) return real.buscarRelatorioMensal(planId, referenceMonth);
   await pausaSimulada();
   const plano = planosMemoria.find((p) => p.id === planId);
   if (!plano) return null;
@@ -618,6 +629,7 @@ export async function buscarRelatorioMensal(
 
 /** Lista todos os modelos padrão de tarefas por tipo de equipamento (`/pmoc/modelo`). */
 export async function listarModelosDeTarefa(): Promise<PmocTaskTemplate[]> {
+  if (USAR_BANCO_PMOC) return real.listarModelosDeTarefa();
   await pausaSimulada();
   return [...modelosMemoria]
     .sort((a, b) => a.equipment_type.localeCompare(b.equipment_type, 'pt-BR'))
@@ -635,6 +647,7 @@ export interface SalvarModeloDeTarefaInput {
 export async function salvarModeloDeTarefa(
   dados: SalvarModeloDeTarefaInput,
 ): Promise<PmocTaskTemplate> {
+  if (USAR_BANCO_PMOC) return real.salvarModeloDeTarefa(dados);
   await pausaSimulada();
   const agora = new Date().toISOString();
   const tipoLimpo = dados.equipment_type.trim();
@@ -681,10 +694,62 @@ export async function salvarModeloDeTarefa(
   return structuredClone(novo);
 }
 
+/** O que o editor manda ao clicar em Salvar: o plano inteiro. */
+export interface SalvarPlanoCompletoInput {
+  plano: PmocPlanInput;
+  ambientes: SalvarAmbienteItemInput[];
+  equipamentos: SalvarEquipamentoPlanoInput[];
+  tarefas: PmocEquipmentTask[];
+}
+
+/**
+ * Grava dados gerais, ambientes, aparelhos e cronograma e devolve tudo como ficou gravado.
+ * No banco é uma transação só (`pmoc_salvar_plano`): ou grava tudo, ou nada.
+ */
+export async function salvarPlanoCompleto(dados: SalvarPlanoCompletoInput): Promise<{
+  plano: PmocPlan;
+  ambientes: PmocEnvironment[];
+  equipamentos: PmocPlanEquipment[];
+  tarefas: PmocEquipmentTask[];
+}> {
+  if (USAR_BANCO_PMOC) {
+    const id = await real.salvarPlanoCompleto(dados);
+    const [plano, ambientes, equipamentos, tarefas] = await Promise.all([
+      real.buscarPlano(id),
+      real.listarAmbientes(id),
+      real.listarEquipamentosDoPlano(id),
+      real.buscarCronograma(id),
+    ]);
+    if (!plano) throw new Error('O plano foi gravado, mas não foi possível recarregá-lo.');
+    return { plano, ambientes, equipamentos, tarefas };
+  }
+  const plano = await salvarPlano(dados.plano);
+  const ambientes = await salvarAmbientes(plano.id, dados.ambientes);
+  const equipamentos = await salvarEquipamentosDoPlano(plano.id, dados.equipamentos);
+  const tarefas =
+    dados.tarefas.length > 0
+      ? await salvarCronograma(plano.id, dados.tarefas.map((t) => ({ ...t, plan_id: plano.id })))
+      : await buscarCronograma(plano.id);
+  return { plano, ambientes, equipamentos, tarefas };
+}
+
+/** Nome, CPF e registro do responsável técnico escolhido (vêm do cadastro do funcionário). */
+export async function buscarDadosResponsavel(employeeId: string) {
+  if (USAR_BANCO_PMOC) return real.buscarDadosResponsavel(employeeId);
+  return null;
+}
+
+/** Responsável técnico sugerido no plano novo (o único funcionário com registro profissional). */
+export async function responsavelPadrao(): Promise<string | null> {
+  if (USAR_BANCO_PMOC) return real.responsavelPadrao();
+  return null;
+}
+
 /** Processa o envio da foto de identificação de um equipamento do plano (em memória no modo demo). */
 export async function enviarFotoEquipamentoPmoc(
   arquivo: File,
 ): Promise<{ url: string; attachment_id: string | null }> {
+  if (USAR_BANCO_PMOC) return real.enviarFotoEquipamentoPmoc(arquivo);
   if (!arquivo.type.startsWith('image/')) {
     throw new Error('Selecione um arquivo de imagem (JPG, PNG ou WebP).');
   }
@@ -700,6 +765,7 @@ export async function enviarFotoEquipamentoPmoc(
 export async function enviarAnexoTrtPmoc(
   arquivo: File,
 ): Promise<{ url: string; file_name: string; mime_type: string }> {
+  if (USAR_BANCO_PMOC) return real.enviarAnexoTrtPmoc(arquivo);
   const aceito = arquivo.type === 'application/pdf' || arquivo.type.startsWith('image/');
   if (!aceito) {
     throw new Error('Envie um arquivo PDF ou uma imagem (JPG, PNG, WebP) para o termo.');

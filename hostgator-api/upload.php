@@ -8,7 +8,7 @@
 // (Authorization: Bearer <access_token>). Não existe chave fixa no front:
 // qualquer valor embutido no bundle do React é visível para quem abrir o site.
 //
-// Requisição: POST multipart/form-data, campo "arquivo".
+// Requisição: POST multipart/form-data, campo "arquivo". Imagens para todos; PDF só admin e escritório (PMOC).
 // Resposta 201: { storage_path, public_url, mime_type, size_bytes, width, height, file_name }
 
 declare(strict_types=1);
@@ -86,14 +86,17 @@ if (!is_array($user) || empty($user['id']) || !preg_match('/^[0-9a-f-]{36}$/', $
 }
 
 // Confere se o operador está ativo (RLS só deixa ler o próprio perfil)
-[$code, $body] = supabase_get($sbUrl . '/rest/v1/profiles?select=active&id=eq.' . $user['id'], $config, $token);
+[$code, $body] = supabase_get($sbUrl . '/rest/v1/profiles?select=active,role&id=eq.' . $user['id'], $config, $token);
 $perfil = $code === 200 ? json_decode($body, true) : null;
 if (!is_array($perfil) || empty($perfil[0]['active'])) {
     responder(403, ['error' => 'Acesso não autorizado']);
 }
+// PDF (termo TRT/ART e laudos do PMOC): só admin e escritório
+$podePdf = in_array($perfil[0]['role'] ?? '', ['admin', 'escritorio'], true);
 
 // ---- Validação do arquivo ----
 $maxBytes = (int)($config['max_bytes'] ?? 5 * 1024 * 1024);
+$maxBytesPdf = (int)($config['max_bytes_pdf'] ?? 10 * 1024 * 1024);
 
 // Se o corpo passar do post_max_size o PHP descarta tudo e $_FILES chega vazio
 if (empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
@@ -115,45 +118,60 @@ switch ($arquivo['error']) {
     default:
         responder(500, ['error' => 'Falha ao receber o arquivo']);
 }
-if ($arquivo['size'] <= 0 || $arquivo['size'] > $maxBytes) {
-    responder(413, ['error' => 'Arquivo grande demais (máx. ' . round($maxBytes / 1048576, 1) . ' MB)']);
+// Extensão informada pelo aparelho: primeira barreira
+$extCliente = strtolower(pathinfo((string)$arquivo['name'], PATHINFO_EXTENSION));
+$ehPdf = $extCliente === 'pdf';
+$extensoesAceitas = $podePdf ? ['jpg', 'jpeg', 'png', 'webp', 'pdf'] : ['jpg', 'jpeg', 'png', 'webp'];
+if (!in_array($extCliente, $extensoesAceitas, true)) {
+    responder(415, ['error' => $podePdf ? 'Formato não aceito. Envie JPG, PNG, WEBP ou PDF' : 'Formato não aceito. Envie JPG, PNG ou WEBP']);
+}
+
+$limite = $ehPdf ? $maxBytesPdf : $maxBytes;
+if ($arquivo['size'] <= 0 || $arquivo['size'] > $limite) {
+    responder(413, ['error' => 'Arquivo grande demais (máx. ' . round($limite / 1048576, 1) . ' MB)']);
 }
 if (!is_uploaded_file($arquivo['tmp_name'])) {
     responder(400, ['error' => 'Upload inválido']);
 }
 
-// Extensão informada pelo aparelho: primeira barreira
-$extensoesAceitas = ['jpg', 'jpeg', 'png', 'webp'];
-$extCliente = strtolower(pathinfo((string)$arquivo['name'], PATHINFO_EXTENSION));
-if (!in_array($extCliente, $extensoesAceitas, true)) {
-    responder(415, ['error' => 'Formato não aceito. Envie JPG, PNG ou WEBP']);
-}
-
-// Tipo real pelo conteúdo (nome e Content-Type são escolhidos pelo cliente)
-$tiposAceitos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-$info = @getimagesize($arquivo['tmp_name']);
-$mime = class_exists('finfo')
-    ? (new finfo(FILEINFO_MIME_TYPE))->file($arquivo['tmp_name'])
-    : ($info['mime'] ?? '');
-if (!isset($tiposAceitos[$mime]) || $info === false || ($info['mime'] ?? '') !== $mime) {
-    responder(415, ['error' => 'O conteúdo não é uma imagem JPG, PNG ou WEBP válida']);
-}
-[$largura, $altura] = $info;
-if ($largura < 1 || $altura < 1 || $largura > 10000 || $altura > 10000) {
-    responder(422, ['error' => 'Dimensões de imagem inválidas']);
+$largura = null;
+$altura = null;
+if ($ehPdf) {
+    // Tipo real pelo conteúdo: PDF começa com "%PDF-"
+    $mime = class_exists('finfo') ? (new finfo(FILEINFO_MIME_TYPE))->file($arquivo['tmp_name']) : 'application/pdf';
+    $inicio = (string)@file_get_contents($arquivo['tmp_name'], false, null, 0, 5);
+    if ($mime !== 'application/pdf' || $inicio !== '%PDF-') {
+        responder(415, ['error' => 'O conteúdo não é um PDF válido']);
+    }
+    $extensaoFinal = 'pdf';
+} else {
+    // Tipo real pelo conteúdo (nome e Content-Type são escolhidos pelo cliente)
+    $tiposAceitos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    $info = @getimagesize($arquivo['tmp_name']);
+    $mime = class_exists('finfo')
+        ? (new finfo(FILEINFO_MIME_TYPE))->file($arquivo['tmp_name'])
+        : ($info['mime'] ?? '');
+    if (!isset($tiposAceitos[$mime]) || $info === false || ($info['mime'] ?? '') !== $mime) {
+        responder(415, ['error' => 'O conteúdo não é uma imagem JPG, PNG ou WEBP válida']);
+    }
+    [$largura, $altura] = $info;
+    if ($largura < 1 || $altura < 1 || $largura > 10000 || $altura > 10000) {
+        responder(422, ['error' => 'Dimensões de imagem inválidas']);
+    }
+    $extensaoFinal = $tiposAceitos[$mime];
 }
 
 // ---- Gravação ----
 // Nome aleatório (128 bits): não dá para adivinhar URL de foto de outro cliente,
-// e a extensão vem do tipo detectado, nunca do nome enviado.
-$subpasta = date('Y/m');
+// e a extensão vem do tipo detectado, nunca do nome enviado. PDFs ficam em pmoc/AAAA/MM.
+$subpasta = ($ehPdf ? 'pmoc/' : '') . date('Y/m');
 $dirBase = rtrim($config['upload_dir'] ?? (__DIR__ . '/uploads'), '/');
 $dirDestino = $dirBase . '/' . $subpasta;
 if (!is_dir($dirDestino) && !mkdir($dirDestino, 0755, true) && !is_dir($dirDestino)) {
     responder(500, ['error' => 'Falha ao preparar a pasta de destino']);
 }
 
-$nomeArquivo = bin2hex(random_bytes(16)) . '.' . $tiposAceitos[$mime];
+$nomeArquivo = bin2hex(random_bytes(16)) . '.' . $extensaoFinal;
 $destino = $dirDestino . '/' . $nomeArquivo;
 if (!move_uploaded_file($arquivo['tmp_name'], $destino)) {
     responder(500, ['error' => 'Falha ao gravar o arquivo']);

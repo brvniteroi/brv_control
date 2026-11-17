@@ -33,7 +33,10 @@ export type TelaAjuda =
   | 'placas-financeiro'
   | 'placas-fichas'
   | 'placas-erros'
-  | 'placas-manuais';
+  | 'placas-manuais'
+  | 'pmoc'
+  | 'pmoc-plano'
+  | 'pmoc-modelo';
 
 export interface Topico {
   id: string;
@@ -58,6 +61,7 @@ export const SECOES = [
   'Avaliação do cliente',
   'Oficina',
   'Placas',
+  'PMOC',
   'Cadastros',
   'Relatórios',
   'Equipe e acessos',
@@ -88,6 +92,9 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   'placas-fichas': 'Fichas técnicas',
   'placas-erros': 'Códigos de erro',
   'placas-manuais': 'Manuais',
+  pmoc: 'PMOC',
+  'pmoc-plano': 'Plano PMOC',
+  'pmoc-modelo': 'Modelo de tarefas PMOC',
 };
 
 export const TOPICOS: Topico[] = [
@@ -1148,6 +1155,112 @@ O app de campo funciona sem sinal: iniciar, concluir e as fotos ficam guardados 
 - Se aparecer **Acesso restrito**, seu usuário não tem permissão para aquela tela.
 - No celular, o menu fica escondido no ícone ☰.
 - Se uma tela parecer desatualizada, aperte **F5** para recarregar.
+`,
+  },
+
+  // ───────────── PMOC ─────────────
+  {
+    id: 'pmoc-o-que-e',
+    titulo: 'O que é o PMOC no sistema',
+    secao: 'PMOC',
+    telas: ['pmoc', 'pmoc-plano'],
+    palavras: 'plano manutencao operacao controle lei 13589 contrato anual climatizacao',
+    texto: `
+O **PMOC** (Plano de Manutenção, Operação e Controle) é o plano anual de manutenção dos aparelhos de ar-condicionado de um local, exigido pela Lei 13.589/2018 e pela Portaria 3.523/1998. A BRV vende como contrato: o plano vale 12 meses e, todo mês, o técnico faz o checklist de cada aparelho.
+No sistema, cada plano tem:
+1. **Geral**: cliente, endereço atendido, vigência, situação, responsável técnico e o termo TRT.
+2. **Ambientes**: as salas climatizadas (nome, sigla, ocupantes e área).
+3. **Equipamentos**: os aparelhos de cada ambiente.
+4. **Cronograma**: as tarefas de cada aparelho e de quanto em quanto tempo são feitas.
+5. **Execução** e **Documento**: o acompanhamento mês a mês e o documento para imprimir.
+! A geração da **OS do mês** e o **checklist no celular** entram na próxima etapa do PMOC. Por enquanto, agende a visita pela linha do tempo.
+`,
+    veja: ['pmoc-novo-plano', 'pmoc-lista'],
+  },
+  {
+    id: 'pmoc-lista',
+    titulo: 'Lista de planos PMOC',
+    secao: 'PMOC',
+    telas: ['pmoc'],
+    palavras: 'vigente vencendo vencido rascunho encerrado proxima visita atrasada filtro',
+    texto: `
+Menu **Serviços > PMOC**. Cada plano mostra o cliente, a vigência, quantos aparelhos tem e a próxima visita.
+- **Rascunho**: ainda em preparação, pode ser salvo incompleto.
+- **Vigente**: contrato em andamento. **Vence em até 60 dias** aparece em amarelo, para lembrar a renovação; **Vencido** em vermelho.
+- **Encerrado**: contrato terminado.
+- **Visitas atrasadas**: meses que já passaram sem a manutenção registrada.
+Use **Novo plano** para criar e **Modelo de tarefas** para mudar as tarefas padrão de cada tipo de aparelho.
+`,
+  },
+  {
+    id: 'pmoc-novo-plano',
+    titulo: 'Criar um plano PMOC',
+    secao: 'PMOC',
+    telas: ['pmoc', 'pmoc-plano'],
+    palavras: 'novo plano cadastrar contrato pmoc salvar vigente rascunho',
+    texto: `
+1. Em **PMOC**, clique em **Novo plano**.
+2. Aba **Geral**: escolha o cliente e o **endereço atendido**. A vigência vem com 12 meses a partir de hoje (dá para mudar). O **responsável técnico** já vem preenchido.
+3. Aba **Ambientes**: **Adicionar ambiente** para cada sala. A **sigla** (2 ou 3 letras, ex.: SR para Sala de Reunião) forma o código dos aparelhos.
+4. Aba **Equipamentos**: **Adicionar equipamento do cliente** (aparelhos já cadastrados) ou **Adicionar linha manual** (aparelho novo). Escolha o ambiente de cada um.
+5. Aba **Cronograma**: as tarefas de cada aparelho já vêm do modelo do tipo dele. Ajuste se precisar.
+6. Clique em **Salvar**. O plano ganha o número **PMOC-AAAA-NNNN**.
+Para o plano ficar **Vigente**, o sistema exige: endereço, responsável técnico com nome, CPF e registro, número do **TRT** e todos os aparelhos ativos com ambiente. Enquanto faltar algo, deixe como **Rascunho**.
+> O plano é gravado inteiro de uma vez: se der erro, nada fica pela metade. Corrija o que a mensagem pedir e salve de novo.
+`,
+    veja: ['pmoc-responsavel', 'pmoc-equipamentos'],
+  },
+  {
+    id: 'pmoc-responsavel',
+    titulo: 'Responsável técnico e TRT',
+    secao: 'PMOC',
+    telas: ['pmoc-plano'],
+    palavras: 'responsavel tecnico cpf registro cft crea trt art termo anexo pdf',
+    texto: `
+- O responsável técnico é escolhido na lista de funcionários. O **CPF** e o **registro profissional** vêm do cadastro dele (**Equipe**, dados pessoais, que só o administrador edita). Se estiverem vazios, peça ao administrador para preencher lá.
+- Registro **CFT** usa o termo **TRT**; registro **CREA** usa **ART**. O nome do termo muda sozinho conforme a escolha.
+- Informe o **número do TRT** e anexe o arquivo do termo (**PDF** de até 10 MB ou imagem). Ele sai na última página do documento.
+> O nome, o CPF e o registro ficam guardados no plano como estavam ao salvar. Se o cadastro do funcionário mudar depois, escolha o responsável de novo no plano.
+`,
+  },
+  {
+    id: 'pmoc-equipamentos',
+    titulo: 'Ambientes e equipamentos do plano',
+    secao: 'PMOC',
+    telas: ['pmoc-plano'],
+    palavras: 'ambiente sigla identificador ar-sr-0001 aparelho equipamento remover desativar foto',
+    texto: `
+- O aparelho do PMOC é o mesmo do **cadastro do cliente** (menu **Equipamentos**). Aparelho incluído por **Adicionar linha manual** é criado no cadastro do cliente ao salvar; mudar tipo, marca, modelo, série ou BTU no plano também atualiza o cadastro.
+- O **identificador** (ex.: **AR-SR-0001**) é montado pela sigla do ambiente. Pode ser trocado à mão, mas não pode repetir no plano.
+- Ao **remover um ambiente**, os aparelhos dele ficam com o aviso **Escolha o ambiente**.
+- Aparelho que **já teve manutenção registrada** não pode ser removido: desative-o (ele sai do cronograma e do documento, mas o histórico fica).
+- A **foto** do aparelho aparece na tabela de equipamentos do documento.
+`,
+  },
+  {
+    id: 'pmoc-cronograma',
+    titulo: 'Cronograma e modelo de tarefas',
+    secao: 'PMOC',
+    telas: ['pmoc-plano', 'pmoc-modelo'],
+    palavras: 'tarefa periodicidade mensal trimestral semestral anual inicia em medicao corrente temperatura modelo',
+    texto: `
+- Cada aparelho tem a sua lista de tarefas, com **periodicidade** (mensal, bimestral, trimestral, semestral ou anual) e o mês em que **inicia**.
+- Tarefas que pedem **medição** (corrente, temperaturas de insuflamento, retorno e ambiente) terão os campos para o técnico preencher no celular.
+- Tarefa desativada fica riscada e não entra no documento nem nas visitas.
+- O **Modelo de tarefas** (botão na lista de planos) guarda a lista padrão de cada tipo de aparelho (Split Hi-Wall, Cassete, Split Piso-Teto, VRF). Aparelho novo no plano recebe o modelo do tipo dele; tipo sem modelo recebe o do Split Hi-Wall.
+> Mudar o modelo **não** muda os planos já criados: vale para os aparelhos incluídos depois.
+`,
+  },
+  {
+    id: 'pmoc-documento',
+    titulo: 'Documento PMOC e relatório do mês',
+    secao: 'PMOC',
+    telas: ['pmoc-plano'],
+    palavras: 'imprimir pdf documento capa relatorio mensal execucao visita atrasada',
+    texto: `
+- Aba **Documento** > **Imprimir / PDF**: na janela do navegador, escolha **Salvar como PDF** (A4 retrato). Sai a capa, a identificação do cliente e do responsável, os ambientes, os equipamentos, o cronograma, as recomendações e o TRT anexado.
+- Aba **Execução**: a grade mostra, por aparelho e por mês, o que está previsto, feito ou atrasado. **Relatório do mês** abre o relatório para imprimir.
+! A **OS do mês** e o preenchimento pelo técnico no celular entram na próxima etapa. Até lá a grade fica só com o previsto.
 `,
   },
 ];

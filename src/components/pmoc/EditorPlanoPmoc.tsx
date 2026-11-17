@@ -32,10 +32,9 @@ import {
   listarEquipamentosDoPlano,
   listarExecucoes,
   listarModelosDeTarefa,
-  salvarAmbientes,
-  salvarCronograma,
-  salvarEquipamentosDoPlano,
-  salvarPlano,
+  responsavelPadrao,
+  buscarDadosResponsavel,
+  salvarPlanoCompleto,
 } from './fonteDeDados';
 import {
   calcularSituacaoPlano,
@@ -131,6 +130,26 @@ export default function EditorPlanoPmoc({ planIdUrl }: EditorPlanoPmocProps) {
     let ativo = true;
 
     if (!planIdUrl) {
+      // Plano novo: já vem com o responsável técnico (decisão 7: o único funcionário com registro profissional)
+      responsavelPadrao()
+        .then(async (empId) => {
+          if (!empId) return;
+          const dados = await buscarDadosResponsavel(empId);
+          if (!ativo || !dados) return;
+          setPlano((p) =>
+            p.responsible_employee_id
+              ? p
+              : {
+                  ...p,
+                  responsible_employee_id: empId,
+                  responsible_name: dados.nome,
+                  responsible_cpf: dados.cpf,
+                  registration_number: dados.registro ?? '',
+                },
+          );
+        })
+        .catch(() => undefined);
+
       listarModelosDeTarefa()
         .then((listaModelos) => {
           if (!ativo) return;
@@ -515,7 +534,9 @@ export default function EditorPlanoPmoc({ planIdUrl }: EditorPlanoPmocProps) {
 
     setSalvando(true);
     try {
-      const planoGravado = await salvarPlano({
+      // Tudo de uma vez: no banco é uma transação só (ou grava o plano inteiro, ou nada)
+      const gravado = await salvarPlanoCompleto({
+       plano: {
         id: idSalvo ?? undefined,
         customer_id: plano.customer_id,
         customer_name: plano.customer_name.trim(),
@@ -542,13 +563,8 @@ export default function EditorPlanoPmoc({ planIdUrl }: EditorPlanoPmocProps) {
         trt_attachment_mime: plano.trt_attachment_mime,
         elaborated_by: plano.elaborated_by.trim() || EMPRESA_BRV.razaoSocial,
         notes: plano.notes?.trim() || null,
-      });
-
-      const idDefinitivo = planoGravado.id;
-
-      const ambientesGravados = await salvarAmbientes(
-        idDefinitivo,
-        ambientes.map((a) => ({
+       },
+        ambientes: ambientes.map((a) => ({
           id: a.id,
           name: a.name,
           code: a.code,
@@ -556,11 +572,7 @@ export default function EditorPlanoPmoc({ planIdUrl }: EditorPlanoPmocProps) {
           floating_occupants: a.floating_occupants,
           area_m2: a.area_m2,
         })),
-      );
-
-      const equipamentosGravados = await salvarEquipamentosDoPlano(
-        idDefinitivo,
-        equipamentos.map((eq) => ({
+        equipamentos: equipamentos.map((eq) => ({
           id: eq.id,
           equipment_id: eq.equipment_id,
           environment_id: eq.environment_id,
@@ -575,25 +587,17 @@ export default function EditorPlanoPmoc({ planIdUrl }: EditorPlanoPmocProps) {
           photo_attachment_id: eq.photo_attachment_id,
           active: eq.active,
         })),
-      );
+        // Aparelho novo sem tarefas na tela recebe o modelo do tipo dele ao gravar
+        tarefas,
+      });
 
-      // Se já existirem tarefas editadas na tela, grava-as; caso contrário busca as inicializadas pela camada
-      let tarefasGravadas: PmocEquipmentTask[];
-      if (tarefas.length > 0) {
-        tarefasGravadas = await salvarCronograma(
-          idDefinitivo,
-          tarefas.map((t) => ({ ...t, plan_id: idDefinitivo })),
-        );
-      } else {
-        tarefasGravadas = await buscarCronograma(idDefinitivo);
-      }
-
+      const idDefinitivo = gravado.plano.id;
       const eraNovo = idSalvo === null;
       setIdSalvo(idDefinitivo);
-      setPlano(planoGravado);
-      setAmbientes(ambientesGravados);
-      setEquipamentos(equipamentosGravados);
-      setTarefas(tarefasGravadas);
+      setPlano(gravado.plano);
+      setAmbientes(gravado.ambientes);
+      setEquipamentos(gravado.equipamentos);
+      setTarefas(gravado.tarefas);
       setTemAlteracoes(false);
       setMensagemSucesso('Plano PMOC salvo com sucesso.');
 

@@ -4,8 +4,23 @@ Plano escrito em 2026-11-16. Base: telas do Gemini (auditadas em 2026-11-04, ain
 `docs/gemini/pmoc-briefing.md`, contrato de dados `docs/gemini/pmoc.md`, modelos `PMOC BRV Control.docx` e `PMOC Field Control.docx`
 (raiz do repositório) e uma pesquisa de como os sistemas vendidos no Brasil fazem o PMOC (seção "O que o mercado faz").
 
-**Nada do banco foi feito ainda.** As decisões do usuário foram tomadas em 2026-11-16 (seção "Decisões do usuário"); falta só confirmar o texto
-legal da capa e escolher o laboratório de qualidade do ar, que não bloqueiam a fase 1.
+**Fase 1 escrita em 2026-11-16** (falta o usuário colar a migration e rodar a verificação; ver "Estado da fase 1"). Decisões do usuário
+tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa aprovado; falta escolher o laboratório de qualidade do ar.
+
+## Estado da fase 1 (2026-11-16)
+
+- Migration `supabase/migrations/20261116100000_pmoc_base.sql` (**a colar no SQL Editor**): tabelas `pmoc_*`, numeração `PMOC-AAAA-NNNN`
+  (`pmoc_code_seq`), histórico `pmoc_events`, RLS (admin/escritório leem; escrita só pelas funções; excluir plano só admin), modelos das 22 tarefas
+  para Split Hi-Wall, Cassete, Split Piso-Teto e VRF, e as funções `pmoc_salvar_plano` (plano inteiro numa transação; aparelho sem cadastro é criado
+  em `equipments`; aparelho sem tarefas recebe o modelo do tipo; plano vigente exige endereço, responsável com nome/CPF/registro, TRT e ambiente em
+  todo aparelho ativo; aparelho com execução não sai do plano), `pmoc_salvar_modelo`, `pmoc_dados_responsavel` (só nome, CPF, registro, e-mail e
+  telefone do funcionário) e `pmoc_responsavel_padrao`.
+- Verificação com desfazer no fim: `supabase/verificacao/pmoc_base.sql` (11 testes).
+- `src/services/pmoc.ts` + `fonteDeDados.ts` com `USAR_BANCO_PMOC = true` (os dados de demonstração continuam no arquivo para `false`). O editor
+  grava pelo `salvarPlanoCompleto`. Plano novo já vem com o responsável técnico; escolher outro preenche CPF e registro pelo cadastro do funcionário.
+- `upload.php` aceita PDF (só admin/escritório, até 10 MB, confere o `%PDF-`, pasta `uploads/pmoc/AAAA/MM`); `uploads/.htaccess` serve `.pdf` sem a CSP.
+- Frase legal da capa sem a RE 09. Menu **Serviços > PMOC** liberado. Ajuda F1: seção "PMOC" (telas `pmoc`, `pmoc-plano`, `pmoc-modelo`).
+- **Fica para a fase 2:** o botão "Gerar OS do mês" responde que entra na próxima etapa; fotos da visita e checklist no celular.
 
 ## O que é o PMOC para a BRV
 

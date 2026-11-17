@@ -14,6 +14,7 @@ import {
   Cpu,
   DollarSign,
   FileBarChart,
+  FileCheck2,
   FileText,
   FolderOpen,
   Hammer,
@@ -75,8 +76,8 @@ const MENU: EntradaMenu[] = [
       { rota: '/calendario', rotulo: 'Calendário', icone: CalendarDays, apenasEscritorio: true },
       { rota: '/mapa', rotulo: 'Mapa', icone: MapaIcone, apenasEscritorio: true },
       { rota: '/ordens-de-servico', rotulo: 'Ordens de Serviço', icone: ClipboardList },
-      // PMOC fica fora do menu até ligar ao banco (hoje usa dados de demonstração). Rotas /pmoc seguem acessíveis por URL.
-      // { rota: '/pmoc', rotulo: 'PMOC', icone: FileCheck2, apenasEscritorio: true },
+      // PMOC ligado ao banco na fase 1 (docs/pmoc.md, 2026-11-16)
+      { rota: '/pmoc', rotulo: 'PMOC', icone: FileCheck2, apenasEscritorio: true },
     ],
   },
   {

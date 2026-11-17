@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { ExternalLink, FileText, Loader2, Sparkles, Trash2, Upload } from 'lucide-react';
 import SeletorCliente from '../ordens/SeletorCliente';
-import { enviarAnexoTrtPmoc } from './fonteDeDados';
+import { buscarDadosResponsavel, enviarAnexoTrtPmoc } from './fonteDeDados';
 import {
   calcularSituacaoPlano,
   criarSnapshotEndereco,
@@ -153,6 +153,18 @@ export default function AbaGeralPmoc({ plano, onChange, onErroUpload }: AbaGeral
         responsible_email: colab.email || plano.responsible_email,
         responsible_phone: colab.phone || plano.responsible_phone,
       });
+      // CPF e registro vêm do cadastro do funcionário (Equipe > dados pessoais); o escritório não vê o resto
+      buscarDadosResponsavel(colab.id)
+        .then((dados) => {
+          if (!dados) return;
+          onChange({
+            responsible_employee_id: colab.id,
+            responsible_name: dados.nome,
+            responsible_cpf: dados.cpf ?? null,
+            registration_number: dados.registro ?? '',
+          });
+        })
+        .catch(() => undefined);
     }
   };
 

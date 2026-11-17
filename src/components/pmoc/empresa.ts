@@ -11,8 +11,10 @@ export const EMPRESA_BRV = {
   endereco: 'Estrada Francisco da Cruz Nunes 10112, Niterói - RJ, CEP 24340-000',
   logoUrl: '/logobrvcontrol.png',
   subtituloPmoc: 'PMOC Oficial - BRV Niterói Elétrica e Refrigeração Ltda',
+  // A RE 09/2003 da ANVISA foi revogada pela RDC 886/2024; a referência técnica passou a ser a ABNT NBR 17037:2023
+  // (texto aprovado pelo usuário em 2026-11-16; ver docs/pmoc.md, item 10)
   fraseLegal:
-    'Documento emitido e mantido pela BRV Niterói Elétrica e Refrigeração Ltda através do sistema BRV Control, em cumprimento à Lei Federal nº 13.589/2018, Portaria MS nº 3.523/1998 e Resolução RE nº 09/ANVISA.',
+    'Documento emitido e mantido pela BRV Niterói Elétrica e Refrigeração Ltda através do sistema BRV Control, em cumprimento à Lei Federal nº 13.589/2018 e à Portaria MS nº 3.523/1998, adotando como referência de qualidade do ar interior a ABNT NBR 17037:2023.',
 } as const;
 
 export interface RecomendacaoPmoc {

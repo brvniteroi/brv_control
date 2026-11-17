@@ -5,8 +5,8 @@ Options -Indexes -ExecCGI
 <FilesMatch ".*">
   Require all denied
 </FilesMatch>
-# jpeg, mp4 e mov: fotos e vídeos importados do Field Control
-<FilesMatch "\.(jpg|jpeg|png|webp|mp4|mov)$">
+# jpeg, mp4 e mov: fotos e vídeos importados do Field Control; pdf: termo TRT/ART e laudos do PMOC (só admin/escritório enviam)
+<FilesMatch "\.(jpg|jpeg|png|webp|mp4|mov|pdf)$">
   Require all granted
 </FilesMatch>
 
@@ -16,3 +16,11 @@ Options -Indexes -ExecCGI
   # Nome do arquivo é único e nunca é sobrescrito: pode cachear para sempre
   Header set Cache-Control "public, max-age=31536000, immutable"
 </IfModule>
+
+# O leitor de PDF do navegador não abre com a CSP "default-src 'none'": para PDF ela sai (o arquivo é servido como documento)
+<FilesMatch "\.pdf$">
+  <IfModule mod_headers.c>
+    Header unset Content-Security-Policy
+    Header set Content-Disposition "inline"
+  </IfModule>
+</FilesMatch>

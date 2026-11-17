@@ -184,6 +184,8 @@ export interface PmocPlanEquipment {
   sort_order: number;
   /** Indica se o equipamento está ativo no plano. */
   active: boolean;
+  /** Token público opaco do equipamento (`equipments.public_token`) para `/equipamento/:token`. */
+  public_token?: string | null;
   /** Data e hora de inclusão no plano (ISO 8601). */
   created_at: string;
 }
@@ -272,16 +274,32 @@ export interface PmocEquipmentMonthExecution {
   photo_urls: string[];
   /** Motivo informado quando o equipamento não foi atendido na visita (`nao_atendido`). */
   unattended_reason: string | null;
+  /** Nome de quem acompanhou a visita presencial no cliente (registrado ao concluir a atividade). */
+  accompanied_by?: string | null;
   /** Data e hora da última atualização do registro (ISO 8601). */
   updated_at: string;
 }
 
-/** Retorno da ação "Gerar OS do mês" na aba Execução. */
+/** Dados de agendamento escolhidos pelo escritório ao gerar a OS do mês (Entrega 1). */
+export interface PmocGenerateOsScheduleInput {
+  /** ID do técnico ativo escalado para a visita (`employees.id`). */
+  technician_id: string;
+  /** Nome do técnico (usado na demonstração em memória). */
+  technician_name?: string | null;
+  /** Data e hora de início agendadas em ISO 8601 completo (montado via `deCamposDataHora`). */
+  scheduled_start: string;
+  /** Duração prevista da visita em minutos (obrigatória; sugerida 30 min por aparelho). */
+  estimated_minutes: number;
+}
+
+/** Retorno da ação "Gerar OS do mês" na aba Execução e no painel PMOC do mês. */
 export interface PmocGenerateOsResult {
   /** ID da Ordem de Serviço criada ou já existente para o mês. */
   service_order_id: string;
   /** Número da Ordem de Serviço criada ou já existente. */
   service_order_number: number;
+  /** ID da atividade (`tasks.id`) criada para a visita do mês. */
+  task_id?: string | null;
   /** Mês de referência (`YYYY-MM`) para o qual a OS foi gerada. */
   reference_month: string;
   /** Quantidade de equipamentos com tarefas previstas incluídos na OS. */
@@ -289,6 +307,218 @@ export interface PmocGenerateOsResult {
   /** Indica se já havia OS vinculada para todos os aparelhos daquele mês. */
   already_existed: boolean;
   /** Mensagem amigável em português para exibir ao operador do escritório. */
+  message: string;
+}
+
+/** Situação mensal de um plano vigente no painel "PMOC do mês" (Entrega 2). */
+export type PmocMonthPlanStatus = 'sem_os' | 'os_agendada' | 'executada' | 'atrasada';
+
+/** Linha de um plano vigente no painel "PMOC do mês" (Entrega 2). */
+export interface PmocMonthPlanItem {
+  /** ID do plano PMOC (`pmoc_plans.id`). */
+  plan_id: string;
+  /** Código legível do plano (`PMOC-AAAA-NNNN`). */
+  plan_code: string;
+  /** ID do cliente (`customers.id`). */
+  customer_id: string;
+  /** Razão social ou nome do cliente. */
+  customer_name: string;
+  /** Nome fantasia do cliente, quando houver. */
+  customer_trade_name: string | null;
+  /** Telefone do cliente para envio do relatório pelo WhatsApp. */
+  customer_phone: string | null;
+  /** Endereço resumido do plano. */
+  address_snapshot: PmocAddressSnapshot | null;
+  /** Mês consultado (`YYYY-MM`). */
+  reference_month: string;
+  /** Posição do mês na vigência do plano (`1..12`). */
+  month_offset: number;
+  /** Quantidade de equipamentos ativos com tarefas previstas neste mês. */
+  equipment_count_in_month: number;
+  /** Soma das tarefas previstas nos equipamentos do plano neste mês. */
+  task_count_in_month: number;
+  /** Situação consolidada do plano no mês (`sem_os`, `os_agendada`, `executada`, `atrasada`). */
+  status: PmocMonthPlanStatus;
+  /** ID da OS vinculada ao mês, se já gerada. */
+  service_order_id: string | null;
+  /** Número da OS vinculada ao mês, se já gerada. */
+  service_order_number: number | null;
+  /** ID da atividade (`tasks.id`) vinculada à OS do mês, se houver. */
+  task_id: string | null;
+  /** ID do técnico escalado ou executor. */
+  technician_id: string | null;
+  /** Nome do técnico escalado ou executor. */
+  technician_name: string | null;
+  /** Data/hora agendada da visita (ISO 8601), quando disponível. */
+  scheduled_start: string | null;
+  /** Data/hora de conclusão da execução (ISO 8601), quando executada. */
+  executed_at: string | null;
+  /** Nome de quem acompanhou a visita no cliente. */
+  accompanied_by: string | null;
+  /** Token público do relatório mensal, quando já gerado. */
+  report_token: string | null;
+}
+
+/** Resumo consolidado retornado por `resumoDoMes(mes)` para o painel "PMOC do mês" e cartão do Dashboard. */
+export interface PmocMonthSummary {
+  /** Mês de referência consultado (`YYYY-MM`). */
+  reference_month: string;
+  /** Total de planos vigentes no sistema (se `0`, o cartão do Dashboard não é exibido). */
+  active_plans_total: number;
+  /** Contadores das 4 situações no mês selecionado. */
+  counts: {
+    sem_os: number;
+    os_agendada: number;
+    executada: number;
+    atrasada: number;
+  };
+  /** Planos vigentes que possuem visita prevista no mês selecionado. */
+  items: PmocMonthPlanItem[];
+}
+
+/** Dados de um equipamento do plano para preenchimento do checklist no app do técnico (Entrega 3). */
+export interface PmocFieldEquipmentChecklist {
+  /** ID do vínculo do aparelho no plano (`pmoc_plan_equipments.id`). */
+  plan_equipment_id: string;
+  /** ID do aparelho no cadastro geral (`equipments.id`), usado ao anexar fotos. */
+  equipment_id: string | null;
+  /** Letra do aparelho no plano (`A`, `B`, `C`...). */
+  letter: string;
+  /** Nome descritivo do aparelho no plano. */
+  name: string;
+  /** Identificador no padrão `AR-<SIGLA>-<0001>`. */
+  identifier: string;
+  /** Nome do ambiente climatizado. */
+  environment_name: string | null;
+  /** Categoria/tipo do equipamento. */
+  equipment_type: string;
+  /** Capacidade em BTUs. */
+  capacity_btu: number;
+  /** Estado atual do preenchimento deste aparelho no mês (`pendente`, `concluida`, `nao_atendido`). */
+  status: PmocExecutionRecordStatus;
+  /** Tarefas previstas especificamente para este aparelho neste mês. */
+  scheduled_tasks: PmocEquipmentTask[];
+  /** Grandezas de medição pedidas pelas tarefas previstas deste mês. */
+  required_measurements: PmocMeasurementKey[];
+  /** Resultados salvos por tarefa. */
+  task_results: PmocTaskExecutionItem[];
+  /** Medições salvas para o aparelho no mês. */
+  measurements: PmocMeasurements;
+  /** Observações gerais do aparelho na visita. */
+  technician_notes: string | null;
+  /** Fotos já registradas para este aparelho na visita do mês. */
+  photo_urls: string[];
+  /** Motivo obrigatório quando `status === 'nao_atendido'`. */
+  unattended_reason: string | null;
+  /** Data/hora da última gravação deste aparelho. */
+  updated_at: string | null;
+}
+
+/** Retorno de `buscarChecklistDaAtividade(taskId)` para o app de campo (`/campo/atividade/:id`). */
+export interface PmocActivityChecklist {
+  /** Indica se a OS da atividade é de manutenção PMOC. */
+  is_pmoc: boolean;
+  /** ID da atividade (`tasks.id`). */
+  task_id: string;
+  /** ID da OS (`service_orders.id`). */
+  service_order_id: string | null;
+  /** Número da OS (`service_orders.number`). */
+  service_order_number: number | null;
+  /** ID do plano PMOC (`pmoc_plans.id`). */
+  plan_id: string | null;
+  /** Código do plano (`PMOC-AAAA-NNNN`). */
+  plan_code: string | null;
+  /** Nome do cliente. */
+  customer_name: string | null;
+  /** Mês de referência da manutenção (`YYYY-MM`). */
+  reference_month: string | null;
+  /** Nome de quem acompanhou a visita, se já concluída. */
+  accompanied_by: string | null;
+  /** Lista ordenada de aparelhos do plano com tarefas previstas no mês da OS. */
+  equipments: PmocFieldEquipmentChecklist[];
+}
+
+/** Dados enviados pelo técnico ao salvar um aparelho no checklist de campo (`salvarExecucaoAparelho`). */
+export interface PmocSaveEquipmentExecutionInput {
+  /** ID da atividade em campo (`tasks.id`). */
+  task_id: string;
+  /** ID do plano PMOC (`pmoc_plans.id`). */
+  plan_id: string;
+  /** ID do aparelho no plano (`pmoc_plan_equipments.id`). */
+  plan_equipment_id: string;
+  /** Mês de referência (`YYYY-MM`). */
+  reference_month: string;
+  /** Desfecho do aparelho na visita (`concluida` = Feito; `nao_atendido` = Não atendido). */
+  status: 'concluida' | 'nao_atendido';
+  /** Resultados individuais de cada tarefa prevista no mês. */
+  task_results: PmocTaskExecutionItem[];
+  /** Medições elétricas e térmicas aferidas. */
+  measurements: PmocMeasurements;
+  /** Observações livres sobre o aparelho. */
+  technician_notes: string | null;
+  /** URLs públicas das fotos anexadas ao aparelho nesta visita. */
+  photo_urls: string[];
+  /** Motivo obrigatório quando `status === 'nao_atendido'`. */
+  unattended_reason: string | null;
+}
+
+/** Item do histórico de manutenções exibido na página pública do aparelho (`/equipamento/:token`). */
+export interface PmocPublicEquipmentHistoryItem {
+  /** Mês de referência (`YYYY-MM`). */
+  reference_month: string;
+  /** Data/hora da execução (ISO 8601). */
+  executed_at: string | null;
+  /** Situação da manutenção do aparelho naquele mês. */
+  status: 'concluida' | 'nao_atendido';
+  /** Quantidade de tarefas marcadas como `feito`. */
+  tasks_done_count: number;
+  /** Total de tarefas previstas para o aparelho naquele mês. */
+  tasks_total_count: number;
+  /** Token público do relatório mensal daquele mês, para abrir `/relatorio-pmoc/:token`. */
+  report_token: string | null;
+}
+
+/** Dados públicos e estritamente seguros do aparelho aberto pelo QR Code (`/equipamento/:token`, Entrega 5). */
+export interface PmocPublicEquipmentView {
+  /** Token público consultado (`equipments.public_token`). */
+  token: string;
+  /** Nome fantasia do cliente (nunca exibe CPF/CNPJ, telefone ou endereço completo). */
+  customer_display_name: string;
+  /** Ambiente onde o aparelho está instalado. */
+  environment_name: string | null;
+  /** Identificador no plano (`AR-SR-0001`). */
+  identifier: string;
+  /** Nome descritivo do aparelho. */
+  name: string;
+  /** Tipo/categoria do aparelho (`Split Hi-Wall`, `Cassete`...). */
+  equipment_type: string;
+  /** Marca do aparelho, se informada. */
+  brand: string | null;
+  /** Modelo do aparelho, se informado. */
+  model: string | null;
+  /** Capacidade térmica em BTUs. */
+  capacity_btu: number;
+  /** Indica se o aparelho pertence a um plano PMOC vigente hoje. */
+  has_active_plan: boolean;
+  /** Dados públicos do plano vigente (ou `null` quando sem plano vigente). */
+  active_plan: {
+    code: string;
+    start_date: string;
+    end_date: string;
+    responsible_name: string;
+    registration_type: PmocRegistrationType;
+    registration_number: string;
+    responsibility_term_number: string;
+  } | null;
+  /** Últimas manutenções registradas para o aparelho (até 12). */
+  recent_maintenances: PmocPublicEquipmentHistoryItem[];
+}
+
+/** Retorno do envio de etiquetas de QR Code dos aparelhos para a fila de impressão (`imprimirEtiquetas`). */
+export interface PmocPrintLabelsResult {
+  /** Quantidade de etiquetas enviadas para a fila. */
+  printed_count: number;
+  /** Mensagem amigável de confirmação (ex.: `"3 etiquetas enviadas para a impressora"`). */
   message: string;
 }
 
@@ -308,6 +538,10 @@ export interface PmocMonthlyReport {
   technician_name: string | null;
   /** Data/hora de referência da visita executada (ISO 8601). */
   executed_at: string | null;
+  /** Nome de quem acompanhou a visita presencial no cliente (obrigatório ao concluir no app). */
+  accompanied_by?: string | null;
+  /** Token público de conferência do relatório mensal (`/relatorio-pmoc/:token`). */
+  public_token?: string | null;
   /** Equipamentos efetivamente atendidos no mês com checklist, medições e fotos. */
   attended_equipments: Array<{
     /** Dados do equipamento no plano. */

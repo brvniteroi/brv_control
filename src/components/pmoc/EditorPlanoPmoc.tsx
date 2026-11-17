@@ -927,6 +927,8 @@ export default function EditorPlanoPmoc({ planIdUrl }: EditorPlanoPmocProps) {
         {abaAtiva === 'execucao' && (
           <AbaExecucaoPmoc
             planId={plano.id}
+            customerName={plano.customer_trade_name || plano.customer_name}
+            customerPhone={plano.customer_phone}
             ehNovo={ehNovo}
             temAlteracoesNaoSalvas={temAlteracoes}
             startDate={plano.start_date}

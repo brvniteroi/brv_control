@@ -8,26 +8,43 @@ import {
   EQUIPAMENTOS_INICIAIS_DEMO,
   EXECUCOES_INICIAIS_DEMO,
   MODELOS_TAREFA_INICIAIS,
+  OS_MES_META_INICIAIS_DEMO,
   PLANOS_INICIAIS_DEMO,
   TAREFAS_INICIAIS_DEMO,
+  type OsMesMetaDemo,
 } from './dadosDemo';
 import {
   calcularEstadoCelulaExecucao,
+  calcularSituacaoPlano,
   gerarMesesDoPlano,
+  grandezasExigidasNasTarefas,
   letraEquipamento,
+  linkPublicoRelatorioPmoc,
   mesAtualLocal,
+  motivoBloqueioConclusaoChecklistPmoc,
   tarefasPrevistasNoMes,
+  validarExecucaoAparelhoPmoc,
 } from './regrasPmoc';
 import type {
+  PmocActivityChecklist,
   PmocEnvironment,
   PmocEquipmentMonthExecution,
   PmocEquipmentTask,
+  PmocFieldEquipmentChecklist,
   PmocGenerateOsResult,
+  PmocGenerateOsScheduleInput,
   PmocMonthlyReport,
+  PmocMonthPlanItem,
+  PmocMonthPlanStatus,
+  PmocMonthSummary,
   PmocPlan,
   PmocPlanEquipment,
   PmocPlanInput,
   PmocPlanSummary,
+  PmocPrintLabelsResult,
+  PmocPublicEquipmentHistoryItem,
+  PmocPublicEquipmentView,
+  PmocSaveEquipmentExecutionInput,
   PmocTaskTemplate,
   PmocTaskTemplateRow,
 } from '../../types/pmoc';
@@ -45,9 +62,45 @@ let equipamentosMemoria: PmocPlanEquipment[] = structuredClone(EQUIPAMENTOS_INIC
 let tarefasMemoria: PmocEquipmentTask[] = structuredClone(TAREFAS_INICIAIS_DEMO);
 let execucoesMemoria: PmocEquipmentMonthExecution[] = structuredClone(EXECUCOES_INICIAIS_DEMO);
 let modelosMemoria: PmocTaskTemplate[] = structuredClone(MODELOS_TAREFA_INICIAIS);
+let osMesMetaMemoria: OsMesMetaDemo[] = structuredClone(OS_MES_META_INICIAIS_DEMO);
 
-let proximoNumeroPlano = 2;
+let proximoNumeroPlano = 3;
 let proximoNumeroOsDemo = 9100;
+
+function gerarTokenDemo(prefixo: string): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return `${prefixo}-${hex}`;
+}
+
+function obterOuCriarMetaMesDemo(planId: string, referenceMonth: string): OsMesMetaDemo | undefined {
+  const achado = osMesMetaMemoria.find(
+    (m) => m.plan_id === planId && m.reference_month === referenceMonth,
+  );
+  if (achado) return achado;
+
+  const execComOs = execucoesMemoria.find(
+    (x) => x.plan_id === planId && x.reference_month === referenceMonth && x.service_order_number,
+  );
+  if (!execComOs || !execComOs.service_order_number) return undefined;
+
+  const novoMeta: OsMesMetaDemo = {
+    plan_id: planId,
+    reference_month: referenceMonth,
+    service_order_id: execComOs.service_order_id ?? crypto.randomUUID(),
+    service_order_number: execComOs.service_order_number,
+    task_id: `00000000-0000-4000-8000-00000009${execComOs.service_order_number}`,
+    technician_id: execComOs.technician_id ?? '',
+    technician_name: execComOs.technician_name ?? 'Técnico BRV (Demo)',
+    scheduled_start: execComOs.executed_at ?? `${referenceMonth}-10T09:00:00.000Z`,
+    estimated_minutes: 60,
+    accompanied_by: execComOs.accompanied_by ?? null,
+    report_token: `rel-pmoc-${planId.slice(-3)}-${referenceMonth}`,
+  };
+  osMesMetaMemoria.push(novoMeta);
+  return novoMeta;
+}
 
 const pausaSimulada = () => new Promise<void>((resolve) => setTimeout(resolve, 120));
 
@@ -276,6 +329,7 @@ export async function salvarEquipamentosDoPlano(
       photo_attachment_id: item.photo_attachment_id,
       sort_order: idx + 1,
       active: item.active,
+      public_token: existente?.public_token ?? gerarTokenDemo('eq-pmoc'),
       created_at: existente?.created_at ?? agora,
     };
   });
@@ -386,17 +440,30 @@ export async function listarExecucoes(planId: string): Promise<PmocEquipmentMont
 }
 
 /**
- * Gera (ou reaproveita) a Ordem de Serviço preventiva para todos os equipamentos do plano
- * que possuam tarefas previstas no mês de referência (`YYYY-MM`).
+ * Gera a Ordem de Serviço preventiva do mês com o técnico, data/hora e duração escolhidos
+ * pelo escritório (`Entrega 1`). Não duplica caso o mês já possua OS vinculada.
  */
 export async function gerarOsDoMes(
   planId: string,
   referenceMonth: string,
+  agendamento: PmocGenerateOsScheduleInput,
 ): Promise<PmocGenerateOsResult> {
-  if (USAR_BANCO_PMOC) return real.gerarOsDoMes();
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
   await pausaSimulada();
   const plano = planosMemoria.find((p) => p.id === planId);
   if (!plano) throw new Error('Plano PMOC não encontrado.');
+
+  if (!agendamento.technician_id.trim()) {
+    throw new Error('Escolha o técnico responsável pela visita.');
+  }
+  if (!agendamento.scheduled_start || !agendamento.scheduled_start.includes('T')) {
+    throw new Error('Informe a data e a hora de início do agendamento.');
+  }
+  if (!Number.isFinite(agendamento.estimated_minutes) || agendamento.estimated_minutes <= 0) {
+    throw new Error('Informe a duração prevista da visita em minutos.');
+  }
 
   const meses = gerarMesesDoPlano(plano.start_date);
   const infoMes = meses.find((m) => m.referencia === referenceMonth);
@@ -417,63 +484,41 @@ export async function gerarOsDoMes(
     throw new Error('Nenhum equipamento possui tarefas ativas previstas para este mês.');
   }
 
-  // Confere se já existe OS vinculada para este mês
-  const execExistenteComOs = execucoesMemoria.find(
-    (x) => x.plan_id === planId && x.reference_month === referenceMonth && x.service_order_number,
-  );
-
-  if (execExistenteComOs && execExistenteComOs.service_order_number) {
-    const agora = new Date().toISOString();
-    let adicionados = 0;
-    for (const eq of aplicaveis) {
-      const jaTem = execucoesMemoria.some(
-        (x) => x.plan_equipment_id === eq.id && x.reference_month === referenceMonth,
-      );
-      if (!jaTem) {
-        adicionados += 1;
-        execucoesMemoria.push({
-          id: crypto.randomUUID(),
-          plan_id: planId,
-          plan_equipment_id: eq.id,
-          reference_month: referenceMonth,
-          status: 'pendente',
-          service_order_id: execExistenteComOs.service_order_id,
-          service_order_number: execExistenteComOs.service_order_number,
-          technician_id: plano.responsible_employee_id,
-          technician_name: plano.responsible_name || null,
-          executed_at: null,
-          measurements: {
-            current_a: null,
-            temp_supply_c: null,
-            temp_return_c: null,
-            temp_ambient_c: null,
-          },
-          task_results: [],
-          technician_notes: null,
-          photo_urls: [],
-          unattended_reason: null,
-          updated_at: agora,
-        });
-      }
-    }
-
+  // Confere se já existe OS vinculada para este mês (não permite gerar outra)
+  const metaExistente = obterOuCriarMetaMesDemo(planId, referenceMonth);
+  if (metaExistente) {
     return {
-      service_order_id: execExistenteComOs.service_order_id ?? crypto.randomUUID(),
-      service_order_number: execExistenteComOs.service_order_number,
+      service_order_id: metaExistente.service_order_id,
+      service_order_number: metaExistente.service_order_number,
+      task_id: metaExistente.task_id,
       reference_month: referenceMonth,
       equipments_included: aplicaveis.length,
-      already_existed: adicionados === 0,
-      message:
-        adicionados === 0
-          ? `A OS #${execExistenteComOs.service_order_number} já estava gerada para ${infoMes.rotuloExtenso} (${aplicaveis.length} equipamento(s)).`
-          : `OS #${execExistenteComOs.service_order_number} atualizada com mais ${adicionados} equipamento(s) para ${infoMes.rotuloExtenso}.`,
+      already_existed: true,
+      message: `OS #${metaExistente.service_order_number} já gerada para este mês (${infoMes.rotuloExtenso}).`,
     };
   }
 
   proximoNumeroOsDemo += 1;
   const osNumero = proximoNumeroOsDemo;
   const osId = crypto.randomUUID();
+  const taskId = crypto.randomUUID();
   const agora = new Date().toISOString();
+  const nomeTecnico =
+    agendamento.technician_name?.trim() || plano.responsible_name || 'Técnico de Campo';
+
+  osMesMetaMemoria.push({
+    plan_id: planId,
+    reference_month: referenceMonth,
+    service_order_id: osId,
+    service_order_number: osNumero,
+    task_id: taskId,
+    technician_id: agendamento.technician_id,
+    technician_name: nomeTecnico,
+    scheduled_start: agendamento.scheduled_start,
+    estimated_minutes: Math.round(agendamento.estimated_minutes),
+    accompanied_by: null,
+    report_token: gerarTokenDemo('rel-pmoc'),
+  });
 
   for (const eq of aplicaveis) {
     const idxExistente = execucoesMemoria.findIndex(
@@ -484,9 +529,8 @@ export async function gerarOsDoMes(
         ...execucoesMemoria[idxExistente],
         service_order_id: osId,
         service_order_number: osNumero,
-        technician_id: execucoesMemoria[idxExistente].technician_id ?? plano.responsible_employee_id,
-        technician_name:
-          execucoesMemoria[idxExistente].technician_name ?? (plano.responsible_name || null),
+        technician_id: agendamento.technician_id,
+        technician_name: nomeTecnico,
         updated_at: agora,
       };
     } else {
@@ -498,8 +542,8 @@ export async function gerarOsDoMes(
         status: 'pendente',
         service_order_id: osId,
         service_order_number: osNumero,
-        technician_id: plano.responsible_employee_id,
-        technician_name: plano.responsible_name || null,
+        technician_id: agendamento.technician_id,
+        technician_name: nomeTecnico,
         executed_at: null,
         measurements: {
           current_a: null,
@@ -511,6 +555,7 @@ export async function gerarOsDoMes(
         technician_notes: null,
         photo_urls: [],
         unattended_reason: null,
+        accompanied_by: null,
         updated_at: agora,
       });
     }
@@ -519,10 +564,11 @@ export async function gerarOsDoMes(
   return {
     service_order_id: osId,
     service_order_number: osNumero,
+    task_id: taskId,
     reference_month: referenceMonth,
     equipments_included: aplicaveis.length,
     already_existed: false,
-    message: `OS preventiva #${osNumero} gerada para ${infoMes.rotuloExtenso} com ${aplicaveis.length} equipamento(s).`,
+    message: `OS preventiva #${osNumero} gerada e agendada para ${infoMes.rotuloExtenso} (${aplicaveis.length} aparelho(s)).`,
   };
 }
 
@@ -614,14 +660,24 @@ export async function buscarRelatorioMensal(
     }
   });
 
+  const metaMes = obterOuCriarMetaMesDemo(planId, referenceMonth);
+  const acompanhadoPorRelatorio =
+    metaMes?.accompanied_by ??
+    execucoesMemoria.find(
+      (x) => x.plan_id === planId && x.reference_month === referenceMonth && x.accompanied_by,
+    )?.accompanied_by ??
+    null;
+
   return {
     plan: structuredClone(plano),
     environments: structuredClone(ambientes),
     reference_month: referenceMonth,
     month_offset: monthOffset,
-    service_order_number: osNumeroPrincipal,
-    technician_name: tecnicoPrincipal,
+    service_order_number: osNumeroPrincipal ?? metaMes?.service_order_number ?? null,
+    technician_name: tecnicoPrincipal ?? metaMes?.technician_name ?? null,
     executed_at: executadoEmPrincipal,
+    accompanied_by: acompanhadoPorRelatorio,
+    public_token: metaMes?.report_token ?? null,
     attended_equipments: atendidos,
     unattended_equipments: naoAtendidos,
   };
@@ -781,4 +837,618 @@ export async function enviarAnexoTrtPmoc(
     mime_type: arquivo.type || 'application/octet-stream',
   };
 }
+
+// ============================================================================
+// NOVAS FUNÇÕES DAS FASES 2 E 3 (DEMONSTRAÇÃO EM MEMÓRIA + DESVIO P/ CLAUDE)
+// ============================================================================
+
+/**
+ * Entrega 2: devolve a consolidação do painel "PMOC do mês" e do cartão do Dashboard
+ * para o mês `referenceMonth` (`YYYY-MM`).
+ */
+export async function resumoDoMes(referenceMonth: string): Promise<PmocMonthSummary> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  const mesHoje = mesAtualLocal();
+  const planosVigentes = planosMemoria.filter((p) => {
+    const sit = calcularSituacaoPlano(p.status, p.end_date).situacao;
+    return sit === 'vigente' || sit === 'vencendo';
+  });
+
+  const counts = {
+    sem_os: 0,
+    os_agendada: 0,
+    executada: 0,
+    atrasada: 0,
+  };
+
+  const items: PmocMonthPlanItem[] = [];
+
+  for (const plano of planosVigentes) {
+    const meses = gerarMesesDoPlano(plano.start_date);
+    const infoMes = meses.find((m) => m.referencia === referenceMonth);
+    if (!infoMes) continue;
+
+    const eqsAtivos = equipamentosMemoria
+      .filter((e) => e.plan_id === plano.id && e.active)
+      .sort((a, b) => a.sort_order - b.sort_order);
+
+    let eqsComTarefa = 0;
+    let totalTarefasNoMes = 0;
+    let concluidosOuJustificados = 0;
+
+    for (const eq of eqsAtivos) {
+      const tarefasEq = tarefasMemoria.filter((t) => t.plan_equipment_id === eq.id);
+      const previstas = tarefasPrevistasNoMes(tarefasEq, infoMes.offset);
+      if (previstas.length === 0) continue;
+
+      eqsComTarefa += 1;
+      totalTarefasNoMes += previstas.length;
+
+      const exec = execucoesMemoria.find(
+        (x) => x.plan_equipment_id === eq.id && x.reference_month === referenceMonth,
+      );
+      if (exec && (exec.status === 'concluida' || exec.status === 'nao_atendido')) {
+        concluidosOuJustificados += 1;
+      }
+    }
+
+    if (eqsComTarefa === 0) continue;
+
+    const meta = obterOuCriarMetaMesDemo(plano.id, referenceMonth);
+    const execucoesDoMes = execucoesMemoria.filter(
+      (x) => x.plan_id === plano.id && x.reference_month === referenceMonth,
+    );
+
+    const osNumero =
+      meta?.service_order_number ??
+      execucoesDoMes.find((x) => x.service_order_number)?.service_order_number ??
+      null;
+    const osId =
+      meta?.service_order_id ??
+      execucoesDoMes.find((x) => x.service_order_id)?.service_order_id ??
+      null;
+    const tecnicoId =
+      meta?.technician_id ??
+      execucoesDoMes.find((x) => x.technician_id)?.technician_id ??
+      plano.responsible_employee_id;
+    const tecnicoNome =
+      meta?.technician_name ??
+      execucoesDoMes.find((x) => x.technician_name)?.technician_name ??
+      (osNumero ? plano.responsible_name : null);
+    const executadoEm =
+      execucoesDoMes.find((x) => x.executed_at)?.executed_at ?? null;
+    const acompanhadoPor =
+      meta?.accompanied_by ??
+      execucoesDoMes.find((x) => x.accompanied_by)?.accompanied_by ??
+      null;
+
+    let status: PmocMonthPlanStatus;
+    if (concluidosOuJustificados === eqsComTarefa) {
+      status = 'executada';
+    } else if (referenceMonth < mesHoje) {
+      status = 'atrasada';
+    } else if (osNumero) {
+      status = 'os_agendada';
+    } else {
+      status = 'sem_os';
+    }
+
+    counts[status] += 1;
+
+    items.push({
+      plan_id: plano.id,
+      plan_code: plano.code,
+      customer_id: plano.customer_id,
+      customer_name: plano.customer_name,
+      customer_trade_name: plano.customer_trade_name,
+      customer_phone: plano.customer_phone,
+      address_snapshot: structuredClone(plano.address_snapshot),
+      reference_month: referenceMonth,
+      month_offset: infoMes.offset,
+      equipment_count_in_month: eqsComTarefa,
+      task_count_in_month: totalTarefasNoMes,
+      status,
+      service_order_id: osId,
+      service_order_number: osNumero,
+      task_id: meta?.task_id ?? null,
+      technician_id: tecnicoId,
+      technician_name: tecnicoNome,
+      scheduled_start: meta?.scheduled_start ?? null,
+      executed_at: executadoEm,
+      accompanied_by: acompanhadoPor,
+      report_token: meta?.report_token ?? null,
+    });
+  }
+
+  return {
+    reference_month: referenceMonth,
+    active_plans_total: planosVigentes.length,
+    counts,
+    items,
+  };
+}
+
+/**
+ * Entrega 3: verifica se uma atividade do técnico (`taskId`) pertence a uma OS de PMOC
+ * e devolve os aparelhos e tarefas previstas no mês para preenchimento no celular.
+ */
+export async function buscarChecklistDaAtividade(
+  taskId: string,
+): Promise<PmocActivityChecklist> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  // Na demonstração, localiza pelo `task_id` ou `service_order_id`; se o técnico abrir uma atividade qualquer
+  // com a demonstração ligada, permite testar também pela OS de novembro do Plano 1 quando `taskId` coincidir.
+  const meta =
+    osMesMetaMemoria.find(
+      (m) => m.task_id === taskId || m.service_order_id === taskId,
+    ) ?? osMesMetaMemoria.find((m) => m.reference_month === '2026-11' && m.service_order_number === 9088);
+
+  if (!meta) {
+    return {
+      is_pmoc: false,
+      task_id: taskId,
+      service_order_id: null,
+      service_order_number: null,
+      plan_id: null,
+      plan_code: null,
+      customer_name: null,
+      reference_month: null,
+      accompanied_by: null,
+      equipments: [],
+    };
+  }
+
+  const plano = planosMemoria.find((p) => p.id === meta.plan_id);
+  if (!plano) {
+    return {
+      is_pmoc: false,
+      task_id: taskId,
+      service_order_id: null,
+      service_order_number: null,
+      plan_id: null,
+      plan_code: null,
+      customer_name: null,
+      reference_month: null,
+      accompanied_by: null,
+      equipments: [],
+    };
+  }
+
+  const meses = gerarMesesDoPlano(plano.start_date);
+  const infoMes = meses.find((m) => m.referencia === meta.reference_month);
+  const offset = infoMes?.offset ?? 1;
+
+  const ambientes = ambientesMemoria.filter((a) => a.plan_id === plano.id);
+  const nomeAmbPorId = new Map(ambientes.map((a) => [a.id, a.name]));
+
+  const eqsAtivos = equipamentosMemoria
+    .filter((e) => e.plan_id === plano.id && e.active)
+    .sort((a, b) => a.sort_order - b.sort_order);
+
+  const aparelhosChecklist: PmocFieldEquipmentChecklist[] = [];
+
+  eqsAtivos.forEach((eq, idx) => {
+    const tarefasDoEq = tarefasMemoria.filter((t) => t.plan_equipment_id === eq.id);
+    const previstas = tarefasPrevistasNoMes(tarefasDoEq, offset);
+    if (previstas.length === 0) return;
+
+    const exec = execucoesMemoria.find(
+      (x) => x.plan_equipment_id === eq.id && x.reference_month === meta.reference_month,
+    );
+
+    aparelhosChecklist.push({
+      plan_equipment_id: eq.id,
+      equipment_id: eq.equipment_id,
+      letter: letraEquipamento(idx),
+      name: eq.name,
+      identifier: eq.identifier,
+      environment_name: eq.environment_id ? (nomeAmbPorId.get(eq.environment_id) ?? null) : null,
+      equipment_type: eq.equipment_type,
+      capacity_btu: eq.capacity_btu,
+      status: exec?.status ?? 'pendente',
+      scheduled_tasks: structuredClone(previstas),
+      required_measurements: grandezasExigidasNasTarefas(previstas),
+      task_results: exec?.task_results ? structuredClone(exec.task_results) : [],
+      measurements: exec?.measurements
+        ? structuredClone(exec.measurements)
+        : {
+            current_a: null,
+            temp_supply_c: null,
+            temp_return_c: null,
+            temp_ambient_c: null,
+          },
+      technician_notes: exec?.technician_notes ?? null,
+      photo_urls: exec?.photo_urls ? [...exec.photo_urls] : [],
+      unattended_reason: exec?.unattended_reason ?? null,
+      updated_at: exec?.updated_at ?? null,
+    });
+  });
+
+  return {
+    is_pmoc: true,
+    task_id: meta.task_id,
+    service_order_id: meta.service_order_id,
+    service_order_number: meta.service_order_number,
+    plan_id: plano.id,
+    plan_code: plano.code,
+    customer_name: plano.customer_trade_name || plano.customer_name,
+    reference_month: meta.reference_month,
+    accompanied_by: meta.accompanied_by,
+    equipments: aparelhosChecklist,
+  };
+}
+
+/**
+ * Entrega 3: grava o preenchimento de um aparelho individual no checklist de campo.
+ */
+export async function salvarExecucaoAparelho(
+  dados: PmocSaveEquipmentExecutionInput,
+): Promise<PmocEquipmentMonthExecution> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  const plano = planosMemoria.find((p) => p.id === dados.plan_id);
+  if (!plano) throw new Error('Plano PMOC não encontrado.');
+
+  const meses = gerarMesesDoPlano(plano.start_date);
+  const infoMes = meses.find((m) => m.referencia === dados.reference_month);
+  const offset = infoMes?.offset ?? 1;
+
+  const tarefasDoEq = tarefasMemoria.filter(
+    (t) => t.plan_equipment_id === dados.plan_equipment_id,
+  );
+  const previstas = tarefasPrevistasNoMes(tarefasDoEq, offset);
+
+  const erroValidacao = validarExecucaoAparelhoPmoc({
+    status: dados.status,
+    tarefasPrevistas: previstas,
+    resultadosTarefas: dados.task_results,
+    medicoes: dados.measurements,
+    motivoNaoAtendido: dados.unattended_reason,
+  });
+  if (erroValidacao) {
+    throw new Error(erroValidacao);
+  }
+
+  const agora = new Date().toISOString();
+  const meta = obterOuCriarMetaMesDemo(dados.plan_id, dados.reference_month);
+
+  const idx = execucoesMemoria.findIndex(
+    (x) =>
+      x.plan_equipment_id === dados.plan_equipment_id &&
+      x.reference_month === dados.reference_month,
+  );
+
+  const registro: PmocEquipmentMonthExecution = {
+    id: idx >= 0 ? execucoesMemoria[idx].id : crypto.randomUUID(),
+    plan_id: dados.plan_id,
+    plan_equipment_id: dados.plan_equipment_id,
+    reference_month: dados.reference_month,
+    status: dados.status,
+    service_order_id:
+      (idx >= 0 ? execucoesMemoria[idx].service_order_id : null) ??
+      meta?.service_order_id ??
+      null,
+    service_order_number:
+      (idx >= 0 ? execucoesMemoria[idx].service_order_number : null) ??
+      meta?.service_order_number ??
+      null,
+    technician_id:
+      (idx >= 0 ? execucoesMemoria[idx].technician_id : null) ??
+      meta?.technician_id ??
+      plano.responsible_employee_id,
+    technician_name:
+      (idx >= 0 ? execucoesMemoria[idx].technician_name : null) ??
+      meta?.technician_name ??
+      plano.responsible_name,
+    executed_at: agora,
+    measurements:
+      dados.status === 'concluida'
+        ? structuredClone(dados.measurements)
+        : {
+            current_a: null,
+            temp_supply_c: null,
+            temp_return_c: null,
+            temp_ambient_c: null,
+          },
+    task_results: dados.status === 'concluida' ? structuredClone(dados.task_results) : [],
+    technician_notes: dados.technician_notes?.trim() || null,
+    photo_urls: [...dados.photo_urls],
+    unattended_reason:
+      dados.status === 'nao_atendido' ? (dados.unattended_reason?.trim() ?? null) : null,
+    accompanied_by: meta?.accompanied_by ?? null,
+    updated_at: agora,
+  };
+
+  if (idx >= 0) {
+    execucoesMemoria[idx] = registro;
+  } else {
+    execucoesMemoria.push(registro);
+  }
+
+  return structuredClone(registro);
+}
+
+/**
+ * Entrega 3: conclui o checklist da visita de PMOC gravando o nome obrigatório de quem acompanhou a visita.
+ */
+export async function concluirChecklist(
+  taskId: string,
+  acompanhadoPor: string,
+): Promise<void> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  const nomeLimpo = acompanhadoPor.trim();
+  if (!nomeLimpo) {
+    throw new Error('Informe o nome de quem acompanhou a visita.');
+  }
+
+  const checklist = await buscarChecklistDaAtividade(taskId);
+  if (!checklist.is_pmoc || !checklist.plan_id || !checklist.reference_month) {
+    return;
+  }
+
+  const bloqueio = motivoBloqueioConclusaoChecklistPmoc(checklist.equipments);
+  if (bloqueio) {
+    throw new Error(bloqueio);
+  }
+
+  const meta = obterOuCriarMetaMesDemo(checklist.plan_id, checklist.reference_month);
+  if (meta) {
+    meta.accompanied_by = nomeLimpo;
+  }
+
+  execucoesMemoria = execucoesMemoria.map((ex) =>
+    ex.plan_id === checklist.plan_id && ex.reference_month === checklist.reference_month
+      ? { ...ex, accompanied_by: nomeLimpo }
+      : ex,
+  );
+}
+
+/**
+ * Entrega 4: obtém (ou cria) o token e link público `/relatorio-pmoc/:token` do relatório mensal.
+ */
+export async function gerarLinkRelatorio(
+  planId: string,
+  referenceMonth: string,
+): Promise<{ token: string; url: string }> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  let meta = obterOuCriarMetaMesDemo(planId, referenceMonth);
+  if (!meta) {
+    const plano = planosMemoria.find((p) => p.id === planId);
+    if (!plano) throw new Error('Plano PMOC não encontrado.');
+    meta = {
+      plan_id: planId,
+      reference_month: referenceMonth,
+      service_order_id: crypto.randomUUID(),
+      service_order_number: 9000,
+      task_id: crypto.randomUUID(),
+      technician_id: plano.responsible_employee_id ?? '',
+      technician_name: plano.responsible_name || 'Técnico BRV',
+      scheduled_start: `${referenceMonth}-10T09:00:00.000Z`,
+      estimated_minutes: 60,
+      accompanied_by: 'Responsável local (Demo)',
+      report_token: `rel-pmoc-${planId.slice(-3)}-${referenceMonth}`,
+    };
+    osMesMetaMemoria.push(meta);
+  }
+
+  return {
+    token: meta.report_token,
+    url: linkPublicoRelatorioPmoc(meta.report_token),
+  };
+}
+
+/**
+ * Entrega 4: busca os dados públicos e higienizados do relatório mensal a partir do `token`
+ * (`/relatorio-pmoc/:token`, sem login). Nunca devolve CPF/CNPJ nem observações internas do contrato.
+ */
+export async function buscarRelatorioPublico(
+  token: string,
+): Promise<PmocMonthlyReport | null> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  const limpo = token.trim();
+  if (!limpo) return null;
+
+  let meta = osMesMetaMemoria.find((m) => m.report_token === limpo);
+
+  // Permite abrir também tokens históricos `rel-pmoc-<3digitos>-YYYY-MM` gerados nas páginas públicas
+  if (!meta) {
+    const casamento = /^rel-pmoc-(\d{3})-(\d{4}-\d{2})$/.exec(limpo);
+    if (casamento) {
+      const sufixo = casamento[1];
+      const mesRef = casamento[2];
+      const planoAchado = planosMemoria.find((p) => p.id.endsWith(sufixo));
+      if (planoAchado) {
+        meta = obterOuCriarMetaMesDemo(planoAchado.id, mesRef);
+      }
+    }
+  }
+
+  if (!meta) return null;
+
+  const relatorio = await buscarRelatorioMensal(meta.plan_id, meta.reference_month);
+  if (!relatorio) return null;
+
+  // Sanitiza campos internos/sensíveis antes de entregar à página pública
+  return {
+    ...relatorio,
+    public_token: limpo,
+    plan: {
+      ...relatorio.plan,
+      customer_document: null,
+      notes: null,
+      responsible_cpf: null,
+    },
+  };
+}
+
+/**
+ * Entrega 5: busca os dados públicos e seguros do aparelho pelo `token` do QR Code (`/equipamento/:token`).
+ * Nunca expõe CPF/CNPJ, telefone nem endereço completo do cliente.
+ */
+export async function buscarEquipamentoPublico(
+  token: string,
+): Promise<PmocPublicEquipmentView | null> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  const limpo = token.trim();
+  if (!limpo) return null;
+
+  // Token especial de demonstração para testar aparelho com selo "Sem plano vigente"
+  if (limpo === 'eq-pmoc-demo-sem-plano') {
+    return {
+      token: limpo,
+      customer_display_name: 'Edifício Comercial Plaza Demo',
+      environment_name: 'Recepção Térreo',
+      identifier: 'AR-RT-0001',
+      name: 'Split Recepção Térreo',
+      equipment_type: 'Split Hi-Wall',
+      brand: 'Midea',
+      model: 'Liva 18K',
+      capacity_btu: 18000,
+      has_active_plan: false,
+      active_plan: null,
+      recent_maintenances: [],
+    };
+  }
+
+  const eq = equipamentosMemoria.find((e) => e.public_token === limpo);
+  if (!eq) return null;
+
+  const plano = planosMemoria.find((p) => p.id === eq.plan_id);
+  if (!plano) return null;
+
+  const amb = eq.environment_id
+    ? ambientesMemoria.find((a) => a.id === eq.environment_id)
+    : undefined;
+
+  const infoSit = calcularSituacaoPlano(plano.status, plano.end_date);
+  const temPlanoVigente =
+    eq.active && (infoSit.situacao === 'vigente' || infoSit.situacao === 'vencendo');
+
+  const mesesPlano = gerarMesesDoPlano(plano.start_date);
+  const offsetPorMes = new Map(mesesPlano.map((m) => [m.referencia, m.offset]));
+  const tarefasEq = tarefasMemoria.filter((t) => t.plan_equipment_id === eq.id);
+
+  const execsAparelho = execucoesMemoria
+    .filter(
+      (x) =>
+        x.plan_equipment_id === eq.id &&
+        (x.status === 'concluida' || x.status === 'nao_atendido'),
+    )
+    .sort((a, b) => b.reference_month.localeCompare(a.reference_month))
+    .slice(0, 12);
+
+  const historico: PmocPublicEquipmentHistoryItem[] = execsAparelho.map((ex) => {
+    const offset = offsetPorMes.get(ex.reference_month) ?? 1;
+    const previstas = tarefasPrevistasNoMes(tarefasEq, offset);
+    const feitas =
+      ex.task_results.length > 0
+        ? ex.task_results.filter((r) => r.result === 'feito').length
+        : ex.status === 'concluida'
+          ? previstas.length
+          : 0;
+    const meta = obterOuCriarMetaMesDemo(plano.id, ex.reference_month);
+
+    return {
+      reference_month: ex.reference_month,
+      executed_at: ex.executed_at,
+      status: ex.status === 'concluida' ? 'concluida' : 'nao_atendido',
+      tasks_done_count: feitas,
+      tasks_total_count: previstas.length,
+      report_token: meta?.report_token ?? null,
+    };
+  });
+
+  return {
+    token: limpo,
+    customer_display_name: plano.customer_trade_name || plano.customer_name,
+    environment_name: amb?.name ?? null,
+    identifier: eq.identifier,
+    name: eq.name,
+    equipment_type: eq.equipment_type,
+    brand: eq.brand,
+    model: eq.model,
+    capacity_btu: eq.capacity_btu,
+    has_active_plan: temPlanoVigente,
+    active_plan: temPlanoVigente
+      ? {
+          code: plano.code,
+          start_date: plano.start_date,
+          end_date: plano.end_date,
+          responsible_name: plano.responsible_name,
+          registration_type: plano.registration_type,
+          registration_number: plano.registration_number,
+          responsibility_term_number: plano.responsibility_term_number,
+        }
+      : null,
+    recent_maintenances: historico,
+  };
+}
+
+/**
+ * Entrega 5: envia para a fila de impressão as etiquetas QR Code (50 x 30 mm) dos aparelhos
+ * selecionados (ou de todos os ativos do plano).
+ */
+export async function imprimirEtiquetas(
+  planId: string,
+  idsAparelhos?: string[],
+): Promise<PmocPrintLabelsResult> {
+  if (USAR_BANCO_PMOC) {
+    throw new Error('Disponível na próxima atualização do sistema.');
+  }
+  await pausaSimulada();
+
+  const filtroIds = idsAparelhos && idsAparelhos.length > 0 ? new Set(idsAparelhos) : null;
+  const alvos = equipamentosMemoria.filter(
+    (e) => e.plan_id === planId && e.active && (!filtroIds || filtroIds.has(e.id)),
+  );
+
+  if (alvos.length === 0) {
+    throw new Error('Selecione ao menos um equipamento para enviar etiquetas à impressora.');
+  }
+
+  // Garante que todos os aparelhos tenham `public_token` gerado
+  equipamentosMemoria = equipamentosMemoria.map((e) => {
+    if (e.plan_id === planId && (!filtroIds || filtroIds.has(e.id)) && !e.public_token) {
+      return { ...e, public_token: gerarTokenDemo('eq-pmoc') };
+    }
+    return e;
+  });
+
+  const qtd = alvos.length;
+  return {
+    printed_count: qtd,
+    message:
+      qtd === 1
+        ? '1 etiqueta enviada para a impressora'
+        : `${qtd} etiquetas enviadas para a impressora`,
+  };
+}
+
 

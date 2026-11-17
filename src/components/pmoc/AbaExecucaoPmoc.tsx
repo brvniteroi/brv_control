@@ -3,18 +3,23 @@ import {
   AlertCircle,
   AlertTriangle,
   CalendarCheck2,
+  Check,
   CheckCircle2,
   ClipboardList,
   Clock,
+  Copy,
   FileSpreadsheet,
   Gauge,
   Loader2,
+  MessageCircle,
   PlayCircle,
   UserCheck,
   X,
 } from 'lucide-react';
+import { prepararJanelaWhatsApp } from '../placas/regrasPlacas';
+import GerarOsMesPmocModal from './GerarOsMesPmocModal';
 import RelatorioExecucaoPmoc from './RelatorioExecucaoPmoc';
-import { gerarOsDoMes } from './fonteDeDados';
+import { gerarLinkRelatorio } from './fonteDeDados';
 import {
   CAMPOS_MEDICAO_PMOC,
   ESTILOS_CELULA_EXECUCAO,
@@ -24,13 +29,16 @@ import {
   gerarMesesDoPlano,
   letraEquipamento,
   mesAtualLocal,
+  montarLinkWhatsAppPmoc,
   rotuloPeriodicidade,
   tarefasPrevistasNoMes,
+  textoWhatsAppRelatorioPmoc,
 } from './regrasPmoc';
 import type {
   PmocEnvironment,
   PmocEquipmentMonthExecution,
   PmocEquipmentTask,
+  PmocGenerateOsResult,
   PmocPlanEquipment,
   PmocTaskResultStatus,
   PmocVisitCellStatus,
@@ -39,6 +47,8 @@ import { formatarDataHora } from '../../utils/ordens';
 
 interface AbaExecucaoPmocProps {
   planId: string;
+  customerName?: string;
+  customerPhone?: string | null;
   ehNovo: boolean;
   temAlteracoesNaoSalvas: boolean;
   startDate: string;
@@ -74,6 +84,8 @@ const SELO_RESULTADO_TAREFA: Record<
 
 export default function AbaExecucaoPmoc({
   planId,
+  customerName = 'Cliente',
+  customerPhone = null,
   ehNovo,
   temAlteracoesNaoSalvas,
   startDate,
@@ -88,7 +100,10 @@ export default function AbaExecucaoPmoc({
 
   const [mesEscolhido, setMesEscolhido] = useState<string>(mesHoje);
   const [celulaAberta, setCelulaAberta] = useState<CelulaSelecionada | null>(null);
-  const [gerandoOs, setGerandoOs] = useState(false);
+  const [mesModalGerarOs, setMesModalGerarOs] = useState<string | null>(null);
+  const [enviandoWhatsMes, setEnviandoWhatsMes] = useState<string | null>(null);
+  const [copiandoMes, setCopiandoMes] = useState<string | null>(null);
+  const [mesCopiado, setMesCopiado] = useState<string | null>(null);
   const [avisoGeracao, setAvisoGeracao] = useState<{
     tipo: 'sucesso' | 'info' | 'erro';
     texto: string;
@@ -156,25 +171,79 @@ export default function AbaExecucaoPmoc({
     return contagem;
   }, [equipamentosAtivos, execucaoPorChave, mesHoje, mesesDoPlano, tarefasPorEquipamento]);
 
-  const dispararGeracaoOs = async (referenciaAlvo: string) => {
-    if (ehNovo || !referenciaAlvo || gerandoOs) return;
-    setGerandoOs(true);
+  // Verifica se o mês selecionado já está com todos os aparelhos aplicáveis executados
+  const mesReferenciaExecutado = useMemo(() => {
+    const infoMes = mesesDoPlano.find((m) => m.referencia === mesReferenciaOs);
+    if (!infoMes) return false;
+    let totalAplicaveis = 0;
+    let totalResolvidos = 0;
+
+    for (const eq of equipamentosAtivos) {
+      const listaTarefas = tarefasPorEquipamento.get(eq.id) ?? [];
+      if (tarefasPrevistasNoMes(listaTarefas, infoMes.offset).length === 0) continue;
+      totalAplicaveis += 1;
+      const exec = execucaoPorChave.get(`${eq.id}::${mesReferenciaOs}`);
+      if (exec && (exec.status === 'concluida' || exec.status === 'nao_atendido')) {
+        totalResolvidos += 1;
+      }
+    }
+    return totalAplicaveis > 0 && totalResolvidos === totalAplicaveis;
+  }, [equipamentosAtivos, execucaoPorChave, mesReferenciaOs, mesesDoPlano, tarefasPorEquipamento]);
+
+  const abrirModalGeracaoOs = (referenciaAlvo: string) => {
+    if (ehNovo || !referenciaAlvo) return;
     setAvisoGeracao(null);
+    setMesModalGerarOs(referenciaAlvo);
+  };
+
+  const handleOsGeradaNoModal = async (resultado: PmocGenerateOsResult) => {
+    setMesModalGerarOs(null);
+    await onRecarregarExecucoes();
+    setAvisoGeracao({
+      tipo: resultado.already_existed ? 'info' : 'sucesso',
+      texto: resultado.message,
+      mesReferencia: resultado.reference_month,
+    });
+  };
+
+  const handleEnviarWhatsAppRelatorio = async (referenciaAlvo: string) => {
+    if (ehNovo || !referenciaAlvo || enviandoWhatsMes) return;
+    const janela = prepararJanelaWhatsApp();
+    setEnviandoWhatsMes(referenciaAlvo);
     try {
-      const resultado = await gerarOsDoMes(planId, referenciaAlvo);
-      await onRecarregarExecucoes();
+      const { url } = await gerarLinkRelatorio(planId, referenciaAlvo);
+      const mensagem = textoWhatsAppRelatorioPmoc(customerName, referenciaAlvo, url);
+      janela.ir(montarLinkWhatsAppPmoc(customerPhone, mensagem));
+    } catch (e) {
+      janela.cancelar();
       setAvisoGeracao({
-        tipo: resultado.already_existed ? 'info' : 'sucesso',
-        texto: resultado.message,
-        mesReferencia: resultado.reference_month,
+        tipo: 'erro',
+        texto:
+          e instanceof Error
+            ? e.message
+            : 'Não foi possível gerar o link do relatório para o WhatsApp.',
       });
+    } finally {
+      setEnviandoWhatsMes(null);
+    }
+  };
+
+  const handleCopiarLinkRelatorio = async (referenciaAlvo: string) => {
+    if (ehNovo || !referenciaAlvo || copiandoMes) return;
+    setCopiandoMes(referenciaAlvo);
+    try {
+      const { url } = await gerarLinkRelatorio(planId, referenciaAlvo);
+      await navigator.clipboard.writeText(url);
+      setMesCopiado(referenciaAlvo);
+      setTimeout(() => setMesCopiado((atual) => (atual === referenciaAlvo ? null : atual)), 2500);
     } catch (e) {
       setAvisoGeracao({
         tipo: 'erro',
-        texto: e instanceof Error ? e.message : 'Não foi possível gerar a OS preventiva do mês.',
+        texto:
+          e instanceof Error ? e.message : 'Não foi possível copiar o link do relatório.',
       });
     } finally {
-      setGerandoOs(false);
+      setCopiandoMes(null);
     }
   };
 
@@ -300,21 +369,12 @@ export default function AbaExecucaoPmoc({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                disabled={ehNovo || gerandoOs || !mesReferenciaOs}
-                onClick={() => void dispararGeracaoOs(mesReferenciaOs)}
+                disabled={ehNovo || !mesReferenciaOs}
+                onClick={() => abrirModalGeracaoOs(mesReferenciaOs)}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-brv-navy px-4 py-2 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-brv-navy-light focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {gerandoOs ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-                    Gerando OS...
-                  </>
-                ) : (
-                  <>
-                    <PlayCircle size={15} aria-hidden="true" />
-                    Gerar OS do mês
-                  </>
-                )}
+                <PlayCircle size={15} aria-hidden="true" />
+                Gerar OS do mês
               </button>
 
               <button
@@ -326,6 +386,40 @@ export default function AbaExecucaoPmoc({
                 <FileSpreadsheet size={15} aria-hidden="true" />
                 Relatório do mês
               </button>
+
+              {mesReferenciaExecutado && !ehNovo && (
+                <>
+                  <button
+                    type="button"
+                    disabled={enviandoWhatsMes === mesReferenciaOs}
+                    onClick={() => void handleEnviarWhatsAppRelatorio(mesReferenciaOs)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    {enviandoWhatsMes === mesReferenciaOs ? (
+                      <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                    ) : (
+                      <MessageCircle size={14} aria-hidden="true" />
+                    )}
+                    <span>Enviar relatório pelo WhatsApp</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={copiandoMes === mesReferenciaOs}
+                    onClick={() => void handleCopiarLinkRelatorio(mesReferenciaOs)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    {copiandoMes === mesReferenciaOs ? (
+                      <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                    ) : mesCopiado === mesReferenciaOs ? (
+                      <Check size={14} className="text-emerald-600" aria-hidden="true" />
+                    ) : (
+                      <Copy size={14} aria-hidden="true" />
+                    )}
+                    <span>{mesCopiado === mesReferenciaOs ? 'Link copiado' : 'Copiar link'}</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -590,9 +684,8 @@ export default function AbaExecucaoPmoc({
                 !ehNovo && (
                   <button
                     type="button"
-                    disabled={gerandoOs}
-                    onClick={() => void dispararGeracaoOs(detalhesCelula.mes.referencia)}
-                    className="mt-1.5 text-xs font-semibold text-blue-600 hover:underline disabled:opacity-50"
+                    onClick={() => abrirModalGeracaoOs(detalhesCelula.mes.referencia)}
+                    className="mt-1.5 text-xs font-semibold text-blue-600 hover:underline"
                   >
                     Gerar OS deste mês agora
                   </button>
@@ -805,6 +898,15 @@ export default function AbaExecucaoPmoc({
           </div>
         </div>
       )}
+
+      {/* Modal de agendamento da OS do mês (Entrega 1) */}
+      <GerarOsMesPmocModal
+        aberto={Boolean(mesModalGerarOs)}
+        planId={planId}
+        mesInicial={mesModalGerarOs ?? undefined}
+        onFechar={() => setMesModalGerarOs(null)}
+        onGerada={(res) => void handleOsGeradaNoModal(res)}
+      />
 
       {/* Modal A4 do Relatório Mensal de Execução (Entrega 4) */}
       {mesRelatorioModal && !ehNovo && (

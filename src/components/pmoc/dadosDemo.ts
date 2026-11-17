@@ -166,12 +166,15 @@ export const MODELOS_TAREFA_INICIAIS: PmocTaskTemplate[] = [
 // IDs sintéticos em formato UUID v4 válido para não causar erro de sintaxe em filtros PostgREST
 const PLANO_1_ID = '00000000-0000-4000-8000-000000000101';
 const PLANO_2_ID = '00000000-0000-4000-8000-000000000102';
+const PLANO_3_ID = '00000000-0000-4000-8000-000000000103';
 
 const CLIENTE_DEMO_1_ID = '00000000-0000-4000-8000-000000000201';
 const CLIENTE_DEMO_2_ID = '00000000-0000-4000-8000-000000000202';
+const CLIENTE_DEMO_3_ID = '00000000-0000-4000-8000-000000000203';
 
 const END_DEMO_1_ID = '00000000-0000-4000-8000-000000000301';
 const END_DEMO_2_ID = '00000000-0000-4000-8000-000000000302';
+const END_DEMO_3_ID = '00000000-0000-4000-8000-000000000303';
 
 const TEC_DEMO_1_ID = '00000000-0000-4000-8000-000000000401';
 const TEC_DEMO_2_ID = '00000000-0000-4000-8000-000000000402';
@@ -179,12 +182,16 @@ const TEC_DEMO_2_ID = '00000000-0000-4000-8000-000000000402';
 const AMB_1_ID = '00000000-0000-4000-8000-000000000501';
 const AMB_2_ID = '00000000-0000-4000-8000-000000000502';
 const AMB_3_ID = '00000000-0000-4000-8000-000000000503';
+const AMB_4_ID = '00000000-0000-4000-8000-000000000504';
 
 const EQ_1_ID = '00000000-0000-4000-8000-000000000601';
 const EQ_2_ID = '00000000-0000-4000-8000-000000000602';
 const EQ_3_ID = '00000000-0000-4000-8000-000000000603';
 const EQ_4_ID = '00000000-0000-4000-8000-000000000604';
 const EQ_5_ID = '00000000-0000-4000-8000-000000000605';
+const EQ_6_ID = '00000000-0000-4000-8000-000000000606';
+
+export const TASK_DEMO_PMOC_NOVEMBRO_ID = '00000000-0000-4000-8000-000000099088';
 
 export const PLANOS_INICIAIS_DEMO: PmocPlan[] = [
   {
@@ -270,6 +277,46 @@ export const PLANOS_INICIAIS_DEMO: PmocPlan[] = [
     created_at: '2025-12-15T13:20:00.000Z',
     updated_at: '2026-10-20T10:15:00.000Z',
   },
+  {
+    id: PLANO_3_ID,
+    code: 'PMOC-2026-0002',
+    customer_id: CLIENTE_DEMO_3_ID,
+    customer_name: 'Colégio Horizonte Niterói Ltda (Fictício)',
+    customer_trade_name: 'Colégio Horizonte Demo',
+    customer_person_type: 'PJ',
+    customer_document: '00DEM001000133',
+    customer_email: 'manutencao@horizonte-demo.exemplo.br',
+    customer_phone: '21998880300',
+    address_id: END_DEMO_3_ID,
+    address_snapshot: {
+      label: 'Campus Santa Rosa (Demo)',
+      street: 'Rua Exemplo Doutor Sardinha',
+      number: '410',
+      complement: 'Bloco Pedagógico',
+      district: 'Santa Rosa',
+      city: 'Niterói',
+      state: 'RJ',
+      zip_code: '24240-000',
+    },
+    start_date: '2026-09-01',
+    end_date: '2027-08-31',
+    status: 'vigente',
+    responsible_employee_id: TEC_DEMO_1_ID,
+    responsible_name: 'Carlos Eduardo Mendes (Demo)',
+    responsible_cpf: null,
+    responsible_email: EMPRESA_BRV.email,
+    responsible_phone: EMPRESA_BRV.telefone,
+    registration_type: 'CFT',
+    registration_number: 'CFT-RJ-000101-DEMO',
+    responsibility_term_number: 'TRT-2026-0002-DEMO',
+    trt_attachment_url: criarSvgTermoDemo('TRT-2026-0002-DEMO', 'Carlos Eduardo Mendes (Demo)'),
+    trt_attachment_name: 'trt-2026-0002-demo.svg',
+    trt_attachment_mime: 'image/svg+xml',
+    elaborated_by: EMPRESA_BRV.razaoSocial,
+    notes: 'Manutenção executada aos sábados pela manhã.',
+    created_at: '2026-09-01T10:00:00.000Z',
+    updated_at: '2026-11-10T15:00:00.000Z',
+  },
 ];
 
 export const AMBIENTES_INICIAIS_DEMO: PmocEnvironment[] = [
@@ -306,13 +353,24 @@ export const AMBIENTES_INICIAIS_DEMO: PmocEnvironment[] = [
     sort_order: 1,
     created_at: '2025-12-15T13:25:00.000Z',
   },
+  {
+    id: AMB_4_ID,
+    plan_id: PLANO_3_ID,
+    name: 'Auditório Principal',
+    code: 'AU',
+    fixed_occupants: 2,
+    floating_occupants: 60,
+    area_m2: 96,
+    sort_order: 1,
+    created_at: '2026-09-01T10:05:00.000Z',
+  },
 ];
 
 export const EQUIPAMENTOS_INICIAIS_DEMO: PmocPlanEquipment[] = [
   {
     id: EQ_1_ID,
     plan_id: PLANO_1_ID,
-    equipment_id: null,
+    equipment_id: '00000000-0000-4000-8000-000000007001',
     environment_id: AMB_1_ID,
     equipment_type: 'Split Hi-Wall',
     name: 'Split Recepção Principal',
@@ -325,12 +383,13 @@ export const EQUIPAMENTOS_INICIAIS_DEMO: PmocPlanEquipment[] = [
     photo_attachment_id: null,
     sort_order: 1,
     active: true,
+    public_token: 'eq-pmoc-demo-001',
     created_at: '2026-08-01T11:10:00.000Z',
   },
   {
     id: EQ_2_ID,
     plan_id: PLANO_1_ID,
-    equipment_id: null,
+    equipment_id: '00000000-0000-4000-8000-000000007002',
     environment_id: AMB_1_ID,
     equipment_type: 'Cassete',
     name: 'Cassete Sala de Espera',
@@ -343,12 +402,13 @@ export const EQUIPAMENTOS_INICIAIS_DEMO: PmocPlanEquipment[] = [
     photo_attachment_id: null,
     sort_order: 2,
     active: true,
+    public_token: 'eq-pmoc-demo-002',
     created_at: '2026-08-01T11:11:00.000Z',
   },
   {
     id: EQ_3_ID,
     plan_id: PLANO_1_ID,
-    equipment_id: null,
+    equipment_id: '00000000-0000-4000-8000-000000007003',
     environment_id: AMB_2_ID,
     equipment_type: 'Split Hi-Wall',
     name: 'Split Sala de Exames 01',
@@ -361,12 +421,13 @@ export const EQUIPAMENTOS_INICIAIS_DEMO: PmocPlanEquipment[] = [
     photo_attachment_id: null,
     sort_order: 3,
     active: true,
+    public_token: 'eq-pmoc-demo-003',
     created_at: '2026-08-01T11:12:00.000Z',
   },
   {
     id: EQ_4_ID,
     plan_id: PLANO_2_ID,
-    equipment_id: null,
+    equipment_id: '00000000-0000-4000-8000-000000007004',
     environment_id: AMB_3_ID,
     equipment_type: 'Split Piso-Teto',
     name: 'Piso-Teto Salão Norte',
@@ -379,12 +440,13 @@ export const EQUIPAMENTOS_INICIAIS_DEMO: PmocPlanEquipment[] = [
     photo_attachment_id: null,
     sort_order: 1,
     active: true,
+    public_token: 'eq-pmoc-demo-004',
     created_at: '2025-12-15T13:30:00.000Z',
   },
   {
     id: EQ_5_ID,
     plan_id: PLANO_2_ID,
-    equipment_id: null,
+    equipment_id: '00000000-0000-4000-8000-000000007005',
     environment_id: AMB_3_ID,
     equipment_type: 'Split Hi-Wall',
     name: 'Split Reserva Apoio Bar',
@@ -397,7 +459,27 @@ export const EQUIPAMENTOS_INICIAIS_DEMO: PmocPlanEquipment[] = [
     photo_attachment_id: null,
     sort_order: 2,
     active: true,
+    public_token: 'eq-pmoc-demo-005',
     created_at: '2025-12-15T13:31:00.000Z',
+  },
+  {
+    id: EQ_6_ID,
+    plan_id: PLANO_3_ID,
+    equipment_id: '00000000-0000-4000-8000-000000007006',
+    environment_id: AMB_4_ID,
+    equipment_type: 'Split Piso-Teto',
+    name: 'Piso-Teto Auditório Central',
+    brand: 'Daikin',
+    model: 'SkyAir Inverter 36K',
+    serial_number: 'DEMO-SN-006',
+    capacity_btu: 36000,
+    identifier: 'AR-AU-0001',
+    photo_url: criarSvgIlustrativo('AR-AU-0001', 'Piso-Teto Auditório Central · 36.000 BTUs', '#ede9fe', '#6d28d9'),
+    photo_attachment_id: null,
+    sort_order: 1,
+    active: true,
+    public_token: 'eq-pmoc-demo-006',
+    created_at: '2026-09-01T10:15:00.000Z',
   },
 ];
 
@@ -440,6 +522,7 @@ export const TAREFAS_INICIAIS_DEMO: PmocEquipmentTask[] = [
   ...gerarCronogramaEquipamentoDemo(PLANO_1_ID, EQ_3_ID, 'p1-eq3'),
   ...gerarCronogramaEquipamentoDemo(PLANO_2_ID, EQ_4_ID, 'p2-eq4'),
   ...gerarCronogramaEquipamentoDemo(PLANO_2_ID, EQ_5_ID, 'p2-eq5', true),
+  ...gerarCronogramaEquipamentoDemo(PLANO_3_ID, EQ_6_ID, 'p3-eq6'),
 ];
 
 function criarExecucaoConcluidaDemo(params: {
@@ -457,6 +540,7 @@ function criarExecucaoConcluidaDemo(params: {
   retornoC: number;
   ambienteC: number;
   observacao: string;
+  acompanhadoPor?: string;
   incluirFoto?: boolean;
 }): PmocEquipmentMonthExecution {
   const tarefasDoAparelho = TAREFAS_INICIAIS_DEMO.filter(
@@ -500,6 +584,7 @@ function criarExecucaoConcluidaDemo(params: {
         ]
       : [],
     unattended_reason: null,
+    accompanied_by: params.acompanhadoPor ?? 'Responsável local (Demo)',
     updated_at: params.executadoEm,
   };
 }
@@ -674,6 +759,197 @@ export const EXECUCOES_INICIAIS_DEMO: PmocEquipmentMonthExecution[] = [
   },
 
   // Plano 1 — Outubro/2026 (mês 3): sem execução concluída -> aparece como "Atrasada"
-  // Plano 2 — Dez/25 a Set/26 concluídos, Out/26 atrasado, Nov/26 previsto
+  // Plano 1 — Novembro/2026 (mês 4): OS #9088 agendada (1 aparelho já preenchido e 2 pendentes no app)
+  criarExecucaoConcluidaDemo({
+    id: 'exec-p1-eq1-m4',
+    planId: PLANO_1_ID,
+    planEquipmentId: EQ_1_ID,
+    referenceMonth: '2026-11',
+    monthOffset: 4,
+    osNumber: 9088,
+    tecnicoId: TEC_DEMO_1_ID,
+    tecnicoNome: 'Carlos Eduardo Mendes (Demo)',
+    executadoEm: '2026-11-17T12:15:00.000Z',
+    correnteA: 5.7,
+    insuflamentoC: 11.3,
+    retornoC: 23.7,
+    ambienteC: 22.3,
+    observacao: 'Filtros higienizados e dreno testado.',
+    acompanhadoPor: '',
+    incluirFoto: true,
+  }),
+  {
+    id: 'exec-p1-eq2-m4',
+    plan_id: PLANO_1_ID,
+    plan_equipment_id: EQ_2_ID,
+    reference_month: '2026-11',
+    status: 'pendente',
+    service_order_id: '00000000-0000-4000-8000-00000009088',
+    service_order_number: 9088,
+    technician_id: TEC_DEMO_1_ID,
+    technician_name: 'Carlos Eduardo Mendes (Demo)',
+    executed_at: null,
+    measurements: {
+      current_a: null,
+      temp_supply_c: null,
+      temp_return_c: null,
+      temp_ambient_c: null,
+    },
+    task_results: [],
+    technician_notes: null,
+    photo_urls: [],
+    unattended_reason: null,
+    updated_at: '2026-11-17T11:00:00.000Z',
+  },
+  {
+    id: 'exec-p1-eq3-m4',
+    plan_id: PLANO_1_ID,
+    plan_equipment_id: EQ_3_ID,
+    reference_month: '2026-11',
+    status: 'pendente',
+    service_order_id: '00000000-0000-4000-8000-00000009088',
+    service_order_number: 9088,
+    technician_id: TEC_DEMO_1_ID,
+    technician_name: 'Carlos Eduardo Mendes (Demo)',
+    executed_at: null,
+    measurements: {
+      current_a: null,
+      temp_supply_c: null,
+      temp_return_c: null,
+      temp_ambient_c: null,
+    },
+    task_results: [],
+    technician_notes: null,
+    photo_urls: [],
+    unattended_reason: null,
+    updated_at: '2026-11-17T11:00:00.000Z',
+  },
+
+  // Plano 2 — Dez/25 a Set/26 concluídos, Out/26 atrasado, Nov/26 sem OS
   ...gerarExecucoesPlano2Demo(),
+
+  // Plano 3 — Set/26, Out/26 e Nov/26 concluídos (Nov/26 aparece como "Executada" no painel do mês)
+  criarExecucaoConcluidaDemo({
+    id: 'exec-p3-eq6-m1',
+    planId: PLANO_3_ID,
+    planEquipmentId: EQ_6_ID,
+    referenceMonth: '2026-09',
+    monthOffset: 1,
+    osNumber: 9052,
+    tecnicoId: TEC_DEMO_1_ID,
+    tecnicoNome: 'Carlos Eduardo Mendes (Demo)',
+    executadoEm: '2026-09-12T11:20:00.000Z',
+    correnteA: 7.4,
+    insuflamentoC: 11.5,
+    retornoC: 23.9,
+    ambienteC: 22.6,
+    observacao: 'Primeira visita preventiva do contrato concluída.',
+    acompanhadoPor: 'Coord. Patrícia Nogueira (Demo)',
+  }),
+  criarExecucaoConcluidaDemo({
+    id: 'exec-p3-eq6-m2',
+    planId: PLANO_3_ID,
+    planEquipmentId: EQ_6_ID,
+    referenceMonth: '2026-10',
+    monthOffset: 2,
+    osNumber: 9071,
+    tecnicoId: TEC_DEMO_1_ID,
+    tecnicoNome: 'Carlos Eduardo Mendes (Demo)',
+    executadoEm: '2026-10-10T11:10:00.000Z',
+    correnteA: 7.5,
+    insuflamentoC: 11.6,
+    retornoC: 24.0,
+    ambienteC: 22.8,
+    observacao: 'Limpeza das bandejas e verificação elétrica.',
+    acompanhadoPor: 'Coord. Patrícia Nogueira (Demo)',
+  }),
+  criarExecucaoConcluidaDemo({
+    id: 'exec-p3-eq6-m3',
+    planId: PLANO_3_ID,
+    planEquipmentId: EQ_6_ID,
+    referenceMonth: '2026-11',
+    monthOffset: 3,
+    osNumber: 9092,
+    tecnicoId: TEC_DEMO_1_ID,
+    tecnicoNome: 'Carlos Eduardo Mendes (Demo)',
+    executadoEm: '2026-11-14T10:40:00.000Z',
+    correnteA: 7.3,
+    insuflamentoC: 11.2,
+    retornoC: 23.5,
+    ambienteC: 22.1,
+    observacao: 'Serpentina higienizada, reaperto de bornes e teste de drenagem.',
+    acompanhadoPor: 'Coord. Patrícia Nogueira (Demo)',
+    incluirFoto: true,
+  }),
 ];
+
+/** Metadados iniciais de OS mensais e tokens de relatórios públicos para o modo de demonstração. */
+export interface OsMesMetaDemo {
+  plan_id: string;
+  reference_month: string;
+  service_order_id: string;
+  service_order_number: number;
+  task_id: string;
+  technician_id: string;
+  technician_name: string;
+  scheduled_start: string;
+  estimated_minutes: number;
+  accompanied_by: string | null;
+  report_token: string;
+}
+
+export const OS_MES_META_INICIAIS_DEMO: OsMesMetaDemo[] = [
+  {
+    plan_id: PLANO_1_ID,
+    reference_month: '2026-08',
+    service_order_id: '00000000-0000-4000-8000-00000009010',
+    service_order_number: 9010,
+    task_id: '00000000-0000-4000-8000-000000099010',
+    technician_id: TEC_DEMO_1_ID,
+    technician_name: 'Carlos Eduardo Mendes (Demo)',
+    scheduled_start: '2026-08-06T09:00:00.000Z',
+    estimated_minutes: 90,
+    accompanied_by: 'Dra. Helena Vasconcelos (Demo)',
+    report_token: 'rel-pmoc-demo-2026-08',
+  },
+  {
+    plan_id: PLANO_1_ID,
+    reference_month: '2026-09',
+    service_order_id: '00000000-0000-4000-8000-00000009045',
+    service_order_number: 9045,
+    task_id: '00000000-0000-4000-8000-000000099045',
+    technician_id: TEC_DEMO_1_ID,
+    technician_name: 'Carlos Eduardo Mendes (Demo)',
+    scheduled_start: '2026-09-04T09:00:00.000Z',
+    estimated_minutes: 90,
+    accompanied_by: 'Marcos Paulo Ribeiro (Demo)',
+    report_token: 'rel-pmoc-demo-2026-09',
+  },
+  {
+    plan_id: PLANO_1_ID,
+    reference_month: '2026-11',
+    service_order_id: '00000000-0000-4000-8000-00000009088',
+    service_order_number: 9088,
+    task_id: TASK_DEMO_PMOC_NOVEMBRO_ID,
+    technician_id: TEC_DEMO_1_ID,
+    technician_name: 'Carlos Eduardo Mendes (Demo)',
+    scheduled_start: '2026-11-17T12:00:00.000Z',
+    estimated_minutes: 90,
+    accompanied_by: null,
+    report_token: 'rel-pmoc-demo-2026-11-p1',
+  },
+  {
+    plan_id: PLANO_3_ID,
+    reference_month: '2026-11',
+    service_order_id: '00000000-0000-4000-8000-00000009092',
+    service_order_number: 9092,
+    task_id: '00000000-0000-4000-8000-000000099092',
+    technician_id: TEC_DEMO_1_ID,
+    technician_name: 'Carlos Eduardo Mendes (Demo)',
+    scheduled_start: '2026-11-14T10:00:00.000Z',
+    estimated_minutes: 45,
+    accompanied_by: 'Coord. Patrícia Nogueira (Demo)',
+    report_token: 'rel-pmoc-demo-2026-11',
+  },
+];
+

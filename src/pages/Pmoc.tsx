@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   AlertTriangle,
   Building2,
+  CalendarCheck2,
   CalendarClock,
   CheckCircle2,
   FileCheck2,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import FaixaDadosDemo from '../components/pmoc/FaixaDadosDemo';
+import PainelPmocDoMes from '../components/pmoc/PainelPmocDoMes';
 import { listarPlanos } from '../components/pmoc/fonteDeDados';
 import {
   calcularSituacaoPlano,
@@ -48,7 +50,16 @@ function normalizarBusca(texto: string): string {
 export default function Pmoc() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const podeGerenciar = profile?.role === 'admin' || profile?.role === 'escritorio';
+
+  const abaAtiva: 'planos' | 'mes' = searchParams.get('aba') === 'mes' ? 'mes' : 'planos';
+  const mudarAba = (nova: 'planos' | 'mes') => {
+    const proximo = new URLSearchParams(searchParams);
+    if (nova === 'mes') proximo.set('aba', 'mes');
+    else proximo.delete('aba');
+    setSearchParams(proximo, { replace: true });
+  };
 
   const [planos, setPlanos] = useState<PmocPlanSummary[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -187,7 +198,48 @@ export default function Pmoc() {
         </div>
       </div>
 
-      {/* Cards de resumo operacional */}
+      {/* Seletor de abas: Lista de Planos vs PMOC do mês (Entrega 2) */}
+      <div
+        role="tablist"
+        aria-label="Visões do módulo PMOC"
+        className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-2xs"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={abaAtiva === 'planos'}
+          onClick={() => mudarAba('planos')}
+          className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition sm:text-sm ${
+            abaAtiva === 'planos'
+              ? 'bg-brv-navy text-white shadow-2xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <FileCheck2 size={16} aria-hidden="true" />
+          <span>Planos PMOC</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={abaAtiva === 'mes'}
+          onClick={() => mudarAba('mes')}
+          className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition sm:text-sm ${
+            abaAtiva === 'mes'
+              ? 'bg-brv-navy text-white shadow-2xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <CalendarCheck2 size={16} aria-hidden="true" />
+          <span>PMOC do mês</span>
+        </button>
+      </div>
+
+      {abaAtiva === 'mes' ? (
+        <PainelPmocDoMes />
+      ) : (
+        <>
+          {/* Cards de resumo operacional */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
@@ -523,6 +575,8 @@ export default function Pmoc() {
             </span>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

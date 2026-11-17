@@ -6,6 +6,7 @@ import CardsResumo from '../components/dashboard/CardsResumo';
 import AtividadesHoje from '../components/dashboard/AtividadesHoje';
 import PrecisamAtencao from '../components/dashboard/PrecisamAtencao';
 import CartaoBackup from '../components/dashboard/CartaoBackup';
+import CartaoPmocMes from '../components/dashboard/CartaoPmocMes';
 
 function formatarDataHojeExtenso(): string {
   try {
@@ -150,6 +151,9 @@ export default function Dashboard() {
         <>
           {/* Cartões Numéricos e Resumo de OS */}
           <CardsResumo resumo={dados.resumo} />
+
+          {/* PMOC do mês: só admin e escritório, e só quando há planos vigentes */}
+          {(profile?.role === 'admin' || profile?.role === 'escritorio') && <CartaoPmocMes />}
 
           {/* Seções em Duas Colunas (Atividades de Hoje e Precisam de Atenção) */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

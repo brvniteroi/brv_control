@@ -1,23 +1,30 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import BotoesFoto from '../comum/BotoesFoto';
 import {
   AlertTriangle,
   Check,
+  CheckCircle2,
   ExternalLink,
+  Eye,
   ImagePlus,
   Loader2,
   Plus,
+  Printer,
+  QrCode,
   Snowflake,
   Trash2,
   X,
 } from 'lucide-react';
-import { enviarFotoEquipamentoPmoc } from './fonteDeDados';
+import { EMPRESA_BRV } from './empresa';
+import { enviarFotoEquipamentoPmoc, imprimirEtiquetas } from './fonteDeDados';
 import {
   TIPOS_EQUIPAMENTO_SUGERIDOS,
   ehIdentificadorAutomatico,
   formatarBtus,
   gerarProximoIdentificador,
   letraEquipamento,
+  linkPublicoEquipamentoPmoc,
 } from './regrasPmoc';
 import { listarEquipamentos, type EquipamentoComCliente } from '../../services/equipamentos';
 import type { PmocEnvironment, PmocPlanEquipment } from '../../types/pmoc';
@@ -49,6 +56,12 @@ export default function AbaEquipamentosPmoc({
   const [fotoAmpliadaUrl, setFotoAmpliadaUrl] = useState<string | null>(null);
   const [enviandoFotoId, setEnviandoFotoId] = useState<string | null>(null);
 
+  // Seleção para impressão de etiquetas QR (50 × 30 mm)
+  const [selecionadosEtiqueta, setSelecionadosEtiqueta] = useState<Record<string, boolean>>({});
+  const [modalEtiquetasAberto, setModalEtiquetasAberto] = useState(false);
+  const [imprimindoEtiquetas, setImprimindoEtiquetas] = useState(false);
+  const [avisoImpressao, setAvisoImpressao] = useState<string | null>(null);
+
   // Modal de importação de equipamentos cadastrados do cliente
   const [modalClienteAberto, setModalClienteAberto] = useState(false);
   const [carregandoCatalogo, setCarregandoCatalogo] = useState(false);
@@ -78,6 +91,63 @@ export default function AbaEquipamentosPmoc({
     }
     return conj;
   }, [equipamentos]);
+
+  const idsEquipamentosSelecionados = useMemo(
+    () => equipamentos.filter((eq) => selecionadosEtiqueta[eq.id]).map((eq) => eq.id),
+    [equipamentos, selecionadosEtiqueta],
+  );
+
+  const equipamentosParaEtiqueta = useMemo(() => {
+    if (idsEquipamentosSelecionados.length > 0) {
+      const conj = new Set(idsEquipamentosSelecionados);
+      return equipamentos.filter((eq) => conj.has(eq.id));
+    }
+    return equipamentos.filter((eq) => eq.active);
+  }, [equipamentos, idsEquipamentosSelecionados]);
+
+  const todosMarcadosEtiqueta =
+    equipamentos.length > 0 && idsEquipamentosSelecionados.length === equipamentos.length;
+
+  const alternarTodosEtiqueta = (marcar: boolean) => {
+    if (!marcar) {
+      setSelecionadosEtiqueta({});
+      return;
+    }
+    const proximo: Record<string, boolean> = {};
+    for (const eq of equipamentos) {
+      proximo[eq.id] = true;
+    }
+    setSelecionadosEtiqueta(proximo);
+  };
+
+  const handleImprimirEtiquetas = async (idsCustomizados?: string[]) => {
+    const alvos =
+      idsCustomizados ??
+      (idsEquipamentosSelecionados.length > 0
+        ? idsEquipamentosSelecionados
+        : equipamentos.filter((eq) => eq.active).map((eq) => eq.id));
+
+    if (alvos.length === 0) {
+      onErro('Adicione ao menos um equipamento antes de imprimir etiquetas.');
+      return;
+    }
+
+    onErro(null);
+    setAvisoImpressao(null);
+    setImprimindoEtiquetas(true);
+    try {
+      const res = await imprimirEtiquetas(planId, alvos);
+      setAvisoImpressao(res.message);
+    } catch (err) {
+      onErro(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível enviar as etiquetas para a fila de impressão.',
+      );
+    } finally {
+      setImprimindoEtiquetas(false);
+    }
+  };
 
   const abrirModalEquipamentosDoCliente = async () => {
     if (!customerId) {
@@ -139,6 +209,7 @@ export default function AbaEquipamentosPmoc({
         serial_number: eq.serial_number,
         capacity_btu: eq.capacity_btu ?? 12000,
         identifier: identificador,
+        public_token: `eq-pmoc-${identificador.toLowerCase()}`,
         photo_url: null,
         photo_attachment_id: null,
         sort_order: equipamentos.length + idx + 1,
@@ -172,6 +243,7 @@ export default function AbaEquipamentosPmoc({
       serial_number: null,
       capacity_btu: 12000,
       identifier: identificador,
+      public_token: `eq-pmoc-${identificador.toLowerCase()}`,
       photo_url: null,
       photo_attachment_id: null,
       sort_order: equipamentos.length + 1,
@@ -250,11 +322,49 @@ export default function AbaEquipamentosPmoc({
         <div>
           <h2 className="text-sm font-bold text-slate-900">Equipamentos do plano</h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Vincule os condicionadores de ar aos ambientes. O identificador <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px]">AR-&lt;SIGLA&gt;-&lt;0001&gt;</code> é gerado pela sigla do ambiente.
+            Vincule os condicionadores de ar aos ambientes. O identificador{' '}
+            <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px]">
+              AR-&lt;SIGLA&gt;-&lt;0001&gt;
+            </code>{' '}
+            é gerado pela sigla do ambiente.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {equipamentos.length > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setAvisoImpressao(null);
+                  setModalEtiquetasAberto(true);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <Eye size={14} aria-hidden="true" />
+                Ver etiquetas (50×30 mm)
+              </button>
+
+              <button
+                type="button"
+                disabled={imprimindoEtiquetas}
+                onClick={() => void handleImprimirEtiquetas()}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+              >
+                {imprimindoEtiquetas ? (
+                  <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <Printer size={14} aria-hidden="true" />
+                )}
+                {imprimindoEtiquetas
+                  ? 'Enviando...'
+                  : idsEquipamentosSelecionados.length > 0
+                    ? `Imprimir etiquetas (${idsEquipamentosSelecionados.length})`
+                    : 'Imprimir etiquetas'}
+              </button>
+            </>
+          )}
+
           <button
             type="button"
             onClick={onIrCadastroEquipamentos}
@@ -283,6 +393,26 @@ export default function AbaEquipamentosPmoc({
           </button>
         </div>
       </div>
+
+      {/* Confirmação de envio para a fila de etiquetas */}
+      {avisoImpressao && (
+        <div
+          role="status"
+          className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-900"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <CheckCircle2 size={15} className="text-emerald-600" aria-hidden="true" />
+            {avisoImpressao}
+          </span>
+          <button
+            type="button"
+            onClick={() => setAvisoImpressao(null)}
+            className="text-emerald-700 hover:underline"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {/* Datalist de tipos comuns de equipamentos */}
       <datalist id="pmoc-tipos-equipamento">
@@ -329,10 +459,19 @@ export default function AbaEquipamentosPmoc({
             tabIndex={0}
             className="overflow-x-auto"
           >
-            <table className="w-full min-w-[920px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[960px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/80 font-semibold tracking-wider text-slate-500 uppercase">
-                  <th scope="col" className="w-10 px-3 py-3 text-center">
+                  <th scope="col" className="w-9 px-3 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      aria-label="Selecionar todos os equipamentos para impressão de etiquetas"
+                      checked={todosMarcadosEtiqueta}
+                      onChange={(e) => alternarTodosEtiqueta(e.target.checked)}
+                      className="h-3.5 w-3.5 rounded accent-blue-600"
+                    />
+                  </th>
+                  <th scope="col" className="w-10 px-2 py-3 text-center">
                     #
                   </th>
                   <th scope="col" className="w-48 px-3 py-3">
@@ -347,7 +486,7 @@ export default function AbaEquipamentosPmoc({
                   <th scope="col" className="w-36 px-3 py-3 text-right">
                     Capacidade (BTUs)
                   </th>
-                  <th scope="col" className="w-36 px-3 py-3">
+                  <th scope="col" className="w-40 px-3 py-3">
                     Identificador *
                   </th>
                   <th scope="col" className="w-36 px-3 py-3 text-center">
@@ -368,10 +507,26 @@ export default function AbaEquipamentosPmoc({
                     Boolean(idNormalizado) &&
                     (contagemIdentificadores.get(idNormalizado) ?? 0) > 1;
                   const enviandoEstaFoto = enviandoFotoId === eq.id;
+                  const marcadoEtiqueta = Boolean(selecionadosEtiqueta[eq.id]);
 
                   return (
                     <tr key={eq.id} className="align-top hover:bg-slate-50/50">
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-3 py-3.5 text-center">
+                        <input
+                          type="checkbox"
+                          aria-label={`Selecionar etiqueta do equipamento ${eq.identifier || letra}`}
+                          checked={marcadoEtiqueta}
+                          onChange={(e) =>
+                            setSelecionadosEtiqueta((prev) => ({
+                              ...prev,
+                              [eq.id]: e.target.checked,
+                            }))
+                          }
+                          className="h-3.5 w-3.5 rounded accent-blue-600"
+                        />
+                      </td>
+
+                      <td className="px-2 py-3 text-center">
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 font-bold text-slate-700">
                           {letra}
                         </span>
@@ -474,6 +629,17 @@ export default function AbaEquipamentosPmoc({
                             Identificador repetido
                           </span>
                         )}
+                        {eq.public_token && (
+                          <Link
+                            to={`/equipamento/${eq.public_token}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:underline"
+                          >
+                            <QrCode size={11} aria-hidden="true" />
+                            Ficha pública QR
+                          </Link>
+                        )}
                       </td>
 
                       <td className="px-3 py-3 text-center">
@@ -531,6 +697,164 @@ export default function AbaEquipamentosPmoc({
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Pré-visualização de etiquetas térmicas 50 × 30 mm */}
+      {modalEtiquetasAberto && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pré-visualização de etiquetas 50 por 30 milímetros"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+          onClick={() => setModalEtiquetasAberto(false)}
+        >
+          <div
+            className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Etiquetas de QR Code dos aparelhos (50 × 30 mm)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Pré-visualização proporcional à etiqueta térmica. Ao apontar a câmera, abre a
+                  ficha pública de manutenção do aparelho.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalEtiquetasAberto(false)}
+                aria-label="Fechar pré-visualização de etiquetas"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-slate-100 p-5">
+              {avisoImpressao && (
+                <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-900">
+                  <CheckCircle2 size={15} className="text-emerald-600" aria-hidden="true" />
+                  {avisoImpressao}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {equipamentosParaEtiqueta.map((eq) => {
+                  const amb = eq.environment_id
+                    ? ambientePorId.get(eq.environment_id)
+                    : undefined;
+                  const tokenEtiqueta =
+                    eq.public_token || `eq-pmoc-${eq.identifier.toLowerCase()}`;
+                  const urlPublica = linkPublicoEquipamentoPmoc(tokenEtiqueta);
+
+                  return (
+                    <div key={eq.id} className="flex flex-col items-center gap-2">
+                      {/* Etiqueta em proporção 50 × 30 mm (ex.: 250 × 150 px) */}
+                      <div
+                        className="flex h-[150px] w-[250px] items-center justify-between gap-2.5 rounded-xl border-2 border-slate-900 bg-white p-3 text-slate-900 shadow-sm"
+                        aria-label={`Etiqueta 50 por 30 mm do aparelho ${eq.identifier}`}
+                      >
+                        <div className="flex h-full min-w-0 flex-1 flex-col justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <img
+                              src={EMPRESA_BRV.logoUrl}
+                              alt={EMPRESA_BRV.nomeCurto}
+                              className="h-5 w-auto object-contain"
+                            />
+                            <span className="truncate text-[9px] font-extrabold tracking-tight text-slate-700 uppercase">
+                              BRV Climatização
+                            </span>
+                          </div>
+
+                          <div>
+                            <div className="truncate font-mono text-lg leading-none font-black tracking-tight text-slate-950">
+                              {eq.identifier || 'AR-0000'}
+                            </div>
+                            <div className="mt-1 truncate text-[10px] font-bold text-slate-700">
+                              {amb?.name || 'Ambiente não definido'}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between border-t border-slate-200 pt-1 text-[9px] font-extrabold tracking-wider text-blue-800 uppercase">
+                            <span>Manutenção PMOC</span>
+                            <span className="font-mono text-[8px] text-slate-400">50×30mm</span>
+                          </div>
+                        </div>
+
+                        {/* Quadro reservado ao QR Code (sem biblioteca externa instalada) */}
+                        <div
+                          title={urlPublica}
+                          className="flex h-[96px] w-[86px] shrink-0 flex-col items-center justify-center rounded-lg border border-dashed border-slate-400 bg-slate-50 p-1.5 text-center"
+                        >
+                          <QrCode size={42} className="text-slate-800" aria-hidden="true" />
+                          <span className="mt-1 text-[8px] leading-tight font-bold text-slate-600">
+                            QR de conferência
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[11px]">
+                        <Link
+                          to={`/equipamento/${tokenEtiqueta}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
+                        >
+                          Abrir página pública
+                          <ExternalLink size={11} aria-hidden="true" />
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={imprimindoEtiquetas}
+                          onClick={() => void handleImprimirEtiquetas([eq.id])}
+                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-slate-950"
+                        >
+                          <Printer size={11} aria-hidden="true" />
+                          Imprimir só esta
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-5 py-3.5">
+              <span className="text-xs text-slate-500">
+                {equipamentosParaEtiqueta.length} etiqueta(s) pronta(s) para fila térmica (50 × 30
+                mm)
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalEtiquetasAberto(false)}
+                  className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Fechar
+                </button>
+                <button
+                  type="button"
+                  disabled={imprimindoEtiquetas}
+                  onClick={() =>
+                    void handleImprimirEtiquetas(equipamentosParaEtiqueta.map((e) => e.id))
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-60"
+                >
+                  {imprimindoEtiquetas ? (
+                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Printer size={14} aria-hidden="true" />
+                  )}
+                  {imprimindoEtiquetas
+                    ? 'Enviando...'
+                    : `Imprimir ${equipamentosParaEtiqueta.length} etiqueta(s)`}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -693,4 +1017,3 @@ export default function AbaEquipamentosPmoc({
     </div>
   );
 }
-

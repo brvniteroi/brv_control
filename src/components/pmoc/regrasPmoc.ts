@@ -6,10 +6,14 @@ import type {
   PmocDisplayStatus,
   PmocEquipmentMonthExecution,
   PmocEquipmentTask,
+  PmocFieldEquipmentChecklist,
   PmocMeasurementKey,
+  PmocMeasurements,
+  PmocMonthPlanStatus,
   PmocPeriodicity,
   PmocPlanBaseStatus,
   PmocRegistrationType,
+  PmocTaskExecutionItem,
   PmocVisitCellStatus,
 } from '../../types/pmoc';
 import { formatarData } from '../../utils/ordens';
@@ -527,4 +531,204 @@ export function formatarEnderecoDocumento(e: PmocAddressSnapshot | null | undefi
   ].filter(Boolean);
   return partes.join(', ') || '—';
 }
+
+// ============================================================================
+// FASES 2 E 3: PAINEL DO MÊS, CHECKLIST DE CAMPO, WHATSAPP E LINKS PÚBLICOS
+// ============================================================================
+
+/** Estilos e rótulos para as 4 situações do painel "PMOC do mês" (Entrega 2). */
+export const ESTILOS_SITUACAO_MES_PMOC: Record<
+  PmocMonthPlanStatus,
+  { rotulo: string; classeSelo: string; classePonto: string }
+> = {
+  sem_os: {
+    rotulo: 'Sem OS',
+    classeSelo: 'border-amber-200 bg-amber-50 text-amber-800',
+    classePonto: 'bg-amber-500',
+  },
+  os_agendada: {
+    rotulo: 'OS agendada',
+    classeSelo: 'border-blue-200 bg-blue-50 text-blue-700',
+    classePonto: 'bg-blue-500',
+  },
+  executada: {
+    rotulo: 'Executada',
+    classeSelo: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    classePonto: 'bg-emerald-500',
+  },
+  atrasada: {
+    rotulo: 'Atrasada',
+    classeSelo: 'border-rose-200 bg-rose-50 text-rose-700',
+    classePonto: 'bg-rose-500',
+  },
+};
+
+/** Faixas plausíveis para aviso em campo durante a aferição das medições (Entrega 3). */
+export const FAIXAS_PLAUSIVEIS_MEDICAO_PMOC: Record<
+  PmocMeasurementKey,
+  { min: number; max: number; descricaoFaixa: string }
+> = {
+  current_a: {
+    min: 0,
+    max: 100,
+    descricaoFaixa: '0 a 100 A',
+  },
+  temp_supply_c: {
+    min: -10,
+    max: 60,
+    descricaoFaixa: '-10 a 60 °C',
+  },
+  temp_return_c: {
+    min: -10,
+    max: 60,
+    descricaoFaixa: '-10 a 60 °C',
+  },
+  temp_ambient_c: {
+    min: -10,
+    max: 60,
+    descricaoFaixa: '-10 a 60 °C',
+  },
+};
+
+/**
+ * Devolve aviso amigável quando o valor digitado na medição está fora da faixa plausível
+ * (`0 a 100 A` para corrente; `-10 a 60 °C` para temperaturas), ou `null` quando dentro da faixa.
+ */
+export function avisoFaixaMedicaoPmoc(
+  chave: PmocMeasurementKey,
+  valor: number | null | undefined,
+): string | null {
+  if (valor === null || valor === undefined || Number.isNaN(valor)) return null;
+  const faixa = FAIXAS_PLAUSIVEIS_MEDICAO_PMOC[chave];
+  if (chave === 'current_a' && (valor <= 0 || valor > faixa.max)) {
+    return `Valor fora da faixa habitual (${faixa.descricaoFaixa}). Confira a leitura do amperímetro.`;
+  }
+  if (valor < faixa.min || valor > faixa.max) {
+    return `Temperatura fora da faixa habitual (${faixa.descricaoFaixa}). Confira o termômetro.`;
+  }
+  return null;
+}
+
+/** Extrai a lista única ordenada de grandezas pedidas pelas tarefas previstas no mês. */
+export function grandezasExigidasNasTarefas(
+  tarefasPrevistas: readonly PmocEquipmentTask[],
+): PmocMeasurementKey[] {
+  const conjunto = new Set<PmocMeasurementKey>();
+  for (const t of tarefasPrevistas) {
+    if (!t.active || !t.requires_measurement) continue;
+    for (const m of t.measurement_fields) {
+      conjunto.add(m);
+    }
+  }
+  return CAMPOS_MEDICAO_PMOC.map((c) => c.chave).filter((k) => conjunto.has(k));
+}
+
+/**
+ * Valida o preenchimento de um aparelho no checklist de campo antes de salvar (`Entrega 3`).
+ * Devolve a mensagem de erro em português, ou `null` quando válido.
+ */
+export function validarExecucaoAparelhoPmoc(params: {
+  status: 'concluida' | 'nao_atendido';
+  tarefasPrevistas: readonly PmocEquipmentTask[];
+  resultadosTarefas: readonly PmocTaskExecutionItem[];
+  medicoes: PmocMeasurements;
+  motivoNaoAtendido: string | null | undefined;
+}): string | null {
+  if (params.status === 'nao_atendido') {
+    if (!params.motivoNaoAtendido || !params.motivoNaoAtendido.trim()) {
+      return 'Informe o motivo pelo qual o aparelho não pôde ser atendido.';
+    }
+    return null;
+  }
+
+  const porTarefa = new Map(params.resultadosTarefas.map((r) => [r.equipment_task_id, r]));
+
+  for (const t of params.tarefasPrevistas) {
+    const item = porTarefa.get(t.id);
+    if (!item) {
+      return `Marque o resultado da tarefa "${t.description}".`;
+    }
+    if (item.result === 'nao_feito' && (!item.notes || !item.notes.trim())) {
+      return `Informe a observação obrigatória para a tarefa marcada como Não feito: "${t.description}".`;
+    }
+  }
+
+  // Uma medição é obrigatória quando ao menos uma tarefa que a pede NÃO foi marcada como 'nao_se_aplica'
+  const grandezasObrigatorias = new Set<PmocMeasurementKey>();
+  for (const t of params.tarefasPrevistas) {
+    if (!t.requires_measurement) continue;
+    const item = porTarefa.get(t.id);
+    if (item?.result === 'nao_se_aplica') continue;
+    for (const g of t.measurement_fields) {
+      grandezasObrigatorias.add(g);
+    }
+  }
+
+  for (const cfg of CAMPOS_MEDICAO_PMOC) {
+    if (!grandezasObrigatorias.has(cfg.chave)) continue;
+    const val = params.medicoes[cfg.chave];
+    if (val === null || val === undefined || Number.isNaN(val)) {
+      return `Preencha a medição obrigatória: ${cfg.rotuloCurto}.`;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Verifica se todos os aparelhos do checklist de PMOC estão resolvidos (`concluida` ou `nao_atendido`)
+ * para liberar a conclusão da atividade em `ConcluirAtividadeModal`.
+ */
+export function motivoBloqueioConclusaoChecklistPmoc(
+  aparelhos: readonly Pick<PmocFieldEquipmentChecklist, 'status' | 'identifier' | 'name'>[],
+): string | null {
+  if (aparelhos.length === 0) return null;
+  const pendentes = aparelhos.filter((a) => a.status === 'pendente');
+  if (pendentes.length === 0) return null;
+  if (pendentes.length === 1) {
+    const unico = pendentes[0];
+    return `Falta preencher 1 aparelho do checklist PMOC (${unico.identifier || unico.name}) antes de concluir a visita.`;
+  }
+  return `Faltam preencher ${pendentes.length} aparelhos do checklist PMOC antes de concluir a visita.`;
+}
+
+/** Gera URL pública completa do relatório mensal (`/relatorio-pmoc/:token`). */
+export function linkPublicoRelatorioPmoc(token: string): string {
+  const origem = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origem}/relatorio-pmoc/${token}`;
+}
+
+/** Gera URL pública completa do histórico do aparelho (`/equipamento/:token`). */
+export function linkPublicoEquipamentoPmoc(token: string): string {
+  const origem = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origem}/equipamento/${token}`;
+}
+
+/**
+ * Monta o texto padrão para envio do relatório mensal do PMOC pelo WhatsApp (Entrega 4):
+ * `"Olá, {cliente}! Segue o relatório da manutenção do PMOC de {mês/ano}: {link}"`
+ */
+export function textoWhatsAppRelatorioPmoc(
+  nomeCliente: string,
+  referenciaMes: string,
+  link: string,
+): string {
+  const mesExtenso = formatarMesReferencia(referenciaMes).toLowerCase();
+  return `Olá, ${nomeCliente}! Segue o relatório da manutenção do PMOC de ${mesExtenso}: ${link}`;
+}
+
+/** Limpa o telefone do cliente e monta URL `https://wa.me/55...` com a mensagem do PMOC. */
+export function montarLinkWhatsAppPmoc(
+  telefone: string | null | undefined,
+  mensagem: string,
+): string {
+  const digitos = (telefone ?? '').replace(/\D/g, '');
+  const comPais =
+    digitos.length >= 10 && !digitos.startsWith('55') ? `55${digitos}` : digitos;
+  const textoCodificado = encodeURIComponent(mensagem);
+  return comPais
+    ? `https://wa.me/${comPais}?text=${textoCodificado}`
+    : `https://wa.me/?text=${textoCodificado}`;
+}
+
 

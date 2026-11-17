@@ -31,8 +31,15 @@ import { useContextoCampo } from '../../components/campo/contextoCampo';
 import { useFilaCampo, useOnline } from '../../hooks/useCampo';
 import FotosAtividade from '../../components/campo/FotosAtividade';
 import ConcluirAtividadeModal, { type DadosConclusao } from '../../components/campo/ConcluirAtividadeModal';
+import ChecklistPmocAtividade from '../../components/campo/pmoc/ChecklistPmocAtividade';
 import FormulariosAtividade from '../../components/formularios/FormulariosAtividade';
 import RecolherEquipamento from '../../components/campo/RecolherEquipamento';
+import {
+  buscarChecklistDaAtividade,
+  concluirChecklist,
+} from '../../components/pmoc/fonteDeDados';
+import { motivoBloqueioConclusaoChecklistPmoc } from '../../components/pmoc/regrasPmoc';
+import type { PmocActivityChecklist } from '../../types/pmoc';
 import { formatarDataHora, infoStatusAtividade } from '../../utils/ordens';
 
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -53,8 +60,19 @@ export default function CampoAtividade() {
   const [concluindo, setConcluindo] = useState(false);
   // Observações digitadas e ainda não salvas: vão para o relato ao concluir
   const [rascunhoObs, setRascunhoObs] = useState<string | null>(null);
+  const [checklistPmoc, setChecklistPmoc] = useState<PmocActivityChecklist | null>(null);
+
+  const recarregarChecklistPmoc = useCallback(async () => {
+    try {
+      const dadosPmoc = await buscarChecklistDaAtividade(id);
+      setChecklistPmoc(dadosPmoc.is_pmoc ? dadosPmoc : null);
+    } catch {
+      // Quando a função do banco ainda não está publicada ou se for atividade comum sem sinal, ignora silenciosamente
+    }
+  }, [id]);
 
   const carregar = useCallback(async () => {
+    void recarregarChecklistPmoc();
     carregarMinhaAgenda(colaborador.id).then(
       (dados) => {
         setDoDia(dados);
@@ -77,7 +95,7 @@ export default function CampoAtividade() {
     } finally {
       setCarregando(false);
     }
-  }, [id, colaborador.id]);
+  }, [id, colaborador.id, recarregarChecklistPmoc]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -149,7 +167,11 @@ export default function CampoAtividade() {
       });
     });
 
-  const concluir = async ({ relato }: DadosConclusao) => {
+  const concluir = async ({ relato, acompanhadoPor }: DadosConclusao) => {
+    if (checklistPmoc?.is_pmoc) {
+      await concluirChecklist(a.id, acompanhadoPor ?? '');
+      await recarregarChecklistPmoc();
+    }
     const pos = await obterPosicao();
     const agora = agoraISO();
     await enfileirarAtividade(a.id, {
@@ -303,6 +325,18 @@ export default function CampoAtividade() {
         </Cartao>
       )}
 
+      {/* Checklist próprio do PMOC por aparelho (Entrega 3 — acima de Fotos e Formulários) */}
+      {checklistPmoc?.is_pmoc && (
+        <Cartao titulo="Checklist PMOC">
+          <ChecklistPmocAtividade
+            checklist={checklistPmoc}
+            online={online}
+            somenteLeitura={!aberta}
+            onRecarregar={recarregarChecklistPmoc}
+          />
+        </Cartao>
+      )}
+
       {ordem && (
         <Cartao titulo="Fotos">
           <FotosAtividade taskId={a.id} serviceOrderId={ordem.id} />
@@ -331,7 +365,19 @@ export default function CampoAtividade() {
       </Cartao>
 
       {concluindo && (
-        <ConcluirAtividadeModal relatoInicial={rascunhoObs ?? a.technician_notes ?? ''} onConfirmar={concluir} onFechar={() => setConcluindo(false)} />
+        <ConcluirAtividadeModal
+          relatoInicial={rascunhoObs ?? a.technician_notes ?? ''}
+          ehPmoc={Boolean(checklistPmoc?.is_pmoc)}
+          online={online}
+          bloqueioPmoc={
+            checklistPmoc?.is_pmoc
+              ? motivoBloqueioConclusaoChecklistPmoc(checklistPmoc.equipments)
+              : null
+          }
+          acompanhadoPorInicial={checklistPmoc?.accompanied_by ?? ''}
+          onConfirmar={concluir}
+          onFechar={() => setConcluindo(false)}
+        />
       )}
     </div>
   );

@@ -1,10 +1,11 @@
-# Produto "Placas" para outras oficinas (plano, rascunho de 2026-11-17)
+# Bancada Pro: produto de Placas para outras oficinas (plano, rascunho de 2026-11-17)
 
 **Decisões do usuário até aqui (2026-11-17):**
 - Oficina e Placas **não** entram como módulos do BRV Control. O BRV Control fica **só para a BRV**.
 - O que se vende é um **produto novo, limpo e multiempresa desde a primeira tabela**.
 - O público já existe e é para o módulo **Placas**: **oficinas de reparo de placa como a BRV** (tocam o próprio balcão: recebem placa,
   orçamentam, consertam, entregam, controlam o financeiro). Não é um portal de parceiro.
+- **Nome do produto: "Bancada Pro"** (decidido em 2026-11-17). Falta conferir domínio no Registro.br e marca no INPI antes de investir em identidade visual.
 - FSM completo e PMOC ficam para depois, se o produto de Placas der certo (ver seção 9).
 
 Nada disso foi construído. Este arquivo é o rascunho para o usuário revisar.
@@ -50,6 +51,13 @@ Ajuda F1 e manual vão junto, **sem citar a BRV** (regra fixa: módulo só está
 | Onboarding | — | Cadastro da empresa, importação por planilha CSV (clientes e placas antigas) |
 | Domínio | control.brvniteroi.com.br | Domínio e nome próprios do produto; subdomínio por empresa é opcional |
 
+## 4b. Preço (hipótese, a validar com 3 a 5 oficinas)
+- Referência do usuário: pagava ao Field Control **R$ 5.850 por ano (≈ R$ 487,50 por mês)** por um FSM completo, para uma equipe com vários técnicos. É o teto da categoria; Placas tem escopo menor.
+- Hipótese inicial: plano único de **R$ 149 a R$ 199 por mês** (até R$ 249 a 299 com mais de um usuário), preço de lançamento menor para as primeiras oficinas, teste de 14 a 30 dias, sem fidelidade.
+- Custo direto estimado por oficina: R$ 10 a 30 por mês (Supabase Pro dividido, fotos, e-mail, IA com cota). Só o piso.
+- Validar com duas perguntas sem sugerir valor: "a partir de quanto seria caro demais?" e "a partir de quanto desconfiaria de ser bom demais?". Pergunta aberta: o Field cobrava por usuário ou valor fechado?
+- Se um dia houver FSM + PMOC vendável, a referência é a faixa do Field (R$ 400 a 500 por mês).
+
 ## 5. Regras de negócio da BRV que viram configuração
 Limite sem sinal (R$ 250,00), % do sinal (50%), validade do orçamento, dias de garantia (90), cláusulas de perda da garantia, política de execução, etapas
 (manter as mesmas no início), "técnico de bancada" (hoje só o Braulio), quem vê o financeiro. Começar com os padrões da BRV como valores iniciais editáveis.
@@ -70,7 +78,7 @@ Estimativa: não dou prazo exato; a fase 2 é a maior, mas a maior parte é adap
 
 ## 8. Perguntas em aberto para o usuário
 1. **Quantas oficinas, mais ou menos, e você já conversou com alguma?** Quanto pagariam por mês? (Define o preço mínimo e o custo aceitável de nuvem e IA.)
-2. **Nome do produto** (e domínio) para o mercado. "BRV Control" é da BRV.
+2. ~~Nome do produto~~ **decidido: "Bancada Pro"**. Falta: domínio (Registro.br), busca de marca no INPI, logo e identidade (briefing para o Gemini).
 3. **Etiqueta:** essas oficinas têm impressora térmica? Se sim, qual modelo (Elgin L42, Zebra, Argox...)? Se a maioria não tem, PDF para A4/etiqueta adesiva resolve.
 4. **Apoio técnico com IA entra no preço base ou é um adicional?** (tem custo por uso)
 5. **A BRV vira a empresa nº 1 do produto** (usando o produto novo no dia a dia) ou segue só com o BRV Control?

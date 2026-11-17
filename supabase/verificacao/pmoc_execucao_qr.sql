@@ -152,15 +152,24 @@ BEGIN
   EXCEPTION WHEN OTHERS THEN v_ok := TRUE; END;
   IF NOT v_ok THEN RAISE EXCEPTION 'FALHOU: concluiu sem o nome de quem acompanhou'; END IF;
   PERFORM public.pmoc_concluir_checklist(v_task, 'Maria da Recepção');
-  IF (SELECT count(*) FROM public.pmoc_executions WHERE task_id = v_task AND accompanied_by = 'Maria da Recepção') <> 2 THEN
-    RAISE EXCEPTION 'FALHOU: o nome de quem acompanhou não foi gravado nos 2 aparelhos';
+  -- O técnico não lê a tabela (RLS): confere como dono e volta para o papel anterior
+  RESET ROLE;
+  SELECT count(*) INTO v_n FROM public.pmoc_executions WHERE task_id = v_task AND accompanied_by = 'Maria da Recepção';
+  SET LOCAL ROLE authenticated;
+  IF v_n <> 2 THEN
+    RAISE EXCEPTION 'FALHOU: o nome de quem acompanhou não foi gravado nos 2 aparelhos (gravado em %)', v_n;
   END IF;
   v_log := v_log || E'\nOK  conclusão exige todos os aparelhos e o nome de quem acompanhou';
 
   -- 7. Outro técnico não mexe na atividade
   IF v_perfil_tec IS NOT NULL AND v_emp_outro IS NOT NULL THEN
+    -- Reatribuir é coisa do escritório (trigger tasks_protege_agenda): troca como Braulio e volta para o técnico
     RESET ROLE;
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', v_braulio, 'role', 'authenticated')::text, TRUE);
+    PERFORM set_config('request.jwt.claim.sub', v_braulio::text, TRUE);
     UPDATE public.tasks SET employee_id = v_emp_outro WHERE id = v_task;
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', v_perfil_tec, 'role', 'authenticated')::text, TRUE);
+    PERFORM set_config('request.jwt.claim.sub', v_perfil_tec::text, TRUE);
     SET LOCAL ROLE authenticated;
     v_ok := FALSE;
     BEGIN PERFORM public.pmoc_checklist_atividade(v_task);
@@ -175,14 +184,14 @@ BEGIN
     EXCEPTION WHEN insufficient_privilege THEN v_ok := TRUE; END;
     IF NOT v_ok THEN RAISE EXCEPTION 'FALHOU: técnico conseguiu gerar OS do mês'; END IF;
     v_log := v_log || E'\nOK  técnico só mexe na própria atividade e não gera OS do mês';
-    -- volta para o Braulio
-    RESET ROLE;
-    PERFORM set_config('request.jwt.claims', json_build_object('sub', v_braulio, 'role', 'authenticated')::text, TRUE);
-    PERFORM set_config('request.jwt.claim.sub', v_braulio::text, TRUE);
-    SET LOCAL ROLE authenticated;
   ELSE
     v_log := v_log || E'\nINFO sem técnico com login e outro funcionário para testar o bloqueio entre técnicos';
   END IF;
+  -- volta para o Braulio (escritório) para os próximos passos, com ou sem o teste acima
+  RESET ROLE;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_braulio, 'role', 'authenticated')::text, TRUE);
+  PERFORM set_config('request.jwt.claim.sub', v_braulio::text, TRUE);
+  SET LOCAL ROLE authenticated;
 
   -- 8. Link do relatório (escritório)
   v_tok := public.pmoc_link_relatorio(v_plano, v_mes);

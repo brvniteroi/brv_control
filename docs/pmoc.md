@@ -15,7 +15,8 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   em `equipments`; aparelho sem tarefas recebe o modelo do tipo; plano vigente exige endereço, responsável com nome/CPF/registro, TRT e ambiente em
   todo aparelho ativo; aparelho com execução não sai do plano), `pmoc_salvar_modelo`, `pmoc_dados_responsavel` (só nome, CPF, registro, e-mail e
   telefone do funcionário) e `pmoc_responsavel_padrao`.
-- Verificação com desfazer no fim: `supabase/verificacao/pmoc_base.sql` (11 testes).
+- Verificação com desfazer no fim: `supabase/verificacao/pmoc_base.sql` (11 testes) **passou** (usuário rodou em 2026-11-16: TUDO CERTO).
+- Falta o teste na prática: plano real com ambiente, 2 aparelhos, TRT em PDF, vigente e documento impresso (conferir se o PDF do TRT abre).
 - `src/services/pmoc.ts` + `fonteDeDados.ts` com `USAR_BANCO_PMOC = true` (os dados de demonstração continuam no arquivo para `false`). O editor
   grava pelo `salvarPlanoCompleto`. Plano novo já vem com o responsável técnico; escolher outro preenche CPF e registro pelo cadastro do funcionário.
 - `upload.php` aceita PDF (só admin/escritório, até 10 MB, confere o `%PDF-`, pasta `uploads/pmoc/AAAA/MM`); `uploads/.htaccess` serve `.pdf` sem a CSP.

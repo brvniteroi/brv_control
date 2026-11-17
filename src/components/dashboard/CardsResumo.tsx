@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
-  Zap,
 } from 'lucide-react';
 import type { ResumoOrdens } from '../../services/dashboard';
 
@@ -18,7 +17,6 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
   const totalAbertas = resumo.porStatus.agendada + resumo.porStatus.em_andamento;
 
   const temAtrasadas = resumo.atrasadas > 0;
-  const temUrgentes = resumo.urgentes > 0;
 
   // Percentuais para a barra de proporção das OS ativas
   const pctAgendada = totalAbertas > 0 ? (resumo.porStatus.agendada / totalAbertas) * 100 : 0;
@@ -28,7 +26,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
   return (
     <div className="space-y-4">
       {/* Grade de Cartões Numéricos */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {/* Card 1: Total em Aberto */}
         <button
           type="button"
@@ -81,7 +79,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
         <button
           type="button"
           onClick={() => navigate('/ordens-de-servico?situacao=atrasadas')}
-          className={`group flex flex-col justify-between rounded-2xl border p-4 text-left shadow-xs transition hover:shadow-sm ${
+          className={`group col-span-2 flex flex-col justify-between rounded-2xl border p-4 text-left shadow-xs transition hover:shadow-sm sm:col-span-1 ${
             temAtrasadas
               ? 'border-rose-200 bg-rose-50/40 hover:border-rose-300'
               : 'border-slate-200 bg-white hover:border-slate-300'
@@ -121,49 +119,7 @@ export default function CardsResumo({ resumo }: CardsResumoProps) {
           </div>
         </button>
 
-        {/* Card 4: Urgentes (destaque âmbar se > 0) */}
-        <button
-          type="button"
-          onClick={() => navigate('/ordens-de-servico?situacao=urgentes')}
-          className={`group flex flex-col justify-between rounded-2xl border p-4 text-left shadow-xs transition hover:shadow-sm ${
-            temUrgentes
-              ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
-              : 'border-slate-200 bg-white hover:border-slate-300'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span
-              className={`text-xs font-semibold ${
-                temUrgentes ? 'text-amber-800' : 'text-slate-500'
-              }`}
-            >
-              Urgentes / Alta
-            </span>
-            <div
-              className={`flex h-9 w-9 items-center justify-center rounded-xl transition group-hover:scale-105 ${
-                temUrgentes ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              <Zap size={18} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span
-              className={`text-2xl font-bold tracking-tight sm:text-3xl ${
-                temUrgentes ? 'text-amber-700' : 'text-slate-900'
-              }`}
-            >
-              {resumo.urgentes}
-            </span>
-            <p
-              className={`mt-0.5 text-[11px] ${
-                temUrgentes ? 'text-amber-700 font-medium' : 'text-slate-400'
-              }`}
-            >
-              {temUrgentes ? 'Prioridade alta ou urgente' : 'Sem urgências pendentes'}
-            </p>
-          </div>
-        </button>
+        {/* O cartão "Urgentes / Alta" saiu com a prioridade da OS (2026-11-16) */}
       </div>
 
       {/* Barra de Distribuição e Indicador dos Últimos 30 Dias */}

@@ -17,12 +17,12 @@ import { ordenarEtiquetas } from './etiquetas';
 export const ORDENS_POR_PAGINA = 50;
 
 /** Situação da lista: um status ou um dos grupos do Dashboard (abertas = agendada + em andamento). */
-export type FiltroSituacao = ServiceOrderStatus | '' | 'abertas' | 'atrasadas' | 'urgentes';
+export type FiltroSituacao = ServiceOrderStatus | '' | 'abertas' | 'atrasadas';
 
+// O filtro "Urgentes / alta" saiu junto com a prioridade da OS (2026-11-16)
 export const FILTROS_SITUACAO_EXTRAS: { valor: FiltroSituacao; rotulo: string }[] = [
   { valor: 'abertas', rotulo: 'Em aberto (agendadas e em andamento)' },
   { valor: 'atrasadas', rotulo: 'Atrasadas (prazo vencido)' },
-  { valor: 'urgentes', rotulo: 'Urgentes / alta (em aberto)' },
 ];
 
 export interface FiltrosOrdens {
@@ -103,8 +103,7 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
     const d = new Date();
     const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     query = query.in('status', abertas).lt('due_date', hoje);
-  } else if (f.status === 'urgentes') query = query.in('status', abertas).in('priority', ['alta', 'urgente']);
-  else if (f.status) query = query.eq('status', f.status);
+  } else if (f.status) query = query.eq('status', f.status);
   if (f.tipoId) query = query.eq('service_type_id', f.tipoId);
   if (f.etiquetaId) query = query.eq('filtro.tag_id', f.etiquetaId);
 

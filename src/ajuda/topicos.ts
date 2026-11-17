@@ -145,7 +145,7 @@ Clique no nome de um grupo (Serviços, Cadastros, Relatórios, Placas) para abri
     texto: `
 - **Cartões do alto**: clique em um cartão (OS em aberto, Em andamento etc.) para abrir a lista de OS já filtrada.
 - **Atividades de Hoje**: todas as visitas do dia. Nas concluídas aparecem as estrelas da avaliação, por onde o cliente respondeu (e-mail ou WhatsApp) e o comentário. Quando o cliente ainda não respondeu, aparece "Avaliação pedida..., aguardando".
-- **Precisam de Atenção**: OS atrasadas ou com prioridade alta/urgente. Clique para abrir.
+- **Precisam de Atenção**: OS em aberto com o prazo vencido. Clique para abrir.
 > A página se atualiza sozinha a cada 2 minutos e quando você volta para a aba.
 ## Backup do sistema (só administrador)
 No fim do Dashboard, o administrador vê o cartão **Backup do sistema**:

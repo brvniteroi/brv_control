@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { ServiceOrderPriority, ServiceOrderStatus, TaskStatus } from '../types/fsm';
+import type { ServiceOrderStatus, TaskStatus } from '../types/fsm';
 
 const STATUS_ABERTOS: ServiceOrderStatus[] = ['agendada', 'em_andamento'];
 
@@ -8,8 +8,6 @@ export interface ResumoOrdens {
   porStatus: Record<ServiceOrderStatus, number>;
   /** OS ainda abertas com prazo (`due_date`) anterior a hoje. */
   atrasadas: number;
-  /** OS abertas com prioridade alta ou urgente. */
-  urgentes: number;
   /** OS concluídas nos últimos 30 dias. */
   concluidas30dias: number;
   /** Das OS em andamento, quantas são de balcão (equipamento trazido à oficina, sem visita de campo). */
@@ -38,7 +36,6 @@ export interface OrdemDestaque {
   id: string;
   number: number;
   status: ServiceOrderStatus;
-  priority: ServiceOrderPriority;
   due_date: string | null;
   customer: { id: string; name: string } | null;
 }
@@ -46,7 +43,7 @@ export interface OrdemDestaque {
 export interface DadosDashboard {
   resumo: ResumoOrdens;
   atividadesHoje: AtividadeDoDia[];
-  /** Até 10 OS abertas atrasadas ou urgentes, as mais antigas primeiro. */
+  /** Até 10 OS abertas atrasadas (prazo vencido), as mais antigas primeiro. A prioridade saiu da OS em 2026-11-16. */
   precisamAtencao: OrdemDestaque[];
 }
 
@@ -78,10 +75,9 @@ export async function carregarDashboard(): Promise<DadosDashboard> {
 
   const statusTodos: ServiceOrderStatus[] = [...STATUS_ABERTOS, 'concluida', 'cancelada'];
 
-  const [contagens, atrasadas, urgentes, concluidas30dias, balcaoEmAndamento, atividades, destaque] = await Promise.all([
+  const [contagens, atrasadas, concluidas30dias, balcaoEmAndamento, atividades, destaque] = await Promise.all([
     Promise.all(statusTodos.map((s) => contar((q) => q.eq('status', s)))),
     contar((q) => q.in('status', STATUS_ABERTOS).lt('due_date', hoje)),
-    contar((q) => q.in('status', STATUS_ABERTOS).in('priority', ['alta', 'urgente'])),
     contar((q) => q.eq('status', 'concluida').gte('completed_at', ha30dias)),
     // OS de balcão = tipo "Oficina (balcão)" (o mesmo nome que `oficina_entrada_balcao` procura)
     supabase
@@ -106,9 +102,9 @@ export async function carregarDashboard(): Promise<DadosDashboard> {
       .order('scheduled_start', { ascending: true }),
     supabase
       .from('service_orders')
-      .select('id, number, status, priority, due_date, customer:customers(id, name)')
+      .select('id, number, status, due_date, customer:customers(id, name)')
       .in('status', STATUS_ABERTOS)
-      .or(`due_date.lt.${hoje},priority.in.(alta,urgente)`)
+      .lt('due_date', hoje)
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(10),
   ]);
@@ -121,7 +117,7 @@ export async function carregarDashboard(): Promise<DadosDashboard> {
   ) as Record<ServiceOrderStatus, number>;
 
   return {
-    resumo: { porStatus, atrasadas, urgentes, concluidas30dias, balcaoEmAndamento },
+    resumo: { porStatus, atrasadas, concluidas30dias, balcaoEmAndamento },
     atividadesHoje: (atividades.data ?? []) as unknown as AtividadeDoDia[],
     precisamAtencao: (destaque.data ?? []) as unknown as OrdemDestaque[],
   };

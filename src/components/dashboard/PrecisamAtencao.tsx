@@ -8,7 +8,6 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import type { OrdemDestaque } from '../../services/dashboard';
-import type { ServiceOrderPriority } from '../../types/fsm';
 import { formatarData, infoStatusOS } from '../../utils/ordens';
 
 interface PrecisamAtencaoProps {
@@ -25,31 +24,6 @@ function estaVencida(dueDate: string | null | undefined): boolean {
   return dataIso < hojeIso;
 }
 
-function seloPrioridade(prioridade: ServiceOrderPriority) {
-  switch (prioridade) {
-    case 'urgente':
-      return {
-        rotulo: 'Urgente',
-        classe: 'bg-rose-50 text-rose-700 border-rose-200',
-      };
-    case 'alta':
-      return {
-        rotulo: 'Alta',
-        classe: 'bg-amber-50 text-amber-700 border-amber-200',
-      };
-    case 'normal':
-      return {
-        rotulo: 'Normal',
-        classe: 'bg-slate-50 text-slate-700 border-slate-200',
-      };
-    case 'baixa':
-      return {
-        rotulo: 'Baixa',
-        classe: 'bg-slate-50 text-slate-500 border-slate-200',
-      };
-  }
-}
-
 export default function PrecisamAtencao({ ordens }: PrecisamAtencaoProps) {
   const navigate = useNavigate();
 
@@ -59,7 +33,7 @@ export default function PrecisamAtencao({ ordens }: PrecisamAtencaoProps) {
         <div>
           <h2 className="text-sm font-bold text-slate-900">Precisam de Atenção</h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Ordens de serviço atrasadas ou com prioridade alta/urgente.
+            Ordens de serviço em aberto com o prazo vencido.
           </p>
         </div>
         <span
@@ -80,14 +54,13 @@ export default function PrecisamAtencao({ ordens }: PrecisamAtencaoProps) {
           </div>
           <h3 className="mt-3 text-sm font-semibold text-slate-800">Tudo em dia</h3>
           <p className="mt-1 max-w-xs text-xs text-slate-400">
-            Nenhuma ordem de serviço aberta está com prazo vencido ou marcada como prioritária no momento.
+            Nenhuma ordem de serviço aberta está com o prazo vencido no momento.
           </p>
         </div>
       ) : (
         <div className="mt-4 divide-y divide-slate-100">
           {ordens.map((os) => {
             const statusInfo = infoStatusOS(os.status);
-            const prioInfo = seloPrioridade(os.priority);
             const vencida = estaVencida(os.due_date);
 
             return (
@@ -97,16 +70,10 @@ export default function PrecisamAtencao({ ordens }: PrecisamAtencaoProps) {
                 className="group flex cursor-pointer items-center justify-between gap-3 py-3.5 transition hover:bg-slate-50/80 -mx-2 px-2 rounded-xl first:pt-0 last:pb-0"
               >
                 <div className="space-y-1.5 min-w-0 flex-1">
-                  {/* Número, Prioridade e Status */}
+                  {/* Número e Status */}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold text-sm text-slate-900">
                       OS #{os.number}
-                    </span>
-
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${prioInfo.classe}`}
-                    >
-                      {prioInfo.rotulo}
                     </span>
 
                     <span

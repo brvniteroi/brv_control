@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261116100000` (2026-11-16) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261117100000` (2026-11-17) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -165,11 +165,10 @@ Feito:
 
 **LEMBRETE (2026-11-17, PC DA EMPRESA): concluir o PMOC fases 2 e 3** (lembrar o usuário logo no início da conversa). Em 2026-11-17 o Gemini entregou as telas
 (`docs/gemini/pmoc-fase2.md`; Claude auditou, commit `cfcbe79`) e o Claude escreveu o backend: migration `20261117100000_pmoc_execucao_qr.sql`
-(**AINDA NÃO APLICADA: o usuário precisa colar no SQL Editor**) + verificação `supabase/verificacao/pmoc_execucao_qr.sql` (ROLLBACK; colar depois da migration),
+(**aplicada em 2026-11-17; a verificação `supabase/verificacao/pmoc_execucao_qr.sql` passou: TUDO CERTO**),
 `services/pmoc.ts` ligado (`fonteDeDados.ts` com `USAR_BANCO_PMOC = true` chama o banco nas 9 funções novas), etiqueta ZPL `utils/etiquetaPmoc.ts`,
-QR real (pacote `qrcode`, `QrCodeImagem.tsx`) e ajuda F1 (tópicos `pmoc-do-mes`, `pmoc-checklist-campo`, `pmoc-relatorio-link`). **Não dar push antes de a migration
-estar aplicada** (a aba "PMOC do mês" e o checklist chamariam funções que não existem). Roteiro: (1) `git pull`; (2) usuário cola a migration e a verificação ("TUDO CERTO");
-(3) push; (4) **teste na prática da fase 1** (plano em Serviços > PMOC com ambiente, 2 aparelhos, TRT em PDF, Vigente, imprimir pelo Documento); (5) teste da fase 2: Gerar OS do mês,
+QR real (pacote `qrcode`, `QrCodeImagem.tsx`) e ajuda F1 (tópicos `pmoc-do-mes`, `pmoc-checklist-campo`, `pmoc-relatorio-link`). Push feito em 2026-11-17 (deploy no site).
+Roteiro que falta: (1) `git pull`; (4) **teste na prática da fase 1** (plano em Serviços > PMOC com ambiente, 2 aparelhos, TRT em PDF, Vigente, imprimir pelo Documento); (5) teste da fase 2: Gerar OS do mês,
 checklist no celular de um técnico (atividade de hoje), concluir com o nome de quem acompanhou, relatório por link no WhatsApp; (6) imprimir a etiqueta na Elgin e ler o QR com o
 celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). Pendente do usuário: ligar para os laboratórios de qualidade do ar (item 11 do plano). Ao concluir, apagar este lembrete.
 

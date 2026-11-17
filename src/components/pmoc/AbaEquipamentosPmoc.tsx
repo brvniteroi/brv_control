@@ -1,3 +1,4 @@
+import QrCodeImagem from './QrCodeImagem';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BotoesFoto from '../comum/BotoesFoto';
@@ -56,7 +57,7 @@ export default function AbaEquipamentosPmoc({
   const [fotoAmpliadaUrl, setFotoAmpliadaUrl] = useState<string | null>(null);
   const [enviandoFotoId, setEnviandoFotoId] = useState<string | null>(null);
 
-  // Seleção para impressão de etiquetas QR (50 × 30 mm)
+  // Seleção para impressão de etiquetas QR (100 × 50 mm)
   const [selecionadosEtiqueta, setSelecionadosEtiqueta] = useState<Record<string, boolean>>({});
   const [modalEtiquetasAberto, setModalEtiquetasAberto] = useState(false);
   const [imprimindoEtiquetas, setImprimindoEtiquetas] = useState(false);
@@ -342,7 +343,7 @@ export default function AbaEquipamentosPmoc({
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 <Eye size={14} aria-hidden="true" />
-                Ver etiquetas (50×30 mm)
+                Ver etiquetas (100×50 mm)
               </button>
 
               <button
@@ -701,7 +702,7 @@ export default function AbaEquipamentosPmoc({
         </div>
       )}
 
-      {/* Modal: Pré-visualização de etiquetas térmicas 50 × 30 mm */}
+      {/* Modal: Pré-visualização de etiquetas térmicas 100 × 50 mm */}
       {modalEtiquetasAberto && (
         <div
           role="dialog"
@@ -717,7 +718,7 @@ export default function AbaEquipamentosPmoc({
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  Etiquetas de QR Code dos aparelhos (50 × 30 mm)
+                  Etiquetas de QR Code dos aparelhos (100 × 50 mm)
                 </h3>
                 <p className="text-xs text-slate-500">
                   Pré-visualização proporcional à etiqueta térmica. Ao apontar a câmera, abre a
@@ -753,10 +754,10 @@ export default function AbaEquipamentosPmoc({
 
                   return (
                     <div key={eq.id} className="flex flex-col items-center gap-2">
-                      {/* Etiqueta em proporção 50 × 30 mm (ex.: 250 × 150 px) */}
+                      {/* Etiqueta em proporção 100 × 50 mm (ex.: 250 × 125 px) */}
                       <div
-                        className="flex h-[150px] w-[250px] items-center justify-between gap-2.5 rounded-xl border-2 border-slate-900 bg-white p-3 text-slate-900 shadow-sm"
-                        aria-label={`Etiqueta 50 por 30 mm do aparelho ${eq.identifier}`}
+                        className="flex h-[125px] w-[250px] items-center justify-between gap-2.5 rounded-xl border-2 border-slate-900 bg-white p-3 text-slate-900 shadow-sm"
+                        aria-label={`Etiqueta 100 por 50 mm do aparelho ${eq.identifier}`}
                       >
                         <div className="flex h-full min-w-0 flex-1 flex-col justify-between">
                           <div className="flex items-center gap-1.5">
@@ -781,19 +782,13 @@ export default function AbaEquipamentosPmoc({
 
                           <div className="flex items-center justify-between border-t border-slate-200 pt-1 text-[9px] font-extrabold tracking-wider text-blue-800 uppercase">
                             <span>Manutenção PMOC</span>
-                            <span className="font-mono text-[8px] text-slate-400">50×30mm</span>
+                            <span className="font-mono text-[8px] text-slate-400">100×50mm</span>
                           </div>
                         </div>
 
-                        {/* Quadro reservado ao QR Code (sem biblioteca externa instalada) */}
-                        <div
-                          title={urlPublica}
-                          className="flex h-[96px] w-[86px] shrink-0 flex-col items-center justify-center rounded-lg border border-dashed border-slate-400 bg-slate-50 p-1.5 text-center"
-                        >
-                          <QrCode size={42} className="text-slate-800" aria-hidden="true" />
-                          <span className="mt-1 text-[8px] leading-tight font-bold text-slate-600">
-                            QR de conferência
-                          </span>
+                        {/* QR real: abre a ficha pública do aparelho (o mesmo que sai na etiqueta da Elgin) */}
+                        <div title={urlPublica} className="flex shrink-0 flex-col items-center">
+                          <QrCodeImagem valor={urlPublica} tamanho={86} alt={`QR Code do aparelho ${eq.identifier}`} className="rounded-md bg-white" />
                         </div>
                       </div>
 
@@ -825,7 +820,7 @@ export default function AbaEquipamentosPmoc({
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-5 py-3.5">
               <span className="text-xs text-slate-500">
-                {equipamentosParaEtiqueta.length} etiqueta(s) pronta(s) para fila térmica (50 × 30
+                {equipamentosParaEtiqueta.length} etiqueta(s) pronta(s) para fila térmica (100 × 50
                 mm)
               </span>
               <div className="flex items-center gap-2">

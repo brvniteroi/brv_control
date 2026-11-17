@@ -21,7 +21,15 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   grava pelo `salvarPlanoCompleto`. Plano novo já vem com o responsável técnico; escolher outro preenche CPF e registro pelo cadastro do funcionário.
 - `upload.php` aceita PDF (só admin/escritório, até 10 MB, confere o `%PDF-`, pasta `uploads/pmoc/AAAA/MM`); `uploads/.htaccess` serve `.pdf` sem a CSP.
 - Frase legal da capa sem a RE 09. Menu **Serviços > PMOC** liberado. Ajuda F1: seção "PMOC" (telas `pmoc`, `pmoc-plano`, `pmoc-modelo`).
-- **Fica para a fase 2:** o botão "Gerar OS do mês" responde que entra na próxima etapa; fotos da visita e checklist no celular.
+- **Fases 2 e 3 escritas em 2026-11-17** (telas do Gemini auditadas, commit `cfcbe79`; backend do Claude): migration `20261117100000_pmoc_execucao_qr.sql`
+  (a aplicar) e verificação `supabase/verificacao/pmoc_execucao_qr.sql`. Funções: `pmoc_gerar_os_mes`, `pmoc_checklist_atividade`, `pmoc_salvar_execucao`,
+  `pmoc_concluir_checklist`, `pmoc_link_relatorio`, públicas `pmoc_relatorio_publico` e `pmoc_equipamento_publico`; trigger `tasks_exige_checklist_pmoc`;
+  `equipments.public_token`, `pmoc_executions.photo_urls`, tabela `pmoc_report_links`, tipo de OS "PMOC", `print_jobs.kind = 'etiqueta_pmoc'`.
+  Telas: aba "PMOC do mês" em `/pmoc?aba=mes`, cartão no Dashboard, checklist em `/campo/atividade/:id`, `/relatorio-pmoc/:token`, `/equipamento/:token`.
+  Decisões do Claude na ligação: etiqueta **100 x 50 mm** (rolo da Oficina, decisão 9; o Gemini tinha desenhado 50 x 30); QR real com o pacote `qrcode`;
+  o checklist só funciona online (a conclusão da atividade é barrada pelo banco se o checklist não foi preenchido); aparelho que sai do plano some da visita,
+  mas o histórico e a página pública continuam. **Testes na prática pendentes** (ver lembrete do CLAUDE.md): OS do mês, checklist no celular, relatório por WhatsApp,
+  etiqueta na Elgin e leitura do QR.
 
 ## O que é o PMOC para a BRV
 

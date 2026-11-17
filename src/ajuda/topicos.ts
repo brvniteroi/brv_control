@@ -1173,9 +1173,9 @@ No sistema, cada plano tem:
 3. **Equipamentos**: os aparelhos de cada ambiente.
 4. **Cronograma**: as tarefas de cada aparelho e de quanto em quanto tempo são feitas.
 5. **Execução** e **Documento**: o acompanhamento mês a mês e o documento para imprimir.
-! A geração da **OS do mês** e o **checklist no celular** entram na próxima etapa do PMOC. Por enquanto, agende a visita pela linha do tempo.
+Todo mês o escritório gera a **OS do mês** (aba **PMOC do mês**), o técnico preenche o checklist no celular e o cliente recebe o relatório por link. Cada aparelho tem uma etiqueta com QR Code.
 `,
-    veja: ['pmoc-novo-plano', 'pmoc-lista'],
+    veja: ['pmoc-novo-plano', 'pmoc-lista', 'pmoc-do-mes'],
   },
   {
     id: 'pmoc-lista',
@@ -1235,6 +1235,7 @@ Para o plano ficar **Vigente**, o sistema exige: endereço, responsável técnic
 - Ao **remover um ambiente**, os aparelhos dele ficam com o aviso **Escolha o ambiente**.
 - Aparelho que **já teve manutenção registrada** não pode ser removido: desative-o (ele sai do cronograma e do documento, mas o histórico fica).
 - A **foto** do aparelho aparece na tabela de equipamentos do documento.
+- **Etiqueta com QR Code**: marque os aparelhos e clique em **Imprimir etiquetas**. Ela sai na impressora Elgin da loja (mesmo rolo da oficina, 100 × 50 mm) com o identificador, o ambiente e o QR. O QR abre a **ficha pública do aparelho** (\`/equipamento/...\`): cliente e fiscal veem o plano vigente, o responsável técnico e as últimas manutenções, sem dados pessoais. A impressora precisa estar ligada (servidor da loja).
 `,
   },
   {
@@ -1259,8 +1260,56 @@ Para o plano ficar **Vigente**, o sistema exige: endereço, responsável técnic
     palavras: 'imprimir pdf documento capa relatorio mensal execucao visita atrasada',
     texto: `
 - Aba **Documento** > **Imprimir / PDF**: na janela do navegador, escolha **Salvar como PDF** (A4 retrato). Sai a capa, a identificação do cliente e do responsável, os ambientes, os equipamentos, o cronograma, as recomendações e o TRT anexado.
-- Aba **Execução**: a grade mostra, por aparelho e por mês, o que está previsto, feito ou atrasado. **Relatório do mês** abre o relatório para imprimir.
-! A **OS do mês** e o preenchimento pelo técnico no celular entram na próxima etapa. Até lá a grade fica só com o previsto.
+- Aba **Execução**: a grade mostra, por aparelho e por mês, o que está previsto, feito ou atrasado. **Gerar OS** cria a OS do mês e **Relatório do mês** abre o relatório (imprimir, enviar pelo WhatsApp ou copiar o link).
+`,
+    veja: ['pmoc-do-mes', 'pmoc-relatorio-link'],
+  },
+  {
+    id: 'pmoc-do-mes',
+    titulo: 'PMOC do mês e Gerar OS',
+    secao: 'PMOC',
+    telas: ['pmoc', 'pmoc-plano'],
+    palavras: 'pmoc do mes gerar os agendar tecnico data hora duracao sem os agendada executada atrasada dashboard painel',
+    texto: `
+Em **PMOC**, a aba **PMOC do mês** lista os planos vigentes com visita prevista no mês escolhido e a situação de cada um:
+- **Sem OS**: ainda não foi gerada a OS do mês. Clique em **Gerar OS**.
+- **OS agendada**: a OS existe e a visita está marcada. Mostra quantos aparelhos já foram feitos.
+- **Executada**: todos os aparelhos foram feitos (ou justificados) e a visita foi concluída. Já dá para **Abrir relatório**, **WhatsApp** ou **Copiar link**.
+- **Atrasada**: o mês passou sem a visita concluída.
+O **Dashboard** mostra um cartão com o resumo do mês (só para admin e escritório).
+**Gerar OS**: escolha o **técnico**, a **data e hora** e a **duração** (o sistema sugere 30 min por aparelho). O sistema cria a OS do tipo **PMOC**, já com os aparelhos do mês, e agenda a atividade na linha do tempo. É **uma OS por plano por mês**: se já existe, o botão abre a OS. Se a OS for cancelada, dá para gerar outra.
+> Aparelho sem tarefa prevista no mês não entra na visita. Se nenhum aparelho tem tarefa no mês, o sistema avisa e não gera.
+`,
+    veja: ['pmoc-checklist-campo', 'pmoc-relatorio-link'],
+  },
+  {
+    id: 'pmoc-checklist-campo',
+    titulo: 'Checklist do PMOC no celular do técnico',
+    secao: 'PMOC',
+    telas: ['pmoc', 'pmoc-plano', 'os'],
+    palavras: 'checklist tecnico celular campo aparelho tarefa medicao corrente temperatura foto nao atendido acompanhou concluir',
+    texto: `
+Na atividade de PMOC, o técnico vê o bloco **Checklist PMOC** com a lista de aparelhos da visita. Em cada aparelho ele:
+1. marca cada tarefa como **Feito**, **Não feito** (com observação) ou **Não se aplica**;
+2. preenche as **medições** pedidas (corrente e temperaturas) e tira as **fotos**;
+3. toca em **Salvar aparelho**. Se não deu para atender (aparelho desligado, sem acesso), marca **Não foi possível atender** e escreve o motivo.
+Para **concluir a atividade** todos os aparelhos precisam estar salvos e o técnico informa o **nome de quem acompanhou a visita** no cliente (não há assinatura). O nome sai no relatório.
+- O checklist **precisa de internet**: se faltar sinal, salve quando a rede voltar. A conclusão da atividade também espera a internet.
+- Medição muito fora do comum (corrente acima de 100 A, temperatura fora de -10 a 60 °C) só gera um aviso amarelo para conferir a digitação.
+> O escritório também consegue abrir e preencher o checklist pela atividade, se precisar corrigir.
+`,
+  },
+  {
+    id: 'pmoc-relatorio-link',
+    titulo: 'Relatório do mês por link (WhatsApp)',
+    secao: 'PMOC',
+    telas: ['pmoc', 'pmoc-plano'],
+    palavras: 'relatorio mensal link publico whatsapp enviar copiar pdf cliente token',
+    texto: `
+Depois da visita, o relatório do mês fica disponível por **link público** (o cliente abre sem login, no celular ou no computador, e pode **Imprimir / Salvar PDF**).
+- No **PMOC do mês** (ou na aba **Execução** do plano, **Relatório do mês**), use **WhatsApp** para abrir a conversa com o telefone do cliente e o link pronto, ou **Copiar link**.
+- O relatório mostra o plano, o responsável técnico, os aparelhos atendidos (tarefas, medições e fotos), os não atendidos com o motivo e quem acompanhou a visita. **Não** mostra CPF/CNPJ do cliente.
+- O link do mês é sempre o mesmo: reenviar não gera outro. Quem tem o link consegue ver o relatório, então envie só para o cliente.
 `,
   },
 ];

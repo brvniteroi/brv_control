@@ -448,9 +448,7 @@ export async function gerarOsDoMes(
   referenceMonth: string,
   agendamento: PmocGenerateOsScheduleInput,
 ): Promise<PmocGenerateOsResult> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.gerarOsDoMes(planId, referenceMonth, agendamento);
   await pausaSimulada();
   const plano = planosMemoria.find((p) => p.id === planId);
   if (!plano) throw new Error('Plano PMOC não encontrado.');
@@ -847,9 +845,7 @@ export async function enviarAnexoTrtPmoc(
  * para o mês `referenceMonth` (`YYYY-MM`).
  */
 export async function resumoDoMes(referenceMonth: string): Promise<PmocMonthSummary> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.resumoDoMes(referenceMonth);
   await pausaSimulada();
 
   const mesHoje = mesAtualLocal();
@@ -979,9 +975,7 @@ export async function resumoDoMes(referenceMonth: string): Promise<PmocMonthSumm
 export async function buscarChecklistDaAtividade(
   taskId: string,
 ): Promise<PmocActivityChecklist> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.buscarChecklistDaAtividade(taskId);
   await pausaSimulada();
 
   // Na demonstração, localiza pelo `task_id` ou `service_order_id`; se o técnico abrir uma atividade qualquer
@@ -1092,9 +1086,7 @@ export async function buscarChecklistDaAtividade(
 export async function salvarExecucaoAparelho(
   dados: PmocSaveEquipmentExecutionInput,
 ): Promise<PmocEquipmentMonthExecution> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.salvarExecucaoAparelho(dados);
   await pausaSimulada();
 
   const plano = planosMemoria.find((p) => p.id === dados.plan_id);
@@ -1186,9 +1178,7 @@ export async function concluirChecklist(
   taskId: string,
   acompanhadoPor: string,
 ): Promise<void> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.concluirChecklist(taskId, acompanhadoPor);
   await pausaSimulada();
 
   const nomeLimpo = acompanhadoPor.trim();
@@ -1225,9 +1215,7 @@ export async function gerarLinkRelatorio(
   planId: string,
   referenceMonth: string,
 ): Promise<{ token: string; url: string }> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.gerarLinkRelatorio(planId, referenceMonth);
   await pausaSimulada();
 
   let meta = obterOuCriarMetaMesDemo(planId, referenceMonth);
@@ -1263,9 +1251,7 @@ export async function gerarLinkRelatorio(
 export async function buscarRelatorioPublico(
   token: string,
 ): Promise<PmocMonthlyReport | null> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.buscarRelatorioPublico(token);
   await pausaSimulada();
 
   const limpo = token.trim();
@@ -1311,9 +1297,7 @@ export async function buscarRelatorioPublico(
 export async function buscarEquipamentoPublico(
   token: string,
 ): Promise<PmocPublicEquipmentView | null> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.buscarEquipamentoPublico(token);
   await pausaSimulada();
 
   const limpo = token.trim();
@@ -1412,16 +1396,14 @@ export async function buscarEquipamentoPublico(
 }
 
 /**
- * Entrega 5: envia para a fila de impressão as etiquetas QR Code (50 x 30 mm) dos aparelhos
+ * Entrega 5: envia para a fila de impressão as etiquetas QR Code (100 x 50 mm) dos aparelhos
  * selecionados (ou de todos os ativos do plano).
  */
 export async function imprimirEtiquetas(
   planId: string,
   idsAparelhos?: string[],
 ): Promise<PmocPrintLabelsResult> {
-  if (USAR_BANCO_PMOC) {
-    throw new Error('Disponível na próxima atualização do sistema.');
-  }
+  if (USAR_BANCO_PMOC) return real.imprimirEtiquetas(planId, idsAparelhos);
   await pausaSimulada();
 
   const filtroIds = idsAparelhos && idsAparelhos.length > 0 ? new Set(idsAparelhos) : null;

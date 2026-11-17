@@ -58,7 +58,7 @@ export default function App() {
         <Route path="/orcamento-placa/:token" element={<OrcamentoPlacaPublico />} />
         {/* Relatório mensal PMOC: público, o cliente abre pelo link do WhatsApp ou QR Code e salva em PDF */}
         <Route path="/relatorio-pmoc/:token" element={<RelatorioPmocPublico />} />
-        {/* Ficha pública do equipamento PMOC: aberta pela etiqueta QR Code (50 × 30 mm) colada no aparelho */}
+        {/* Ficha pública do equipamento PMOC: aberta pela etiqueta QR Code (100 × 50 mm) colada no aparelho */}
         <Route path="/equipamento/:token" element={<EquipamentoPublico />} />
         <Route path="/portal" element={<PortalRoute />}>
           <Route index element={<PortalHome />} />

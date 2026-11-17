@@ -11,17 +11,26 @@ import {
   mesAtualLocal,
   tarefasPrevistasNoMes,
 } from '../components/pmoc/regrasPmoc';
+import { gerarZplEtiquetaPmoc } from '../utils/etiquetaPmoc';
 import type {
+  PmocActivityChecklist,
   PmocEnvironment,
   PmocEquipmentMonthExecution,
   PmocEquipmentTask,
+  PmocFieldEquipmentChecklist,
   PmocGenerateOsResult,
+  PmocGenerateOsScheduleInput,
   PmocMeasurementKey,
   PmocMonthlyReport,
+  PmocMonthPlanStatus,
+  PmocMonthSummary,
   PmocPlan,
   PmocPlanEquipment,
   PmocPlanInput,
   PmocPlanSummary,
+  PmocPrintLabelsResult,
+  PmocPublicEquipmentView,
+  PmocSaveEquipmentExecutionInput,
   PmocTaskTemplate,
 } from '../types/pmoc';
 
@@ -83,10 +92,10 @@ interface LinhaAparelhoPlano {
   sort_order: number;
   active: boolean;
   created_at: string;
-  equipment: { category: string; brand: string | null; model: string | null; serial_number: string | null; capacity_btu: number | null } | null;
+  equipment: { category: string; brand: string | null; model: string | null; serial_number: string | null; capacity_btu: number | null; public_token: string | null } | null;
 }
 
-const SELECT_APARELHO = '*, equipment:equipments(category, brand, model, serial_number, capacity_btu)';
+const SELECT_APARELHO = '*, equipment:equipments(category, brand, model, serial_number, capacity_btu, public_token)';
 
 function paraAparelho(l: LinhaAparelhoPlano): PmocPlanEquipment {
   return {
@@ -105,6 +114,7 @@ function paraAparelho(l: LinhaAparelhoPlano): PmocPlanEquipment {
     photo_attachment_id: null,
     sort_order: l.sort_order,
     active: l.active,
+    public_token: l.equipment?.public_token ?? null,
     created_at: l.created_at,
   };
 }
@@ -136,6 +146,8 @@ interface LinhaExecucao {
   task_results: PmocEquipmentMonthExecution['task_results'] | null;
   technician_notes: string | null;
   unattended_reason: string | null;
+  accompanied_by: string | null;
+  photo_urls: string[] | null;
   updated_at: string;
   ordem: { number: number } | null;
   tecnico: { name: string } | null;
@@ -162,8 +174,9 @@ function paraExecucao(l: LinhaExecucao): PmocEquipmentMonthExecution {
     },
     task_results: l.task_results ?? [],
     technician_notes: l.technician_notes,
-    photo_urls: [], // fotos da visita: fase 2 (app de campo)
+    photo_urls: l.photo_urls ?? [],
     unattended_reason: l.unattended_reason,
+    accompanied_by: l.accompanied_by,
     updated_at: l.updated_at,
   };
 }
@@ -230,16 +243,16 @@ export async function listarModelosDeTarefa(): Promise<PmocTaskTemplate[]> {
   }));
 }
 
-/** Relatório mensal: mesma consolidação da tela de demonstração, com os dados do banco. */
-export async function buscarRelatorioMensal(planId: string, referenceMonth: string): Promise<PmocMonthlyReport | null> {
-  const [plano, ambientes, aparelhos, tarefas, execucoes] = await Promise.all([
-    buscarPlano(planId),
-    listarAmbientes(planId),
-    listarEquipamentosDoPlano(planId),
-    buscarCronograma(planId),
-    listarExecucoes(planId),
-  ]);
-  if (!plano) return null;
+/** Consolida o relatório do mês a partir das peças do plano (a mesma regra vale para a tela interna e para o link público). */
+function montarRelatorio(
+  plano: PmocPlan,
+  ambientes: PmocEnvironment[],
+  aparelhos: PmocPlanEquipment[],
+  tarefas: PmocEquipmentTask[],
+  execucoes: PmocEquipmentMonthExecution[],
+  referenceMonth: string,
+  publicToken: string | null,
+): PmocMonthlyReport {
 
   const offset = gerarMesesDoPlano(plano.start_date).find((m) => m.referencia === referenceMonth)?.offset ?? 1;
   const nomeAmbiente = new Map(ambientes.map((a) => [a.id, a.name]));
@@ -248,6 +261,7 @@ export async function buscarRelatorioMensal(planId: string, referenceMonth: stri
   let numeroOs: number | null = null;
   let tecnico: string | null = null;
   let executadoEm: string | null = null;
+  let acompanhadoPor: string | null = null;
 
   aparelhos
     .filter((e) => e.active)
@@ -259,6 +273,7 @@ export async function buscarRelatorioMensal(planId: string, referenceMonth: stri
       numeroOs ??= exec?.service_order_number ?? null;
       tecnico ??= exec?.technician_name ?? null;
       executadoEm ??= exec?.executed_at ?? null;
+      acompanhadoPor ??= exec?.accompanied_by ?? null;
       const ambiente = eq.environment_id ? (nomeAmbiente.get(eq.environment_id) ?? null) : null;
 
       if (exec?.status === 'concluida') {
@@ -285,9 +300,25 @@ export async function buscarRelatorioMensal(planId: string, referenceMonth: stri
     service_order_number: numeroOs,
     technician_name: tecnico,
     executed_at: executadoEm,
+    accompanied_by: acompanhadoPor,
+    public_token: publicToken,
     attended_equipments: atendidos,
     unattended_equipments: naoAtendidos,
   };
+}
+
+/** Relatório mensal interno (admin/escritório), com os dados do banco. */
+export async function buscarRelatorioMensal(planId: string, referenceMonth: string): Promise<PmocMonthlyReport | null> {
+  const [plano, ambientes, aparelhos, tarefas, execucoes, link] = await Promise.all([
+    buscarPlano(planId),
+    listarAmbientes(planId),
+    listarEquipamentosDoPlano(planId),
+    buscarCronograma(planId),
+    listarExecucoes(planId),
+    supabase.from('pmoc_report_links').select('token').eq('plan_id', planId).eq('reference_month', referenceMonth).maybeSingle(),
+  ]);
+  if (!plano) return null;
+  return montarRelatorio(plano, ambientes, aparelhos, tarefas, execucoes, referenceMonth, (link.data?.token as string | undefined) ?? null);
 }
 
 // ---------------------------------------------------------------------
@@ -345,9 +376,290 @@ export async function responsavelPadrao(): Promise<string | null> {
   return (data as string | null) ?? null;
 }
 
-/** A OS do mês entra na fase 2 (docs/pmoc.md): botão com técnico, data e hora escolhidos pelo escritório. */
-export async function gerarOsDoMes(): Promise<PmocGenerateOsResult> {
-  throw new Error('A geração da OS do mês entra na próxima etapa do PMOC. Por enquanto, agende a visita pela linha do tempo.');
+/** Gera a OS do mês com a atividade já agendada (técnico, início e duração escolhidos pelo escritório). Não duplica. */
+export async function gerarOsDoMes(
+  planId: string,
+  referenceMonth: string,
+  agendamento: PmocGenerateOsScheduleInput,
+): Promise<PmocGenerateOsResult> {
+  const { data, error } = await supabase.rpc('pmoc_gerar_os_mes', {
+    p_plano: planId,
+    p_mes: referenceMonth,
+    p_tecnico: agendamento.technician_id,
+    p_inicio: agendamento.scheduled_start,
+    p_minutos: Math.round(agendamento.estimated_minutes),
+    p_obs: null,
+  });
+  erroDoBanco(error);
+  const r = data as Partial<PmocGenerateOsResult> & { service_order_id: string; service_order_number: number };
+  return {
+    service_order_id: r.service_order_id,
+    service_order_number: Number(r.service_order_number),
+    task_id: r.task_id ?? null,
+    reference_month: referenceMonth,
+    equipments_included: r.equipments_included ?? 0,
+    already_existed: r.already_existed ?? false,
+    message: r.message ?? `OS ${r.service_order_number} gerada.`,
+  };
+}
+
+// ---------------------------------------------------------------------
+// Painel "PMOC do mês" (admin/escritório)
+// ---------------------------------------------------------------------
+
+interface LinhaOsMes {
+  plan_id: string;
+  plan_equipment_id: string;
+  service_order_id: string | null;
+  task_id: string | null;
+  technician_id: string | null;
+  accompanied_by: string | null;
+  executed_at: string | null;
+  status: PmocEquipmentMonthExecution['status'];
+  ordem: { number: number; status: string } | null;
+  atividade: { scheduled_start: string | null } | null;
+  tecnico: { name: string } | null;
+}
+
+/** Situação de cada plano vigente no mês: sem OS, OS agendada, executada ou atrasada. */
+export async function resumoDoMes(referenceMonth: string): Promise<PmocMonthSummary> {
+  const hoje = mesAtualLocal();
+  const planos = await todas<PmocPlan>(
+    (de, ate) => supabase.from('pmoc_plans').select('*').eq('status', 'vigente').order('code').range(de, ate),
+    'Erro ao listar os planos vigentes',
+  );
+  const resumo: PmocMonthSummary = {
+    reference_month: referenceMonth,
+    active_plans_total: planos.length,
+    counts: { sem_os: 0, os_agendada: 0, executada: 0, atrasada: 0 },
+    items: [],
+  };
+  if (planos.length === 0) return resumo;
+
+  const ids = planos.map((p) => p.id);
+  const [aparelhos, tarefas, execs, links] = await Promise.all([
+    todas<{ id: string; plan_id: string }>(
+      (de, ate) => supabase.from('pmoc_plan_equipments').select('id, plan_id').in('plan_id', ids).eq('active', true).order('id').range(de, ate),
+      'Erro ao listar os aparelhos',
+    ),
+    todas<PmocEquipmentTask>(
+      (de, ate) => supabase.from('pmoc_equipment_tasks').select('*').in('plan_id', ids).eq('active', true).order('id').range(de, ate),
+      'Erro ao listar os cronogramas',
+    ),
+    todas<LinhaOsMes>(
+      (de, ate) =>
+        supabase
+          .from('pmoc_executions')
+          .select('plan_id, plan_equipment_id, service_order_id, task_id, technician_id, accompanied_by, executed_at, status, ordem:service_orders(number, status), atividade:tasks(scheduled_start), tecnico:employees(name)')
+          .eq('reference_month', referenceMonth)
+          .in('plan_id', ids)
+          .order('id')
+          .range(de, ate),
+      'Erro ao listar as execuções do mês',
+    ),
+    supabase.from('pmoc_report_links').select('plan_id, token').eq('reference_month', referenceMonth).in('plan_id', ids),
+  ]);
+  falhar(links.error, 'Erro ao buscar os links dos relatórios');
+  const tokenDoPlano = new Map(((links.data ?? []) as { plan_id: string; token: string }[]).map((l) => [l.plan_id, l.token]));
+
+  for (const plano of planos) {
+    const mes = gerarMesesDoPlano(plano.start_date).find((m) => m.referencia === referenceMonth);
+    if (!mes) continue;
+    const comTarefa = aparelhos
+      .filter((e) => e.plan_id === plano.id)
+      .map((e) => ({ id: e.id, qtd: tarefasPrevistasNoMes(tarefas.filter((t) => t.plan_equipment_id === e.id), mes.offset).length }))
+      .filter((e) => e.qtd > 0);
+    if (comTarefa.length === 0) continue;
+
+    // OS cancelada não conta (dá para gerar outra)
+    const doMes = execs.filter((x) => x.plan_id === plano.id && x.ordem?.status !== 'cancelada');
+    const comOs = doMes.find((x) => x.service_order_id) ?? null;
+    const tudoFeito = comTarefa.every((e) => {
+      const x = doMes.find((d) => d.plan_equipment_id === e.id);
+      return x?.status === 'concluida' || x?.status === 'nao_atendido';
+    });
+
+    let status: PmocMonthPlanStatus;
+    if (tudoFeito) status = 'executada';
+    else if (referenceMonth < hoje) status = 'atrasada';
+    else if (comOs) status = 'os_agendada';
+    else status = 'sem_os';
+    resumo.counts[status] += 1;
+
+    resumo.items.push({
+      plan_id: plano.id,
+      plan_code: plano.code,
+      customer_id: plano.customer_id,
+      customer_name: plano.customer_name,
+      customer_trade_name: plano.customer_trade_name,
+      customer_phone: plano.customer_phone,
+      address_snapshot: plano.address_snapshot,
+      reference_month: referenceMonth,
+      month_offset: mes.offset,
+      equipment_count_in_month: comTarefa.length,
+      task_count_in_month: comTarefa.reduce((soma, e) => soma + e.qtd, 0),
+      status,
+      service_order_id: comOs?.service_order_id ?? null,
+      service_order_number: comOs?.ordem?.number ?? null,
+      task_id: comOs?.task_id ?? null,
+      technician_id: comOs?.technician_id ?? null,
+      technician_name: comOs?.tecnico?.name ?? null,
+      scheduled_start: comOs?.atividade?.scheduled_start ?? null,
+      executed_at: doMes.find((x) => x.executed_at)?.executed_at ?? null,
+      accompanied_by: doMes.find((x) => x.accompanied_by)?.accompanied_by ?? null,
+      report_token: tokenDoPlano.get(plano.id) ?? null,
+    });
+  }
+  return resumo;
+}
+
+// ---------------------------------------------------------------------
+// Checklist no app de campo (técnico) e relatório/ficha públicos
+// ---------------------------------------------------------------------
+
+type ChecklistBruto = Omit<PmocActivityChecklist, 'equipments'> & {
+  equipments: (Omit<PmocFieldEquipmentChecklist, 'letter'> & { letter_idx: number })[];
+};
+
+/** Atividade de PMOC: aparelhos e tarefas do mês. Atividade comum devolve `is_pmoc: false`. */
+export async function buscarChecklistDaAtividade(taskId: string): Promise<PmocActivityChecklist> {
+  const { data, error } = await supabase.rpc('pmoc_checklist_atividade', { p_task: taskId });
+  falhar(error, 'Erro ao carregar o checklist do PMOC');
+  const c = data as ChecklistBruto;
+  return {
+    is_pmoc: c.is_pmoc,
+    task_id: c.task_id,
+    service_order_id: c.service_order_id ?? null,
+    service_order_number: c.service_order_number ?? null,
+    plan_id: c.plan_id ?? null,
+    plan_code: c.plan_code ?? null,
+    customer_name: c.customer_name ?? null,
+    reference_month: c.reference_month ?? null,
+    accompanied_by: c.accompanied_by ?? null,
+    equipments: (c.equipments ?? []).map(({ letter_idx, ...a }) => ({
+      ...a,
+      letter: letraEquipamento(letter_idx),
+      photo_urls: a.photo_urls ?? [],
+      measurements: {
+        current_a: a.measurements?.current_a ?? null,
+        temp_supply_c: a.measurements?.temp_supply_c ?? null,
+        temp_return_c: a.measurements?.temp_return_c ?? null,
+        temp_ambient_c: a.measurements?.temp_ambient_c ?? null,
+      },
+    })),
+  };
+}
+
+/** Grava um aparelho da visita (a validação final é do banco). */
+export async function salvarExecucaoAparelho(dados: PmocSaveEquipmentExecutionInput): Promise<PmocEquipmentMonthExecution> {
+  const { data, error } = await supabase.rpc('pmoc_salvar_execucao', {
+    p_task: dados.task_id,
+    p_plano_equip: dados.plan_equipment_id,
+    p_dados: {
+      status: dados.status,
+      task_results: dados.task_results,
+      measurements: dados.measurements,
+      technician_notes: dados.technician_notes,
+      photo_urls: dados.photo_urls,
+      unattended_reason: dados.unattended_reason,
+    },
+  });
+  erroDoBanco(error);
+  const x = data as LinhaExecucao;
+  return paraExecucao({ ...x, ordem: null, tecnico: null });
+}
+
+/** Conclui o checklist: todos os aparelhos preenchidos e o nome de quem acompanhou a visita. */
+export async function concluirChecklist(taskId: string, acompanhadoPor: string): Promise<void> {
+  const { error } = await supabase.rpc('pmoc_concluir_checklist', { p_task: taskId, p_acompanhado: acompanhadoPor });
+  erroDoBanco(error);
+}
+
+/** Token do relatório do mês (cria se ainda não existe) e o link público. */
+export async function gerarLinkRelatorio(planId: string, referenceMonth: string): Promise<{ token: string; url: string }> {
+  const { data, error } = await supabase.rpc('pmoc_link_relatorio', { p_plano: planId, p_mes: referenceMonth });
+  erroDoBanco(error);
+  const token = data as string;
+  return { token, url: `${window.location.origin}/relatorio-pmoc/${token}` };
+}
+
+interface RelatorioPublicoBruto {
+  public_token: string;
+  reference_month: string;
+  plan: Record<string, unknown>;
+  environments: PmocEnvironment[];
+  equipments: LinhaAparelhoPlano[];
+  tasks: PmocEquipmentTask[];
+  executions: LinhaExecucao[] & { service_order_number?: number | null; technician_name?: string | null }[];
+}
+
+/** Relatório do mês aberto pelo link, sem login. O banco já tirou CPF/CNPJ e observações internas. */
+export async function buscarRelatorioPublico(token: string): Promise<PmocMonthlyReport | null> {
+  const { data, error } = await supabase.rpc('pmoc_relatorio_publico', { p_token: token.trim() });
+  falhar(error, 'Erro ao carregar o relatório');
+  if (!data) return null;
+  const r = data as RelatorioPublicoBruto;
+  const plano = {
+    customer_document: null,
+    responsible_cpf: null,
+    notes: null,
+    address_id: null,
+    trt_attachment_url: null,
+    trt_attachment_name: null,
+    trt_attachment_mime: null,
+    created_by: null,
+    ...r.plan,
+  } as unknown as PmocPlan;
+  const execucoes = (r.executions as unknown as (LinhaExecucao & { service_order_number: number | null; technician_name: string | null })[]).map(
+    (x) => ({ ...paraExecucao({ ...x, ordem: null, tecnico: null }), service_order_number: x.service_order_number, technician_name: x.technician_name }),
+  );
+  return montarRelatorio(
+    plano,
+    r.environments.map((a) => ({ ...a, area_m2: Number(a.area_m2) })),
+    r.equipments.map(paraAparelho),
+    r.tasks.map((t) => ({ ...t, measurement_fields: (t.measurement_fields ?? []) as PmocMeasurementKey[] })),
+    execucoes,
+    r.reference_month,
+    r.public_token,
+  );
+}
+
+/** Ficha do aparelho aberta pelo QR Code, sem login. */
+export async function buscarEquipamentoPublico(token: string): Promise<PmocPublicEquipmentView | null> {
+  const { data, error } = await supabase.rpc('pmoc_equipamento_publico', { p_token: token.trim() });
+  falhar(error, 'Erro ao carregar a ficha do aparelho');
+  return (data as PmocPublicEquipmentView | null) ?? null;
+}
+
+/** Manda a etiqueta de cada aparelho (ou de todos os ativos do plano) para a fila da Elgin. */
+export async function imprimirEtiquetas(planId: string, idsAparelhos?: string[]): Promise<PmocPrintLabelsResult> {
+  const [plano, ambientes, aparelhos] = await Promise.all([buscarPlano(planId), listarAmbientes(planId), listarEquipamentosDoPlano(planId)]);
+  if (!plano) throw new Error('Plano PMOC não encontrado.');
+  const filtro = idsAparelhos && idsAparelhos.length > 0 ? new Set(idsAparelhos) : null;
+  const alvos = aparelhos.filter((e) => e.active && (!filtro || filtro.has(e.id)));
+  if (alvos.length === 0) throw new Error('Selecione ao menos um aparelho para imprimir a etiqueta.');
+  if (alvos.some((e) => !e.public_token)) throw new Error('Aparelho sem código para o QR. Salve o plano e tente de novo.');
+
+  const nomeAmbiente = new Map(ambientes.map((a) => [a.id, a.name]));
+  const pedidos = alvos.map((e) => ({
+    kind: 'etiqueta_pmoc',
+    payload: gerarZplEtiquetaPmoc({
+      identificador: e.identifier,
+      cliente: plano.customer_trade_name || plano.customer_name,
+      ambiente: e.environment_id ? (nomeAmbiente.get(e.environment_id) ?? '') : '',
+      equipamento: [e.equipment_type, e.capacity_btu ? `${e.capacity_btu} BTU` : ''].filter(Boolean).join(' '),
+      plano: plano.code,
+      token: e.public_token as string,
+    }),
+    copies: 1,
+  }));
+  const { error } = await supabase.from('print_jobs').insert(pedidos);
+  erroDoBanco(error);
+  const qtd = alvos.length;
+  return {
+    printed_count: qtd,
+    message: qtd === 1 ? '1 etiqueta enviada para a impressora' : `${qtd} etiquetas enviadas para a impressora`,
+  };
 }
 
 // ---------------------------------------------------------------------

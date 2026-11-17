@@ -1,3 +1,4 @@
+import QrCodeImagem from './QrCodeImagem';
 import { useState } from 'react';
 import {
   AlertTriangle,
@@ -398,14 +399,18 @@ export default function CorpoRelatorioMensalPmoc({
                       </div>
                     </div>
 
-                    {/* Espaço reservado para o QR de conferência (sem biblioteca externa instalada) */}
+                    {/* QR de conferência: abre o próprio relatório online (só existe depois que o link do mês é gerado) */}
                     <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-3 text-center sm:w-44">
-                      <div className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white text-slate-500">
-                        <QrCode size={28} aria-hidden="true" />
-                        <span className="mt-1 text-[9px] font-bold uppercase">
-                          QR de conferência
-                        </span>
-                      </div>
+                      {linkConferencia ? (
+                        <QrCodeImagem valor={linkConferencia} tamanho={88} alt="QR Code para conferir este relatório online" className="rounded-lg bg-white" />
+                      ) : (
+                        <div className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white text-slate-500">
+                          <QrCode size={28} aria-hidden="true" />
+                          <span className="mt-1 text-[9px] font-bold uppercase">
+                            QR de conferência
+                          </span>
+                        </div>
+                      )}
                       <span className="mt-1.5 text-[10px] font-semibold text-slate-600">
                         Autenticidade online
                       </span>

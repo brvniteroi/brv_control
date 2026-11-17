@@ -70,7 +70,7 @@ export interface AtividadeDetalhe extends Task {
 }
 
 export interface OrdemDetalhe extends ServiceOrder {
-  customer: { id: string; name: string } | null;
+  customer: { id: string; name: string; phone: string | null } | null;
   service_type: { id: string; name: string } | null;
   tasks: AtividadeDetalhe[];
   attachments: Attachment[];
@@ -140,7 +140,7 @@ export async function buscarOrdem(id: string): Promise<OrdemDetalhe | null> {
   const { data, error } = await supabase
     .from('service_orders')
     .select(
-      `*, customer:customers(id, name), service_type:service_types(id, name), tasks(*, employee:employees(id, name)), attachments(*), criador:profiles!created_by(full_name), ${CAMPOS_ETIQUETAS}`,
+      `*, customer:customers(id, name, phone), service_type:service_types(id, name), tasks(*, employee:employees(id, name)), attachments(*), criador:profiles!created_by(full_name), ${CAMPOS_ETIQUETAS}`,
     )
     .eq('id', id)
     .maybeSingle();

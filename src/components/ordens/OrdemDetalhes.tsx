@@ -23,7 +23,8 @@ import { definirEtiquetasOrdem } from '../../services/etiquetas';
 import ClienteDetalhes from '../clientes/ClienteDetalhes';
 import EtiquetaChip from '../etiquetas/EtiquetaChip';
 import SeletorEtiquetas from '../etiquetas/SeletorEtiquetas';
-import { PRIORIDADES, STATUS_OS, formatarDataHora, rotuloEndereco } from '../../utils/ordens';
+import { STATUS_OS, formatarDataHora, rotuloEndereco } from '../../utils/ordens';
+import { formatarTelefone } from '../../utils/telefone';
 import AnexosOS from './AnexosOS';
 import AtividadesOS from './AtividadesOS';
 import ComentariosOS from './ComentariosOS';
@@ -60,7 +61,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
   const [tecnicos, setTecnicos] = useState<Pick<Employee, 'id' | 'name' | 'active' | 'role'>[]>([]);
   const [enderecos, setEnderecos] = useState<CustomerAddress[]>([]);
 
-  const [cliente, setCliente] = useState<{ id: string; name: string } | null>(null);
+  const [cliente, setCliente] = useState<{ id: string; name: string; phone: string | null } | null>(null);
   const [enderecoId, setEnderecoId] = useState('');
   const [tipoId, setTipoId] = useState('');
   const [status, setStatus] = useState<ServiceOrderStatus>('agendada');
@@ -189,7 +190,7 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
   };
 
   const escolherCliente = (c: Customer | null) => {
-    setCliente(c ? { id: c.id, name: c.name } : null);
+    setCliente(c ? { id: c.id, name: c.name, phone: c.phone } : null);
     setEnderecoId('');
     setEnderecos([]);
   };
@@ -406,13 +407,12 @@ export default function OrdemDetalhes({ ordemId, onFechar, onSalvo }: OrdemDetal
                 ))}
               </select>
             </div>
+            {/* No lugar da Prioridade (pedido do usuário, 2026-11-16): telefone do contato principal, só leitura; muda no cadastro do cliente */}
             <div>
-              <label htmlFor="os-prio" className="block text-xs font-medium text-slate-700">Prioridade</label>
-              <select id="os-prio" value={prioridade} onChange={(e) => setPrioridade(e.target.value as ServiceOrderPriority)} className={INPUT}>
-                {PRIORIDADES.map((p) => (
-                  <option key={p.valor} value={p.valor}>{p.rotulo}</option>
-                ))}
-              </select>
+              <span className="block text-xs font-medium text-slate-700">Telefone do cliente</span>
+              <div className="mt-1.5 flex min-h-[38px] items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 select-all">
+                {cliente?.phone ? formatarTelefone(cliente.phone) : <span className="text-slate-400">{cliente ? 'Sem telefone' : '—'}</span>}
+              </div>
             </div>
           </div>
 

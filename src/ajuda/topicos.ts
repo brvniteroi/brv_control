@@ -273,7 +273,7 @@ Pela lista de OS:
 2. Clique em **Nova OS**.
 3. Escolha o **Cliente** (busque pelo nome, CPF/CNPJ ou telefone).
 4. Se o cliente tiver mais de um endereço, escolha o **Endereço do atendimento**.
-5. Escolha o **Tipo de OS** e, se quiser, a **Prioridade** e o **Prazo**.
+5. Escolha o **Tipo de OS** e, se quiser, o **Prazo**. Ao lado da Situação aparece o **Telefone do cliente** (o do contato principal; para mudar, use **Abrir cadastro do cliente**).
 6. Em **Solicitação do cliente / descrição**, escreva o que o cliente pediu. O técnico vê esse texto.
 7. Em **Observações internas**, escreva o que só o escritório deve ver.
 8. Clique em **Salvar**. Depois de salva, aparece o botão **Nova atividade** para agendar o técnico.

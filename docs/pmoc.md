@@ -9,7 +9,7 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
 
 ## Estado da fase 1 (2026-11-16)
 
-- Migration `supabase/migrations/20261116100000_pmoc_base.sql` (**a colar no SQL Editor**): tabelas `pmoc_*`, numeração `PMOC-AAAA-NNNN`
+- Migration `supabase/migrations/20261116100000_pmoc_base.sql` (aplicada pelo usuário em 2026-11-16): tabelas `pmoc_*`, numeração `PMOC-AAAA-NNNN`
   (`pmoc_code_seq`), histórico `pmoc_events`, RLS (admin/escritório leem; escrita só pelas funções; excluir plano só admin), modelos das 22 tarefas
   para Split Hi-Wall, Cassete, Split Piso-Teto e VRF, e as funções `pmoc_salvar_plano` (plano inteiro numa transação; aparelho sem cadastro é criado
   em `equipments`; aparelho sem tarefas recebe o modelo do tipo; plano vigente exige endereço, responsável com nome/CPF/registro, TRT e ambiente em

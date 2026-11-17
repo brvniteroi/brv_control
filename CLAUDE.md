@@ -275,6 +275,12 @@ Pendente, nesta ordem:
    **Módulo financeiro**: planejado e adiado (2026-11-04). Plano, decisões (nível de acesso no perfil em vez de papel novo, recebimento
    do técnico "a conferir", maquininhas Rede/InfinitePay, contas) e pendências em `docs/financeiro.md`. Ler antes de começar.
 
+**Data de saída das placas (corrigido em 2026-11-16, commit `4679ed2`):** a entrega mandava só `AAAA-MM-DD` e o banco lia meia-noite UTC (21h do dia
+anterior): a saída ficava um dia antes e, com entrada no mesmo dia, o banco recusava ("A saída não pode ser antes da entrada"). Agora `instanteDaSaida`
+em `services/placas.ts` manda hoje sem data (o banco usa `NOW()`) e dia passado como 23:59 local; o calendário da entrega vai da entrada até hoje.
+As 14 placas entregues pelo Control de 10/11 a 16/11 foram corrigidas no banco em 2026-11-16 (SQL em `supabase/verificacao/corrige_saida_placas_um_dia_antes.sql`).
+**Cuidado geral:** nunca gravar data sem hora (`AAAA-MM-DD`) em coluna `TIMESTAMPTZ`.
+
 **Placa sem defeito (2026-11-12, pedido do usuário):** botão "Placa sem defeito" no detalhe da placa (`PlacaDetalhes.tsx`, só escritório/admin, em Entrada/Diagnóstico): pede o valor da avaliação em bancada
 (garantia não cobra), manda a placa direto para **Pronto** sem orçamento nem aprovação e abre o WhatsApp (`textoWhatsAppSemDefeitoPlaca` em `regrasPlacas.ts`: não apresentou defeito + valor + pronta para retirada).
 O valor fica em `board_orders.quote_amount` (a saída já sugere esse valor) e a marca em `board_orders.no_defect_found` (migration `20261112100000_placas_sem_defeito.sql`, aplicada em 2026-11-12; refaz

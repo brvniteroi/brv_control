@@ -4,8 +4,8 @@ Plano escrito em 2026-11-16. Base: telas do Gemini (auditadas em 2026-11-04, ain
 `docs/gemini/pmoc-briefing.md`, contrato de dados `docs/gemini/pmoc.md`, modelos `PMOC BRV Control.docx` e `PMOC Field Control.docx`
 (raiz do repositório) e uma pesquisa de como os sistemas vendidos no Brasil fazem o PMOC (seção "O que o mercado faz").
 
-**Nada do banco foi feito ainda.** Este documento fecha as decisões antes da primeira migration. As decisões que dependem do usuário
-estão na seção "Decisões que preciso do usuário", cada uma com a recomendação.
+**Nada do banco foi feito ainda.** As decisões do usuário foram tomadas em 2026-11-16 (seção "Decisões do usuário"); falta só confirmar o texto
+legal da capa e escolher o laboratório de qualidade do ar, que não bloqueiam a fase 1.
 
 ## O que é o PMOC para a BRV
 
@@ -84,7 +84,7 @@ agendar a visita sozinho (não sabe o técnico nem o horário). Proposta:
 - Botão **"Gerar OS do mês"** por plano (e "Gerar todas"): cria a OS do tipo "PMOC" do mês, já com os equipamentos e a lista de tarefas do mês,
   e abre a escolha de técnico, data e hora (o mesmo `NovaAtividadeModal`). Uma OS por plano por mês (função `gerar_os_mes_pmoc`, que não
   duplica). Cliente grande que precisa de dois técnicos: segunda OS ligada ao mesmo plano e mês (segue a regra "segundo técnico = OS nova").
-- Alternativa (decisão 2): gerar as OS do mês sozinho no dia 1, ainda sem atividade, e o escritório só agenda.
+- Descartado (decisão 2): o sistema gerar as OS do mês sozinho no dia 1.
 
 ### 6. Checklist no celular
 
@@ -92,7 +92,7 @@ Checklist **próprio do PMOC** na atividade (não o motor de formulários genér
 precisam ficar estruturadas por equipamento para o relatório e o histórico. Na atividade de PMOC, o técnico vê a lista de aparelhos; em cada um,
 marca cada tarefa do mês como feita / não feita / não se aplica, preenche as medições pedidas (corrente, temperaturas de insuflamento, retorno e
 ambiente) e tira fotos (ligadas ao aparelho). A atividade só conclui com todos os aparelhos preenchidos ou justificados ("não atendido": aparelho
-desligado, sem acesso etc.). Grava em `pmoc_executions`. Fase 2 começa só online; sem internet entra depois, pela fila do app (fase 4).
+desligado, sem acesso etc.) e com o **nome de quem acompanhou a visita** (sem assinatura, decisão 4). Grava em `pmoc_executions`. Fase 2 começa só online; sem internet entra depois, pela fila do app (fase 4).
 
 ### 7. QR Code por equipamento e página pública
 
@@ -114,17 +114,39 @@ fase 4). Portal do Cliente: o relatório aparece lá também quando o portal for
 
 Continua sendo o documento A4 da tela (imprimir / salvar em PDF), com o TRT no anexo e o QR de conferência. Sem gerador de PDF no servidor.
 
-### 10. Pontos legais a confirmar (não bloqueiam o começo)
+### 10. Pontos legais
 
+- **A RE 09/2003 da ANVISA foi revogada** pela RDC nº 886, de 10/07/2024 (DOU de 12/07/2024, item XI; a própria ANVISA marca a RE 09 como
+  revogada). A RDC 886 é uma "limpeza" de normas e não pôs outra no lugar; o setor passou a usar a **ABNT NBR 17037:2023** (qualidade do ar
+  interior em ambientes não residenciais climatizados) como referência técnica. **Continuam valendo** a Lei 13.589/2018 e a Portaria MS 3.523/1998.
+- Por isso a frase legal da capa (`src/components/pmoc/empresa.ts`, que hoje cita a "Resolução RE nº 09/ANVISA") **precisa ser trocada na fase 1**.
+  Texto proposto, a confirmar pelo usuário: "...em cumprimento à Lei Federal nº 13.589/2018 e à Portaria MS nº 3.523/1998, adotando como referência
+  de qualidade do ar interior a ABNT NBR 17037:2023."
 - Conferir o conteúdo mínimo do plano com o Anexo I da Portaria 3.523/1998 antes de liberar para clientes (o modelo da BRV veio do Field Control).
-- A RE 09/ANVISA trata da qualidade do ar interior; análises de laboratório, quando o cliente fizer, entram como anexo do plano (o sistema não as
-  produz). Confirmar com o usuário se a BRV contrata ou indica laboratório.
+- Análise de qualidade do ar (laboratório): o sistema não produz; o laudo do laboratório entra como **anexo do plano** (PDF, item 4). Laboratório
+  ainda não escolhido (ver "Laboratórios de qualidade do ar").
+
+### 11. Laboratórios de qualidade do ar (pedido do usuário, 2026-11-16: "me indicar empresas próximas")
+
+Levantamento inicial pela internet (2026-11-16). **Nenhuma acreditação foi conferida**; muitos sites de laboratórios de fora do RJ listam Niterói e
+São Gonçalo só para aparecer na busca. Critérios para escolher: acreditação **ISO/IEC 17025 pelo Inmetro (Cgcre)** com escopo de ar interior
+(conferir na lista de laboratórios acreditados do Inmetro), laudo pela **NBR 17037**, coleta presencial em Niterói, preço e prazo do laudo.
+
+| Laboratório | Onde fica | O que se sabe | Contato |
+|---|---|---|---|
+| **Lab Agua Laboratório Ambiental** | **Niterói** (Ingá; Rua São Sebastião, 50, endereço de um laudo de 2017) | Laboratório ambiental desde 1993 (água, ar, efluentes, solo). Não confirmado se faz ar interior/PMOC nem a acreditação. **O mais próximo: ligar primeiro.** | labagua.com.br |
+| **Acqua Air** | Rio de Janeiro (Jacarepaguá; Estrada de Jacarepaguá, 7655, salas 1120/1121) | Faz CO₂, temperatura, umidade, velocidade do ar, particulado e fungos em ambiente climatizado. Site ainda cita a RE 09; acreditação não informada. | (21) 2436-1881, (21) 99384-7599 |
+| **LAB2BIO** | Matriz em Guarulhos (SP), unidades em Juiz de Fora (MG) e Vila Velha (ES) | Diz atender o estado do RJ; análise microbiológica do ar. Acreditação não informada. | (11) 2443-3786 |
+| **HB Laboratórios** | Sorocaba (SP) | **Acreditado ISO/IEC 17025** e cita a NBR 17037; diz atender o país todo (conferir se coleta em Niterói e o custo do deslocamento). | (15) 3227-5766 |
+
+Descartados por ficarem longe (só listam a cidade no site): LABOAR (Salvador/BA) e Laboratório Proxy (Piracicaba/SP).
+Próximo passo: o usuário liga para o Lab Agua e a Acqua Air perguntando acreditação, NBR 17037, preço por ponto de coleta e prazo do laudo.
 
 ## Fases
 
 | Fase | O que entra | Pronto quando |
 |---|---|---|
-| **1. Banco e telas ligadas** | migration `pmoc_base` (tabelas, RLS, código sequencial, modelo das 22 tarefas, histórico), cópia do responsável técnico, PDF no `upload.php`, `services/pmoc.ts`, `fonteDeDados.ts` ligada ao banco, verificação com ROLLBACK, menu liberado, **ajuda F1** | plano real cadastrado, documento impresso com TRT, sem dados de demonstração |
+| **1. Banco e telas ligadas** | migration `pmoc_base` (tabelas, RLS, código sequencial, modelo das 22 tarefas, histórico), cópia do responsável técnico, PDF no `upload.php`, frase legal da capa sem a RE 09 (item 10), `services/pmoc.ts`, `fonteDeDados.ts` ligada ao banco, verificação com ROLLBACK, menu liberado, **ajuda F1** | plano real cadastrado, documento impresso com TRT, sem dados de demonstração |
 | **2. Execução mensal** | painel "PMOC do mês", `gerar_os_mes_pmoc`, tipo de OS "PMOC", checklist no app de campo (telas pelo Gemini, com briefing), grade de execução real, relatório mensal por link + WhatsApp, cartão no Dashboard, **ajuda F1** | um mês completo executado num cliente real e o relatório enviado |
 | **3. QR e página pública** | token por aparelho, etiqueta na Elgin, página `/equipamento/<token>` (tela pelo Gemini), QR no documento e no relatório, **ajuda F1** | etiqueta colada num aparelho real e a página aberta pelo celular do cliente |
 | **4. Melhorias** | checklist sem internet (fila do app), QR lido pelo app do técnico, e-mail do relatório, aviso de plano vencendo (60 dias) para renovação, renovar plano copiando o anterior, relatório no Portal do Cliente | conforme a necessidade |
@@ -144,20 +166,23 @@ regras, impressão na Elgin e auditoria com o Claude.
 - **Responsável técnico:** o documento só vale com CPF, registro e TRT reais. Plano vigente sem esses dados é barrado pelo banco.
 - **Página pública:** o token precisa ser impossível de adivinhar e a página não pode mostrar nada além do aparelho e do plano.
 
-## Decisões que preciso do usuário
+## Decisões do usuário (2026-11-16)
 
-1. **Equipamentos:** o aparelho do PMOC é o do cadastro do cliente (item 1)? *Recomendo sim.*
-2. **OS do mês:** botão "Gerar OS do mês" com o escritório escolhendo técnico, data e hora na hora (item 5), ou o sistema cria as OS sozinho no dia 1
-   e o escritório só agenda? *Recomendo o botão* (respeita a regra de toda atividade nascer agendada; com um painel mostrando o que falta).
-3. **Checklist:** próprio do PMOC, por aparelho (item 6), ou o motor de formulários? *Recomendo o próprio.*
-4. **Assinatura do cliente:** os sistemas do mercado pegam assinatura na tela; o Control tirou a assinatura do app em 2026-11-01. Para o PMOC:
-   sem assinatura, só **nome de quem acompanhou a visita**, ou voltar com assinatura só no PMOC? *Recomendo só o nome* (mais rápido para o técnico;
-   o registro do sistema com horário e GPS já comprova a visita).
-5. **Relatório mensal:** por link pelo WhatsApp (item 8)? E o cliente recebe todo mês ou só quando pede? *Recomendo link todo mês, enviado pelo escritório.*
-6. **Clientes atuais com PMOC:** quantos são hoje e com quais aparelhos? Entram cadastrados à mão (não há importação do Field para PMOC).
-7. **Responsável técnico:** é sempre o Braulio (registro "CRT 96236361720" já gravado), ou pode ser outro técnico registrado?
-8. **Laboratório de qualidade do ar (item 10):** a BRV contrata, indica ou não trata disso?
-9. **Etiqueta:** confirmar o tamanho (mesmo rolo de 50 mm da Oficina) e se vale testar etiqueta de poliéster para as condensadoras externas.
+1. **Equipamentos:** o aparelho do PMOC **é o do cadastro do cliente** (item 1).
+2. **OS do mês:** **botão "Gerar OS do mês"**, com o escritório escolhendo técnico, data e hora na hora (item 5). O sistema não cria OS sozinho.
+3. **Checklist:** **próprio do PMOC**, por aparelho (item 6), não o motor de formulários.
+4. **Assinatura:** **sem assinatura**; o técnico registra só o **nome de quem acompanhou a visita** (campo obrigatório ao concluir a atividade de PMOC;
+   aparece no relatório mensal).
+5. **Relatório mensal:** **por link** (item 8), enviado pelo escritório pelo WhatsApp.
+6. **Clientes atuais:** **nenhum cliente tem PMOC ainda.** Não há importação; o primeiro plano será cadastrado do zero (bom para testar a fase 1).
+7. **Responsável técnico:** **sempre o Braulio** (registro "CRT 96236361720" em `funcionario_dados`). A tela pode já vir com ele escolhido; o banco
+   continua guardando o funcionário do plano (se um dia houver outro técnico registrado, não precisa mudar a estrutura).
+   *(Resposta digitada "sem eu", entendida como "sempre eu"; corrigir aqui se não for.)*
+8. **Laboratório de qualidade do ar:** o usuário está pesquisando um na região e pediu ao Claude, como prioridade, **indicar empresas próximas**:
+   levantamento inicial no item 11; falta ligar e conferir acreditação.
+9. **Etiqueta:** **mesmo rolo da Oficina por enquanto**; uma etiqueta melhor (poliéster, para condensadora externa) fica para avaliar depois.
+
+**Pendente do usuário:** confirmar o texto novo da frase legal da capa (item 10) e escolher o laboratório (item 11).
 
 ## Ajuda F1 (regra fixa)
 

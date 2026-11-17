@@ -144,8 +144,7 @@ Feito:
   função antiga). Dados pessoais em `public.funcionario_dados` (1:1, RLS **só admin**, LGPD): CPF (único, validado), RG/órgão, nascimento,
   CTPS (nº/série/UF; a digital é o CPF), PIS/NIS, admissão, registro profissional (CFT, para o PMOC) e endereço com CEP (`utils/cep.ts`).
   **Comercialização (pedido do usuário, 2026-11-08)**: o usuário quer vender o sistema; multiempresa (cada empresa só vê os próprios dados,
-  `empresa_id` em todas as tabelas) tem rascunho de plano em `docs/multiempresa.md` (2026-11-17; PMOC como módulo vendido à parte, licença por módulo no banco,
-  opção A banco único x B instalação por empresa; 6 perguntas em aberto para o usuário; regras para código novo na seção 6). Nada construído.
+  `empresa_id` em todas as tabelas) tem rascunho de plano em `docs/multiempresa.md` (2026-11-17). **Decisão do usuário:** o BRV Control fica só para a BRV (Oficina e Placas não viram módulos dele); vende-se um **produto novo, só de Placas, para oficinas de reparo de placa como a BRV**, multiempresa desde a primeira tabela (repositório novo, portando o que já funciona). FSM e PMOC como produto vendável ficam para depois. 7 perguntas em aberto no plano. Nada construído.
 - Qualquer usuário troca a própria senha pelo botão "Senha" do cabeçalho (`AlterarSenhaModal.tsx`, confere a senha atual).
   Telefones usam máscara (`utils/telefone.ts`).
 - Tipos de OS editáveis (`service_types`; `service_orders.service_type_id` substitui o antigo `type` fixo). Migration

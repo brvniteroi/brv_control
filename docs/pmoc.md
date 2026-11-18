@@ -30,9 +30,12 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   o checklist só funciona online (a conclusão da atividade é barrada pelo banco se o checklist não foi preenchido); aparelho que sai do plano some da visita,
   mas o histórico e a página pública continuam. **Testado e aprovado pelo usuário em 2026-11-17:** fase 1 na prática (TRT em PDF, documento impresso) e fase 2 (OS do mês,
   checklist no celular, relatório por WhatsApp). **Falta:** etiqueta na Elgin e leitura do QR.
-- **Modelo do Split Hi-Wall enxugado em 2026-11-17** (direto no banco, a pedido do usuário): saíram as tarefas de correias, resistência do cárter, nível de óleo do
-  compressor e pressostatos (eram de equipamento grande, vindas do Field); ficou com 18. Vale só para aparelhos incluídos depois; planos já criados mantêm as tarefas.
-  Cassete, Split Piso-Teto e VRF seguem com as 22.
+- **Modelos de tarefa refeitos em 2026-11-17** (a pedido do usuário; os 22 itens vinham do Field Control, pensados para equipamento grande), gravados direto no banco
+  por `scripts/pmoc/atualizar-modelos-tarefas.mjs` (repetível; `--simular` antes): **Split Hi-Wall e Split Piso-Teto com 17 tarefas** (entrou a limpeza dos filtros de
+  ar, que faltava, ruídos e vibrações, controle remoto e sensor, isolamento da tubulação e fixação da condensadora; saíram correias, cárter, óleo, pressostatos, filtro
+  secador, válvula de expansão, relés térmicos/termostato e a tarefa repetida; lavagem da serpentina passou a trimestral e resistência de isolamento a semestral),
+  **Cassete com 19** (as 17 + bomba de dreno e painel/aletas) e **VRF com 21** (só saiu a das correias; mantém cárter, óleo e pressostatos). Vale para aparelhos
+  incluídos depois; planos já criados mantêm as tarefas que têm (o PMOC-2026-0001 ficou com as antigas).
 
 ## O que é o PMOC para a BRV
 

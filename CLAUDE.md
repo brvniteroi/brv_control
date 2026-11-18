@@ -170,7 +170,8 @@ Feito:
 QR real (pacote `qrcode`, `QrCodeImagem.tsx`) e ajuda F1 (tópicos `pmoc-do-mes`, `pmoc-checklist-campo`, `pmoc-relatorio-link`). Push feito em 2026-11-17 (deploy no site).
 **Testado e aprovado pelo usuário em 2026-11-17:** fase 1 na prática (plano com TRT em PDF, Vigente, documento impresso) e fase 2 (Gerar OS do mês,
 checklist no celular, conclusão com o nome de quem acompanhou, relatório por link no WhatsApp). Roteiro que falta: imprimir a etiqueta na Elgin e ler o QR com o
-celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). Pendente do usuário: ligar para os laboratórios de qualidade do ar (item 11 do plano). Ao concluir, apagar este lembrete.
+celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). O plano de teste foi apagado em 2026-11-17 (ver `docs/pmoc.md`): para testar a etiqueta, criar um plano
+(se for teste, apagar depois e zerar `pmoc_code_seq`). Modelos de tarefa refeitos em 2026-11-17 (split 17, cassete 19, VRF 21). Pendente do usuário: ligar para os laboratórios de qualidade do ar (item 11 do plano). Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 

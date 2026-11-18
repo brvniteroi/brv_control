@@ -36,7 +36,8 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
 
 ## O que é o PMOC para a BRV
 
-Plano anual de manutenção dos aparelhos de climatização de um local (Lei 13.589/2018, Portaria MS 3.523/1998, Resolução RE 09/ANVISA).
+Plano anual de manutenção dos aparelhos de climatização de um local (Lei 13.589/2018 e Portaria MS 3.523/1998; referência de qualidade do ar:
+ABNT NBR 17037:2023, já que a RE 09/ANVISA foi revogada em 2024, ver item 10).
 A BRV vende como contrato recorrente: o plano vale 12 meses e, todo mês, um técnico visita o cliente e executa o checklist de cada aparelho
 conforme o cronograma (tarefas mensais, trimestrais, semestrais). O responsável técnico é técnico industrial com registro no **CFT** e o
 termo de responsabilidade é o **TRT** (não CREA/ART).

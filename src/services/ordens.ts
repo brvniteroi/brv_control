@@ -313,14 +313,48 @@ export async function removerAtividade(id: string): Promise<void> {
   if (error) throw new Error(traduzirErro(error.message));
 }
 
+/** Endereço de uma OS do cliente, para identificar a qual deles o atendimento se refere. */
+export interface EnderecoDaOrdem {
+  /** Apelido do endereço (vazio se não tiver; "Principal" não conta como apelido). */
+  apelido: string;
+  /** Rua, número e bairro. */
+  descricao: string;
+}
+
+export interface OrdemDoCliente extends OrdemResumo {
+  endereco: EnderecoDaOrdem | null;
+}
+
+export interface OrdensDoCliente {
+  ordens: OrdemDoCliente[];
+  /** Mais de um endereço cadastrado: vale mostrar a qual deles cada OS se refere. */
+  temVariosEnderecos: boolean;
+}
+
 /** OS de um cliente (da mais nova para a mais antiga), para a aba Atendimento do cadastro. */
-export async function listarOrdensDoCliente(customerId: string): Promise<OrdemResumo[]> {
-  const { data, error } = await supabase
-    .from('service_orders')
-    .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}, ${CAMPOS_AVALIACAO}`)
-    .eq('customer_id', customerId)
-    .order('number', { ascending: false })
-    .limit(200);
-  if (error) throw error;
-  return normalizarResumo(data);
+export async function listarOrdensDoCliente(customerId: string): Promise<OrdensDoCliente> {
+  const [os, ends] = await Promise.all([
+    supabase
+      .from('service_orders')
+      .select(`*, customer:customers(id, name), service_type:service_types(id, name), ${CAMPOS_ATIVIDADE_RESUMO}, ${CAMPOS_ETIQUETAS}, ${CAMPOS_AVALIACAO}`)
+      .eq('customer_id', customerId)
+      .order('number', { ascending: false })
+      .limit(200),
+    supabase.from('customer_addresses').select('id, label, street, number, district').eq('customer_id', customerId),
+  ]);
+  if (os.error) throw os.error;
+  if (ends.error) throw ends.error;
+  const porId = new Map<string, EnderecoDaOrdem>();
+  for (const e of ends.data ?? []) {
+    const rua = [e.street, e.number].filter(Boolean).join(', ');
+    porId.set(e.id, {
+      apelido: e.label && e.label !== 'Principal' ? e.label : '',
+      descricao: [rua, e.district].filter(Boolean).join(' - '),
+    });
+  }
+  const ordens = normalizarResumo(os.data).map((o) => ({
+    ...o,
+    endereco: (o.address_id && porId.get(o.address_id)) || null,
+  }));
+  return { ordens, temVariosEnderecos: porId.size > 1 };
 }

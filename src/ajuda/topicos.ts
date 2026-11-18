@@ -377,6 +377,7 @@ Use os comentários para recados entre o pessoal do escritório sobre aquela OS 
     texto: `
 1. Na OS, clique em **Histórico de atendimentos**, logo abaixo do número.
 2. Aparecem as outras OS do mesmo cliente, com o relato do técnico.
+- Se o cliente tem **mais de um endereço**, a lista ganha a coluna **Endereço** com o apelido de cada um (ou rua e bairro, se não tiver apelido). Dá o mesmo na aba **Atendimento** do cadastro do cliente. Dê apelidos curtos aos endereços (ex.: Icaraí, Pendotiba) em **Endereços adicionais**.
 3. Abrir outra OS dali não perde o que você estava editando: **Voltar** ou **Esc** retorna à OS de origem.
 `,
   },

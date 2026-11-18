@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ClipboardList } from 'lucide-react';
-import { listarOrdensDoCliente, type OrdemResumo } from '../../services/ordens';
+import { listarOrdensDoCliente, type OrdensDoCliente } from '../../services/ordens';
 import { formatarData, formatarDataHora, infoStatusOS } from '../../utils/ordens';
 
 interface AtendimentosClienteProps {
@@ -12,7 +12,8 @@ interface AtendimentosClienteProps {
 }
 
 export default function AtendimentosCliente({ clienteId, ordemAtualId, onAbrirOrdem }: AtendimentosClienteProps) {
-  const [ordens, setOrdens] = useState<OrdemResumo[] | null>(null);
+  const [dados, setDados] = useState<OrdensDoCliente | null>(null);
+  const ordens = dados?.ordens ?? null;
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function AtendimentosCliente({ clienteId, ordemAtualId, onAbrirOr
     let ativo = true;
     listarOrdensDoCliente(clienteId)
       .then((lista) => {
-        if (ativo) setOrdens(lista);
+        if (ativo) setDados(lista);
       })
       .catch((e: unknown) => {
         console.error('Erro ao buscar atendimentos do cliente:', e);
@@ -55,6 +56,7 @@ export default function AtendimentosCliente({ clienteId, ordemAtualId, onAbrirOr
               <tr className="border-b border-slate-100 font-semibold uppercase tracking-wider text-slate-500">
                 <th className="px-3 py-2.5">Nº</th>
                 <th className="px-3 py-2.5">Tipo</th>
+                {dados?.temVariosEnderecos && <th className="px-3 py-2.5">Endereço</th>}
                 <th className="px-3 py-2.5">Situação</th>
                 <th className="px-3 py-2.5">Técnico</th>
                 <th className="px-3 py-2.5">Último agendamento</th>
@@ -91,6 +93,20 @@ export default function AtendimentosCliente({ clienteId, ordemAtualId, onAbrirOr
                         </div>
                       )}
                     </td>
+                    {dados?.temVariosEnderecos && (
+                      <td className="px-3 py-3">
+                        {o.endereco ? (
+                          <div title={o.endereco.descricao}>
+                            <div className="font-semibold text-slate-800">{o.endereco.apelido || o.endereco.descricao}</div>
+                            {o.endereco.apelido && (
+                              <div className="max-w-48 truncate text-[11px] text-slate-400">{o.endereco.descricao}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-3 py-3">
                       <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>
                         {info.rotulo}

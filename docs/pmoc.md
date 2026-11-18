@@ -28,8 +28,8 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   Telas: aba "PMOC do mês" em `/pmoc?aba=mes`, cartão no Dashboard, checklist em `/campo/atividade/:id`, `/relatorio-pmoc/:token`, `/equipamento/:token`.
   Decisões do Claude na ligação: etiqueta **100 x 50 mm** (rolo da Oficina, decisão 9; o Gemini tinha desenhado 50 x 30); QR real com o pacote `qrcode`;
   o checklist só funciona online (a conclusão da atividade é barrada pelo banco se o checklist não foi preenchido); aparelho que sai do plano some da visita,
-  mas o histórico e a página pública continuam. **Testes na prática pendentes** (ver lembrete do CLAUDE.md): OS do mês, checklist no celular, relatório por WhatsApp,
-  etiqueta na Elgin e leitura do QR.
+  mas o histórico e a página pública continuam. **Testado e aprovado pelo usuário em 2026-11-17:** fase 1 na prática (TRT em PDF, documento impresso) e fase 2 (OS do mês,
+  checklist no celular, relatório por WhatsApp). **Falta:** etiqueta na Elgin e leitura do QR.
 - **Modelo do Split Hi-Wall enxugado em 2026-11-17** (direto no banco, a pedido do usuário): saíram as tarefas de correias, resistência do cárter, nível de óleo do
   compressor e pressostatos (eram de equipamento grande, vindas do Field); ficou com 18. Vale só para aparelhos incluídos depois; planos já criados mantêm as tarefas.
   Cassete, Split Piso-Teto e VRF seguem com as 22.

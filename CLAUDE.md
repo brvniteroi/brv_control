@@ -168,8 +168,8 @@ Feito:
 (**aplicada em 2026-11-17; a verificação `supabase/verificacao/pmoc_execucao_qr.sql` passou: TUDO CERTO**),
 `services/pmoc.ts` ligado (`fonteDeDados.ts` com `USAR_BANCO_PMOC = true` chama o banco nas 9 funções novas), etiqueta ZPL `utils/etiquetaPmoc.ts`,
 QR real (pacote `qrcode`, `QrCodeImagem.tsx`) e ajuda F1 (tópicos `pmoc-do-mes`, `pmoc-checklist-campo`, `pmoc-relatorio-link`). Push feito em 2026-11-17 (deploy no site).
-Roteiro que falta: (1) `git pull`; (4) **teste na prática da fase 1** (plano em Serviços > PMOC com ambiente, 2 aparelhos, TRT em PDF, Vigente, imprimir pelo Documento); (5) teste da fase 2: Gerar OS do mês,
-checklist no celular de um técnico (atividade de hoje), concluir com o nome de quem acompanhou, relatório por link no WhatsApp; (6) imprimir a etiqueta na Elgin e ler o QR com o
+**Testado e aprovado pelo usuário em 2026-11-17:** fase 1 na prática (plano com TRT em PDF, Vigente, documento impresso) e fase 2 (Gerar OS do mês,
+checklist no celular, conclusão com o nome de quem acompanhou, relatório por link no WhatsApp). Roteiro que falta: imprimir a etiqueta na Elgin e ler o QR com o
 celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). Pendente do usuário: ligar para os laboratórios de qualidade do ar (item 11 do plano). Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.

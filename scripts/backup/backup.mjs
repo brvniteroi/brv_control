@@ -142,6 +142,20 @@ if (!pegarTrava()) {
   log('PULOU: já existe outro backup em andamento (backup.lock). Tente de novo em alguns minutos.')
   process.exit(2)
 }
+// Diagnóstico (2026-11-18): em 16 e 17/11 a tarefa das 9h morreu sem deixar rastro. Agora o log diz que iniciou
+// (e por quem) e, se o Windows encerrar o processo, qual sinal chegou.
+log(`INICIOU (pid ${process.pid}, pai ${process.ppid}, ${soFotos ? 'só fotos' : soBanco ? 'só banco' : 'banco e fotos'})`)
+let terminou = false
+for (const sinal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
+  process.on(sinal, () => {
+    log(`INTERROMPIDO: o Windows encerrou o processo (${sinal}) antes de terminar`)
+    rmSync(lockArq, { force: true })
+    process.exit(1)
+  })
+}
+process.on('exit', (codigo) => {
+  if (!terminou) { try { appendFileSync(logArq, `[${agora()}] SAIU sem terminar (código ${codigo})\n`) } catch { /* sem log */ } }
+})
 try {
   if (!soFotos) {
     if (!existsSync(PG_DUMP)) { log(`FALHOU: pg_dump não encontrado em ${PG_DUMP}`); falhas++ }
@@ -152,5 +166,6 @@ try {
 } finally {
   rmSync(lockArq, { force: true })
 }
+terminou = true
 await reportar(falhas === 0)
 process.exit(falhas ? 1 : 0)

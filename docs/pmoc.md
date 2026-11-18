@@ -35,7 +35,10 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   ar, que faltava, ruídos e vibrações, controle remoto e sensor, isolamento da tubulação e fixação da condensadora; saíram correias, cárter, óleo, pressostatos, filtro
   secador, válvula de expansão, relés térmicos/termostato e a tarefa repetida; lavagem da serpentina passou a trimestral e resistência de isolamento a semestral),
   **Cassete com 19** (as 17 + bomba de dreno e painel/aletas) e **VRF com 21** (só saiu a das correias; mantém cárter, óleo e pressostatos). Vale para aparelhos
-  incluídos depois; planos já criados mantêm as tarefas que têm (o PMOC-2026-0001 ficou com as antigas).
+  incluídos depois; planos já criados mantêm as tarefas que têm.
+- **Teste apagado em 2026-11-17** (a pedido do usuário): plano PMOC-2026-0001 (cliente real Adriana Lobo, tudo o mais era teste), a OS 17427 (tipo PMOC, com
+  atividade e 2 fotos; os arquivos das fotos continuam na HostGator) e os 2 aparelhos criados no cadastro dela. Numeração `pmoc_code_seq` de 2026 zerada:
+  o primeiro plano real será o **PMOC-2026-0001**. O número de OS 17427 fica pulado.
 
 ## O que é o PMOC para a BRV
 

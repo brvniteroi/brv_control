@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Car,
   CheckCircle2,
+  DoorClosed,
   Loader2,
   Lock,
   MapPin,
@@ -31,6 +32,7 @@ import { useContextoCampo } from '../../components/campo/contextoCampo';
 import { useFilaCampo, useOnline } from '../../hooks/useCampo';
 import FotosAtividade from '../../components/campo/FotosAtividade';
 import ConcluirAtividadeModal, { type DadosConclusao } from '../../components/campo/ConcluirAtividadeModal';
+import ImpedirAtividadeModal from '../../components/campo/ImpedirAtividadeModal';
 import ChecklistPmocAtividade from '../../components/campo/pmoc/ChecklistPmocAtividade';
 import FormulariosAtividade from '../../components/formularios/FormulariosAtividade';
 import RecolherEquipamento from '../../components/campo/RecolherEquipamento';
@@ -58,6 +60,7 @@ export default function CampoAtividade() {
   const [erro, setErro] = useState<string | null>(null);
   const [acao, setAcao] = useState<string | null>(null);
   const [concluindo, setConcluindo] = useState(false);
+  const [impedindo, setImpedindo] = useState(false);
   // Observações digitadas e ainda não salvas: vão para o relato ao concluir
   const [rascunhoObs, setRascunhoObs] = useState<string | null>(null);
   const [checklistPmoc, setChecklistPmoc] = useState<PmocActivityChecklist | null>(null);
@@ -138,7 +141,7 @@ export default function CampoAtividade() {
   const end = enderecoDaAtividade(a);
   const st = infoStatusAtividade(a.status);
   const pendentes = fila.filter((i) => i.taskId === a.id && i.tipo === 'atividade');
-  const aberta = a.status !== 'concluida' && a.status !== 'cancelada';
+  const aberta = a.status !== 'concluida' && a.status !== 'cancelada' && a.status !== 'impedida';
   // Sair / iniciar só na primeira do dia ou logo depois de uma concluída (já a caminho segue liberado)
   const bloqueio =
     a.status === 'agendada'
@@ -184,6 +187,21 @@ export default function CampoAtividade() {
       technician_notes: relato,
     });
     setConcluindo(false);
+  };
+
+  // Foi ao local e não conseguiu atender (cliente ausente...): fica na linha do tempo como impedida, com o motivo
+  const impedir = async (motivo: string) => {
+    const pos = await obterPosicao();
+    const agora = agoraISO();
+    await enfileirarAtividade(a.id, {
+      status: 'impedida',
+      impediment_reason: motivo,
+      started_at: a.started_at ?? agora,
+      finished_at: agora,
+      checkout_lat: pos?.lat ?? null,
+      checkout_lng: pos?.lng ?? null,
+    });
+    setImpedindo(false);
   };
 
   return (
@@ -238,7 +256,18 @@ export default function CampoAtividade() {
                 Concluir atividade
               </BotaoAcao>
             )}
+            {(a.status === 'em_deslocamento' || a.status === 'em_execucao') && (
+              <BotaoAcao onClick={() => setImpedindo(true)} cor="bg-rose-600 active:bg-rose-700" icone={<DoorClosed size={18} />}>
+                Não consegui atender
+              </BotaoAcao>
+            )}
           </div>
+        )}
+
+        {a.status === 'impedida' && a.impediment_reason && (
+          <p className="mt-3 whitespace-pre-line rounded-xl border border-rose-100 bg-rose-50 px-3 py-2.5 text-xs text-rose-800">
+            <b>Visita impedida:</b> {a.impediment_reason}
+          </p>
         )}
 
         {(a.started_at || a.finished_at) && (
@@ -363,6 +392,8 @@ export default function CampoAtividade() {
           <p className="text-xs text-slate-500">Os formulários precisam de internet. Preencha quando tiver sinal.</p>
         )}
       </Cartao>
+
+      {impedindo && <ImpedirAtividadeModal onConfirmar={impedir} onFechar={() => setImpedindo(false)} />}
 
       {concluindo && (
         <ConcluirAtividadeModal

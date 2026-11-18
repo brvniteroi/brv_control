@@ -61,6 +61,7 @@ const Barra = memo(function Barra({ atividade: a, dia, janelaInicioMin, pxPorMin
     real,
     o?.customer?.name,
     detalhes,
+    a.status === 'impedida' && a.impediment_reason ? `Impedida: ${a.impediment_reason}` : null,
     dicaEtiquetas(o?.etiquetas),
     conflito ? 'Conflito de horário com outra atividade do técnico' : null,
     !movel

@@ -14,7 +14,7 @@ interface Estado {
 
 const chave = (colaboradorId: string) => `brv:campo:avisos:${colaboradorId}`;
 const diaDeHoje = () => new Date().toLocaleDateString('sv-SE'); // AAAA-MM-DD no fuso do aparelho
-const emAberto = (a: AtividadeCampo) => a.status !== 'concluida' && a.status !== 'cancelada';
+const emAberto = (a: AtividadeCampo) => a.status !== 'concluida' && a.status !== 'cancelada' && a.status !== 'impedida';
 
 function ler(colaboradorId: string): Estado | null {
   try {

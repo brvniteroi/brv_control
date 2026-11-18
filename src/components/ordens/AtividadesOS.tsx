@@ -37,6 +37,8 @@ interface Formulario {
   duracao: string;
   descricao: string;
   relato: string;
+  /** Motivo do impedimento (só com situação Impedida) */
+  motivoImpedimento: string;
   /** Início e término reais (check-in/check-out), no formato do input datetime-local */
   inicioReal: string;
   fimReal: string;
@@ -93,6 +95,7 @@ export default function AtividadesOS({
       duracao: String(duracaoPadrao),
       descricao: '',
       relato: '',
+      motivoImpedimento: '',
       inicioReal: '',
       fimReal: '',
     });
@@ -116,6 +119,7 @@ export default function AtividadesOS({
       duracao: String(minutos),
       descricao: a.description ?? '',
       relato: a.technician_notes ?? '',
+      motivoImpedimento: a.impediment_reason ?? '',
       inicioReal: paraCampoDataHora(a.started_at),
       fimReal: paraCampoDataHora(a.finished_at),
     });
@@ -149,9 +153,14 @@ export default function AtividadesOS({
       return;
     }
     // Horário real informado: a atividade já aconteceu (ou está acontecendo)
-    if (status !== 'cancelada') {
+    if (status !== 'cancelada' && status !== 'impedida') {
       if (fimReal) status = 'concluida';
       else if (inicioReal && ['agendada', 'em_deslocamento'].includes(status)) status = 'em_execucao';
+    }
+
+    if (status === 'impedida' && !form.motivoImpedimento.trim()) {
+      setErro('Informe o motivo do impedimento.');
+      return;
     }
 
     // Só concluída/cancelada (vinda da importação) pode ficar sem técnico ou horário
@@ -176,6 +185,7 @@ export default function AtividadesOS({
         scheduled_end: fim,
         estimated_minutes: minutos,
         technician_notes: form.relato,
+        impediment_reason: form.motivoImpedimento,
       });
       setAberto(false);
       await onAlterado();
@@ -268,6 +278,11 @@ export default function AtividadesOS({
                       {a.started_at && <span>Iniciada em {formatarDataHora(a.started_at)}</span>}
                       {a.finished_at && <span>Concluída em {formatarDataHora(a.finished_at)}</span>}
                     </div>
+                    {a.status === 'impedida' && a.impediment_reason && (
+                      <p className="mt-1.5 whitespace-pre-line rounded-lg border border-rose-100 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-800">
+                        <b>Motivo do impedimento:</b> {a.impediment_reason}
+                      </p>
+                    )}
                     {a.technician_notes && (
                       <p className="mt-1.5 whitespace-pre-line text-xs text-slate-600">{a.technician_notes}</p>
                     )}
@@ -351,6 +366,21 @@ export default function AtividadesOS({
                   </select>
                 </div>
               </div>
+
+              {form.status === 'impedida' && (
+                <div>
+                  <label htmlFor="at-impedimento" className="block text-xs font-medium text-slate-700">Motivo do impedimento *</label>
+                  <textarea
+                    id="at-impedimento"
+                    rows={2}
+                    value={form.motivoImpedimento}
+                    onChange={(e) => campo('motivoImpedimento', e.target.value)}
+                    placeholder="Ex.: cliente não estava no local, portão fechado..."
+                    className={INPUT}
+                  />
+                  <p className="mt-1 text-[11px] text-slate-500">A atividade continua na linha do tempo. Para reagendar, mude a situação para Agendada e escolha a nova data.</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-3">
                 <div>

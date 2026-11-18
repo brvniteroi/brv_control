@@ -34,6 +34,7 @@ const COR_STATUS: Record<TaskStatus, string> = {
   agendada: '#2563EB',
   em_deslocamento: '#4F46E5',
   em_execucao: '#EA580C',
+  impedida: '#E11D48',
   concluida: '#16A34A',
   cancelada: '#FCA5A5',
 };

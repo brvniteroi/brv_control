@@ -311,10 +311,30 @@ Pela lista de OS:
 A situação da OS segue a atividade do técnico. Você não precisa mudar à mão:
 - Técnico **a caminho** ou **em execução**: OS **Em andamento**.
 - Atividade **agendada**: OS **Agendada**.
+- Atividade **impedida** (o técnico foi ao local e não conseguiu atender): OS **Impedida**, até você reagendar (veja "Visita impedida").
 - Atividade **concluída**: OS **Concluída**.
 O único caso que é sempre manual é o cancelamento (veja "Cancelar uma OS").
 `,
-    veja: ['cancelar-os'],
+    veja: ['cancelar-os', 'visita-impedida'],
+  },
+  {
+    id: 'visita-impedida',
+    titulo: 'Visita impedida (cliente ausente)',
+    secao: 'Ordens de serviço',
+    telas: ['os', 'os-lista', 'linha-do-tempo', 'calendario'],
+    palavras: 'impedida impedimento cliente ausente nao atendeu portao fechado remarcar reagendar',
+    texto: `
+Quando o técnico vai ao local e não consegue atender (cliente saiu, portão fechado...):
+1. No celular, na atividade, o técnico toca em **Não consegui atender** e escreve o **motivo**.
+2. A atividade fica **Impedida** (vermelho-rosado) na Linha do tempo e no Calendário, com o tempo da visita. Passe o mouse para ver o motivo; na OS o motivo aparece na atividade.
+3. A OS também fica **Impedida**, e a agenda do técnico segue para a próxima atividade.
+
+Pelo escritório: no lápis da atividade, **Situação = Impedida** e preencha o **Motivo do impedimento** (obrigatório).
+
+Para reagendar: no lápis da atividade, mude a **Situação** para **Agendada** e escolha a nova data, hora e técnico (o motivo é apagado). Só o escritório tira a atividade de Impedida.
+! Impedida não é concluída: não entra nos relatórios de atividades realizadas e não gera pedido de avaliação. Para desistir do atendimento, cancele a atividade e a OS.
+`,
+    veja: ['situacao-os', 'cancelar-os'],
   },
   {
     id: 'cancelar-os',

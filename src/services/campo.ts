@@ -13,7 +13,7 @@ export interface AtividadeCampo
   extends Pick<
     Task,
     | 'id' | 'service_order_id' | 'employee_id' | 'title' | 'description' | 'status' | 'scheduled_start' | 'scheduled_end'
-    | 'estimated_minutes' | 'started_at' | 'finished_at' | 'technician_notes'
+    | 'estimated_minutes' | 'started_at' | 'finished_at' | 'technician_notes' | 'impediment_reason'
     | 'checkin_lat' | 'checkin_lng' | 'checkout_lat' | 'checkout_lng'
   > {
   ordem: {
@@ -39,14 +39,14 @@ export interface AtividadeCampo
 
 /** Campos que o técnico pode alterar (trigger tasks_protege_agenda barra o resto). */
 export type CamposExecucao = Partial<
-  Pick<Task, 'status' | 'started_at' | 'finished_at' | 'checkin_lat' | 'checkin_lng' | 'checkout_lat' | 'checkout_lng' | 'technician_notes'>
+  Pick<Task, 'status' | 'started_at' | 'finished_at' | 'checkin_lat' | 'checkin_lng' | 'checkout_lat' | 'checkout_lng' | 'technician_notes' | 'impediment_reason'>
 >;
 
 const END = 'id, label, street, number, complement, district, city, state, zip_code, reference, latitude, longitude';
 // O técnico não lê customers nem customer_contacts (telefone, e-mail, documento): o nome do cliente
 // vem de campo_clientes() e os endereços numa consulta à parte (ver completarClientes).
 const SELECT = `id, service_order_id, employee_id, title, description, status, scheduled_start, scheduled_end,
-  estimated_minutes, started_at, finished_at, technician_notes, checkin_lat, checkin_lng, checkout_lat, checkout_lng,
+  estimated_minutes, started_at, finished_at, technician_notes, impediment_reason, checkin_lat, checkin_lng, checkout_lat, checkout_lng,
   ordem:service_orders!service_order_id(id, number, status, priority, description, customer_id,
     tipo:service_types!service_type_id(name),
     endereco:customer_addresses!service_orders_address_fk(${END}),
@@ -143,7 +143,7 @@ export function bloqueioDeInicio(atividade: AtividadeCampo, doDia: AtividadeCamp
   if (pos === -1) return 'Só dá para iniciar atividades de hoje.';
   if (pos === 0) return null;
   const anterior = ordem[pos - 1];
-  if (anterior.status === 'concluida') return null;
+  if (anterior.status === 'concluida' || anterior.status === 'impedida') return null;
   const horario = anterior.scheduled_start
     ? ` (${new Date(anterior.scheduled_start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})`
     : '';

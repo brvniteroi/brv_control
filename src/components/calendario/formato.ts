@@ -35,6 +35,7 @@ export function dicaAtividade(a: AtividadeLinha, tecnico: TecnicoLinha | undefin
     [o ? `OS ${o.number}` : null, o?.service_type?.name, o?.local].filter(Boolean).join(' · '),
     `Técnico: ${tecnico?.name ?? 'a distribuir'}`,
     `Situação: ${infoStatusAtividade(a.status).rotulo}`,
+    a.status === 'impedida' && a.impediment_reason ? `Motivo: ${a.impediment_reason}` : null,
     dicaEtiquetas(o?.etiquetas),
   ]
     .filter(Boolean)

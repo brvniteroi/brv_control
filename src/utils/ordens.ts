@@ -10,6 +10,7 @@ export function rotuloEndereco(e: CustomerAddress): string {
 export const STATUS_OS: { valor: ServiceOrderStatus; rotulo: string; classe: string }[] = [
   { valor: 'agendada', rotulo: 'Agendada', classe: 'bg-blue-50 text-blue-700 border-blue-100' },
   { valor: 'em_andamento', rotulo: 'Em andamento', classe: 'bg-amber-50 text-amber-700 border-amber-100' },
+  { valor: 'impedida', rotulo: 'Impedida', classe: 'bg-rose-50 text-rose-700 border-rose-200' },
   { valor: 'concluida', rotulo: 'Concluída', classe: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
   { valor: 'cancelada', rotulo: 'Cancelada', classe: 'bg-red-50 text-red-700 border-red-100' },
 ];
@@ -25,6 +26,7 @@ export const STATUS_ATIVIDADE: { valor: TaskStatus; rotulo: string; classe: stri
   { valor: 'agendada', rotulo: 'Agendada', classe: 'bg-blue-50 text-blue-700 border-blue-100' },
   { valor: 'em_deslocamento', rotulo: 'Em deslocamento', classe: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
   { valor: 'em_execucao', rotulo: 'Em execução', classe: 'bg-amber-50 text-amber-700 border-amber-100' },
+  { valor: 'impedida', rotulo: 'Impedida', classe: 'bg-rose-50 text-rose-700 border-rose-200' },
   { valor: 'concluida', rotulo: 'Concluída', classe: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
   { valor: 'cancelada', rotulo: 'Cancelada', classe: 'bg-red-50 text-red-700 border-red-100' },
 ];
@@ -34,6 +36,7 @@ export const COR_STATUS_ATIVIDADE: Record<TaskStatus, string> = {
   agendada: 'bg-blue-600 border-blue-800',
   em_deslocamento: 'bg-indigo-600 border-indigo-800',
   em_execucao: 'bg-orange-600 border-orange-800',
+  impedida: 'bg-rose-600 border-rose-800',
   concluida: 'bg-green-600 border-green-800',
   cancelada: 'bg-red-300 border-red-400 opacity-60',
 };

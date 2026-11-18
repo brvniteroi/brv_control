@@ -97,7 +97,7 @@ export async function listarOrdens(f: FiltrosOrdens, pagina: number): Promise<Pa
     .range(pagina * ORDENS_POR_PAGINA, (pagina + 1) * ORDENS_POR_PAGINA - 1);
 
   // Mesmas regras dos cards do Dashboard (services/dashboard.ts)
-  const abertas: ServiceOrderStatus[] = ['agendada', 'em_andamento'];
+  const abertas: ServiceOrderStatus[] = ['agendada', 'em_andamento', 'impedida'];
   if (f.status === 'abertas') query = query.in('status', abertas);
   else if (f.status === 'atrasadas') {
     const d = new Date();
@@ -250,6 +250,8 @@ export interface SalvarAtividadeInput {
   /** Duração prevista; `undefined` = não mexe */
   estimated_minutes?: number | null;
   technician_notes: string;
+  /** Motivo (obrigatório com status impedida) */
+  impediment_reason?: string;
   /** Início/término reais (digitados no painel); `undefined` = não mexe. Concluída sem eles: carimba. */
   started_at?: string | null;
   finished_at?: string | null;
@@ -274,7 +276,7 @@ async function concluirAtividadesAbertas(ordemId: string): Promise<void> {
     .from('tasks')
     .select('id, scheduled_start, started_at, finished_at')
     .eq('service_order_id', ordemId)
-    .not('status', 'in', '(concluida,cancelada)');
+    .not('status', 'in', '(concluida,cancelada,impedida)');
   if (error) throw new Error(traduzirErro(error.message));
   const agora = new Date().toISOString();
   for (const t of data ?? []) {
@@ -296,6 +298,7 @@ export async function salvarAtividade(d: SalvarAtividadeInput): Promise<void> {
     scheduled_start: d.scheduled_start,
     scheduled_end: d.scheduled_end,
     technician_notes: d.technician_notes.trim() || null,
+    ...(d.status === 'impedida' && { impediment_reason: d.impediment_reason?.trim() || null }),
     ...(d.estimated_minutes !== undefined && { estimated_minutes: d.estimated_minutes }),
     ...(d.started_at !== undefined && { started_at: d.started_at }),
     ...(d.finished_at !== undefined && { finished_at: d.finished_at }),

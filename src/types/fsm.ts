@@ -157,7 +157,7 @@ export interface ServiceType {
   updated_at: string;
 }
 
-export type ServiceOrderStatus = 'agendada' | 'em_andamento' | 'concluida' | 'cancelada';
+export type ServiceOrderStatus = 'agendada' | 'em_andamento' | 'impedida' | 'concluida' | 'cancelada';
 
 export type ServiceOrderPriority = 'baixa' | 'normal' | 'alta' | 'urgente';
 
@@ -192,7 +192,7 @@ export interface ServiceOrderEquipment {
   created_at: string;
 }
 
-export type TaskStatus = 'agendada' | 'em_deslocamento' | 'em_execucao' | 'concluida' | 'cancelada';
+export type TaskStatus = 'agendada' | 'em_deslocamento' | 'em_execucao' | 'impedida' | 'concluida' | 'cancelada';
 
 export interface Task {
   id: string;
@@ -212,6 +212,8 @@ export interface Task {
   checkout_lat: number | null;
   checkout_lng: number | null;
   technician_notes: string | null;
+  /** Motivo de a visita não ter sido feita (só com status impedida) */
+  impediment_reason: string | null;
   field_control_id: string | null;
   created_at: string;
   updated_at: string;

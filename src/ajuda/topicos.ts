@@ -191,9 +191,10 @@ No fim do Dashboard, o administrador vê o cartão **Backup do sistema**:
     telas: ['clientes'],
     palavras: 'procurar pesquisar localizar',
     texto: `
-1. Em **Cadastros > Clientes**, digite na busca: nome, nome fantasia, e-mail, telefone ou CPF/CNPJ.
+1. Em **Cadastros > Clientes**, digite na busca: nome, nome fantasia, e-mail, telefone, CPF/CNPJ ou **endereço** (rua, número, bairro, CEP ou o apelido do endereço).
 2. Clique em **Abrir** na linha do cliente.
 - A busca ignora acentos: "joao" encontra "João".
+- Pelo endereço, digite um pedaço e/ou várias palavras em qualquer ordem: "tavares 121" ou "icarai macedo". O cliente aparece se **qualquer** um dos endereços dele (inclusive o antigo) combinar.
 - Para ver o endereço sem abrir o cadastro, **passe o mouse sobre a linha do cliente**: aparece a dica com o endereço (se houver mais de um, todos, o principal primeiro).
 - Os filtros **Ativos**, **Arquivados** e **Todos** mudam quais clientes aparecem.
 `,

@@ -95,6 +95,10 @@ export async function listarClientes(
     // CPF/CNPJ é guardado sem máscara: "123.456.789-00" deve achar "12345678900"
     const semMascara = limpo.replace(/[.\-/\s]/g, '');
     if (semMascara && semMascara !== limpo) condicoes.push(`document.ilike.%${semMascara}%`);
+    // Endereço (apelido, rua, número, bairro, cidade, CEP...): cada palavra precisa aparecer, em qualquer ordem
+    const palavras = semAcento(limpo).split(' ').filter(Boolean);
+    const emEndereco = palavras.map((p) => `busca_enderecos.ilike.%${p}%`);
+    condicoes.push(emEndereco.length > 1 ? `and(${emEndereco.join(',')})` : emEndereco[0]);
     query = query.or(condicoes.join(','));
   }
 

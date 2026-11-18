@@ -115,7 +115,7 @@ export default function Clientes() {
               setBusca(e.target.value);
               setPagina(0);
             }}
-            placeholder="Buscar cliente por nome, CPF/CNPJ, e-mail..."
+            placeholder="Buscar por nome, CPF/CNPJ, e-mail, endereço..."
             className="block w-full rounded-xl border border-slate-200 py-2.5 pr-3 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           />
         </div>

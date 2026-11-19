@@ -173,7 +173,10 @@ QR real (pacote `qrcode`, `QrCodeImagem.tsx`) e ajuda F1 (tópicos `pmoc-do-mes`
 **Testado e aprovado pelo usuário em 2026-11-17:** fase 1 na prática (plano com TRT em PDF, Vigente, documento impresso) e fase 2 (Gerar OS do mês,
 checklist no celular, conclusão com o nome de quem acompanhou, relatório por link no WhatsApp). Roteiro que falta: imprimir a etiqueta na Elgin e ler o QR com o
 celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). O plano de teste foi apagado em 2026-11-17 (ver `docs/pmoc.md`): para testar a etiqueta, criar um plano
-(se for teste, apagar depois e zerar `pmoc_code_seq`). Modelos de tarefa refeitos em 2026-11-17 (split 17, cassete 19, VRF 21). Pendente do usuário: ligar para os laboratórios de qualidade do ar (item 11 do plano). Ao concluir, apagar este lembrete.
+(se for teste, apagar depois e zerar `pmoc_code_seq`). Modelos de tarefa refeitos em 2026-11-17 (split 17, cassete 19, VRF 21). Laboratório: o usuário mandou e-mail em 2026-11-18 e aguarda resposta. **Lançamento comercial (2026-11-18, seção "Lançamento comercial" do `docs/pmoc.md`):**
+3 documentos do Claude (plano comercial com preços/site/Google Ads, carta aos clientes e treinamento dos mecânicos). Falta o usuário: confirmar a tabela de preços
+e o custo da hora do mecânico, alinhar a carta (planos "Essencial/Completo" e "app" não batem com o plano), publicar a página `pmoc.html` no site (fora deste
+repositório; o Claude monta se tiver acesso aos arquivos), criar a campanha no Google Ads e dar o treinamento. Ao concluir, apagar este lembrete.
 
 **LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
 

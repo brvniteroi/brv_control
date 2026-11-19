@@ -180,6 +180,24 @@ São Gonçalo só para aparecer na busca. Critérios para escolher: acreditaçã
 Descartados por ficarem longe (só listam a cidade no site): LABOAR (Salvador/BA) e Laboratório Proxy (Piracicaba/SP).
 Próximo passo: o usuário liga para o Lab Agua e a Acqua Air perguntando acreditação, NBR 17037, preço por ponto de coleta e prazo do laudo.
 
+## Lançamento comercial (2026-11-18)
+
+Pedido do usuário enquanto o laboratório não responde (ele mandou e-mail e aguarda). Material em documentos do Claude (fora do repositório):
+
+- **[PMOC BRV: plano comercial](https://claude.ai/artifact/XAcxoEgKLKrHRyxN5VG8vs)**: precificação, texto da página do site e campanha do Google Ads.
+  Preço proposto (a confirmar pelo usuário): split até 18.000 BTU **R$ 120/mês**, acima de 18.000 R$ 140, cassete/piso-teto R$ 190, VRF sob consulta,
+  mínimo R$ 480/mês, implantação R$ 900 até 10 aparelhos + R$ 40 por aparelho a mais, desconto 10% (11 a 20 aparelhos) e 15% (acima de 20), 10% no
+  pagamento anual; contrato de 12 meses com reajuste pelo IPCA. Acima da média da internet (R$ 50 a R$ 100) porque o site da BRV vende a preventiva avulsa
+  a partir de R$ 390. Supõe R$ 60/hora de mecânico com encargos (comentário no documento pedindo confirmação). O site (`brvniteroi.com.br`, HTML estático,
+  fora deste repositório) ainda não tem a página `pmoc.html`; o Google Ads é uma campanha nova "PMOC - Pesquisa", só depois da página no ar.
+- **[Carta de apresentação: PMOC BRV](https://claude.ai/artifact/Wfgekx2Zy1qwXccdr5XzE3)**: escrita/editada por outra pessoa durante a sessão; o Claude
+  não mexeu. Diverge do plano comercial: cita planos "Essencial" e "Completo" (corretiva inclusa, 24 h úteis) que não existem na tabela, e um "app BRV Control"
+  para o cliente (hoje ele vê relatório por link e histórico pelo QR; Portal do Cliente com PMOC é fase 4). Alinhar antes de enviar.
+- **[Treinamento PMOC: medições e registro](https://claude.ai/artifact/2YoFPC9u4jAHMtzT3aKhr5)**: para os mecânicos (onde e como medir corrente,
+  insuflamento, retorno e ambiente; delta T de 8 a 12 °C como referência de campo; passo a passo no app; erros comuns; teste rápido).
+- A conferir: o limite de 60.000 BTU/h citado por fontes do setor para exigir responsável técnico (não confirmado no texto legal) e o custo por clique do
+  Google Ads (Planejador de palavras-chave).
+
 ## Telas das fases 2 e 3 com o Gemini (2026-11-16)
 
 Briefing em `docs/gemini/pmoc-fase2-briefing.md`: modal "Gerar OS do mês" (técnico, data, hora, duração), painel "PMOC do mês" + cartão no

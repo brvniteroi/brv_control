@@ -415,4 +415,6 @@ por cima (`useTelaAjuda('os' | 'cliente' | 'nova-atividade')` em `src/ajuda/cont
 (ele só mexe em `AjudaPainel.tsx`, `TextoAjuda.tsx`, `pages/Ajuda.tsx`; visual feito e auditado em 2026-11-07, resumo em `docs/gemini/ajuda-resultado.md`).
 A impressão do manual é uma cópia montada por portal em `document.body`, porque o `index.css` esconde o `#root` ao imprimir.
 
+Ditado por voz (2026-11-19, pedido do usuário): `components/comum/DitadoVoz.tsx`, montado em `Layout.tsx` e `CampoLayout.tsx`, põe um microfone no canto de qualquer `<textarea>` em foco (Web Speech API, pt-BR; texto entra no cursor; `data-sem-voz` desliga num campo; some se o navegador não suporta, ex. WebView do APK). Páginas públicas não têm. Ajuda F1: tópico `ditado-voz`.
+
 Usuários: admin criado; Adriana Lobo (Diretora Administrativa, papel `admin`: acesso a tudo, inclusive dados pessoais dos funcionários; criada em 2026-11-01, cargo corrigido em 2026-11-08).

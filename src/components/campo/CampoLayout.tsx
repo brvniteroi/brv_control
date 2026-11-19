@@ -12,6 +12,7 @@ import AlterarSenhaModal from '../AlterarSenhaModal';
 import { aparelhoLiberado, guardarMotivoSaida } from '../../services/aparelho';
 import { supabase } from '../../services/supabase';
 import type { ContextoCampo } from './contextoCampo';
+import DitadoVoz from '../comum/DitadoVoz';
 
 const CHAVE_COLABORADOR = 'brv:campo:colaborador';
 /** Período das avaliações mostradas na estrela do cabeçalho. */
@@ -161,6 +162,7 @@ export default function CampoLayout() {
 
   return (
     <div className="min-h-dvh bg-slate-100">
+      <DitadoVoz />
       <header className="sticky top-0 z-30 bg-[#0B1E3F] text-white shadow-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
           <Link to="/campo" className="flex min-w-0 flex-1 items-center gap-2.5">

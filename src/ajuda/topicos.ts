@@ -114,6 +114,23 @@ Aperte **F1** em qualquer tela para abrir a ajuda daquela tela. O botão **Ajuda
 `,
   },
   {
+    id: 'ditado-voz',
+    titulo: 'Ditar texto pelo microfone',
+    secao: 'Primeiros passos',
+    telas: ['geral'],
+    palavras: 'voz microfone ditar falar digitar texto diagnostico relato observacao',
+    texto: `
+Em qualquer campo de texto grande (diagnóstico de bancada, relato, observações, parecer...) aparece um **microfone** no canto do campo quando você clica nele.
+1. Clique no campo, no ponto onde o texto deve entrar.
+2. Clique no **microfone** (fica vermelho enquanto ouve) e fale.
+3. Clique no **quadrado** vermelho para parar. O texto entra onde estava o cursor, e você pode corrigir digitando.
+- Funciona no Chrome e no Edge, com internet. Na primeira vez o navegador pede permissão para usar o microfone: clique em **Permitir**.
+- Pontuação não vem sozinha: diga o texto e acrescente vírgulas e pontos digitando.
+! No Chrome o áudio é processado pelo serviço de voz do Google. Não dite dados sensíveis do cliente (CPF, senhas).
+- Se o microfone não aparece, o navegador não tem esse recurso. No app Android dos técnicos, use o microfone do próprio teclado do celular.
+`,
+  },
+  {
     id: 'menu',
     titulo: 'O menu e as telas do sistema',
     secao: 'Primeiros passos',

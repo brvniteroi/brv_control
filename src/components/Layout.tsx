@@ -4,6 +4,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import { useAuth } from '../contexts/useAuth';
 import AjudaPainel from '../ajuda/AjudaPainel';
+import DitadoVoz from './comum/DitadoVoz';
 import { telaDaRota, useTelaSobreposta } from '../ajuda/contextoAjuda';
 
 export default function Layout() {
@@ -38,6 +39,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      <DitadoVoz />
       {ajudaAberta && <AjudaPainel tela={sobreposta ?? telaDaRota(pathname)} onFechar={fecharAjuda} />}
     </div>
   );

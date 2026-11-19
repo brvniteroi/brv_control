@@ -4,8 +4,9 @@ Plano escrito em 2026-11-16. Base: telas do Gemini (auditadas em 2026-11-04, ain
 `docs/gemini/pmoc-briefing.md`, contrato de dados `docs/gemini/pmoc.md`, modelos `PMOC BRV Control.docx` e `PMOC Field Control.docx`
 (raiz do repositório) e uma pesquisa de como os sistemas vendidos no Brasil fazem o PMOC (seção "O que o mercado faz").
 
-**Fase 1 escrita em 2026-11-16** (falta o usuário colar a migration e rodar a verificação; ver "Estado da fase 1"). Decisões do usuário
-tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa aprovado; falta escolher o laboratório de qualidade do ar.
+**Situação em 2026-11-18:** fases 1, 2 e 3 no ar, aplicadas e verificadas; fases 1 e 2 testadas na prática pelo usuário (2026-11-17). Falta testar a
+etiqueta na Elgin e a leitura do QR (fase 3) e escolher o laboratório de qualidade do ar. Fase 4 (melhorias) não começou. Decisões do usuário em
+2026-11-16 (seção "Decisões do usuário"); texto legal da capa aprovado.
 
 ## Estado da fase 1 (2026-11-16)
 
@@ -16,7 +17,7 @@ tomadas em 2026-11-16 (seção "Decisões do usuário"); texto legal da capa apr
   todo aparelho ativo; aparelho com execução não sai do plano), `pmoc_salvar_modelo`, `pmoc_dados_responsavel` (só nome, CPF, registro, e-mail e
   telefone do funcionário) e `pmoc_responsavel_padrao`.
 - Verificação com desfazer no fim: `supabase/verificacao/pmoc_base.sql` (11 testes) **passou** (usuário rodou em 2026-11-16: TUDO CERTO).
-- Falta o teste na prática: plano real com ambiente, 2 aparelhos, TRT em PDF, vigente e documento impresso (conferir se o PDF do TRT abre).
+- Teste na prática (plano com ambiente, 2 aparelhos, TRT em PDF, vigente e documento impresso): **aprovado pelo usuário em 2026-11-17**.
 - `src/services/pmoc.ts` + `fonteDeDados.ts` com `USAR_BANCO_PMOC = true` (os dados de demonstração continuam no arquivo para `false`). O editor
   grava pelo `salvarPlanoCompleto`. Plano novo já vem com o responsável técnico; escolher outro preenche CPF e registro pelo cadastro do funcionário.
 - `upload.php` aceita PDF (só admin/escritório, até 10 MB, confere o `%PDF-`, pasta `uploads/pmoc/AAAA/MM`); `uploads/.htaccess` serve `.pdf` sem a CSP.

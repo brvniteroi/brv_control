@@ -32,7 +32,7 @@ export type DadosFolhaOrcamento = Pick<
   | 'quote_technical_opinion'
   | 'quote_amount'
   | 'quote_validity_days'
-> & { technical_diagnosis?: string | null };
+>;
 
 /** Estilo A4 da impressão; vai junto de quem monta a folha (portal em `document.body`, porque o `#root` some ao imprimir). */
 export const ESTILO_IMPRESSAO_ORCAMENTO_A4 = `
@@ -160,7 +160,7 @@ export default function FolhaOrcamentoPlaca({ dados, dataEmissao, aceiteCliente 
           </p>
           <p>
             <strong>Parecer técnico laboratorial:</strong>{' '}
-            {dados.quote_technical_opinion || dados.technical_diagnosis || 'Reparo eletrônico em bancada especializada.'}
+            {dados.quote_technical_opinion || 'Reparo eletrônico em bancada especializada.'}
           </p>
         </div>
       </section>

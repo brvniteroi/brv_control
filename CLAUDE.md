@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261118110000` (2026-11-19) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261119100000` (2026-11-19) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -318,7 +318,7 @@ com **Imprimir**, **Copiar link** e **Enviar o link pelo WhatsApp** (`textoWhats
 o papel `oficina` continua sem ver telefone). Página pública `/acompanhar-oficina/:token` (`pages/AcompanhamentoOficina.tsx`, função anon `oficina_acompanhamento`):
 etapa atual, linha do tempo simplificada (`PASSOS_ACOMPANHAMENTO_OFICINA`) e garantia de 90 dias depois de entregue; sem diagnóstico, valores, observações,
 fotos nem contato. Token em `workshop_orders.public_token` (não muda pelo app). WhatsApp da loja no comprovante: `WHATSAPP_OFICINA` = (21) 99972-7798 (o geral do site;
-o de `EMPRESA_BRV` é o das placas). Migration `20261119100000_oficina_comprovante.sql` (**a aplicar antes do push**; refaz a visão `oficina_itens`). Ajuda F1: `oficina-comprovante`.
+o de `EMPRESA_BRV` é o das placas). Migration `20261119100000_oficina_comprovante.sql` (aplicada em 2026-11-19; refaz a visão `oficina_itens`). Ajuda F1: `oficina-comprovante`.
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no

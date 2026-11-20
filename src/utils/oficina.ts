@@ -218,3 +218,64 @@ export function textoOrcamentoWhatsApp(item: ItemOficinaTela): string {
     `\nSegue o orçamento${ref}${valor}. Aguardamos sua autorização para seguir com o conserto.`
   );
 }
+
+// ---------------------------------------------------------------------
+// Comprovante de entrada e acompanhamento pelo cliente (2026-11-19)
+// ---------------------------------------------------------------------
+
+/** WhatsApp geral da loja (site brvniteroi.com.br, 2026-11-19); o (21) 99925-4178 de `EMPRESA_BRV` é o do laboratório de placas. */
+export const WHATSAPP_OFICINA = '(21) 99972-7798';
+
+/** Link público de acompanhamento do item (página sem login). */
+export function linkAcompanhamentoOficina(publicToken: string): string {
+  const origem = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origem}/acompanhar-oficina/${publicToken}`;
+}
+
+/** Mensagem do WhatsApp ao entregar o comprovante: o equipamento recebido e o link para acompanhar. */
+export function textoWhatsAppEntradaOficina(
+  item: Pick<ItemOficinaTela, 'os_number' | 'item_number' | 'legacy_reference' | 'equipment_type' | 'brand' | 'units_collected' | 'customer_name' | 'public_token'>,
+  totalNaOs?: number,
+): string {
+  const nome = item.customer_name?.trim();
+  return (
+    `${nome ? `Olá, ${nome}! ` : 'Olá! '}Recebemos seu equipamento na oficina da BRV Niterói: ` +
+    `${descricaoItem(item)} (${numeroItem(item, totalNaOs)}).\n` +
+    `Acompanhe o andamento por aqui: ${linkAcompanhamentoOficina(item.public_token)}`
+  );
+}
+
+/**
+ * Cláusulas do comprovante de entrada da oficina (adaptadas do comprovante das placas, `CLAUSULAS_COMPROVANTE_ENTRADA`).
+ * Texto jurídico: revisar com o Braulio antes de mudar.
+ */
+export const CLAUSULAS_COMPROVANTE_OFICINA: readonly string[] = [
+  '1. A BRV responde apenas pelo equipamento e pelos acessórios descritos neste comprovante, no estado registrado na conferência de entrada.',
+  '2. O equipamento disponibilizado para retirada que não for retirado no prazo de até 90 (noventa) dias corridos após a notificação de liberação será caracterizado como BEM ABANDONADO (Art. 1.275, III do Código Civil), autorizando o descarte ecológico ou a venda para custeio da guarda.',
+  '3. A garantia dos serviços executados é de 90 (noventa) dias, conforme o Art. 26 do CDC, contados da data de retirada e restrita às peças e aos serviços realizados.',
+];
+
+/** Etapas mostradas ao cliente na página pública (as etapas internas são agrupadas em passos simples). */
+export const PASSOS_ACOMPANHAMENTO_OFICINA: { chave: string; rotulo: string; etapas: EtapaOficina[] }[] = [
+  { chave: 'transito', rotulo: 'Retirado pelo técnico', etapas: ['em_transito'] },
+  { chave: 'entrada', rotulo: 'Recebido na oficina', etapas: ['entrada'] },
+  { chave: 'analise', rotulo: 'Em análise', etapas: ['diagnostico', 'aguardando_orcamento', 'aguardando_cliente'] },
+  { chave: 'reparo', rotulo: 'Em reparo', etapas: ['aguardando_peca', 'em_reparo'] },
+  { chave: 'pronto', rotulo: 'Pronto para devolução', etapas: ['pronto'] },
+  { chave: 'entregue', rotulo: 'Devolvido ao cliente', etapas: ['entregue'] },
+];
+
+/** Como a etapa atual aparece para o cliente. */
+export const ROTULO_ETAPA_PUBLICO: Record<EtapaOficina, string> = {
+  em_transito: 'Retirado pelo técnico, a caminho da oficina',
+  entrada: 'Recebido na oficina',
+  diagnostico: 'Em análise na bancada',
+  aguardando_orcamento: 'Em análise: preparando o orçamento',
+  aguardando_cliente: 'Aguardando sua resposta ao orçamento',
+  aguardando_peca: 'Aguardando peça',
+  em_reparo: 'Em reparo',
+  pronto: 'Pronto para devolução',
+  entregue: 'Devolvido ao cliente',
+  descarte: 'Descartado com autorização do cliente',
+  cancelado: 'Cancelado',
+};

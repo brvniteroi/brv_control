@@ -311,6 +311,15 @@ Dashboard (2026-11-12): o cartão "Em andamento" e a legenda da composição mos
 No Kanban da Oficina, o cartão de balcão (item sem `pickup_employee_id`) tem fundo azul claro (`CartaoItem.tsx`). Os 2 itens antigos `BALCAO-53` e `BALCAO-61`
 ganharam as OS 17381 e 17382 em 2026-11-12 (OS criada direto no banco, `legacy_reference` mantida).
 
+**Comprovante de entrada da Oficina (2026-11-19, pedido do usuário: "semelhante ao das placas, com envio pelo WhatsApp"):** botão **Comprovante** no item
+(`ItemOficinaDetalhes.tsx`, só admin/escritório; item cancelado não tem) abre `components/oficina/ComprovanteEntradaOficina.tsx` (A4: cliente, telefone,
+equipamento, acessórios, defeito, conferência da entrada, link, cláusulas `CLAUSULAS_COMPROVANTE_OFICINA` em `utils/oficina.ts` adaptadas das placas, assinaturas),
+com **Imprimir**, **Copiar link** e **Enviar o link pelo WhatsApp** (`textoWhatsAppEntradaOficina`; telefone pela RPC `oficina_contato_cliente`, só escritório:
+o papel `oficina` continua sem ver telefone). Página pública `/acompanhar-oficina/:token` (`pages/AcompanhamentoOficina.tsx`, função anon `oficina_acompanhamento`):
+etapa atual, linha do tempo simplificada (`PASSOS_ACOMPANHAMENTO_OFICINA`) e garantia de 90 dias depois de entregue; sem diagnóstico, valores, observações,
+fotos nem contato. Token em `workshop_orders.public_token` (não muda pelo app). WhatsApp da loja no comprovante: `WHATSAPP_OFICINA` = (21) 99972-7798 (o geral do site;
+o de `EMPRESA_BRV` é o das placas). Migration `20261119100000_oficina_comprovante.sql` (**a aplicar antes do push**; refaz a visão `oficina_itens`). Ajuda F1: `oficina-comprovante`.
+
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no
 calendário (atualizam por Realtime). Excluir do catálogo: só admin.

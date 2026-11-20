@@ -14,6 +14,7 @@ import {
   MessageCircle,
   PackageCheck,
   Printer,
+  Receipt,
   RefreshCw,
   RotateCcw,
   ShieldCheck,
@@ -69,6 +70,7 @@ import { formatarDataHora } from '../../utils/ordens';
 import OrdemDetalhes from '../ordens/OrdemDetalhes';
 import { CORES_ETAPA } from './cores';
 import EtiquetaModal from './EtiquetaModal';
+import ComprovanteEntradaOficina from './ComprovanteEntradaOficina';
 import FotosItem from './FotosItem';
 import HistoricoItem from './HistoricoItem';
 import {
@@ -199,6 +201,7 @@ export default function ItemOficinaDetalhes({
 
   // Modais
   const [etiquetaAberta, setEtiquetaAberta] = useState(abrirEtiquetaInicial);
+  const [comprovanteAberto, setComprovanteAberto] = useState(false);
   const [modalAcao, setModalAcao] = useState<
     'orcamento' | 'resposta' | 'descarte' | 'devolucao' | 'cancelar' | null
   >(null);
@@ -661,6 +664,18 @@ export default function ItemOficinaDetalhes({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Comprovante de entrada com link pelo WhatsApp: só admin/escritório (o telefone do cliente não é da oficina) */}
+              {ehEscritorio && item.status !== 'cancelado' && (
+                <button
+                  type="button"
+                  onClick={() => setComprovanteAberto(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 shadow-2xs transition hover:bg-slate-50"
+                >
+                  <Receipt size={15} className="text-emerald-600" />
+                  Comprovante
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setEtiquetaAberta(true)}
@@ -1472,6 +1487,14 @@ export default function ItemOficinaDetalhes({
         </div>
 
         {/* Modais de ação */}
+        {comprovanteAberto && (
+          <ComprovanteEntradaOficina
+            item={item}
+            totalNaOs={totalNaOs}
+            onFechar={() => setComprovanteAberto(false)}
+          />
+        )}
+
         {etiquetaAberta && (
           <EtiquetaModal
             item={item}

@@ -31,6 +31,7 @@ import PlacasFichas from './pages/PlacasFichas';
 import PlacasErros from './pages/PlacasErros';
 import PlacasManuais from './pages/PlacasManuais';
 import AcompanhamentoPlaca from './pages/AcompanhamentoPlaca';
+import AcompanhamentoOficina from './pages/AcompanhamentoOficina';
 import OrcamentoPlacaPublico from './pages/OrcamentoPlacaPublico';
 import RelatorioPmocPublico from './pages/RelatorioPmocPublico';
 import EquipamentoPublico from './pages/EquipamentoPublico';
@@ -60,6 +61,8 @@ export default function App() {
         <Route path="/relatorio-pmoc/:token" element={<RelatorioPmocPublico />} />
         {/* Ficha pública do equipamento PMOC: aberta pela etiqueta QR Code (100 × 50 mm) colada no aparelho */}
         <Route path="/equipamento/:token" element={<EquipamentoPublico />} />
+        {/* Acompanhamento público de equipamento na oficina (sem login, link do comprovante de entrada) */}
+        <Route path="/acompanhar-oficina/:token" element={<AcompanhamentoOficina />} />
         <Route path="/portal" element={<PortalRoute />}>
           <Route index element={<PortalHome />} />
         </Route>

@@ -84,9 +84,32 @@ export interface ItemOficina {
   legacy_id: string | null;
   legacy_reference: string | null;
 
+  /** Código secreto do link público de acompanhamento (/acompanhar-oficina/<token>; migration 20261119100000). */
+  public_token: string;
+
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** O que a página pública de acompanhamento recebe (`oficina_acompanhamento`): só dados seguros para o cliente. */
+export interface AcompanhamentoOficinaPublico {
+  os_number: number | null;
+  item_number: number;
+  items_in_os: number;
+  legacy_reference: string | null;
+  equipment_type: string;
+  units_collected: UnidadeRecolhida;
+  brand: string | null;
+  model: string | null;
+  status: EtapaOficina;
+  is_warranty: boolean;
+  created_at: string;
+  received_at: string | null;
+  ready_at: string | null;
+  finished_at: string | null;
+  /** Primeira vez que o item chegou a cada etapa. */
+  reached: Partial<Record<EtapaOficina, string>>;
 }
 
 /** Linha da visão public.oficina_itens: o item com os nomes para a tela. */

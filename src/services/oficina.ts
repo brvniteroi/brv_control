@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import { anexarFoto } from './anexos';
 import type { Attachment, AttachmentCategory } from '../types/fsm';
 import type {
+  AcompanhamentoOficinaPublico,
   AgenteImpressao,
   CamposBancada,
   CamposEscritorio,
@@ -107,6 +108,22 @@ export async function itensDoCliente(customerId: string): Promise<ItemOficinaTel
     .order('created_at', { ascending: false });
   falhar(error);
   return (data ?? []) as ItemOficinaTela[];
+}
+
+/** Telefone do cliente do item, para o comprovante e o WhatsApp (só admin/escritório; o papel 'oficina' não vê telefone). */
+export async function telefoneDoClienteDoItem(id: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('oficina_contato_cliente', { p_item: id });
+  falhar(error);
+  return (data as string | null) ?? null;
+}
+
+/** Página pública de acompanhamento (sem login): null se o link não existe ou o item foi cancelado. */
+export async function buscarAcompanhamentoOficina(token: string): Promise<AcompanhamentoOficinaPublico | null> {
+  const limpo = token.trim();
+  if (limpo.length < 32) return null;
+  const { data, error } = await supabase.rpc('oficina_acompanhamento', { p_token: limpo });
+  if (error) throw new Error('Não foi possível consultar o andamento agora. Tente de novo em instantes.');
+  return (data as AcompanhamentoOficinaPublico | null) ?? null;
 }
 
 /** Dados de uma OS pelo número, para registrar a entrada de um item ligado a ela. */

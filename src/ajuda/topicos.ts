@@ -725,6 +725,22 @@ Depois de entregue, descartado ou cancelado, o item vai para a aba **Finalizados
     veja: ['oficina-elgin-sem-sinal'],
   },
   {
+    id: 'oficina-comprovante',
+    titulo: 'Comprovante de entrada e link para o cliente',
+    secao: 'Oficina',
+    telas: ['item-oficina', 'oficina'],
+    palavras: 'comprovante recibo entrada whatsapp link acompanhamento cliente imprimir a4 balcao',
+    texto: `
+Administrador e escritório: abra o item e clique em **Comprovante**.
+- A folha A4 traz o cliente, o telefone, o equipamento (tipo, marca, modelo, série, BTU, tensão), os acessórios, o defeito relatado, a conferência da entrada, o link de acompanhamento, as condições de guarda e garantia e as linhas de assinatura.
+- **Imprimir**: para entregar no balcão e o cliente assinar.
+- **Enviar o link pelo WhatsApp**: abre o WhatsApp no telefone do cadastro do cliente com a mensagem pronta e o link. Cliente sem telefone: o WhatsApp abre para você escolher o contato.
+- **Copiar link**: para mandar por outro meio.
+O cliente abre o link no celular, sem senha, e vê a etapa atual, a linha do tempo e, depois de devolvido, a garantia de 90 dias. Ele **não** vê diagnóstico, valores, observações internas nem fotos.
+> O link de cada item é fixo: pode reenviar o mesmo quantas vezes precisar. Item cancelado não tem página.
+`,
+  },
+  {
     id: 'oficina-bancada',
     titulo: 'Diagnóstico, conserto, fotos e anotações',
     secao: 'Oficina',

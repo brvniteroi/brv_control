@@ -178,7 +178,7 @@ celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). O plano de teste
 e o custo da hora do mecânico, alinhar a carta (planos "Essencial/Completo" e "app" não batem com o plano), publicar a página `pmoc.html` no site (fora deste
 repositório; o Claude monta se tiver acesso aos arquivos), criar a campanha no Google Ads e dar o treinamento. Ao concluir, apagar este lembrete.
 
-**LEMBRETE (2026-11-19): desligar o BRV Equipamentos** (decisão do usuário; substitui o antigo lembrete de segurança do Equipamentos, de 2026-11-05, que perdeu
+**LEMBRETE (2026-11-19): desligar o BRV Equipamentos** (lembrar o usuário logo no início da conversa no PC da empresa; o usuário deixou para outro dia; decisão do usuário; substitui o antigo lembrete de segurança do Equipamentos, de 2026-11-05, que perdeu
 o sentido). Conferido em 2026-11-19: **nada do Control depende do projeto `tnsmwpewdkdigwjyaufr`** (nenhum anexo, foto de placa, manual ou ficha aponta para ele; só os
 scripts de importação em `scripts/equipamentos/`). Lá restam 12 tabelas (81 OS de placas, 62 equipamentos, 620 históricos, 276 movimentações, 139 mídias, 131 fichas...)
 e o bucket `midias` com 77 arquivos (220 MB). Roteiro, no PC da empresa: (1) `git pull` e **arquivo final**: `node scripts/equipamentos/arquivo-final.mjs` (`--simular`

@@ -318,7 +318,7 @@ com **Imprimir**, **Copiar link** e **Enviar o link pelo WhatsApp** (`textoWhats
 o papel `oficina` continua sem ver telefone). Página pública `/acompanhar-oficina/:token` (`pages/AcompanhamentoOficina.tsx`, função anon `oficina_acompanhamento`):
 etapa atual, linha do tempo simplificada (`PASSOS_ACOMPANHAMENTO_OFICINA`) e garantia de 90 dias depois de entregue; sem diagnóstico, valores, observações,
 fotos nem contato. Token em `workshop_orders.public_token` (não muda pelo app). WhatsApp da loja no comprovante: `WHATSAPP_OFICINA` = (21) 99972-7798 (o geral do site;
-o de `EMPRESA_BRV` é o das placas). Migration `20261119100000_oficina_comprovante.sql` (aplicada em 2026-11-19; refaz a visão `oficina_itens`). Ajuda F1: `oficina-comprovante`.
+o de `EMPRESA_BRV` é o das placas). Migration `20261119100000_oficina_comprovante.sql` (aplicada em 2026-11-19; refaz a visão `oficina_itens`). Ajuda F1: `oficina-comprovante`. **Testado e aprovado pelo usuário em 2026-11-19** (comprovante, impressão, WhatsApp e página pública). A confirmar com o usuário: texto das cláusulas, o WhatsApp (21) 99972-7798 e se o comprovante deve abrir sozinho depois da entrada de balcão.
 
 Etiquetas de OS (`tags` + `service_order_tags`, `services/etiquetas.ts`, `components/etiquetas/`): ex. "Aguardando pagamento",
 "Pago". Só na OS (não no cliente) e só o escritório vê; aparecem na lista/detalhe da OS (com filtro), na linha do tempo e no

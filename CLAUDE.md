@@ -178,7 +178,16 @@ celular (se o QR não ler, ajustar `^BQ` em `etiquetaPmoc.ts`). O plano de teste
 e o custo da hora do mecânico, alinhar a carta (planos "Essencial/Completo" e "app" não batem com o plano), publicar a página `pmoc.html` no site (fora deste
 repositório; o Claude monta se tiver acesso aos arquivos), criar a campanha no Google Ads e dar o treinamento. Ao concluir, apagar este lembrete.
 
-**LEMBRETE (2026-11-05): retomar a segurança do BRV Equipamentos** (estado em `docs/oficina.md`, seção Segurança). Falta o usuário: OS de teste com foto em outro navegador (confirma o commit `119d428`), 6 testes com usuário não admin (Kanban, etapa e foto, etiqueta, galeria em aba anônima, Fichas Técnicas, Códigos de erro), conferir Logs > API, confirmar os 6 usuários e os 2 admins, revogar a chave do Field. Depois: remover `frontend/.env_old`, fazer o banco respeitar `ativo` e voltar às 7 decisões do plano. Ao concluir, apagar este lembrete.
+**LEMBRETE (2026-11-19): desligar o BRV Equipamentos** (decisão do usuário; substitui o antigo lembrete de segurança do Equipamentos, de 2026-11-05, que perdeu
+o sentido). Conferido em 2026-11-19: **nada do Control depende do projeto `tnsmwpewdkdigwjyaufr`** (nenhum anexo, foto de placa, manual ou ficha aponta para ele; só os
+scripts de importação em `scripts/equipamentos/`). Lá restam 12 tabelas (81 OS de placas, 62 equipamentos, 620 históricos, 276 movimentações, 139 mídias, 131 fichas...)
+e o bucket `midias` com 77 arquivos (220 MB). Roteiro, no PC da empresa: (1) `git pull` e **arquivo final**: `node scripts/equipamentos/arquivo-final.mjs` (`--simular`
+antes; baixa todas as tabelas em JSON e todos os arquivos para `D:/backups-brv/equipamentos-final-AAAA-MM-DD`, que o Google Drive sincroniza; precisa de
+`EQUIP_SERVICE_ROLE_KEY` no `.env`; simulação rodada no PC de casa em 2026-11-19 sem falhas); conferir o `LEIA-ME.json` (contagens e falhas); (2) **pausar** o projeto no
+painel do Supabase (reversível; libera a vaga do gratuito); (3) **apagar** depois de algumas semanas sem falta; (4) desligar o site do Equipamentos no XAMPP da loja
+(**não** desligar o servidor: o agente da Elgin roda nele) e, opcional, apagar a Edge Function `consultar-os` e o segredo `EQUIPAMENTOS_SEGREDO` do Control; (5) com a vaga
+livre, fazer o **ensaio de restauração do backup** (pendente). Ao apagar o projeto: tirar `EQUIP_SERVICE_ROLE_KEY` do `.env`, atualizar a seção "Supabase: plano e uso"
+(1 projeto) e apagar este lembrete.
 
 **OFICINA E IMPRESSORA: implantação concluída em 2026-11-11** (não é mais lembrete; fica como registro e referência do agente da Elgin):
 (1) **FEITO em 2026-11-09**: agente da Elgin instalado no servidor da loja (login `impressora@brvniteroi.com.br`, pasta em

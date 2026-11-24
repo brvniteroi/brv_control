@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, ShoppingBag } from 'lucide-react';
 import {
   LIMITE_VENDAS_CLIENTE,
   detalhesDaVenda,
+  enderecosDoClienteVendas,
   listarVendasDoCliente,
   type ItemVendaSicweb,
   type PagamentoVendaSicweb,
@@ -26,6 +27,7 @@ const quantidade = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDig
 export default function VendasCliente({ clienteId }: VendasClienteProps) {
   const [dados, setDados] = useState<VendasDoCliente | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [enderecos, setEnderecos] = useState<Record<string, string>>({});
   const [aberta, setAberta] = useState<number | null>(null);
   const [detalhes, setDetalhes] = useState<Record<number, Detalhe | 'erro'>>({});
 
@@ -44,6 +46,22 @@ export default function VendasCliente({ clienteId }: VendasClienteProps) {
       ativo = false;
     };
   }, [clienteId]);
+
+  useEffect(() => {
+    if (clienteId === 'novo') return;
+    let ativo = true;
+    enderecosDoClienteVendas(clienteId)
+      .then((lista) => {
+        if (ativo) setEnderecos(Object.fromEntries(lista.map((e) => [e.id, e.rotulo])));
+      })
+      .catch(() => {});
+    return () => {
+      ativo = false;
+    };
+  }, [clienteId]);
+
+  // Coluna de endereço só quando o cliente tem mais de um (casa e consultório, por exemplo)
+  const mostraEndereco = Object.keys(enderecos).length > 1;
 
   const resumo = useMemo(() => {
     const ativas = (dados?.vendas ?? []).filter((v) => !v.cancelada);
@@ -101,6 +119,7 @@ export default function VendasCliente({ clienteId }: VendasClienteProps) {
                 <th className="w-6 px-2 py-2.5" />
                 <th className="px-3 py-2.5">Data</th>
                 <th className="px-3 py-2.5">Tipo</th>
+                {mostraEndereco && <th className="px-3 py-2.5">Endereço</th>}
                 <th className="px-3 py-2.5">Nota</th>
                 <th className="px-3 py-2.5 text-right">Valor</th>
                 <th className="px-3 py-2.5 text-right">Pago</th>
@@ -120,6 +139,7 @@ export default function VendasCliente({ clienteId }: VendasClienteProps) {
                       <td className="px-2 py-2.5 text-slate-400">{expandida ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">{formatarData(v.data)}</td>
                       <td className="px-3 py-2.5">{v.tipo_nome ?? '—'}</td>
+                      {mostraEndereco && <td className="px-3 py-2.5">{(v.address_id && enderecos[v.address_id]) || '—'}</td>}
                       <td className="px-3 py-2.5">{v.nota ?? '—'}</td>
                       <td className="px-3 py-2.5 text-right font-semibold whitespace-nowrap">{valorEmReais(v.total + v.frete)}</td>
                       <td className="px-3 py-2.5 text-right whitespace-nowrap">{v.pago > 0 ? valorEmReais(v.pago) : '—'}</td>
@@ -134,7 +154,7 @@ export default function VendasCliente({ clienteId }: VendasClienteProps) {
                     {expandida && (
                       <tr className="border-b border-slate-100 bg-slate-50/60">
                         <td />
-                        <td colSpan={6} className="px-3 py-3">
+                        <td colSpan={mostraEndereco ? 7 : 6} className="px-3 py-3">
                           {d === undefined ? (
                             <p className="text-slate-400">Carregando itens...</p>
                           ) : d === 'erro' ? (

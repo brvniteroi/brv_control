@@ -17,6 +17,8 @@ export interface VendaSicweb {
   total_tabela: number;
   pago: number;
   cancelada: boolean;
+  /** Endereço do cliente onde a venda foi feita (só nos clientes com mais de um endereço). */
+  address_id: string | null;
 }
 
 export interface ItemVendaSicweb {
@@ -44,7 +46,7 @@ export interface VendasDoCliente {
 /** Quantas vendas a lista traz (as mais recentes). Cliente comum tem poucas; só o "Cliente Balcão" passa disso. */
 export const LIMITE_VENDAS_CLIENTE = 300;
 
-const COLUNAS = 'controle, data, hora, tipo, tipo_nome, nota, pedido, observacoes, frete, total, total_tabela, pago, cancelada';
+const COLUNAS = 'controle, data, hora, tipo, tipo_nome, nota, pedido, observacoes, frete, total, total_tabela, pago, cancelada, address_id';
 
 export async function listarVendasDoCliente(clienteId: string): Promise<VendasDoCliente> {
   const { data, error, count } = await supabase
@@ -63,6 +65,13 @@ export async function listarVendasDoCliente(clienteId: string): Promise<VendasDo
     pago: Number(v.pago),
   })) as VendaSicweb[];
   return { vendas, quantidade: count ?? vendas.length };
+}
+
+/** Endereços ativos do cliente (para mostrar em que endereço cada venda foi feita). */
+export async function enderecosDoClienteVendas(clienteId: string): Promise<{ id: string; rotulo: string }[]> {
+  const { data, error } = await supabase.from('customer_addresses').select('id, label, street, number, is_primary').eq('customer_id', clienteId).order('is_primary', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((a) => ({ id: a.id as string, rotulo: (a.label as string | null)?.trim() || [a.street, a.number].filter(Boolean).join(', ') }));
 }
 
 export async function detalhesDaVenda(vendaControle: number): Promise<{ itens: ItemVendaSicweb[]; pagamentos: PagamentoVendaSicweb[] }> {

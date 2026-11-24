@@ -171,3 +171,31 @@ títulos, parcelas, baixas) quase não são usadas. Por isso a ordem proposta ab
 - Pesquisar provedores (preço, NFC-e do RJ, NFS-e nacional, aceitam o certificado existente) e escolher.
 - Entender por que há rascunhos parados no portal da NFS-e (dado faltando? dúvida de enquadramento?) para o botão "Preparar NFS-e" resolver.
 - Lançamento fiscal continua sendo o que decide a data da virada (ordem proposta, item 5).
+
+## Retomada (2026-11-24, fim do dia no PC da empresa; continuar de casa)
+
+**Onde paramos.** Plano de virada e de notas fiscais escritos (seções acima). Orçamentos do SicWeb medidos: 1.702 desde 2023 (293/393/496/520 por ano; ticket médio ~R$ 1.550 em 2026);
+tabelas `TABEST4` (cabeçalho: cliente, contato, vendedor, total, `obs`) e `TABEST5` (itens: produto, quantidade, valor unitário, total), **sem status, sem validade e sem ligação com a venda**
+(o botão "Vender" só converte). Mão de obra aparece como produto comum com nome "M.O Instal Ar Cond split N btus" (12k: 503 vezes; 9k: 403; 18k: 203; 24k: 80; 30k: 48...), "Desinstalação" e
+afins: o prefixo "M.O" é a heurística para marcar Serviço no catálogo. Observações padrão se repetem (ver o briefing). **Nada de código novo ainda**: só documentos.
+
+**Briefing pronto para o Gemini:** `docs/gemini/vendas-financeiro-briefing.md` (Catálogo, Orçamentos, Vendas e Financeiro, com camada de dados de demonstração, em **duas rodadas**:
+1 = catálogo, orçamentos e vendas; 2 = financeiro). Ele devolve `docs/gemini/vendas-financeiro-r1.md` e `-r2.md` para o Claude auditar, igual PMOC e Placas.
+
+**Roteiro de continuação (de casa ou da empresa):**
+1. `git pull`. Passar o briefing ao Gemini (rodada 1). Ele não faz commit; quando entregar, o Claude audita (`typecheck`, `lint`, `build`, ler o resumo) e commita.
+2. Claude, depois da auditoria da rodada 1: migrations novas (**nunca** editar as antigas; avisar que precisam ser coladas no SQL Editor): `catalog_items`, `quotes` (+ itens, eventos, textos padrão,
+   `public_token`), `sales` (+ itens, pagamentos), `sale_documents` (notas) e funções públicas `orcamento_ver`/`orcamento_aprovar` (como `placa_orcamento_*`); `services/vendas.ts`; trocar o corpo do
+   `components/vendas/fonteDeDados.ts` (`FONTE_DADOS_DEMO = false`); verificação com `ROLLBACK` em `supabase/verificacao/`; ajuda F1 (**regra fixa**: tópicos em `src/ajuda/topicos.ts`); ligar o menu (`MOSTRAR_MENU_VENDAS`).
+3. **Importar o catálogo (`TABEST1`, 829 itens)**: precisa do SQL Server com o SICNET restaurado (**só o PC da empresa**) ou do `scripts/sicweb/dados/produtos.csv` (gitignored; copiar por pen drive/Drive).
+   Fazer simulação primeiro, como `importar-clientes.mjs`; marcar serviço pelo prefixo "M.O"; deixar o dado fiscal (NCM/CFOP/CSOSN) para o contador revisar.
+4. Rodada 2 do Gemini (financeiro) e, depois, a Etapa A do plano (migration financeira, nível de acesso no perfil e aba Usuários) como já descrita acima; Etapa B (recebimento na OS e no app do técnico) só depois.
+5. **Fiscal por último** (decide a data da virada). Provedor ainda **não escolhido**: Focus NFe é a primeira opção (teste em homologação com o `.pfx` da BRV). Ver a seção "Notas fiscais".
+6. Histórico de orçamentos do SicWeb (1.702): **decisão em aberto**. Sugestão: importar só para consulta (como `sicweb_vendas`), numa aba "Orçamentos" do cliente, só admin; não misturar com os orçamentos novos.
+
+**Decisões já tomadas nesta conversa:** venda/orçamento sem cliente = "Consumidor final" (o "Cliente Balcão" fica inativo); orçamento por **link de aprovação pelo WhatsApp** (sem e-mail, sem PDF anexo; mesmo
+modelo das Placas); uma venda separa sozinha produtos (NFC-e/NF-e) e serviços (NFS-e nacional); histórico antigo fica em `sicweb_*` e não entra nas listas novas.
+
+**Pendências do usuário:** achar o `.pfx` do certificado A1 e a senha (validade 01/09/2027); quantas notas por mês de cada tipo; perguntas ao contador (código de serviço e ISS da instalação/manutenção
+de ar-condicionado em Niterói, material cobrado junto com a mão de obra, regra NFC-e x NF-e); escolher o provedor; as pendências da seção "Pendências para retomar" (InfinitePay, taxas, maquininhas, logins da Jéssica e do Pedro).
+Em outro PC (casa): `.env` e `scripts/sicweb/dados/` **não vêm no `git pull`** (ver CLAUDE.md, "Trabalhar com o SicWeb em outro PC").

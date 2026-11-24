@@ -25,6 +25,8 @@ import EnderecosAdicionais from './EnderecosAdicionais';
 import EnderecosOriginaisField from './EnderecosOriginaisField';
 import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
+import VendasCliente from './VendasCliente';
+import { useAuth } from '../../contexts/useAuth';
 import OrdemDetalhes from '../ordens/OrdemDetalhes';
 import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
 import { ItensOficinaCliente } from '../oficina/NaOficinaOS';
@@ -42,7 +44,7 @@ interface ClienteDetalhesProps {
   nomeInicial?: string;
 }
 
-type AbaAtiva = 'geral' | 'atendimento' | 'modelos';
+type AbaAtiva = 'geral' | 'atendimento' | 'vendas' | 'modelos';
 
 interface AbaItem {
   id: AbaAtiva;
@@ -55,11 +57,16 @@ const ABAS: AbaItem[] = [
   { id: 'modelos', rotulo: 'Modelos' },
 ];
 
+/** O histórico de vendas do SicWeb só o admin lê (RLS das tabelas sicweb_*): a aba só aparece para ele, entre Atendimento e Modelos. */
+const ABA_VENDAS: AbaItem = { id: 'vendas', rotulo: 'Vendas' };
+
 /** Rótulos oferecidos no cadastro de contato (os mesmos das opções do formulário). */
 const ROTULOS_CONTATO = ['Celular', 'WhatsApp', 'Casa', 'Comercial', 'Financeiro', 'Síndico(a)'];
 
 export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInicial }: ClienteDetalhesProps) {
   useTelaAjuda('cliente');
+  const { profile } = useAuth();
+  const abas = profile?.role === 'admin' && clienteId !== 'novo' ? [ABAS[0], ABAS[1], ABA_VENDAS, ABAS[2]] : ABAS;
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('geral');
   const [ordemAberta, setOrdemAberta] = useState<string | null>(null);
   const [versaoAtendimentos, setVersaoAtendimentos] = useState(0);
@@ -525,7 +532,7 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
       {/* 2. Barra de Abas - Anexos, Campos customizados e Histórico voltam quando houver o recurso por trás */}
       <div className="border-b border-slate-200 bg-white px-6">
         <nav className="flex space-x-8">
-          {ABAS.map((aba) => {
+          {abas.map((aba) => {
             const ativa = abaAtiva === aba.id;
             return (
               <button
@@ -947,6 +954,8 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
           )}
         </>
       )}
+
+      {abaAtiva === 'vendas' && profile?.role === 'admin' && <VendasCliente clienteId={clienteId} />}
 
       {/* OS aberta pela aba Atendimento: por cima do cadastro; fechar volta para o cliente */}
       {ordemAberta && (

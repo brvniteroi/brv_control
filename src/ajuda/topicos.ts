@@ -261,6 +261,21 @@ No fim do Dashboard, o administrador vê o cartão **Backup do sistema**:
 `,
   },
   {
+    id: 'vendas-cliente',
+    titulo: 'Ver as vendas de um cliente (SicWeb)',
+    secao: 'Clientes',
+    telas: ['cliente'],
+    palavras: 'vendas compras historico sicweb comprou produtos valor pagamento balcao',
+    texto: `
+1. Abra o cadastro do cliente.
+2. Clique na aba **Vendas**. Ela só aparece para o **administrador**.
+3. Aparecem as vendas feitas no SicWeb até 24/11/2026: data, tipo, nota, valor, quanto foi pago e se foi cancelada. No alto está o total vendido e a data da última venda.
+4. Clique em uma venda para ver os **itens** (produto ou serviço, quantidade e valor) e a **forma de pagamento**.
+! Vendas antigas não têm a forma de pagamento registrada: aparecem só com os itens.
+> As vendas de balcão (cliente avulso) ficam no cadastro **Cliente Balcão**, que está arquivado: abra Clientes > Arquivados. Ele mostra só as 300 vendas mais recentes.
+`,
+  },
+  {
     id: 'arquivar-cliente',
     titulo: 'Arquivar ou reativar um cliente',
     secao: 'Clientes',

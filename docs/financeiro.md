@@ -98,3 +98,42 @@ catálogo e vendas com itens, NF-e/NFS-e, estoque. Fora do escopo das etapas A e
 - Criar os logins da Jéssica e do Pedro (Equipe > Usuários, papel Escritório) antes de usar o nível caixa.
 - Ajustes propostos considerados aprovados (forma de pagamento, recebimento à vista, venda de balcão, situação calculada, origens com FK);
   o usuário não se opôs, mas confirmar ao retomar.
+
+## Uso real do SicWeb (medido no backup SICNET de 2026-11-24) e plano de virada
+
+Medido no banco restaurado, últimos 12 meses (25/11/2025 a 24/11/2026). Serve para decidir **o que o Control precisa ter antes da virada**.
+
+| O que o SicWeb faz | Volume | Peso para a virada |
+|---|---|---|
+| Vendas (balcão e serviços) | 1.190 vendas, R$ 793 mil (~100 por mês) | **Alto**: precisa de venda com itens, cliente e forma de pagamento |
+| Forma de pagamento das vendas | PIX 687 (R$ 406 mil), crédito 374 (R$ 311 mil), dinheiro 89 (R$ 62 mil), débito 25, cobrança bancária 7, a prazo 4 | PIX e crédito são quase tudo; **a prazo e boleto quase não existem** |
+| Orçamentos | 616 | **Alto**: usado todo dia; hoje o plano diz que "orçamento continua no SicWeb" |
+| Caixa (livro) | 789 lançamentos | Médio |
+| Cartão integrado (NSU/TID/paymentid) | 365 | Médio: há integração com adquirente/gateway; **descobrir qual** |
+| NFC-e (cupom fiscal de consumidor) | 104 em 2026 (38 em 2025; 546 em 2018) | **Alto e arriscado**: emissão fiscal exige provedor/certificado |
+| NF-e | 2 em 2026 (113 desde o início) | Baixo volume, mas obrigatório quando acontece |
+| Contas a receber | 14 lançadas em 12 meses; R$ 1,03 mi em aberto é lixo sem baixa | **Quase não se usa**; ficou para depois (decisão do usuário, 2026-11-24) |
+| Contas a pagar | 267 no total; abertos são de 2015-16 | **Não se usa** |
+| Compras (entrada de mercadoria) | 20 em 12 meses | Baixo |
+| Produtos | 829 (790 ativos, 259 com estoque) | Catálogo precisa existir; estoque é leve |
+| Cheques, recibos | poucos / último recibo em 02/2026 | Baixo |
+
+**Leitura:** o SicWeb na prática é um **PDV de balcão + orçamentos + caixa + emissão fiscal**. Contas a pagar/receber (o miolo da Etapa A deste plano:
+títulos, parcelas, baixas) quase não são usadas. Por isso a ordem proposta abaixo começa por caixa e venda, não por títulos.
+
+### Ordem proposta (a confirmar com o usuário)
+1. **Base financeira enxuta**: nível de acesso (\`completo\`/\`caixa\`/\`nenhum\`), contas (Caixa BRV, Itaú, Caixa Econômica, Nubank), formas de pagamento,
+   movimentos imutáveis com estorno, auditoria, RLS. Sem títulos e parcelas por enquanto (entram quando houver conta a prazo de verdade).
+2. **Catálogo de produtos e serviços** (importar \`TABEST1\`, 829 itens) e **venda com itens** (balcão e serviço), pagamento PIX/cartão/dinheiro,
+   cliente opcional (o "Cliente Balcão" inativo vira o "Consumidor final"). Daqui em diante a venda nasce no Control; o histórico fica em \`sicweb_vendas\`.
+3. **Caixa**: abertura e fechamento, conferência do dinheiro com técnicos (Etapa B do plano original: "Recebeu do cliente?" no app de campo).
+4. **Orçamentos** com aprovação do cliente (616 por ano): vira venda ou OS.
+5. **Fiscal** (NFC-e e NF-e) por provedor de API: **é o que decide a data da virada**. Enquanto não existir, o SicWeb continua só para emitir nota.
+6. **Virada**: congelar o SicWeb, gerar um **novo backup**, rodar os importadores de novo (são idempotentes: \`importar-clientes.mjs\`,
+   \`importar-vendas.mjs\` com upsert por \`controle\`), trazer o que faltar (produtos e saldo de abertura do caixa), conferir totais contra o SICNET e passar a operar só no Control.
+   O SicWeb fica guardado só para consulta.
+
+### Decisões que dependem do usuário
+- **Fiscal**: qual provedor de emissão (ou manter o SicWeb só para nota por um tempo)? Certificado digital A1 está com quem?
+- **Cartão/PIX**: qual integração o SicWeb usa hoje (a tabela de cartão guarda NSU/TID/paymentid)? As maquininhas (Rede, InfinitePay) são as mesmas?
+- Os 4 pontos da seção "Pendências para retomar" acima (InfinitePay, taxas, quantas maquininhas, logins da Jéssica e do Pedro).

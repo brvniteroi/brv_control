@@ -55,6 +55,11 @@ O usuário fala português; código, comentários e mensagens de commit também 
   vagas de projeto ativo do gratuito. Uso: em Dashboard > organização > Usage (ou na tela Projects, "Free plan usage").
 - Uso em 2026-11-03: banco 154 / 500 MB (31%, já com todo o histórico do Field), egress 0,18 / 5 GB, usuários ativos 11 / 50.000,
   arquivos 0,12 / 1 GB. O banco cresce poucos MB por mês (~200 OS/mês; fotos ficam na HostGator): espaço não é problema por anos.
+- **Medido em 2026-11-24, depois da importação do SicWeb:** as 10 maiores tabelas somam ~167 MB (`attachments` 64 MB, `customers` 19, `tasks` 18,
+  `sicweb_venda_itens` 17, `service_orders` 16, `sicweb_vendas` 14, `customer_sicweb_codes` 6,6, `customer_addresses` 6,1, `customer_contacts` 3,5,
+  `sicweb_venda_pagamentos` 3); o histórico do SicWeb ocupa ~41 MB. Banco inteiro estimado em ~200 MB de 500 MB. Vendas e financeiro novos devem crescer
+  ~5 a 10 MB por ano (~1.100 vendas/ano + itens, orçamentos, caixa e recebimentos). **Regra:** XML/PDF das notas fiscais **não** vão para o banco (ficam na HostGator
+  ou no provedor; o banco guarda número, situação e link), como as fotos.
 - Projeto gratuito é pausado após 1 semana sem uso (não ocorre com uso diário).
 - **Backup é o único motivo para contratar o Pro**: o gratuito não tem backup automático confiável. Pro ≈ US$ 25/mês por organização
   com crédito para 1 projeto; com 2 projetos ≈ US$ 35/mês (conferir na tela de upgrade). Traz backup diário (7 dias), 8 GB de banco,

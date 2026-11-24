@@ -137,3 +137,37 @@ títulos, parcelas, baixas) quase não são usadas. Por isso a ordem proposta ab
 - **Fiscal**: qual provedor de emissão (ou manter o SicWeb só para nota por um tempo)? Certificado digital A1 está com quem?
 - **Cartão/PIX**: qual integração o SicWeb usa hoje (a tabela de cartão guarda NSU/TID/paymentid)? As maquininhas (Rede, InfinitePay) são as mesmas?
 - Os 4 pontos da seção "Pendências para retomar" acima (InfinitePay, taxas, quantas maquininhas, logins da Jéssica e do Pedro).
+
+## Notas fiscais (definido em 2026-11-24, conversa com o usuário)
+
+**Como a BRV emite hoje**
+- **NFC-e** (produto, balcão): módulo de emissão do próprio SicWeb, num PC da loja, a partir da venda registrada no SICNET ("última venda" ou "nº de pedido");
+  usuário Jéssica. Configurações vistas: certificado digital com **validade até 01/09/2027** (senha só é pedida para A3, o campo está vazio: provavelmente A1 instalado
+  no Windows; **confirmar e achar o `.pfx` com senha**), CSC com ID `000003` (o token do CSC **não** é guardado no repositório; vai só no cadastro do provedor),
+  CFOP padrão 5.102 (tabela CSOSN→CFOP vazia), "Pedir CPF/CNPJ antes da emissão" ligado, "novos tributos da reforma tributária" desligado. O botão "Arquivos XML" guarda os XMLs.
+- **NFS-e** (serviço): pelo **Emissor Nacional** (`nfse.gov.br/EmissorNacional`, Portal Contribuinte), digitada à mão; há rascunhos antigos parados no portal (03/09, 08/09, 27/10).
+- **NF-e**: 2 em 2026 (113 desde o início).
+- **Uma venda costuma gerar duas notas**: o orçamento mistura produtos (tubo de cobre, esponjoso, disjuntor...) e mão de obra ("M.O Instal Ar Cond split 12.000 btus"),
+  que no SicWeb está cadastrada como produto comum.
+
+**Desenho para o Control**
+1. Cada item do catálogo é **Produto** ou **Serviço** (marca no cadastro). Dados fiscais: produto = NCM, CFOP, CSOSN (Simples Nacional, 102);
+   serviço = código de serviço e alíquota de ISS. Na importação de `TABEST1`, listar os itens que parecem serviço ("M.O", "mão de obra", "instalação") para o usuário marcar.
+2. Ao faturar, o Control **separa os itens sozinho**: produtos → **NFC-e** (consumidor final no balcão) ou **NF-e** (CNPJ, entrega ou pedido do cliente; regra padrão
+   proposta, com escolha manual na venda); serviços → **NFS-e nacional**.
+3. A venda guarda as **duas notas** (tabela própria: tipo, número, chave de acesso, status, XML, PDF), ligadas ao mesmo orçamento/venda; cancelar uma não mexe na outra.
+4. Emissão por **provedor de API único** (NFC-e + NF-e + NFS-e nacional), chamado por Edge Function (chave do provedor só no servidor, como `consultar-os`).
+   Motivos: volume baixo (~10 notas/mês), mudanças de regra (reforma tributária), nada de assinar XML nem contingência. Alternativa só para NFS-e: API direta do
+   Emissor Nacional (gratuita, mas exige certificado A1 com mTLS e montar o XML); descartada porque NFC-e e NF-e ficariam sem solução.
+5. **Etapa intermediária opcional**, antes do provedor: botão "Preparar NFS-e" na OS/venda, mostrando tomador, descrição e valor prontos para copiar no portal nacional,
+   e registrando o número da nota emitida.
+6. Guardar os XMLs antigos (5 anos pela lei): "Arquivos XML" do módulo de NFC-e entram no backup, mesmo depois da virada.
+
+**O que falta (usuário e contador)**
+- Achar o **certificado A1 (`.pfx`) e a senha**; renovar como A1 antes de 01/09/2027 se for A3 ou não exportável. Os provedores só aceitam A1.
+- Quantas NFC-e, NF-e e NFS-e por mês (somando as do portal nacional).
+- Contador: **código de serviço e alíquota de ISS** da instalação/manutenção de ar-condicionado em Niterói, e como tratar o **material cobrado junto com a mão de obra**
+  (hoje vai em nota de produto, a mão de obra em NFS-e); regra de NFC-e x NF-e.
+- Pesquisar provedores (preço, NFC-e do RJ, NFS-e nacional, aceitam o certificado existente) e escolher.
+- Entender por que há rascunhos parados no portal da NFS-e (dado faltando? dúvida de enquadramento?) para o botão "Preparar NFS-e" resolver.
+- Lançamento fiscal continua sendo o que decide a data da virada (ordem proposta, item 5).

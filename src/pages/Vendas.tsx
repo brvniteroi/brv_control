@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Lock,
   Plus,
@@ -184,6 +184,15 @@ export default function Vendas() {
 
         <div className="flex flex-wrap items-center gap-2">
           <NavegacaoVendas />
+
+          {profile?.role === 'admin' && (
+            <Link
+              to="/vendas/vendedores"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Vendedores
+            </Link>
+          )}
 
           <button
             type="button"

@@ -17,6 +17,8 @@ export interface Profile {
    * Vem da migration 20261125100000; ausente antes dela.
    */
   financial_access?: 'nenhum' | 'caixa' | 'completo';
+  /** É vendedor (escritório só entra em Vendas, Orçamentos e Catálogo se for). Migration 20261125120000. */
+  sales_access?: boolean;
   created_at: string;
   updated_at: string;
 }

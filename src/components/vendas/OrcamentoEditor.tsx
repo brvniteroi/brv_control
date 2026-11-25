@@ -43,6 +43,9 @@ import SeletorCliente from '../ordens/SeletorCliente';
 import { CORES_SITUACAO_ORCAMENTO, ROTULO_CANAL_ORCAMENTO } from './cores';
 import { OrcamentoDocumentoModal } from './FolhaOrcamentoVenda';
 import TabelaItensVenda, { type LinhaItemVenda } from './TabelaItensVenda';
+import ModelosItens from './ModelosItens';
+import { aplicarModeloNasLinhas, confirmarItensSemQuantidade, focarQuantidade } from './linhasModelo';
+import type { ItemDoModelo } from '../../services/modelosOrcamento';
 import { useNivelFinanceiro } from '../financeiro/fonteDeDados';
 import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import {
@@ -327,6 +330,12 @@ export default function OrcamentoEditor({
     });
   };
 
+  const aplicarModelo = (doModelo: ItemDoModelo[]) => {
+    const { novasLinhas, primeiraEmBranco } = aplicarModeloNasLinhas(linhas, doModelo, 'lin-mod');
+    setLinhas(novasLinhas);
+    focarQuantidade('orc', primeiraEmBranco);
+  };
+
   const adicionarItemAvulso = (av: ItemAvulsoResultado) => {
     setLinhas((atuais) => [
       ...atuais,
@@ -438,7 +447,10 @@ export default function OrcamentoEditor({
       setErro('Adicione ao menos um produto ou serviço ao orçamento.');
       return null;
     }
-    if (itensCalculados.some((i) => i.quantity <= 0)) {
+    // Linha com a quantidade em branco (veio de um modelo e não foi usada) fica de fora
+    const comQuantidade = confirmarItensSemQuantidade(itensCalculados);
+    if (!comQuantidade) return null;
+    if (comQuantidade.some((i) => i.quantity <= 0)) {
       setErro('Todas as linhas devem ter quantidade maior que zero.');
       return null;
     }
@@ -463,7 +475,7 @@ export default function OrcamentoEditor({
           payment_terms_note: condicaoPagamento.trim() || null,
           notes: observacoes.trim() || null,
           internal_notes: observacaoInterna.trim() || null,
-          items: itensCalculados.map((i) => ({
+          items: comQuantidade.map((i) => ({
             id: i.uid.startsWith('lin-') || i.uid.startsWith('avulso-') ? undefined : i.uid,
             catalog_item_id: i.catalog_item_id,
             is_custom: i.is_custom,
@@ -987,6 +999,8 @@ export default function OrcamentoEditor({
             {/* Seção 2: Itens */}
             <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
               <h2 className="text-base font-bold text-slate-800">Itens</h2>
+
+              {!somenteLeitura && <ModelosItens linhas={linhas} onAplicar={aplicarModelo} />}
 
               <TabelaItensVenda
                 idPrefixo="orc"

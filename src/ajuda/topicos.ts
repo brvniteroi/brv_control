@@ -42,7 +42,8 @@ export type TelaAjuda =
   | 'orcamento'
   | 'vendas'
   | 'venda'
-  | 'financeiro-cadastros';
+  | 'financeiro-cadastros'
+  | 'vendedores';
 
 export interface Topico {
   id: string;
@@ -109,6 +110,7 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   vendas: 'Vendas',
   venda: 'Venda',
   'financeiro-cadastros': 'Cadastros do financeiro',
+  vendedores: 'Vendedores',
 };
 
 export const TOPICOS: Topico[] = [
@@ -1460,6 +1462,41 @@ Ficam nos cadastros do Financeiro, só para o acesso completo. Nada se exclui: d
 ! As maquininhas começam com **taxa zero**. Cadastre as taxas reais antes de registrar vendas no cartão: a venda já lançada não é recalculada.
 `,
     veja: ['venda-nova'],
+  },
+  {
+    id: 'vendedores',
+    titulo: 'Vendedores: quem acessa as vendas',
+    secao: 'Vendas',
+    telas: ['vendedores', 'vendas', 'orcamentos', 'catalogo'],
+    palavras: 'vendedor vendedores acesso restrito permissao nivel caixa completo liberar bloquear quem vende orcamento catalogo nome',
+    texto: `
+Só **vendedores** e administradores entram em **Orçamentos**, **Vendas** e **Catálogo**. Quem cadastra é o administrador, em **Vendas > Vendedores** (também há o botão **Vendedores** na tela de Vendas).
+1. Na linha do login, marque **Vendedor(a)**. Antes de marcar, confira o **Nome no orçamento**: é ele que sai no documento.
+2. Escolha o **Nível**: **caixa** (orçamentos, vendas e pagamentos) ou **completo** (também vê custo, cancela venda, dá desconto acima de 10% e mexe nos cadastros do financeiro).
+- Desmarcar tira o acesso na hora. Orçamentos e vendas já feitos continuam com o nome de quem vendeu.
+- O campo **Vendedor(a)** lista só quem está marcado. O administrador sempre entra; marque-o se o nome dele deve aparecer na lista.
+- O login precisa existir antes: crie em **Cadastros > Equipe > Usuários**, com o papel escritório.
+! Depois de liberar, a pessoa precisa recarregar a página (F5) para o acesso aparecer.
+`,
+    veja: ['orcamento-modelos', 'venda-nova'],
+  },
+  {
+    id: 'orcamento-modelos',
+    titulo: 'Modelos de orçamento e de venda',
+    secao: 'Vendas',
+    telas: ['orcamento', 'venda', 'orcamentos', 'vendas'],
+    palavras: 'modelo modelos botao pronto instalacao split 9000 12000 18000 kit preencher automatico itens salvar como modelo excluir quantidade em branco',
+    texto: `
+Os botões em **Modelos**, acima dos itens, incluem de uma vez a lista pronta de um serviço, com o **preço atual do catálogo**.
+1. Clique no modelo (ex.: **Instalação split 9.000**). As quantidades ficam **em branco** (campo amarelo); a mão de obra já vem preenchida.
+2. Digite a quantidade e tecle **Enter**: o cursor pula para a próxima em branco.
+3. Ao salvar o orçamento ou concluir a venda, os itens que continuaram em branco **ficam de fora** (o sistema mostra quais e pede confirmação).
+- Item que já estava na tela não é repetido.
+- **Criar um modelo**: monte os itens e clique em **Salvar como modelo**. Produtos são guardados sem quantidade; serviços guardam a quantidade da tela. Usar o nome de um modelo existente substitui os itens dele.
+- **Excluir modelo**: clique no botão e depois no modelo. Orçamentos já feitos não mudam.
+- Item avulso não entra no modelo, e item inativado no catálogo fica de fora com um aviso.
+`,
+    veja: ['venda-nova', 'vendedores'],
   },
   // ───────────── PMOC ─────────────
   {

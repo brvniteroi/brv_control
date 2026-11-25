@@ -473,15 +473,19 @@ export async function gerarOsDoOrcamento(
 }
 
 /** Funcionários ativos; quem está logado vem primeiro (é o vendedor sugerido no orçamento novo). */
+/** Só os vendedores cadastrados; quem está logado vem primeiro (migration 20261125120000). */
 export async function listarVendedores(): Promise<SellerOption[]> {
-  const [lista, eu] = await Promise.all([
-    supabase.from('employees').select('id, name, role').eq('active', true).order('name'),
-    supabase.rpc('meu_funcionario_id'),
-  ]);
-  falhou(lista.error);
-  const vendedores = (lista.data ?? []) as SellerOption[];
-  const meuId = typeof eu.data === 'string' ? eu.data : null;
-  return meuId ? [...vendedores.filter((v) => v.id === meuId), ...vendedores.filter((v) => v.id !== meuId)] : vendedores;
+  const { data, error } = await supabase.rpc('vendas_vendedores');
+  falhou(error);
+  return (data ?? []) as SellerOption[];
+}
+
+/** Itens do catálogo pelos ids (modelos de orçamento). */
+export async function buscarItensPorIds(ids: string[]): Promise<CatalogItem[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from('catalog_items').select('*').in('id', ids);
+  falhou(error);
+  return comCustos((data ?? []) as LinhaCatalogo[]);
 }
 
 // ============================================================================

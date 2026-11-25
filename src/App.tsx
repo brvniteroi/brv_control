@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import RotaRestrita from './components/RotaRestrita';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -35,6 +36,7 @@ import AcompanhamentoOficina from './pages/AcompanhamentoOficina';
 import OrcamentoPlacaPublico from './pages/OrcamentoPlacaPublico';
 import OrcamentoPublico from './pages/OrcamentoPublico';
 import Catalogo from './pages/Catalogo';
+import Vendedores from './pages/Vendedores';
 import Orcamentos from './pages/Orcamentos';
 import Vendas from './pages/Vendas';
 import FinanceiroVisaoGeral from './pages/FinanceiroVisaoGeral';
@@ -98,10 +100,15 @@ export default function App() {
             <Route path="pmoc/modelo" element={<PmocModelo />} />
             <Route path="pmoc/novo" element={<PmocEditorPage />} />
             <Route path="pmoc/:id" element={<PmocEditorPage />} />
-            <Route path="orcamentos" element={<Orcamentos />} />
-            <Route path="orcamentos/textos" element={<Orcamentos />} />
-            <Route path="vendas" element={<Vendas />} />
-            <Route path="catalogo" element={<Catalogo />} />
+            <Route element={<RotaRestrita exige="vendas" />}>
+              <Route path="orcamentos" element={<Orcamentos />} />
+              <Route path="orcamentos/textos" element={<Orcamentos />} />
+              <Route path="vendas" element={<Vendas />} />
+              <Route path="catalogo" element={<Catalogo />} />
+            </Route>
+            <Route element={<RotaRestrita exige="admin" />}>
+              <Route path="vendas/vendedores" element={<Vendedores />} />
+            </Route>
             <Route path="financeiro" element={<FinanceiroVisaoGeral />} />
             <Route path="financeiro/caixa" element={<FinanceiroCaixa />} />
             <Route path="financeiro/recebimentos" element={<FinanceiroRecebimentos />} />

@@ -38,6 +38,9 @@ import {
 } from './fonteDeDados';
 import NotasFiscaisVenda, { ReciboVendaModal } from './NotasFiscaisVenda';
 import TabelaItensVenda, { type LinhaItemVenda } from './TabelaItensVenda';
+import ModelosItens from './ModelosItens';
+import { aplicarModeloNasLinhas, confirmarItensSemQuantidade, focarQuantidade } from './linhasModelo';
+import type { ItemDoModelo } from '../../services/modelosOrcamento';
 import {
   ModalItemAvulso,
   type ItemAvulsoResultado,
@@ -247,6 +250,12 @@ export default function NovaVendaModal({
     });
   };
 
+  const aplicarModelo = (doModelo: ItemDoModelo[]) => {
+    const { novasLinhas, primeiraEmBranco } = aplicarModeloNasLinhas(carrinho, doModelo, 'cart-mod');
+    setCarrinho(novasLinhas);
+    focarQuantidade('pdv', primeiraEmBranco);
+  };
+
   const adicionarAvulsoAoCarrinho = (av: ItemAvulsoResultado) => {
     setCarrinho((atual) => [
       ...atual,
@@ -415,6 +424,13 @@ export default function NovaVendaModal({
       return;
     }
 
+    const comQuantidade = confirmarItensSemQuantidade(itensCalculados);
+    if (!comQuantidade) return;
+    if (comQuantidade.some((i) => i.quantity <= 0)) {
+      setErro('Todas as linhas devem ter quantidade maior que zero.');
+      return;
+    }
+
     setSalvando(true);
     try {
       const criada = await concluirVenda(
@@ -431,7 +447,7 @@ export default function NovaVendaModal({
           seller_id: vendedorId || null,
           general_discount_cents: converterTextoParaCentavos(descontoGeralTexto) ?? 0,
           freight_cents: freteCentavos,
-          items: itensCalculados.map((i) => ({
+          items: comQuantidade.map((i) => ({
             catalog_item_id: i.catalog_item_id,
             is_custom: i.is_custom,
             kind: i.kind,
@@ -622,6 +638,8 @@ export default function NovaVendaModal({
                     </button>
                   )}
                 </div>
+
+                <ModelosItens linhas={carrinho} onAplicar={aplicarModelo} />
 
                 <TabelaItensVenda
                   idPrefixo="pdv"

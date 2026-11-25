@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { podeVerFinanceiroPlacas } from '../utils/acessoPlacas';
+import { podeVender } from '../utils/acessoVendas';
 import { useNivelFinanceiro } from './financeiro/fonteDeDados';
 
 interface ItemMenu {
@@ -52,6 +53,9 @@ interface ItemMenu {
   financeiroPlacas?: boolean;
   /** Visível apenas para quem tem nível financeiro `completo` (Adriana/Braulio) */
   financeiroCompleto?: boolean;
+  /** Visível só para vendedores e admin */
+  vendas?: boolean;
+  apenasAdmin?: boolean;
 }
 
 interface GrupoMenu {
@@ -107,9 +111,10 @@ const MENU: EntradaMenu[] = [
     rotulo: 'Vendas',
     icone: ShoppingBag,
     itens: [
-      { rota: '/orcamentos', rotulo: 'Orçamentos', icone: FileText, apenasEscritorio: true },
-      { rota: '/vendas', rotulo: 'Vendas', icone: ShoppingBag, apenasEscritorio: true },
-      { rota: '/catalogo', rotulo: 'Catálogo', icone: Package, apenasEscritorio: true },
+      { rota: '/orcamentos', rotulo: 'Orçamentos', icone: FileText, vendas: true },
+      { rota: '/vendas', rotulo: 'Vendas', icone: ShoppingBag, vendas: true },
+      { rota: '/catalogo', rotulo: 'Catálogo', icone: Package, vendas: true },
+      { rota: '/vendas/vendedores', rotulo: 'Vendedores', icone: UserCog, apenasAdmin: true },
     ],
   },
   // Logo abaixo de Vendas: o caminho do dinheiro fica junto (decisão do Braulio, 2026-11-24)
@@ -184,6 +189,8 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
   const temFinanceiroPlacas = podeVerFinanceiroPlacas(profile);
   const { nivel: nivelFin } = useNivelFinanceiro(profile);
   const visivel = (item: ItemMenu) => {
+    if (item.vendas) return podeVender(profile);
+    if (item.apenasAdmin) return profile?.role === 'admin';
     if (item.financeiroPlacas) return temFinanceiroPlacas;
     if (item.financeiroCompleto) return nivelFin === 'completo';
     if (item.rota.startsWith('/financeiro')) return nivelFin !== 'nenhum';
@@ -257,7 +264,7 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
                       <NavLink
                         key={rota}
                         to={rota}
-                        end={rota === '/placas' || rota === '/financeiro'}
+                        end={rota === '/placas' || rota === '/financeiro' || rota === '/vendas'}
                         onClick={onFechar}
                         className={classeLink}
                       >

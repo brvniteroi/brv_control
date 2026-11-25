@@ -12,6 +12,7 @@ import { buscarItensParaBusca } from './fonteDeDados';
  * quantidade (vazio = 1), Enter, digita código, código de barras ou nome, escolhe com ↓/↑ e Enter; o cursor volta para a
  * quantidade. O leitor de código de barras pode ler direto no campo da quantidade (6 dígitos ou mais seguidos de Enter são
  * código, não quantidade). Enter numa linha volta para a inclusão; ↓/↑ nos campos da linha andam para o item de baixo/cima.
+ * Itens vindos de um modelo entram com a quantidade em branco (campo destacado): Enter na quantidade vai para a próxima em branco.
  */
 
 /** Linha em edição (textos como o usuário digitou). */
@@ -193,11 +194,14 @@ export default function TabelaItensVenda({
 
   const ordem = GRUPOS.flatMap((g) => itens.filter((i) => i.kind === g.kind));
 
-  /** Enter volta para a inclusão; ↓/↑ vão para o mesmo campo da linha de baixo/cima. */
+  /** Enter volta para a inclusão (na quantidade, antes passa pelas que estão em branco); ↓/↑ andam entre as linhas. */
   const teclarNaCelula = (e: KeyboardEvent<HTMLInputElement>, uid: string, coluna: Coluna) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      focarInclusao();
+      const emBranco =
+        coluna === 'qtd' ? ordem.slice(ordem.findIndex((l) => l.uid === uid) + 1).find((l) => !l.quantityTexto.trim()) : null;
+      if (emBranco) document.getElementById(`${idPrefixo}-qtd-${emBranco.uid}`)?.focus();
+      else focarInclusao();
       return;
     }
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -244,7 +248,9 @@ export default function TabelaItensVenda({
         onFocus={(e) => e.target.select()}
         placeholder={placeholder}
         aria-label={`${coluna === 'qtd' ? 'Quantidade' : coluna === 'unit' ? 'Valor unitário' : 'Desconto'} de ${item.name}`}
-        className={`${CAMPO_CELULA} ${coluna === 'desc' ? 'pl-6' : ''}`}
+        className={`${CAMPO_CELULA} ${coluna === 'desc' ? 'pl-6' : ''} ${
+          coluna === 'qtd' && !valor.trim() ? '!border-amber-400 !bg-amber-50' : ''
+        }`}
       />
     );
 

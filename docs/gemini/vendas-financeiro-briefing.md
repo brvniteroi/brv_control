@@ -156,6 +156,31 @@ Nomes em inglês no padrão do banco, comentário em português em `src/types/ve
 `model` `nfce|nfe|nfse`, status, número, chave, urls). **Não use os nomes `sicweb_*`**: aquelas tabelas são o histórico importado, só admin lê, e continuam como estão.
 
 ## 6. Rodada 2: Financeiro (`/financeiro...`)
+
+### 6.0 Leia primeiro: o que mudou depois da rodada 1 (2026-11-24) e vale para toda a rodada 2
+A rodada 1 voltou com "cara de IA" e foi corrigida; depois o Braulio pediu mais ajustes. **Releia o `GEMINI.md`, seção "Padrão visual (obrigatório)",
+regras 1 a 8**, e `docs/gemini/vendas-financeiro-r1-auditoria.md`. Na prática, para o Financeiro:
+1. **Modelos a copiar** (abra lado a lado antes de começar): lista = `pages/Vendas.tsx` como está **agora** (cabeçalho, barra de filtros, tabela, total no
+   rodapé); painel/formulário por cima = `components/ordens/OrdemDetalhes.tsx`; modal pequeno = `components/linhaDoTempo/NovaAtividadeModal.tsx`.
+2. **Visão geral (6.1) é a única tela com cartões de número**, e no molde do Dashboard do sistema: `components/dashboard/CardsResumo.tsx` (cartões
+   pequenos, sem gradiente nem ícone grande). Gráfico no molde de `pages/RelatorioGraficos.tsx`. Nas demais telas, **nenhuma** fileira de cartões de resumo:
+   total ou saldo numa linha no rodapé da tabela, como em Vendas ("N vendas · Total · Recebido · A receber").
+3. **Período:** todo filtro de data usa `components/comum/FiltroPeriodo.tsx` (caixa "Período" com intervalos prontos + "De"/"até"). **Não** crie atalho de
+   data em botões ("Hoje", "Este mês") ao lado dele: em Vendas o botão "Hoje" anulava o período escolhido e foi retirado. Os atalhos de cima
+   (controle segmentado) são só de situação (ex.: Todas / A conferir / Divergentes).
+4. **Listas com valores linha a linha** (pagamentos da venda, taxas da maquininha por número de parcelas, lançamentos do caixa, recebimentos a conferir):
+   tabela compacta, um registro por linha, campos editáveis dentro da célula, sem cartão por registro nem rótulo repetido (regra 8). Modelo:
+   `components/vendas/TabelaItensVenda.tsx`.
+5. **Escolher em lista com busca** (fornecedor, conta, categoria): `src/hooks/useNavegacaoLista.ts` (setas ↓/↑, Enter, Esc; regra 7). Cliente: o próprio
+   `SeletorCliente`. Poucos valores fixos: `<select>` nativo.
+6. **Saldo em aberto aparece junto do que já entrou**: em Vendas, a venda parcial mostra a forma do que foi pago e, embaixo, "Falta R$ X". Faça igual nos
+   recebimentos e no "vendas a receber" da Visão geral (nunca uma linha que pareça quitada sem estar).
+7. **"Ver como: completo / caixa / nenhum"**: reaproveite `components/vendas/NavegacaoVendas.tsx` (o `<select>` pequeno no cabeçalho, só com
+   `FONTE_DADOS_DEMO`); não crie faixa nem barra de abas de demonstração.
+8. **Datas:** dia sempre local (`AAAA-MM-DD` montado com `getFullYear/getMonth/getDate`, como em `FiltroPeriodo`); **nunca** `toISOString().slice(0, 10)`
+   para saber o dia (depois das 21h vira o dia seguinte). Vale para "recebido hoje", fechamento do caixa e o "dia útil seguinte" da maquininha.
+9. **Contrato mudou na rodada 1:** `SaleListFilter.chip` não tem mais `'hoje'` (só `todas | a_receber | canceladas`). Não volte a acrescentar.
+
 Siga o modelo de dados do plano: `docs/financeiro.md` ("Modelo e regras" e "Contas e maquininhas"). Dinheiro em centavos/`utils/dinheiro.ts`. **Movimentos não se editam nem se apagam: só estorno** (a tela não tem editar/excluir movimento).
 
 ### 6.1 `/financeiro` — Visão geral
@@ -186,7 +211,8 @@ Chama `registrarRecebimento(dados)`. **Não coloque este modal na OS**: a OS, o 
 ## 7. Papéis e níveis de acesso (esconder, não só bloquear)
 O **nível financeiro** é um campo do perfil (`completo`, `caixa`, `nenhum`; plano em `docs/financeiro.md`). Ele **ainda não existe no banco** e ainda não está em `src/types/fsm.ts`: crie **uma função só**,
 `nivelFinanceiro(profile)`, em `components/financeiro/fonteDeDados.ts`, com `TODO(Claude)` explicando que o Claude troca por `utils/acessoFinanceiro.ts` lendo o campo real; na demo: `admin` = `completo`, `escritorio` = `caixa`,
-os demais `nenhum`, e **um seletor "Ver como: completo / caixa / nenhum" na faixa de demonstração** para você testar os três (só enquanto `FONTE_DADOS_DEMO`).
+os demais `nenhum`, e **um seletor "Ver como: completo / caixa / nenhum"** para você testar os três (só enquanto `FONTE_DADOS_DEMO`; já existe:
+`components/vendas/NavegacaoVendas.tsx`, ver 6.0 item 7).
 
 | Quem | Catálogo / Orçamentos / Vendas | Financeiro |
 |---|---|---|

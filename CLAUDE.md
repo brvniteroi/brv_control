@@ -466,7 +466,7 @@ Telas da Nova venda no mesmo dia: itens em largura total (Cliente e Pagamento ab
 movimento da conta de dinheiro (`financial_movements.cash_session_id`; data anterior à abertura fica de fora). Funções `caixa_situacao/abrir/lancar/fechar/fechamentos`
 (nível caixa ou completo). Diferença na abertura ou no fechamento exige motivo e grava **movimento de ajuste** (origem `caixa`, sem categoria; a primeira abertura é o
 saldo inicial). **Na visão geral e no extrato, origem `caixa` não é receita nem despesa.** Retirada para depósito não credita o banco (transferência fica na tela de
-Movimentos). Tela `/financeiro/caixa` ligada (`USAR_BANCO_CAIXA`). Ajuda F1: `financeiro-caixa`.
+Movimentos). Tela `/financeiro/caixa` ligada (`USAR_BANCO_CAIXA`). Ajuda F1: `financeiro-caixa`. **Testada pelo usuário no site em 2026-11-25: funcionou.** Há uma venda de teste cancelada (VND-30001).
 **Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
 **Falta da parte 3:** recebimentos dos técnicos, movimentos (extrato) e visão geral (ainda demonstração), ajuda F1 deles e ligar os menus.
 

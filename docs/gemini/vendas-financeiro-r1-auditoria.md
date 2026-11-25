@@ -48,5 +48,9 @@ ou nome; lista em colunas Código/Descrição/Estoque/Custo só no nível comple
 venda volta para a inclusão (leitor de código de barras); Enter numa célula volta para a inclusão, ↓/↑ andam entre as linhas; Enter com a lista ainda
 desatualizada busca na hora e inclui se o código bater. Observações continuam embaixo (decisão do Braulio). **Rodada 2: telas com itens usam essa tabela.**
 
+**Filtro de período (Claude, 2026-11-24):** `components/comum/FiltroPeriodo.tsx` em Vendas e Orçamentos: caixa "Período" (Qualquer data, Hoje, Últimos 7 dias,
+Este mês, Mês passado, Este ano) + datas "De"/"até" com rótulo. **Na ligação ao banco:** o demo compara `created_at.slice(0, 10)` (dia em UTC: venda depois das
+21h cai no dia seguinte); a consulta real tem que filtrar pelo dia local (`>= 'AAAA-MM-DDT00:00' local` e `< dia seguinte`), como manda a regra das datas do CLAUDE.md.
+
 **Para a ligação ao banco:** `OrcamentoEditor.tsx` importa `CLIENTES_DEMO_VENDAS` direto do `dadosDemo.ts` (dado de demonstração dentro do componente,
 contra a regra do briefing): trocar pelo cliente real ao ligar o banco.

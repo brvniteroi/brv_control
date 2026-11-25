@@ -16,6 +16,7 @@ import {
 } from '../components/vendas/cores';
 import { listarVendas } from '../components/vendas/fonteDeDados';
 import NavegacaoVendas from '../components/vendas/NavegacaoVendas';
+import FiltroPeriodo from '../components/comum/FiltroPeriodo';
 import NovaVendaModal from '../components/vendas/NovaVendaModal';
 import {
   ITENS_VENDAS_POR_PAGINA,
@@ -169,6 +170,7 @@ export default function Vendas() {
 
   const totalPaginas = Math.max(1, Math.ceil(total / ITENS_VENDAS_POR_PAGINA));
 
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho da página */}
@@ -301,28 +303,17 @@ export default function Vendas() {
           <option value="com_erro_nota">Erro na nota</option>
         </select>
 
-        <div className="flex items-center gap-1.5">
-          <input
-            type="date"
-            value={dataInicio}
-            aria-label="Data inicial"
-            onChange={(e) => {
-              setDataInicio(e.target.value);
-              setPagina(0);
-            }}
-            className={SELECT}
-          />
-          <input
-            type="date"
-            value={dataFim}
-            aria-label="Data final"
-            onChange={(e) => {
-              setDataFim(e.target.value);
-              setPagina(0);
-            }}
-            className={SELECT}
-          />
-        </div>
+        <FiltroPeriodo
+          idPrefixo="vendas"
+          dataInicio={dataInicio}
+          dataFim={dataFim}
+          onMudar={(ini, fim) => {
+            setDataInicio(ini);
+            setDataFim(fim);
+            setPagina(0);
+          }}
+          classe={SELECT}
+        />
       </search>
 
       {/* Estados da listagem */}

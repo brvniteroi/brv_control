@@ -12,6 +12,7 @@ import {
   listarVendedores,
 } from '../components/vendas/fonteDeDados';
 import NavegacaoVendas from '../components/vendas/NavegacaoVendas';
+import FiltroPeriodo from '../components/comum/FiltroPeriodo';
 import OrcamentoEditor from '../components/vendas/OrcamentoEditor';
 import { ModalTextosPadraoOrcamento } from '../components/vendas/OrcamentoModais';
 import {
@@ -251,28 +252,17 @@ export default function Orcamentos() {
           <option value="com_produto">Com produto</option>
         </select>
 
-        <div className="flex items-center gap-1.5">
-          <input
-            type="date"
-            value={dataInicio}
-            aria-label="Data inicial"
-            onChange={(e) => {
-              setDataInicio(e.target.value);
-              setPagina(0);
-            }}
-            className={SELECT}
-          />
-          <input
-            type="date"
-            value={dataFim}
-            aria-label="Data final"
-            onChange={(e) => {
-              setDataFim(e.target.value);
-              setPagina(0);
-            }}
-            className={SELECT}
-          />
-        </div>
+        <FiltroPeriodo
+          idPrefixo="orcamentos"
+          dataInicio={dataInicio}
+          dataFim={dataFim}
+          onMudar={(ini, fim) => {
+            setDataInicio(ini);
+            setDataFim(fim);
+            setPagina(0);
+          }}
+          classe={SELECT}
+        />
       </search>
 
       {/* Estados da listagem */}

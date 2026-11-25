@@ -58,7 +58,8 @@ por URL para testar e que o Claude liga quando o banco estiver pronto). Ordem do
 | Financeiro | Cadastros | `/financeiro/cadastros` | só `completo` |
 | (público) | Orçamento para o cliente | `/orcamento/:token` | sem login, fora do `Layout` |
 
-Navegação de abas comum no topo de cada grupo (`NavegacaoVendas`, `NavegacaoFinanceiro`, como `NavegacaoPlacas`). Cada rota nova entra em `telaDaRota` (`src/ajuda`) **só com um `TODO(Claude)`**:
+**Navegação só pelo menu lateral, sem barra de abas no topo** (corrigido em 2026-11-24; `GEMINI.md` regra 6 e seção 6.0: o `NavegacaoVendas` virou só o
+seletor "Ver como"; não crie `NavegacaoFinanceiro` com abas). Cada rota nova entra em `telaDaRota` (`src/ajuda`) **só com um `TODO(Claude)`**:
 a ajuda é do Claude (seção 10). Rotas protegidas: copie como `/placas` é tratada no `ProtectedRoute` (o Claude ajusta o arquivo; avise no resumo quais prefixos precisa liberar).
 
 ## 3. Rodada 1A: Orçamentos (`/orcamentos`)

@@ -1,23 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Loader2,
-  Plus,
-  Printer,
-  RotateCcw,
-  Search,
-  ShoppingBag,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { CheckCircle2, Loader2, Plus, Printer, RotateCcw, ShoppingBag, X } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
 import type { FinancialPaymentMethod } from '../../types/financeiro';
 import type { Customer, PersonType } from '../../types/fsm';
 import type {
   CatalogItem,
-  CatalogItemKind,
   Sale,
   SellerOption,
 } from '../../types/vendas';
@@ -38,19 +26,17 @@ import {
 } from '../financeiro/fonteDeDados';
 import SeletorCliente from '../ordens/SeletorCliente';
 import {
-  CORES_TIPO_ITEM,
   ROTULO_FORMA_PAGAMENTO,
   ROTULO_FORMA_PAGAMENTO_CURTO,
 } from './cores';
 import {
-  buscarItensParaBusca,
   buscarOrcamento,
   concluirVenda,
   listarItensFrequentes,
   listarVendedores,
 } from './fonteDeDados';
 import NotasFiscaisVenda, { ReciboVendaModal } from './NotasFiscaisVenda';
-import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
+import TabelaItensVenda, { type LinhaItemVenda } from './TabelaItensVenda';
 import {
   ModalItemAvulso,
   type ItemAvulsoResultado,
@@ -64,21 +50,7 @@ import {
 const INPUT =
   'mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
-interface LinhaCarrinho {
-  uid: string;
-  catalog_item_id: string | null;
-  is_custom: boolean;
-  kind: CatalogItemKind;
-  code: string;
-  name: string;
-  unit: string;
-  quantityTexto: string;
-  unitPriceTexto: string;
-  discountMode: ModoDescontoLinha;
-  discountTexto: string;
-  controlsStock?: boolean;
-  stockQuantity?: number;
-}
+type LinhaCarrinho = LinhaItemVenda;
 
 interface LinhaPagamentoPdv {
   uid: string;
@@ -121,17 +93,13 @@ export default function NovaVendaModal({
   const atorNome = profile?.full_name || 'Equipe BRV';
   const { nivel } = useNivelFinanceiro(profile);
   const ehCompleto = nivel === 'completo';
-  const inputBuscaRef = useRef<HTMLInputElement>(null);
+
 
   const [carregandoOrigem, setCarregandoOrigem] = useState(Boolean(orcamentoOrigemId));
   const [orcamentoNumero, setOrcamentoNumero] = useState<string | null>(null);
   const [itensFrequentes, setItensFrequentes] = useState<CatalogItem[]>([]);
   const [vendedores, setVendedores] = useState<SellerOption[]>([]);
   const [vendedorId, setVendedorId] = useState('');
-
-  const [busca, setBusca] = useState('');
-  const [resultadosBusca, setResultadosBusca] = useState<CatalogItem[]>([]);
-  const [buscaFocada, setBuscaFocada] = useState(false);
 
   const [carrinho, setCarrinho] = useState<LinhaCarrinho[]>([]);
   const [descontoGeralTexto, setDescontoGeralTexto] = useState('');
@@ -217,41 +185,12 @@ export default function NovaVendaModal({
         .finally(() => {
           if (ativo) setCarregandoOrigem(false);
         });
-    } else {
-      setTimeout(() => inputBuscaRef.current?.focus(), 80);
     }
 
     return () => {
       ativo = false;
     };
   }, [orcamentoOrigemId]);
-
-  useEffect(() => {
-    if (!busca.trim() && !buscaFocada) return;
-    let ativo = true;
-    const timer = setTimeout(() => {
-      buscarItensParaBusca(busca)
-        .then((lista) => {
-          if (ativo) setResultadosBusca(lista);
-        })
-        .catch(() => {});
-    }, 80);
-    return () => {
-      ativo = false;
-      clearTimeout(timer);
-    };
-  }, [busca, buscaFocada]);
-
-  // ↓/↑ na lista de resultados, Enter adiciona o marcado, Esc fecha
-  const listaAberta = buscaFocada && busca.trim().length > 0 && resultadosBusca.length > 0;
-  const teclasBusca = useNavegacaoLista({
-    itens: resultadosBusca,
-    aberta: listaAberta,
-    idPrefixo: 'pdv-resultado',
-    aoEscolher: (item) => adicionarAoCarrinho(item),
-    aoAbrir: () => setBuscaFocada(true),
-    aoFechar: () => setBuscaFocada(false),
-  });
 
   const adicionarAoCarrinho = (item: CatalogItem) => {
     setCarrinho((atual) => {
@@ -282,8 +221,6 @@ export default function NovaVendaModal({
         },
       ];
     });
-    setBusca('');
-    inputBuscaRef.current?.focus();
   };
 
   const adicionarAvulsoAoCarrinho = (av: ItemAvulsoResultado) => {
@@ -503,7 +440,7 @@ export default function NovaVendaModal({
     setDocNaNota('');
     setMostrarCampoCpfNota(false);
     setErro(null);
-    setTimeout(() => inputBuscaRef.current?.focus(), 80);
+    setTimeout(() => document.getElementById('pdv-busca-item')?.focus(), 80);
   };
 
   return createPortal(
@@ -647,114 +584,9 @@ export default function NovaVendaModal({
           >
             {/* Coluna esquerda: Busca, frequentes e itens */}
             <div className="space-y-6 lg:col-span-7">
-              <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-base font-bold text-slate-800">Adicionar item</h2>
-                  <button
-                    type="button"
-                    onClick={() => setModalAvulsoAberto(true)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <Plus size={13} /> Item avulso
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <Search
-                    size={16}
-                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    ref={inputBuscaRef}
-                    id="pdv-busca-item"
-                    type="text"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    value={busca}
-                    onChange={(e) => {
-                      setBusca(e.target.value);
-                      setBuscaFocada(true);
-                    }}
-                    onFocus={() => setBuscaFocada(true)}
-                    onBlur={() => setTimeout(() => setBuscaFocada(false), 180)}
-                    onKeyDown={teclasBusca.aoTeclar}
-                    role="combobox"
-                    aria-expanded={listaAberta}
-                    aria-controls="pdv-resultados"
-                    aria-activedescendant={listaAberta ? `pdv-resultado-${teclasBusca.ativo}` : undefined}
-                    placeholder="Código de barras, código ou nome do item..."
-                    className="block w-full rounded-lg border border-slate-200 py-2 pr-3 pl-9 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-
-                  {listaAberta && (
-                    <ul
-                      id="pdv-resultados"
-                      role="listbox"
-                      className="absolute z-30 mt-1 max-h-60 w-full divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-sm"
-                    >
-                      {resultadosBusca.map((item, idx) => (
-                        <li key={item.id} id={`pdv-resultado-${idx}`} role="option" aria-selected={idx === teclasBusca.ativo}>
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            onMouseDown={() => adicionarAoCarrinho(item)}
-                            onMouseEnter={() => teclasBusca.setAtivo(idx)}
-                            className={`flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-xs ${
-                              idx === teclasBusca.ativo ? 'bg-blue-50' : 'hover:bg-slate-50'
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <span className="font-mono text-[11px] font-bold text-slate-400">
-                                {item.code}
-                              </span>{' '}
-                              <strong className="text-slate-900">{item.name}</strong>
-                              <span
-                                className={`ml-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${CORES_TIPO_ITEM[item.kind].selo}`}
-                              >
-                                {CORES_TIPO_ITEM[item.kind].rotulo}
-                              </span>
-                            </div>
-                            <span className="shrink-0 font-semibold text-slate-900">
-                              {formatarReais(item.sale_price_cents)}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {itensFrequentes.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {itensFrequentes.slice(0, 9).map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => adicionarAoCarrinho(item)}
-                        className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-left text-xs transition hover:border-blue-300 hover:bg-blue-50/40"
-                      >
-                        <span className="line-clamp-1 font-semibold text-slate-800">
-                          {item.name}
-                        </span>
-                        <div className="mt-1 flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">
-                            {item.kind === 'produto' ? 'Produto' : 'Serviço'}
-                          </span>
-                          <span className="font-semibold text-slate-900">
-                            {formatarReais(item.sale_price_cents)}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <h2 className="text-base font-bold text-slate-800">
-                    Itens ({itensCalculados.length})
-                  </h2>
+              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold text-slate-800">Itens</h2>
                   {itensCalculados.length > 0 && (
                     <button
                       type="button"
@@ -766,134 +598,32 @@ export default function NovaVendaModal({
                   )}
                 </div>
 
-                {itensCalculados.length === 0 ? (
-                  <p className="py-10 text-center text-xs text-slate-400">
-                    Nenhum item adicionado.
-                  </p>
-                ) : (
-                  <div className="mt-3 space-y-2.5">
-                    {itensCalculados.map((item) => {
-                      const faltaEstoque =
-                        item.kind === 'produto' &&
-                        item.controlsStock &&
-                        item.stockQuantity !== undefined &&
-                        item.quantity > item.stockQuantity;
+                <TabelaItensVenda
+                  idPrefixo="pdv"
+                  itens={itensCalculados}
+                  podeVerCusto={ehCompleto}
+                  colunaCodigo={false}
+                  focarBuscaAoAbrir={!orcamentoOrigemId}
+                  focoAposIncluir="busca"
+                  onAdicionar={adicionarAoCarrinho}
+                  onAtualizar={atualizarItemCarrinho}
+                  onRemover={(uid) => setCarrinho((at) => at.filter((x) => x.uid !== uid))}
+                  onItemAvulso={() => setModalAvulsoAberto(true)}
+                />
 
-                      return (
-                        <div
-                          key={item.uid}
-                          className="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span
-                                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${CORES_TIPO_ITEM[item.kind].selo}`}
-                              >
-                                {CORES_TIPO_ITEM[item.kind].rotulo}
-                              </span>
-                              <span className="font-mono text-[11px] text-slate-400">
-                                {item.code}
-                              </span>
-                              <strong className="text-xs text-slate-900">{item.name}</strong>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setCarrinho((at) => at.filter((x) => x.uid !== item.uid))
-                              }
-                              aria-label={`Remover ${item.name}`}
-                              className="rounded-lg p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-
-                          {faltaEstoque && (
-                            <p className="mt-1.5 inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
-                              <AlertTriangle size={12} />
-                              Estoque insuficiente (saldo: {item.stockQuantity} {item.unit})
-                            </p>
-                          )}
-
-                          <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                            <div>
-                              <label className="block text-[11px] font-medium text-slate-600">
-                                Qtd. ({item.unit})
-                              </label>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={item.quantityTexto}
-                                onChange={(e) =>
-                                  atualizarItemCarrinho(item.uid, {
-                                    quantityTexto: e.target.value,
-                                  })
-                                }
-                                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[11px] font-medium text-slate-600">
-                                Unitário (R$)
-                              </label>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={item.unitPriceTexto}
-                                onChange={(e) =>
-                                  atualizarItemCarrinho(item.uid, {
-                                    unitPriceTexto: e.target.value,
-                                  })
-                                }
-                                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800"
-                              />
-                            </div>
-
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <label className="text-[11px] font-medium text-slate-600">
-                                  Desconto
-                                </label>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    atualizarItemCarrinho(item.uid, {
-                                      discountMode:
-                                        item.discountMode === 'valor' ? 'percentual' : 'valor',
-                                      discountTexto: '',
-                                    })
-                                  }
-                                  className="text-[11px] font-semibold text-blue-600 hover:underline"
-                                >
-                                  {item.discountMode === 'valor' ? '%' : 'R$'}
-                                </button>
-                              </div>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={item.discountTexto}
-                                onChange={(e) =>
-                                  atualizarItemCarrinho(item.uid, {
-                                    discountTexto: e.target.value,
-                                  })
-                                }
-                                placeholder={item.discountMode === 'valor' ? 'R$ 0,00' : '0%'}
-                                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
-                              />
-                            </div>
-
-                            <div className="flex flex-col justify-end text-right">
-                              <span className="text-[11px] text-slate-500">Total</span>
-                              <span className="text-sm font-bold tabular-nums text-slate-900">
-                                {formatarReais(item.total_cents)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {itensFrequentes.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {itensFrequentes.slice(0, 9).map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => adicionarAoCarrinho(item)}
+                        title={`${item.name} (${formatarReais(item.sale_price_cents)})`}
+                        className="max-w-[14rem] truncate rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 hover:border-blue-300 hover:bg-blue-50/40"
+                      >
+                        + {item.name}
+                      </button>
+                    ))}
                   </div>
                 )}
               </section>

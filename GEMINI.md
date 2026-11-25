@@ -30,6 +30,8 @@ Regras:
 7. **Setas do teclado** (pedido do Braulio, 2026-11-24): toda lista de escolha ligada a uma busca (cliente, produto, conta, categoria...) usa o hook
    `src/hooks/useNavegacaoLista.ts` (↓/↑ marcam, Enter escolhe, Esc fecha; modelo em `components/ordens/SeletorCliente.tsx`). Para escolher cliente, use o
    próprio `SeletorCliente`. Escolha entre poucos valores fixos: `<select>` nativo (já aceita as setas).
+8. **Listas de itens com valores** (produtos, parcelas, lançamentos): tabela compacta, **uma linha por item**, campos editáveis dentro da célula, sem
+   cartão por item nem rótulo repetido em cada campo. Itens de venda/orçamento: use `components/vendas/TabelaItensVenda.tsx`.
 Antes de entregar, abra a tela nova lado a lado com `Clientes.tsx`/`OrdemDetalhes.tsx` e tire o que não existe lá.
 
 ## O que você NÃO altera (peça ao Claude)

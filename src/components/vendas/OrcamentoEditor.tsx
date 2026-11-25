@@ -1,25 +1,20 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd';
 import {
-  AlertTriangle,
   Check,
   CheckCircle2,
   ClipboardList,
   Copy,
   ExternalLink,
   FileText,
-  GripVertical,
   History,
   Link2,
   Loader2,
   MessageCircle,
-  Plus,
   Printer,
   RefreshCw,
   RotateCcw,
-  Search,
   ShoppingBag,
   Trash2,
   X,
@@ -48,10 +43,10 @@ import SeletorCliente from '../ordens/SeletorCliente';
 import { CORES_SITUACAO_ORCAMENTO, ROTULO_CANAL_ORCAMENTO } from './cores';
 import { CLIENTES_DEMO_VENDAS } from './dadosDemo';
 import { OrcamentoDocumentoModal } from './FolhaOrcamentoVenda';
-import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
+import TabelaItensVenda, { type LinhaItemVenda } from './TabelaItensVenda';
+import { useNivelFinanceiro } from '../financeiro/fonteDeDados';
 import {
   anotarNoHistoricoOrcamento,
-  buscarItensParaBusca,
   buscarOrcamento,
   duplicarOrcamento,
   excluirOrcamento,
@@ -83,21 +78,7 @@ import {
 const INPUT =
   'mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500';
 
-interface LinhaEditor {
-  uid: string;
-  catalog_item_id: string | null;
-  is_custom: boolean;
-  kind: CatalogItemKind;
-  code: string;
-  name: string;
-  unit: string;
-  quantityTexto: string;
-  unitPriceTexto: string;
-  discountMode: ModoDescontoLinha;
-  discountTexto: string;
-  controlsStock?: boolean;
-  stockQuantity?: number;
-}
+type LinhaEditor = LinhaItemVenda;
 
 function parseQuantidade(texto: string): number {
   const n = Number(texto.trim().replace(',', '.'));
@@ -129,6 +110,8 @@ export default function OrcamentoEditor({
   const navigate = useNavigate();
   const { profile } = useAuth();
   const atorNome = profile?.full_name || 'Equipe BRV';
+  const { nivel } = useNivelFinanceiro(profile);
+  const podeVerCusto = nivel === 'completo';
   const ehNovo = orcamentoId === 'novo';
 
   const [orcamento, setOrcamento] = useState<Quote | null>(null);
@@ -151,9 +134,6 @@ export default function OrcamentoEditor({
   const [vendedorId, setVendedorId] = useState('');
 
   const [linhas, setLinhas] = useState<LinhaEditor[]>([]);
-  const [buscaItem, setBuscaItem] = useState('');
-  const [sugestoesCatalogo, setSugestoesCatalogo] = useState<CatalogItem[]>([]);
-  const [buscaAberta, setBuscaAberta] = useState(false);
 
   const [validadeDias, setValidadeDias] = useState('10');
   const [descontoGeralTexto, setDescontoGeralTexto] = useState('');
@@ -315,22 +295,6 @@ export default function OrcamentoEditor({
     };
   }, [clienteId]);
 
-  useEffect(() => {
-    if (!buscaAberta) return;
-    let ativo = true;
-    const timer = setTimeout(() => {
-      buscarItensParaBusca(buscaItem)
-        .then((lista) => {
-          if (ativo) setSugestoesCatalogo(lista);
-        })
-        .catch(() => {});
-    }, 100);
-    return () => {
-      ativo = false;
-      clearTimeout(timer);
-    };
-  }, [buscaItem, buscaAberta]);
-
   const situacaoExibida = useMemo(() => {
     if (!orcamento) return 'rascunho' as const;
     return situacaoOrcamento(orcamento);
@@ -342,16 +306,6 @@ export default function OrcamentoEditor({
     (orcamento.status === 'aprovado' ||
       orcamento.status === 'convertido' ||
       orcamento.status === 'enviado');
-
-  // ↓/↑ na lista de sugestões, Enter adiciona o marcado, Esc fecha
-  const teclasBusca = useNavegacaoLista({
-    itens: sugestoesCatalogo,
-    aberta: buscaAberta && sugestoesCatalogo.length > 0,
-    idPrefixo: 'orc-sugestao',
-    aoEscolher: (item) => adicionarItemCatalogo(item),
-    aoAbrir: () => setBuscaAberta(true),
-    aoFechar: () => setBuscaAberta(false),
-  });
 
   const adicionarItemCatalogo = (item: CatalogItem) => {
     setLinhas((atuais) => {
@@ -387,8 +341,6 @@ export default function OrcamentoEditor({
         },
       ];
     });
-    setBuscaItem('');
-    setBuscaAberta(false);
   };
 
   const adicionarItemAvulso = (av: ItemAvulsoResultado) => {
@@ -418,12 +370,8 @@ export default function OrcamentoEditor({
     setLinhas((atuais) => atuais.filter((l) => l.uid !== uid));
   };
 
-  const reordenarPorTipo = (tipoTabela: CatalogItemKind, resultado: DropResult) => {
-    if (!resultado.destination || somenteLeitura) return;
-    const origIdx = resultado.source.index;
-    const destIdx = resultado.destination.index;
-    if (origIdx === destIdx) return;
-
+  const reordenarPorTipo = (tipoTabela: CatalogItemKind, origIdx: number, destIdx: number) => {
+    if (somenteLeitura) return;
     setLinhas((atuais) => {
       const doTipo = atuais.filter((l) => l.kind === tipoTabela);
       const outros = atuais.filter((l) => l.kind !== tipoTabela);
@@ -473,7 +421,6 @@ export default function OrcamentoEditor({
     );
   }, [itensCalculados, descontoGeralTexto, freteTexto]);
 
-  const produtosLista = itensCalculados.filter((i) => i.kind === 'produto');
   const servicosLista = itensCalculados.filter((i) => i.kind === 'servico');
 
   const escolherCliente = (c: Customer | null) => {
@@ -715,189 +662,6 @@ export default function OrcamentoEditor({
     } finally {
       setSalvandoNota(false);
     }
-  };
-
-  const renderizarTabelaItens = (tipoTabela: CatalogItemKind, lista: typeof itensCalculados) => {
-    const subtotal =
-      tipoTabela === 'produto'
-        ? totais.produtosSubtotalCentavos
-        : totais.servicosSubtotalCentavos;
-
-    return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs font-bold text-slate-800">
-            {tipoTabela === 'produto' ? 'Produtos' : 'Serviços'} ({lista.length})
-          </span>
-          <span className="text-xs font-semibold text-slate-900">
-            Subtotal: {formatarReais(subtotal)}
-          </span>
-        </div>
-
-        {lista.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs text-slate-400">
-            Nenhum {tipoTabela === 'produto' ? 'produto' : 'serviço'} incluído.
-          </p>
-        ) : (
-          <DragDropContext onDragEnd={(r) => reordenarPorTipo(tipoTabela, r)}>
-            <Droppable droppableId={`orc-tabela-${tipoTabela}`}>
-              {(dropProvided) => (
-                <div
-                  ref={dropProvided.innerRef}
-                  {...dropProvided.droppableProps}
-                  className="space-y-2"
-                >
-                  {lista.map((item, idx) => {
-                    const faltaEstoque =
-                      item.kind === 'produto' &&
-                      item.controlsStock &&
-                      item.stockQuantity !== undefined &&
-                      item.quantity > item.stockQuantity;
-
-                    return (
-                      <Draggable
-                        key={item.uid}
-                        draggableId={item.uid}
-                        index={idx}
-                        isDragDisabled={somenteLeitura}
-                      >
-                        {(dragProvided) => (
-                          <div
-                            ref={dragProvided.innerRef}
-                            {...dragProvided.draggableProps}
-                            className="rounded-xl border border-slate-200 bg-white p-3"
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              {!somenteLeitura && (
-                                <span
-                                  {...dragProvided.dragHandleProps}
-                                  title="Arraste para reordenar"
-                                  className="cursor-grab text-slate-400 hover:text-slate-700"
-                                >
-                                  <GripVertical size={15} />
-                                </span>
-                              )}
-
-                              <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-600">
-                                {item.code}
-                              </span>
-
-                              {item.is_custom && (
-                                <span className="rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                                  Avulso
-                                </span>
-                              )}
-
-                              <span className="min-w-0 flex-1 text-xs font-semibold text-slate-900">
-                                {item.name}
-                              </span>
-
-                              {faltaEstoque && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                                  <AlertTriangle size={10} /> Estoque insuficiente (saldo:{' '}
-                                  {item.stockQuantity} {item.unit})
-                                </span>
-                              )}
-
-                              {!somenteLeitura && (
-                                <button
-                                  type="button"
-                                  onClick={() => removerLinha(item.uid)}
-                                  aria-label={`Remover ${item.name}`}
-                                  className="rounded-lg p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
-                            </div>
-
-                            <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                              <div>
-                                <label className="block text-[11px] font-medium text-slate-600">
-                                  Qtd. ({item.unit})
-                                </label>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  disabled={somenteLeitura}
-                                  value={item.quantityTexto}
-                                  onChange={(e) =>
-                                    atualizarLinha(item.uid, { quantityTexto: e.target.value })
-                                  }
-                                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[11px] font-medium text-slate-600">
-                                  Valor unit. (R$)
-                                </label>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  disabled={somenteLeitura}
-                                  value={item.unitPriceTexto}
-                                  onChange={(e) =>
-                                    atualizarLinha(item.uid, { unitPriceTexto: e.target.value })
-                                  }
-                                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
-                                />
-                              </div>
-
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <label className="text-[11px] font-medium text-slate-600">
-                                    Desconto
-                                  </label>
-                                  {!somenteLeitura && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        atualizarLinha(item.uid, {
-                                          discountMode:
-                                            item.discountMode === 'valor' ? 'percentual' : 'valor',
-                                          discountTexto: '',
-                                        })
-                                      }
-                                      className="text-[11px] font-semibold text-blue-600 hover:underline"
-                                    >
-                                      {item.discountMode === 'valor' ? 'Usar %' : 'Usar R$'}
-                                    </button>
-                                  )}
-                                </div>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  disabled={somenteLeitura}
-                                  value={item.discountTexto}
-                                  onChange={(e) =>
-                                    atualizarLinha(item.uid, { discountTexto: e.target.value })
-                                  }
-                                  placeholder={item.discountMode === 'valor' ? 'R$ 0,00' : '0%'}
-                                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
-                                />
-                              </div>
-
-                              <div className="flex flex-col justify-end text-right">
-                                <span className="text-[11px] text-slate-500">Total</span>
-                                <span className="text-sm font-bold tabular-nums text-slate-900">
-                                  {formatarReais(item.total_cents)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    );
-                  })}
-                  {dropProvided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        )}
-      </div>
-    );
   };
 
   return createPortal(
@@ -1238,88 +1002,19 @@ export default function OrcamentoEditor({
 
             {/* Seção 2: Itens */}
             <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-base font-bold text-slate-800">Itens</h2>
+              <h2 className="text-base font-bold text-slate-800">Itens</h2>
 
-                {!somenteLeitura && (
-                  <button
-                    type="button"
-                    onClick={() => setModalAvulsoAberto(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <Plus size={14} />
-                    Item avulso
-                  </button>
-                )}
-              </div>
-
-              {!somenteLeitura && (
-                <div className="relative">
-                  <Search
-                    size={16}
-                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="text"
-                    value={buscaItem}
-                    onChange={(e) => {
-                      setBuscaItem(e.target.value);
-                      setBuscaAberta(true);
-                    }}
-                    onFocus={() => setBuscaAberta(true)}
-                    onBlur={() => setTimeout(() => setBuscaAberta(false), 180)}
-                    onKeyDown={teclasBusca.aoTeclar}
-                    role="combobox"
-                    aria-expanded={buscaAberta && sugestoesCatalogo.length > 0}
-                    aria-controls="orc-sugestoes"
-                    aria-activedescendant={
-                      buscaAberta && sugestoesCatalogo.length > 0 ? `orc-sugestao-${teclasBusca.ativo}` : undefined
-                    }
-                    placeholder="Buscar produto ou serviço por código ou nome..."
-                    className="block w-full rounded-lg border border-slate-200 py-2 pr-3 pl-9 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-
-                  {buscaAberta && sugestoesCatalogo.length > 0 && (
-                    <ul
-                      id="orc-sugestoes"
-                      role="listbox"
-                      className="absolute z-30 mt-1 max-h-60 w-full divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-sm"
-                    >
-                      {sugestoesCatalogo.map((item, idx) => (
-                        <li key={item.id} id={`orc-sugestao-${idx}`} role="option" aria-selected={idx === teclasBusca.ativo}>
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            onMouseDown={() => adicionarItemCatalogo(item)}
-                            onMouseEnter={() => teclasBusca.setAtivo(idx)}
-                            className={`flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-xs ${
-                              idx === teclasBusca.ativo ? 'bg-blue-50' : 'hover:bg-slate-50'
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <span className="font-mono text-[11px] font-bold text-slate-400">
-                                {item.code}
-                              </span>{' '}
-                              <strong className="text-slate-800">{item.name}</strong>
-                              <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                                {item.kind === 'produto' ? 'Produto' : 'Serviço'}
-                              </span>
-                            </div>
-                            <span className="shrink-0 font-semibold text-slate-900">
-                              {formatarReais(item.sale_price_cents)} / {item.unit}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {renderizarTabelaItens('produto', produtosLista)}
-                {renderizarTabelaItens('servico', servicosLista)}
-              </div>
+              <TabelaItensVenda
+                idPrefixo="orc"
+                itens={itensCalculados}
+                somenteLeitura={somenteLeitura}
+                podeVerCusto={podeVerCusto}
+                onAdicionar={adicionarItemCatalogo}
+                onAtualizar={atualizarLinha}
+                onRemover={removerLinha}
+                onItemAvulso={() => setModalAvulsoAberto(true)}
+                onReordenar={reordenarPorTipo}
+              />
 
               <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-4">
                 <div>

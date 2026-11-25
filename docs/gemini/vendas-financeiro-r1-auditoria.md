@@ -41,5 +41,12 @@ No mesmo dia o Braulio pediu as setas "em todas as vezes que pudermos selecionar
 `SeletorCliente` (OS, Oficina, PMOC, orçamento, venda), `SeletorClienteEquipamento`, Nova atividade, cliente da Nova placa, etiquetas e busca da Ajuda F1
 (tópico `setas-teclado`). **Toda lista de escolha nova com busca usa esse hook** (rodada 2 inclusive).
 
+**Itens em tabela compacta (Claude, 2026-11-24, pedido do Braulio no molde da tela de orçamento do SicWeb):** os cartões de item (~110 px cada) viraram
+`components/vendas/TabelaItensVenda.tsx`, usada no orçamento e na Nova venda: um item por linha (Qtd., Un., Código, Descrição, Unitário, Desconto R$/%,
+Total), grupos Produtos/Serviços com subtotal, arrastar só no orçamento, aviso de estoque como ícone. A última linha é a inclusão (código, código de barras
+ou nome; lista em colunas Código/Descrição/Estoque/Custo só no nível completo/Valor/Un.); no orçamento o cursor vai para a quantidade do item incluído, na
+venda volta para a inclusão (leitor de código de barras); Enter numa célula volta para a inclusão, ↓/↑ andam entre as linhas; Enter com a lista ainda
+desatualizada busca na hora e inclui se o código bater. Observações continuam embaixo (decisão do Braulio). **Rodada 2: telas com itens usam essa tabela.**
+
 **Para a ligação ao banco:** `OrcamentoEditor.tsx` importa `CLIENTES_DEMO_VENDAS` direto do `dadosDemo.ts` (dado de demonstração dentro do componente,
 contra a regra do briefing): trocar pelo cliente real ao ligar o banco.

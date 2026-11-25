@@ -49,7 +49,7 @@ import {
 } from './regrasVendas';
 
 const INPUT =
-  'mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+  'mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
 type LinhaCarrinho = LinhaItemVenda;
 
@@ -469,11 +469,11 @@ export default function NovaVendaModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50 pb-16">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-100 pb-16">
       {/* Cabeçalho fixo igual a OrdemDetalhes */}
-      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-6 py-4 shadow-xs">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-300 bg-white px-6 py-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-800">
             <ShoppingBag size={18} />
           </div>
           <div>
@@ -484,7 +484,7 @@ export default function NovaVendaModal({
                   ? `Nova venda · ${orcamentoNumero}`
                   : 'Nova venda'}
             </h1>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-700">
               Total: <strong className="text-slate-900">{formatarReais(vendaConcluida ? vendaConcluida.total_cents : totais.totalCentavos)}</strong>
             </span>
           </div>
@@ -496,7 +496,7 @@ export default function NovaVendaModal({
               type="button"
               onClick={() => void handleConcluirVenda()}
               disabled={salvando || itensCalculados.length === 0}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-800 disabled:opacity-50"
             >
               {salvando ? 'Salvando...' : 'Concluir venda'}
             </button>
@@ -506,7 +506,7 @@ export default function NovaVendaModal({
             type="button"
             onClick={onFechar}
             aria-label="Fechar"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition hover:bg-slate-100 hover:text-slate-700"
           >
             <X size={18} />
           </button>
@@ -515,14 +515,14 @@ export default function NovaVendaModal({
 
       {carregandoOrigem ? (
         <div className="flex h-80 items-center justify-center">
-          <div className="flex flex-col items-center gap-2 text-slate-500">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+          <div className="flex flex-col items-center gap-2 text-slate-700">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600" />
             <span className="text-sm font-medium">Carregando orçamento...</span>
           </div>
         </div>
       ) : vendaConcluida ? (
         <div className="mx-auto mt-6 max-w-5xl space-y-6 px-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+          <div className="rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
@@ -549,7 +549,7 @@ export default function NovaVendaModal({
                 <button
                   type="button"
                   onClick={() => setReciboAberto(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   <Printer size={14} />
                   Recibo
@@ -558,7 +558,7 @@ export default function NovaVendaModal({
                 <button
                   type="button"
                   onClick={() => onAbrirDetalheVenda(vendaConcluida.id)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Abrir venda
                 </button>
@@ -566,7 +566,7 @@ export default function NovaVendaModal({
                 <button
                   type="button"
                   onClick={iniciarNovaVendaEmBranco}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-800"
                 >
                   <RotateCcw size={14} />
                   Nova venda
@@ -575,7 +575,7 @@ export default function NovaVendaModal({
             </div>
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+          <section className="rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
             <h3 className="mb-3 text-base font-bold text-slate-800">Notas fiscais</h3>
             <NotasFiscaisVenda
               venda={vendaConcluida}
@@ -609,14 +609,14 @@ export default function NovaVendaModal({
           >
             {/* Em cima, em largura total (a descrição do item precisa aparecer inteira): busca, itens e frequentes */}
             <div className="space-y-6">
-              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+              <section className="space-y-3 rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-bold text-slate-800">Itens</h2>
                   {itensCalculados.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setCarrinho([])}
-                      className="text-xs font-semibold text-slate-500 hover:text-red-600"
+                      className="text-xs font-semibold text-slate-700 hover:text-red-600"
                     >
                       Limpar
                     </button>
@@ -643,7 +643,7 @@ export default function NovaVendaModal({
                         type="button"
                         onClick={() => adicionarAoCarrinho(item)}
                         title={`${item.name} (${formatarReais(item.sale_price_cents)})`}
-                        className="max-w-[14rem] truncate rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 hover:border-blue-300 hover:bg-blue-50/40"
+                        className="max-w-[14rem] truncate rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 hover:border-blue-300 hover:bg-blue-50/40"
                       >
                         + {item.name}
                       </button>
@@ -655,14 +655,14 @@ export default function NovaVendaModal({
 
             {/* Embaixo, lado a lado: Cliente e Pagamento */}
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+              <section className="space-y-3 rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-bold text-slate-800">Cliente</h2>
                   {!cliente && (
                     <button
                       type="button"
                       onClick={() => setMostrarCampoCpfNota((v) => !v)}
-                      className="text-xs font-semibold text-blue-600 hover:underline"
+                      className="text-xs font-semibold text-blue-800 hover:underline"
                     >
                       {mostrarCampoCpfNota ? 'Ocultar CPF/CNPJ na nota' : 'CPF/CNPJ na nota'}
                     </button>
@@ -691,7 +691,7 @@ export default function NovaVendaModal({
                 </div>
 
                 {!cliente && mostrarCampoCpfNota && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="rounded-xl border border-slate-300 bg-slate-50 p-3">
                     <div className="flex items-center justify-between text-xs font-medium text-slate-700">
                       <label htmlFor="pdv-doc-nota">CPF/CNPJ na nota</label>
                       <div className="inline-flex rounded-md bg-white p-0.5">
@@ -705,8 +705,8 @@ export default function NovaVendaModal({
                             }}
                             className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
                               tipoDocNota === t
-                                ? 'bg-blue-600 text-white'
-                                : 'text-slate-500'
+                                ? 'bg-blue-700 text-white'
+                                : 'text-slate-700'
                             }`}
                           >
                             {t === 'PF' ? 'CPF' : 'CNPJ'}
@@ -724,7 +724,7 @@ export default function NovaVendaModal({
                       placeholder={
                         tipoDocNota === 'PF' ? '000.000.000-00' : '00.000.000/0000-00'
                       }
-                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs"
+                      className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs"
                     />
                   </div>
                 )}
@@ -748,19 +748,19 @@ export default function NovaVendaModal({
                 </div>
               </section>
 
-              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+              <section className="space-y-3 rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-base font-bold text-slate-800">Pagamento</h2>
                   <button
                     type="button"
                     onClick={() => adicionarLinhaPagamento('pix')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-800 hover:underline"
                   >
                     <Plus size={13} /> Adicionar forma
                   </button>
                 </div>
 
-                <div className="space-y-2 border-b border-slate-100 pb-3 text-xs">
+                <div className="space-y-2 border-b border-slate-200 pb-3 text-xs">
                   <div className="flex justify-between text-slate-600">
                     <span>Produtos</span>
                     <strong>{formatarReais(totais.produtosSubtotalCentavos)}</strong>
@@ -781,7 +781,7 @@ export default function NovaVendaModal({
                       value={descontoGeralTexto}
                       onChange={(e) => setDescontoGeralTexto(e.target.value)}
                       placeholder="0,00"
-                      className="w-28 rounded-lg border border-slate-200 px-2.5 py-1 text-right text-xs font-semibold text-slate-800"
+                      className="w-28 rounded-lg border border-slate-300 px-2.5 py-1 text-right text-xs font-semibold text-slate-800"
                     />
                   </div>
 
@@ -799,7 +799,7 @@ export default function NovaVendaModal({
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-sm font-bold text-slate-900">
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-sm font-bold text-slate-900">
                     <span>Total a pagar</span>
                     <span>{formatarReais(totais.totalCentavos)}</span>
                   </div>
@@ -812,7 +812,7 @@ export default function NovaVendaModal({
                         key={m}
                         type="button"
                         onClick={() => pagarTotalEm(m)}
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                        className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                       >
                         {ROTULO_FORMA_PAGAMENTO_CURTO[m]}
                       </button>
@@ -820,7 +820,7 @@ export default function NovaVendaModal({
                     <button
                       type="button"
                       onClick={() => setPagamentos([])}
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50"
+                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       A receber
                     </button>
@@ -851,7 +851,7 @@ export default function NovaVendaModal({
                       return (
                         <div
                           key={pg.uid}
-                          className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
+                          className="space-y-2 rounded-xl border border-slate-300 bg-slate-50 p-3"
                         >
                           <div className="grid grid-cols-2 gap-2">
                             <div>
@@ -864,7 +864,7 @@ export default function NovaVendaModal({
                                   const m = e.target.value as FinancialPaymentMethod;
                                   atualizarPagamento(pg.uid, { method: m, accountId: '' });
                                 }}
-                                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800"
+                                className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800"
                               >
                                 {(
                                   Object.keys(ROTULO_FORMA_PAGAMENTO) as FinancialPaymentMethod[]
@@ -902,7 +902,7 @@ export default function NovaVendaModal({
                                     amountTexto: e.target.value,
                                   })
                                 }
-                                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800"
+                                className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800"
                               />
                             </div>
                           </div>
@@ -923,11 +923,11 @@ export default function NovaVendaModal({
                                     })
                                   }
                                   placeholder={pg.amountTexto}
-                                  className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs"
+                                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs"
                                 />
                               </div>
                               <div className="flex flex-col justify-end text-right">
-                                <span className="text-[11px] text-slate-500">Troco:</span>
+                                <span className="text-[11px] text-slate-700">Troco:</span>
                                 <span className="text-xs font-bold text-emerald-700">
                                   {formatarReais(troco)}
                                 </span>
@@ -946,7 +946,7 @@ export default function NovaVendaModal({
                                       machineId: e.target.value,
                                     })
                                   }
-                                  className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"
                                 >
                                   {maquininhas.map((m) => (
                                     <option key={m.id} value={m.id}>
@@ -967,7 +967,7 @@ export default function NovaVendaModal({
                                         installments: Number(e.target.value),
                                       })
                                     }
-                                    className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                                    className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"
                                   >
                                     {[1, 2, 3, 4, 5, 6, 10, 12].map((n) => (
                                       <option key={n} value={n}>
@@ -978,7 +978,7 @@ export default function NovaVendaModal({
                                 </div>
                               )}
                               {taxa && (
-                                <p className="col-span-2 text-[11px] text-slate-500">
+                                <p className="col-span-2 text-[11px] text-slate-700">
                                   Taxa: <strong>{taxa.percentual.toFixed(2)}%</strong> (
                                   {formatarReais(taxa.taxaCentavos)}) · Líquido:{' '}
                                   <strong>{formatarReais(taxa.liquidoCentavos)}</strong>
@@ -997,7 +997,7 @@ export default function NovaVendaModal({
                                     accountId: e.target.value,
                                   })
                                 }
-                                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                                className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"
                               >
                                 {contas.filter((c) => c.kind === 'banco').map((c) => (
                                   <option key={c.id} value={c.id}>
@@ -1013,7 +1013,7 @@ export default function NovaVendaModal({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs">
+                <div className="flex items-center justify-between border-t border-slate-200 pt-2.5 text-xs">
                   <span className="font-medium text-slate-600">Restante a receber</span>
                   <strong
                     className={`text-sm font-bold ${
@@ -1027,7 +1027,7 @@ export default function NovaVendaModal({
                 <button
                   type="submit"
                   disabled={salvando || itensCalculados.length === 0}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-800 disabled:opacity-50"
                 >
                   {salvando && <Loader2 size={16} className="animate-spin" />}
                   Concluir venda ({formatarReais(totais.totalCentavos)})

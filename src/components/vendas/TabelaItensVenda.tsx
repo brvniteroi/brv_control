@@ -59,7 +59,7 @@ interface TabelaItensVendaProps {
 }
 
 const CAMPO_CELULA =
-  'block w-full rounded-md border border-slate-200 bg-white px-1.5 py-1 text-right text-xs text-slate-800 tabular-nums focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+  'block w-full rounded-md border border-slate-300 bg-white px-1.5 py-1 text-right text-xs text-slate-800 tabular-nums focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
 const GRUPOS: { kind: CatalogItemKind; rotulo: string }[] = [
   { kind: 'produto', rotulo: 'Produtos' },
@@ -251,10 +251,10 @@ export default function TabelaItensVenda({
   const linha = (item: LinhaItemCalculada, idx: number) => (
     <Draggable key={item.uid} draggableId={item.uid} index={idx} isDragDisabled={!arrastavel}>
       {(arraste) => (
-        <tr ref={arraste.innerRef} {...arraste.draggableProps} className="border-t border-slate-100 bg-white">
+        <tr ref={arraste.innerRef} {...arraste.draggableProps} className="border-t border-slate-200 bg-white">
           {arrastavel && (
             <td className="pl-1.5">
-              <span {...arraste.dragHandleProps} title="Arraste para reordenar" className="flex cursor-grab text-slate-300 hover:text-slate-600">
+              <span {...arraste.dragHandleProps} title="Arraste para reordenar" className="flex cursor-grab text-slate-500 hover:text-slate-600">
                 <GripVertical size={14} />
               </span>
             </td>
@@ -269,10 +269,10 @@ export default function TabelaItensVenda({
               {celulaCampo(item, 'qtd', item.quantityTexto, (v) => onAtualizar(item.uid, { quantityTexto: v }))}
             </div>
           </td>
-          <td className="px-1 py-1 text-xs text-slate-500">{item.unit}</td>
-          {colunaCodigo && <td className="truncate px-1 py-1 font-mono text-[11px] text-slate-500">{item.code}</td>}
+          <td className="px-1 py-1 text-xs text-slate-700">{item.unit}</td>
+          {colunaCodigo && <td className="truncate px-1 py-1 font-mono text-[11px] text-slate-700">{item.code}</td>}
           <td className="px-1 py-1 text-xs leading-snug break-words text-slate-900">
-            {!colunaCodigo && <span className="mr-1.5 font-mono text-[11px] text-slate-400">{item.code}</span>}
+            {!colunaCodigo && <span className="mr-1.5 font-mono text-[11px] text-slate-600">{item.code}</span>}
             {item.name}
           </td>
           <td className="px-1 py-1">
@@ -298,7 +298,7 @@ export default function TabelaItensVenda({
                     })
                   }
                   title={item.discountMode === 'valor' ? 'Desconto em R$ (clique para usar %)' : 'Desconto em % (clique para usar R$)'}
-                  className="absolute inset-y-0 left-0 px-1.5 text-[10px] font-semibold text-blue-600 hover:underline"
+                  className="absolute inset-y-0 left-0 px-1.5 text-[10px] font-semibold text-blue-800 hover:underline"
                 >
                   {item.discountMode === 'valor' ? 'R$' : '%'}
                 </button>
@@ -313,7 +313,7 @@ export default function TabelaItensVenda({
                 tabIndex={-1}
                 onClick={() => onRemover(item.uid)}
                 aria-label={`Remover ${item.name}`}
-                className="rounded p-1 text-slate-300 hover:bg-red-50 hover:text-red-600"
+                className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 size={13} />
               </button>
@@ -325,7 +325,7 @@ export default function TabelaItensVenda({
   );
 
   return (
-    <div className="rounded-xl border border-slate-200">
+    <div className="rounded-xl border border-slate-300">
       <div className="overflow-x-auto">
         <DragDropContext onDragEnd={aoSoltar}>
           <table className={`w-full table-fixed border-collapse ${colunaCodigo ? 'min-w-[620px]' : 'min-w-[520px]'}`}>
@@ -340,7 +340,7 @@ export default function TabelaItensVenda({
               <col className="w-24" />
               {!somenteLeitura && <col className="w-8" />}
             </colgroup>
-            <thead className="bg-slate-50 text-[11px] font-semibold text-slate-500">
+            <thead className="bg-slate-200/70 text-[11px] font-semibold text-slate-700">
               <tr>
                 {arrastavel && <th />}
                 <th className="px-1 py-2 text-right font-semibold">Qtd.</th>
@@ -356,7 +356,7 @@ export default function TabelaItensVenda({
             {itens.length === 0 && (
               <tbody>
                 <tr>
-                  <td colSpan={totalColunas} className="border-t border-slate-100 px-3 py-4 text-center text-xs text-slate-400">
+                  <td colSpan={totalColunas} className="border-t border-slate-200 px-3 py-4 text-center text-xs text-slate-600">
                     Nenhum item incluído.
                   </td>
                 </tr>
@@ -370,7 +370,7 @@ export default function TabelaItensVenda({
                 <Droppable key={g.kind} droppableId={`${idPrefixo}-${g.kind}`}>
                   {(soltar) => (
                     <tbody ref={soltar.innerRef} {...soltar.droppableProps}>
-                      <tr className="border-t border-slate-200 bg-slate-50/60">
+                      <tr className="border-t border-slate-300 bg-slate-100">
                         <td colSpan={totalColunas - (somenteLeitura ? 1 : 2)} className="px-2 py-1 text-[11px] font-bold text-slate-700">
                           {g.rotulo} ({doGrupo.length})
                         </td>
@@ -391,8 +391,8 @@ export default function TabelaItensVenda({
       </div>
 
       {!somenteLeitura && (
-        <div className="relative flex items-center gap-2 border-t border-dashed border-slate-200 px-2 py-1.5">
-          <Plus size={14} className="shrink-0 text-slate-400" />
+        <div className="relative flex items-center gap-2 border-t border-dashed border-slate-300 px-2 py-1.5">
+          <Plus size={14} className="shrink-0 text-slate-600" />
           <input
             id={idQtdNova}
             type="text"
@@ -404,7 +404,7 @@ export default function TabelaItensVenda({
             onFocus={(e) => e.target.select()}
             placeholder="Qtd. 1"
             aria-label="Quantidade do item a incluir (vazio = 1)"
-            className="w-20 shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-right text-sm text-slate-800 tabular-nums placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            className="w-20 shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1 text-right text-sm text-slate-800 tabular-nums placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           />
           <input
             id={idBusca}
@@ -424,20 +424,20 @@ export default function TabelaItensVenda({
             aria-controls={`${idPrefixo}-sugestoes`}
             aria-activedescendant={listaVisivel ? `${idPrefixo}-sugestao-${teclas.ativo}` : undefined}
             placeholder={placeholderBusca}
-            className="min-w-0 flex-1 rounded-md border border-transparent px-1.5 py-1 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            className="min-w-0 flex-1 rounded-md border border-transparent px-1.5 py-1 text-sm text-slate-800 placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
           />
           <button
             type="button"
             onClick={onItemAvulso}
-            className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
           >
             Item avulso
           </button>
 
           {listaVisivel && (
-            <div className="absolute top-full right-0 left-0 z-30 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="absolute top-full right-0 left-0 z-30 mt-1 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
               <div
-                className={`grid gap-2 border-b border-slate-100 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-500 ${
+                className={`grid gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-700 ${
                   podeVerCusto ? 'grid-cols-[7rem_1fr_4.5rem_5rem_5.5rem_2.5rem]' : 'grid-cols-[7rem_1fr_4.5rem_5.5rem_2.5rem]'
                 }`}
               >
@@ -463,21 +463,21 @@ export default function TabelaItensVenda({
                         podeVerCusto ? 'grid-cols-[7rem_1fr_4.5rem_5rem_5.5rem_2.5rem]' : 'grid-cols-[7rem_1fr_4.5rem_5.5rem_2.5rem]'
                       } ${idx === teclas.ativo ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
                     >
-                      <span className="truncate font-mono text-[11px] text-slate-500">{item.code}</span>
+                      <span className="truncate font-mono text-[11px] text-slate-700">{item.code}</span>
                       <span className="truncate text-slate-900">
                         {item.name}
-                        {item.kind === 'servico' && <span className="ml-1.5 text-[10px] text-slate-400">Serviço</span>}
+                        {item.kind === 'servico' && <span className="ml-1.5 text-[10px] text-slate-600">Serviço</span>}
                       </span>
-                      <span className="text-right text-slate-500 tabular-nums">
+                      <span className="text-right text-slate-700 tabular-nums">
                         {item.kind === 'produto' && item.controls_stock ? String(item.stock_quantity).replace('.', ',') : '-'}
                       </span>
                       {podeVerCusto && (
-                        <span className="text-right text-slate-500 tabular-nums">
+                        <span className="text-right text-slate-700 tabular-nums">
                           {item.cost_price_cents != null ? formatarReais(item.cost_price_cents) : '-'}
                         </span>
                       )}
                       <span className="text-right font-semibold text-slate-900 tabular-nums">{formatarReais(item.sale_price_cents)}</span>
-                      <span className="text-slate-500">{item.unit}</span>
+                      <span className="text-slate-700">{item.unit}</span>
                     </button>
                   </li>
                 ))}

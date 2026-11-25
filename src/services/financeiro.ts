@@ -1,11 +1,16 @@
 // Cadastros do financeiro no Supabase (migration 20261125110000_vendas_financeiro_base.sql).
 // Ler contas, maquininhas e categorias: nível "caixa" ou "completo" (saldo só no completo), pelas funções financeiro_*.
 // Cadastrar e alterar: só o nível completo (RLS). Cadastro não se exclui, só se desativa.
-// Caixa da loja, recebimentos dos técnicos e extrato ainda estão na demonstração (parte 3).
+// Caixa da loja: funções caixa_* (migration 20261125130000_caixa_loja.sql), níveis "caixa" e "completo".
+// Recebimentos dos técnicos, extrato e visão geral ainda estão na demonstração.
 
 import { supabase } from './supabase';
 import type {
   CardMachine,
+  CashSession,
+  CashStatus,
+  CloseCashSessionInput,
+  CreateCashEntryInput,
   FinancialAccount,
   FinancialCategory,
   SaveCardMachineInput,
@@ -96,6 +101,33 @@ export async function salvarCategoria(dados: SaveFinancialCategoryInput): Promis
   const id = await gravar('financial_categories', dados.id, { name: nome, kind: dados.kind, active: dados.active });
   return { id, name: nome, kind: dados.kind, active: dados.active };
 }
+
+async function chamarCaixa<T>(funcao: string, parametros?: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.rpc(funcao, parametros);
+  if (error) throw new Error(error.message);
+  return data as T;
+}
+
+export const situacaoCaixa = () => chamarCaixa<CashStatus>('caixa_situacao');
+
+export const abrirCaixa = (contadoCentavos: number, motivo?: string) =>
+  chamarCaixa<CashSession>('caixa_abrir', { p_contado: Math.round(contadoCentavos), p_motivo: motivo?.trim() || null });
+
+export const registrarMovimentoCaixa = (dados: CreateCashEntryInput) =>
+  chamarCaixa<CashSession>('caixa_lancar', {
+    p_tipo: dados.kind,
+    p_valor: Math.round(dados.amount_cents),
+    p_motivo: dados.description.trim(),
+  });
+
+export const fecharCaixa = (dados: CloseCashSessionInput) =>
+  chamarCaixa<CashSession>('caixa_fechar', {
+    p_sessao: dados.session_id,
+    p_contado: Math.round(dados.counted_balance_cents),
+    p_motivo: dados.difference_reason?.trim() || null,
+  });
+
+export const listarFechamentos = () => chamarCaixa<CashSession[]>('caixa_fechamentos');
 
 const COLUNAS_FORNECEDOR = 'id, name, person_type, document, phone, email, active';
 

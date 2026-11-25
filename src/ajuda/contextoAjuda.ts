@@ -68,6 +68,7 @@ const ROTAS: [prefixo: string, tela: TelaAjuda][] = [
   ['/orcamentos', 'orcamentos'],
   ['/vendas/vendedores', 'vendedores'],
   ['/vendas', 'vendas'],
+  ['/financeiro/caixa', 'financeiro-caixa'],
   ['/financeiro/cadastros', 'financeiro-cadastros'],
 ];
 

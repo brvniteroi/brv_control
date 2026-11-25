@@ -8,6 +8,7 @@ import { useSyncExternalStore } from 'react';
 import type {
   CardMachine,
   CashSession,
+  CashStatus,
   CashSessionEntry,
   CloseCashSessionInput,
   ConfirmFieldReceiptInput,
@@ -67,6 +68,9 @@ export const FONTE_DADOS_FINANCEIRO_DEMO = true;
 /** Parte 2: cadastros (contas, maquininhas, categorias, fornecedores) e recebimento de venda já usam o banco.
  *  Caixa, recebimentos dos técnicos, extrato e visão geral seguem na demonstração até a parte 3. */
 export const USAR_BANCO_CADASTROS = true;
+
+/** Caixa da loja no Supabase (migration 20261125130000_caixa_loja.sql). */
+export const USAR_BANCO_CAIXA = true;
 
 function clonar<T>(valor: T): T {
   return JSON.parse(JSON.stringify(valor)) as T;
@@ -1099,15 +1103,24 @@ export async function recusarRecebimento(
 // 7. CAIXA FÍSICO DA LOJA (seção 6.2 — um caixa aberto por vez)
 // ============================================================================
 
-export async function situacaoCaixa(): Promise<CashSession | null> {
+export async function situacaoCaixa(): Promise<CashStatus> {
+  if (USAR_BANCO_CAIXA) return real.situacaoCaixa();
   await atraso(50);
-  return caixaAbertoMemoria ? clonar(caixaAbertoMemoria) : null;
+  return {
+    sessao: caixaAbertoMemoria ? clonar(caixaAbertoMemoria) : null,
+    esperado_abertura_cents: caixaAbertoMemoria
+      ? null
+      : (fechamentosCaixaMemoria[0]?.counted_balance_cents ?? 0),
+    primeira_abertura: !caixaAbertoMemoria && fechamentosCaixaMemoria.length === 0,
+  };
 }
 
 export async function abrirCaixa(
   valorInicialCentavos: number,
   atorNome = 'Jéssica Atendimento',
+  motivo?: string,
 ): Promise<CashSession> {
+  if (USAR_BANCO_CAIXA) return real.abrirCaixa(valorInicialCentavos, motivo);
   await atraso(90);
   if (caixaAbertoMemoria) {
     throw new Error('Já existe um caixa aberto. Feche o caixa atual antes de abrir outro.');
@@ -1144,6 +1157,7 @@ export async function registrarMovimentoCaixa(
   dados: CreateCashEntryInput,
   atorNome = 'Jéssica Atendimento',
 ): Promise<CashSession> {
+  if (USAR_BANCO_CAIXA) return real.registrarMovimentoCaixa(dados);
   await atraso(90);
   if (!caixaAbertoMemoria) {
     throw new Error('O caixa está fechado. Abra o caixa antes de lançar reforço ou sangria.');
@@ -1232,6 +1246,7 @@ export async function fecharCaixa(
   dados: CloseCashSessionInput,
   atorNome = 'Jéssica Atendimento',
 ): Promise<CashSession> {
+  if (USAR_BANCO_CAIXA) return real.fecharCaixa(dados);
   await atraso(110);
   if (!caixaAbertoMemoria) {
     throw new Error('Não há caixa aberto para fechar.');
@@ -1265,6 +1280,7 @@ export async function fecharCaixa(
 }
 
 export async function listarFechamentos(): Promise<CashSession[]> {
+  if (USAR_BANCO_CAIXA) return real.listarFechamentos();
   await atraso(50);
   return clonar(fechamentosCaixaMemoria);
 }

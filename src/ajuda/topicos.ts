@@ -42,6 +42,7 @@ export type TelaAjuda =
   | 'orcamento'
   | 'vendas'
   | 'venda'
+  | 'financeiro-caixa'
   | 'financeiro-cadastros'
   | 'vendedores';
 
@@ -109,6 +110,7 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   orcamento: 'Orçamento',
   vendas: 'Vendas',
   venda: 'Venda',
+  'financeiro-caixa': 'Caixa da loja',
   'financeiro-cadastros': 'Cadastros do financeiro',
   vendedores: 'Vendedores',
 };
@@ -1448,6 +1450,26 @@ Uma venda com produtos e serviços tem **duas notas**. O sistema **ainda não em
 - **Cancelar nota** (acesso completo) só marca a nota como cancelada. O cancelamento fiscal é feito onde ela foi emitida.
 `,
     veja: ['venda-receber-cancelar'],
+  },
+  {
+    id: 'financeiro-caixa',
+    titulo: 'Caixa da loja: abrir, lançar e fechar',
+    secao: 'Financeiro',
+    telas: ['financeiro-caixa', 'venda'],
+    palavras: 'caixa abrir fechar gaveta dinheiro reforco retirada sangria suprimento diferenca falta sobra troco fechamento',
+    texto: `
+É o dinheiro em espécie da gaveta. Abre quem tem acesso **caixa** ou **completo**; há **um caixa aberto por vez**.
+1. **Abrir caixa**, antes da primeira venda: conte a gaveta e digite o valor. O sistema mostra quanto espera; se for diferente, escreva o motivo. Na primeira abertura, o valor contado vira o saldo inicial.
+2. Com o caixa aberto, **venda em dinheiro** e **cancelamento** aparecem sozinhos na lista. Não lance de novo. No troco, entra só o valor da venda.
+3. **Reforço** é dinheiro que você coloca na gaveta (ex.: troco). **Retirada (sangria)** é o que sai (ex.: depósito no banco, compra pequena). Os dois pedem o motivo.
+4. **Fechar caixa**, no fim do dia: conte a gaveta e digite o valor. Se não bater, a justificativa é obrigatória.
+- PIX, cartão e cheque não passam pelo caixa.
+- Diferença na abertura ou no fechamento gera um **ajuste**, para o saldo do Caixa BRV ficar igual à gaveta.
+- Recebimento lançado com data anterior não entra no caixa aberto.
+- Reforço, retirada e ajuste não contam como receita nem despesa. A retirada **não** aumenta o saldo do banco sozinha.
+! Lançamento não se edita nem se apaga. Errou um reforço? Faça uma retirada do mesmo valor, com o motivo.
+`,
+    veja: ['venda-nova', 'financeiro-cadastros'],
   },
   {
     id: 'financeiro-cadastros',

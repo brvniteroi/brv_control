@@ -37,6 +37,8 @@ export const ROTULO_ORIGEM_MOVIMENTO: Record<FinancialOriginType, string> = {
 
 export const ROTULO_TIPO_LANCAMENTO_CAIXA: Record<CashEntryKind, string> = {
   venda_dinheiro: 'Venda em dinheiro',
+  estorno: 'Estorno',
+  outro: 'Outro lançamento',
   recebimento_os: 'Recebimento de OS',
   reforco: 'Reforço (suprimento)',
   sangria: 'Retirada (sangria)',

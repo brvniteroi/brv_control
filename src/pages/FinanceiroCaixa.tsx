@@ -16,13 +16,12 @@ import {
   situacaoCaixa,
   useNivelFinanceiro,
 } from '../components/financeiro/fonteDeDados';
-import { calcularDiferencaCaixa } from '../components/financeiro/regrasFinanceiro';
+import { calcularDiferencaCaixa, diaLocalFinanceiro } from '../components/financeiro/regrasFinanceiro';
 import ModalDialogoVendas from '../components/vendas/ModalDialogoVendas';
 import NavegacaoVendas from '../components/vendas/NavegacaoVendas';
 import { useAuth } from '../contexts/useAuth';
-import type { CashSession } from '../types/financeiro';
+import type { CashSession, CashStatus } from '../types/financeiro';
 import {
-  centavosParaTextoInput,
   converterTextoParaCentavos,
   formatarReais,
 } from '../utils/dinheiro';
@@ -37,13 +36,18 @@ export default function FinanceiroCaixa() {
   const { nivel } = useNivelFinanceiro(profile);
 
   const [caixaAtual, setCaixaAtual] = useState<CashSession | null>(null);
+  const [abertura, setAbertura] = useState<Omit<CashStatus, 'sessao'>>({
+    esperado_abertura_cents: null,
+    primeira_abertura: false,
+  });
+  const [motivoAbertura, setMotivoAbertura] = useState('');
   const [fechamentos, setFechamentos] = useState<CashSession[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   // Modais
   const [abrirModal, setAbrirModal] = useState(false);
-  const [saldoInicialTexto, setSaldoInicialTexto] = useState('200,00');
+  const [saldoInicialTexto, setSaldoInicialTexto] = useState('');
 
   const [lancamentoTipo, setLancamentoTipo] = useState<'reforco' | 'sangria' | null>(null);
   const [lancamentoValorTexto, setLancamentoValorTexto] = useState('');
@@ -61,7 +65,8 @@ export default function FinanceiroCaixa() {
     setErro(null);
     try {
       const [atual, historico] = await Promise.all([situacaoCaixa(), listarFechamentos()]);
-      setCaixaAtual(atual);
+      setCaixaAtual(atual.sessao);
+      setAbertura(atual);
       setFechamentos(historico);
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível carregar o caixa da loja.');
@@ -109,9 +114,13 @@ export default function FinanceiroCaixa() {
       setErroModal('Informe um saldo inicial válido.');
       return;
     }
+    if (precisaMotivoAbertura && !motivoAbertura.trim()) {
+      setErroModal('Informe o motivo da diferença para abrir o caixa.');
+      return;
+    }
     setSalvando(true);
     try {
-      const novo = await abrirCaixa(centavos, atorNome);
+      const novo = await abrirCaixa(centavos, atorNome, motivoAbertura);
       setCaixaAtual(novo);
       setAbrirModal(false);
     } catch (err) {
@@ -156,8 +165,9 @@ export default function FinanceiroCaixa() {
   };
 
   const esperadoAtual = caixaAtual?.expected_balance_cents ?? 0;
-  const contadoAtual = converterTextoParaCentavos(saldoContadoTexto) ?? 0;
-  const diferencaFechamento = calcularDiferencaCaixa(contadoAtual, esperadoAtual);
+  const contadoAtual = converterTextoParaCentavos(saldoContadoTexto);
+  const diferencaFechamento =
+    contadoAtual === null ? 0 : calcularDiferencaCaixa(contadoAtual, esperadoAtual);
 
   const handleFecharCaixa = async (e: FormEvent) => {
     e.preventDefault();
@@ -175,6 +185,7 @@ export default function FinanceiroCaixa() {
     try {
       await fecharCaixa(
         {
+          session_id: caixaAtual!.id,
           counted_balance_cents: centavos,
           difference_reason: justificativaDiferenca.trim() || undefined,
         },
@@ -185,10 +196,20 @@ export default function FinanceiroCaixa() {
       await carregar();
     } catch (err) {
       setErroModal(err instanceof Error ? err.message : 'Erro ao fechar o caixa.');
+      // Pode ter entrado uma venda enquanto a janela estava aberta: atualiza o saldo esperado
+      await carregar();
     } finally {
       setSalvando(false);
     }
   };
+
+  const contadoAbertura = converterTextoParaCentavos(saldoInicialTexto);
+  const diferencaAbertura =
+    contadoAbertura === null || abertura.esperado_abertura_cents === null
+      ? 0
+      : calcularDiferencaCaixa(contadoAbertura, abertura.esperado_abertura_cents);
+  // Na primeira abertura a diferença é o próprio saldo inicial: não precisa de motivo
+  const precisaMotivoAbertura = diferencaAbertura !== 0 && !abertura.primeira_abertura;
 
   return (
     <div className="space-y-6">
@@ -238,7 +259,7 @@ export default function FinanceiroCaixa() {
                 type="button"
                 onClick={() => {
                   setErroModal(null);
-                  setSaldoContadoTexto(centavosParaTextoInput(caixaAtual.expected_balance_cents));
+                  setSaldoContadoTexto('');
                   setJustificativaDiferenca('');
                   setFecharModal(true);
                 }}
@@ -253,7 +274,9 @@ export default function FinanceiroCaixa() {
               type="button"
               onClick={() => {
                 setErroModal(null);
-                setSaldoInicialTexto('200,00');
+                setSaldoInicialTexto('');
+                setMotivoAbertura('');
+                void carregar();
                 setAbrirModal(true);
               }}
               className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
@@ -287,7 +310,7 @@ export default function FinanceiroCaixa() {
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3.5">
               <div className="flex items-center gap-2.5">
-                <h2 className="text-sm font-bold text-slate-800">Movimentos do caixa de hoje</h2>
+                <h2 className="text-sm font-bold text-slate-800">Movimentos do caixa</h2>
                 {caixaAtual ? (
                   <span className="inline-flex rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
                     Caixa aberto
@@ -306,6 +329,12 @@ export default function FinanceiroCaixa() {
                 </span>
               )}
             </div>
+
+            {caixaAtual && caixaAtual.opened_date < diaLocalFinanceiro() && (
+              <p className="border-b border-amber-100 bg-amber-50 px-5 py-2.5 text-xs font-medium text-amber-800">
+                Este caixa é de {formatarData(caixaAtual.opened_date)} e não foi fechado. Feche-o e abra o de hoje.
+              </p>
+            )}
 
             {!caixaAtual ? (
               <div className="p-10 text-center">
@@ -515,9 +544,38 @@ export default function FinanceiroCaixa() {
                 required
                 value={saldoInicialTexto}
                 onChange={(e) => setSaldoInicialTexto(e.target.value)}
+                placeholder="0,00"
+                autoFocus
                 className={INPUT}
               />
+              {abertura.primeira_abertura ? (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Primeira abertura: o valor contado vira o saldo inicial do Caixa BRV.
+                </p>
+              ) : (
+                abertura.esperado_abertura_cents !== null && (
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    O sistema espera <strong>{formatarReais(abertura.esperado_abertura_cents)}</strong> na gaveta.
+                  </p>
+                )
+              )}
             </div>
+
+            {precisaMotivoAbertura && (
+              <div>
+                <label htmlFor="cx-abrir-motivo" className="block text-xs font-semibold text-slate-700">
+                  Motivo da diferença de {diferencaAbertura > 0 ? '+' : '-'}{' '}
+                  {formatarReais(Math.abs(diferencaAbertura))} *
+                </label>
+                <input
+                  id="cx-abrir-motivo"
+                  type="text"
+                  value={motivoAbertura}
+                  onChange={(e) => setMotivoAbertura(e.target.value)}
+                  className={INPUT}
+                />
+              </div>
+            )}
 
             {erroModal && (
               <p role="alert" className="text-xs font-medium text-red-600">
@@ -668,10 +726,13 @@ export default function FinanceiroCaixa() {
                 required
                 value={saldoContadoTexto}
                 onChange={(e) => setSaldoContadoTexto(e.target.value)}
+                placeholder="0,00"
+                autoFocus
                 className={INPUT}
               />
             </div>
 
+            {contadoAtual !== null && (
             <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs">
               <span className="font-medium text-slate-600">Diferença apurada:</span>
               <strong
@@ -690,6 +751,7 @@ export default function FinanceiroCaixa() {
                     : `- ${formatarReais(Math.abs(diferencaFechamento))} (Falta)`}
               </strong>
             </div>
+            )}
 
             {diferencaFechamento !== 0 && (
               <div>

@@ -193,6 +193,13 @@ como verdade (começa zerado ou por contagem).
 - Entender por que há rascunhos parados no portal da NFS-e (dado faltando? dúvida de enquadramento?) para o botão "Preparar NFS-e" resolver.
 - Lançamento fiscal continua sendo o que decide a data da virada (ordem proposta, item 5).
 
+## Data prevista da virada (2026-11-25)
+
+**05/12/2026** (sábado; se a loja não abrir, o primeiro dia é segunda, 07/12), definida pelo usuário: 10 dias à frente.
+**Depende da resposta do contador** (docs/perguntas-contador.md). Enquanto o Control não emitir nota, o SicWeb continua só para isso.
+No dia: roteiro do item "Virada" acima; o saldo da gaveta entra pela primeira abertura do Caixa e o saldo dos bancos pelo
+saldo inicial de cada conta (Cadastros do financeiro). Antes, cancelar as vendas de teste.
+
 ## Retomada (2026-11-24, fim do dia no PC da empresa; continuar de casa)
 
 **Onde paramos.** Plano de virada e de notas fiscais escritos (seções acima). Orçamentos do SicWeb medidos: 1.702 desde 2023 (293/393/496/520 por ano; ticket médio ~R$ 1.550 em 2026);

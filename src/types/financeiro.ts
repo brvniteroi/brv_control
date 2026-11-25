@@ -247,7 +247,7 @@ export interface TechnicianCashHolding {
 // CAIXA FÍSICO DA LOJA (`cash_sessions`, `cash_session_entries`, seção 6.2)
 // ============================================================================
 
-export type CashEntryKind = 'venda_dinheiro' | 'recebimento_os' | 'reforco' | 'sangria';
+export type CashEntryKind = 'venda_dinheiro' | 'recebimento_os' | 'reforco' | 'sangria' | 'estorno' | 'outro';
 
 export interface CashSessionEntry {
   id: string;
@@ -285,7 +285,16 @@ export interface CreateCashEntryInput {
   description: string;
 }
 
+/** Caixa aberto (ou null) e, com ele fechado, o que o sistema espera encontrar na gaveta. */
+export interface CashStatus {
+  sessao: CashSession | null;
+  esperado_abertura_cents: number | null;
+  primeira_abertura: boolean;
+}
+
 export interface CloseCashSessionInput {
+  /** Caixa que está na tela (o banco recusa se ele já foi fechado). */
+  session_id: string;
   counted_balance_cents: number;
   difference_reason?: string;
 }

@@ -133,6 +133,27 @@ títulos, parcelas, baixas) quase não são usadas. Por isso a ordem proposta ab
    \`importar-vendas.mjs\` com upsert por \`controle\`), trazer o que faltar (produtos e saldo de abertura do caixa), conferir totais contra o SICNET e passar a operar só no Control.
    O SicWeb fica guardado só para consulta.
 
+### O que vem do SICNET e onde entra (conferido em 2026-11-24, antes da rodada 2 do Gemini)
+O financeiro novo **não importa** os dados financeiros do SicWeb como dados vivos: contas a receber (R$ 1,03 mi sem baixa) e a pagar (abandonadas desde
+2015-16) ficam só no backup; o histórico de vendas já está em `sicweb_vendas` (só admin). Por isso as telas da rodada 2 não dependem do SICNET. O que a
+integração precisa, por tabela:
+| SICNET | Destino no Control | Situação |
+|---|---|---|
+| `TABCLI` | `customers` + `customer_sicweb_codes` | importado (2026-11-24) |
+| `TABEST3A/3B/3R` (vendas, itens, pagamentos) | `sicweb_vendas*` (histórico, só leitura) | importado; repetir na virada (idempotente) |
+| `TABEST1` (829 produtos) | `catalog_items` | **falta**; ver abaixo |
+| `TABEST7` (formas) | `FinancialPaymentMethod` | mapa: dinheiro, PIX, débito, crédito, cobrança bancária = `boleto`, cheque; "a prazo" = venda sem pagamento (a receber) |
+| `TABCX1` (caixa) | só o **saldo de abertura** de cada conta no dia da virada (um movimento por conta) | na virada |
+| `TABCR1/2`, `TABCP*`, `TABCHQ*`, `TABRECIB` | não entram (ficam no backup) | decidido |
+| `TABCAR1` (NSU/TID/paymentid do cartão) | não importa; **avaliar** um campo opcional de NSU/autorização no pagamento em cartão para conferir com o extrato da maquininha | a decidir |
+| `TABNFCE` | não entra; as notas novas nascem no provedor | decidido |
+
+**Catálogo (`TABEST1`) precisa de campos que a rodada 1 não tem** (a tela de pesquisa do SicWeb mostra e busca por eles): **fabricante**, **código interno**
+(a chave `controle`, para o importador ser repetível como o de vendas), **observações** do produto e **data do último reajuste** de preço. Entram na migration do
+catálogo, com a coluna Fabricante e a busca por fabricante/observação na tela (Claude, na ligação ao banco). Antes de escrever o importador, conferir as colunas
+reais da `TABEST1` no PC da empresa (`sqlcmd`) ou no `produtos.csv`: o estoque do SicWeb tem muito saldo negativo (ex.: -4154), então o saldo **não** é importado
+como verdade (começa zerado ou por contagem).
+
 ### Decisões que dependem do usuário
 - **Fiscal**: qual provedor de emissão (ou manter o SicWeb só para nota por um tempo)? Certificado digital A1 está com quem?
 - **Cartão/PIX**: qual integração o SicWeb usa hoje (a tabela de cartão guarda NSU/TID/paymentid)? As maquininhas (Rede, InfinitePay) são as mesmas?

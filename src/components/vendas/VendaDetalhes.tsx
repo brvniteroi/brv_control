@@ -4,17 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   Ban,
-  CreditCard,
-  DollarSign,
   ExternalLink,
   History,
   Loader2,
-  Package,
   Plus,
   Printer,
   ShoppingBag,
   Trash2,
-  Wrench,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
@@ -140,8 +136,7 @@ function ReceberSaldoVendaModal({
       aberto
       onFechar={onFechar}
       titulo={`Receber saldo · ${venda.number}`}
-      subtitulo={`Cliente: ${venda.customer_name} · Saldo em aberto: ${formatarReais(saldoAberto)}`}
-      larguraMax="max-w-xl"
+      larguraMax="max-w-lg"
     >
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div className="space-y-3">
@@ -161,7 +156,7 @@ function ReceberSaldoVendaModal({
             return (
               <div
                 key={lin.uid}
-                className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5"
+                className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5"
               >
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   <div>
@@ -177,7 +172,7 @@ function ReceberSaldoVendaModal({
                           accountId: m === 'dinheiro' ? 'conta-caixa-brv' : 'conta-itau',
                         });
                       }}
-                      className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-800"
+                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-800"
                     >
                       {(Object.keys(ROTULO_FORMA_PAGAMENTO) as FinancialPaymentMethod[]).map(
                         (m) => (
@@ -191,7 +186,7 @@ function ReceberSaldoVendaModal({
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700">
-                      Valor a abater (R$)
+                      Valor (R$)
                     </label>
                     <input
                       type="text"
@@ -200,7 +195,7 @@ function ReceberSaldoVendaModal({
                       onChange={(e) =>
                         atualizarLinha(lin.uid, { amountTexto: e.target.value })
                       }
-                      className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-800"
+                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-800"
                     />
                   </div>
                 </div>
@@ -208,8 +203,8 @@ function ReceberSaldoVendaModal({
                 {lin.method === 'dinheiro' ? (
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600">
-                        Valor entregue em espécie (p/ troco)
+                      <label className="block text-xs font-medium text-slate-700">
+                        Recebido em espécie (R$)
                       </label>
                       <input
                         type="text"
@@ -219,12 +214,12 @@ function ReceberSaldoVendaModal({
                           atualizarLinha(lin.uid, { tenderedTexto: e.target.value })
                         }
                         placeholder={lin.amountTexto}
-                        className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                        className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
                       />
                     </div>
                     <div className="flex flex-col justify-end">
-                      <span className="text-[11px] text-slate-500">Troco a devolver:</span>
-                      <span className="text-sm font-extrabold text-emerald-700">
+                      <span className="text-xs text-slate-500">Troco:</span>
+                      <span className="text-sm font-bold text-emerald-700">
                         {formatarReais(troco)}
                       </span>
                     </div>
@@ -232,7 +227,7 @@ function ReceberSaldoVendaModal({
                 ) : lin.method === 'debito' || lin.method === 'credito' ? (
                   <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600">
+                      <label className="block text-xs font-medium text-slate-700">
                         Maquininha
                       </label>
                       <select
@@ -240,7 +235,7 @@ function ReceberSaldoVendaModal({
                         onChange={(e) =>
                           atualizarLinha(lin.uid, { machineId: e.target.value })
                         }
-                        className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                        className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
                       >
                         {MAQUININHAS_DEMO.map((m) => (
                           <option key={m.id} value={m.id}>
@@ -251,7 +246,7 @@ function ReceberSaldoVendaModal({
                     </div>
                     {lin.method === 'credito' && (
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-600">
+                        <label className="block text-xs font-medium text-slate-700">
                           Parcelas
                         </label>
                         <select
@@ -261,7 +256,7 @@ function ReceberSaldoVendaModal({
                               installments: Number(e.target.value),
                             })
                           }
-                          className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                          className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
                         >
                           {[1, 2, 3, 4, 5, 6, 10, 12].map((n) => (
                             <option key={n} value={n}>
@@ -272,15 +267,15 @@ function ReceberSaldoVendaModal({
                       </div>
                     )}
                     {taxa && (
-                      <p className="text-[11px] text-slate-500 sm:col-span-2">
-                        Taxa estimada: <strong>{taxa.percentual.toFixed(2)}%</strong> ({formatarReais(taxa.taxaCentavos)}) ·
-                        Líquido estimado no dia útil seguinte: <strong>{formatarReais(taxa.liquidoCentavos)}</strong>
+                      <p className="text-xs text-slate-500 sm:col-span-2">
+                        Taxa: <strong>{taxa.percentual.toFixed(2)}%</strong> ({formatarReais(taxa.taxaCentavos)}) ·
+                        Líquido: <strong>{formatarReais(taxa.liquidoCentavos)}</strong>
                       </p>
                     )}
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600">
+                    <label className="block text-xs font-medium text-slate-700">
                       Conta de destino
                     </label>
                     <select
@@ -288,7 +283,7 @@ function ReceberSaldoVendaModal({
                       onChange={(e) =>
                         atualizarLinha(lin.uid, { accountId: e.target.value })
                       }
-                      className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
                     >
                       {CONTAS_FINANCEIRAS_DEMO.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -308,7 +303,7 @@ function ReceberSaldoVendaModal({
                       }
                       className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline"
                     >
-                      <Trash2 size={12} /> Remover linha
+                      <Trash2 size={12} /> Remover
                     </button>
                   </div>
                 )}
@@ -324,8 +319,8 @@ function ReceberSaldoVendaModal({
               setLinhas((at) => [
                 ...at,
                 {
-                  uid: `rec-${Date.now()}`,
-                  method: 'cartao' in at ? 'pix' : 'credito',
+                  uid: `rec-${at.length + 1}`,
+                  method: 'credito',
                   amountTexto: restante > 0 ? centavosParaTextoInput(restante) : '',
                   tenderedTexto: '',
                   accountId: 'conta-itau',
@@ -335,13 +330,13 @@ function ReceberSaldoVendaModal({
                 },
               ])
             }
-            className="inline-flex items-center gap-1 font-bold text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
           >
-            <Plus size={14} /> Adicionar outra forma
+            <Plus size={14} /> Adicionar forma
           </button>
 
           <span>
-            Restante após este recebimento:{' '}
+            Restante:{' '}
             <strong className={restante > 0 ? 'text-amber-700' : 'text-emerald-700'}>
               {formatarReais(restante)}
             </strong>
@@ -354,20 +349,20 @@ function ReceberSaldoVendaModal({
           </p>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
+        <div className="flex justify-end gap-2 pt-1">
           <button
             type="button"
             onClick={onFechar}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={salvando}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {salvando && <Loader2 size={14} className="animate-spin" />}
+            {salvando && <Loader2 size={13} className="animate-spin" />}
             Confirmar recebimento ({formatarReais(somaInformada)})
           </button>
         </div>
@@ -375,10 +370,6 @@ function ReceberSaldoVendaModal({
     </ModalDialogoVendas>
   );
 }
-
-// ============================================================================
-// Painel de Detalhe da Venda
-// ============================================================================
 
 interface VendaDetalhesProps {
   vendaId: string;
@@ -472,88 +463,89 @@ export default function VendaDetalhes({
 
           return (
             <>
-              {/* Cabeçalho fixo */}
-              <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-4 py-3.5 shadow-2xs sm:px-6">
-                <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                      <ShoppingBag size={18} />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl">
-                          {venda.number}
-                        </h1>
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-bold ${CORES_SITUACAO_VENDA[sit].selo}`}
-                        >
-                          {CORES_SITUACAO_VENDA[sit].rotulo}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-                          Origem: {ROTULO_ORIGEM_VENDA[venda.origin_type]}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        {venda.customer_name} · {formatarDataHora(venda.created_at)}
-                        {venda.seller_name ? ` · Vendedor(a): ${venda.seller_name}` : ''}
-                      </p>
-                    </div>
+              {/* Cabeçalho fixo igual a OrdemDetalhes */}
+              <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-6 py-4 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <ShoppingBag size={18} />
                   </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                        {venda.number}
+                      </h1>
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${CORES_SITUACAO_VENDA[sit].selo}`}
+                      >
+                        {CORES_SITUACAO_VENDA[sit].rotulo}
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                        {ROTULO_ORIGEM_VENDA[venda.origin_type]}
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      {venda.customer_name} · {formatarDataHora(venda.created_at)}
+                      {venda.seller_name ? ` · ${venda.seller_name}` : ''}
+                    </span>
+                  </div>
+                </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReciboAberto(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <Printer size={14} />
+                    Recibo
+                  </button>
+
+                  {!cancelada && saldoAberto > 0 && (
                     <button
                       type="button"
-                      onClick={() => setReciboAberto(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50"
+                      onClick={() => setReceberAberto(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700"
                     >
-                      <Printer size={14} />
-                      Imprimir recibo
+                      Receber saldo ({formatarReais(saldoAberto)})
                     </button>
+                  )}
 
-                    {!cancelada && saldoAberto > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setReceberAberto(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700"
-                      >
-                        <DollarSign size={14} />
-                        Receber saldo ({formatarReais(saldoAberto)})
-                      </button>
-                    )}
-
-                    {!cancelada && ehCompleto && (
-                      <button
-                        type="button"
-                        onClick={() => setCancelarAberto(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100"
-                      >
-                        <Ban size={14} />
-                        Cancelar venda
-                      </button>
-                    )}
-
+                  {!cancelada && ehCompleto && (
                     <button
                       type="button"
-                      onClick={onFechar}
-                      aria-label="Fechar"
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-100"
+                      onClick={() => setCancelarAberto(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
                     >
-                      <X size={18} />
+                      <Ban size={14} />
+                      Cancelar venda
                     </button>
-                  </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onFechar}
+                    aria-label="Fechar"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
               </div>
 
-              <div className="mx-auto mt-6 max-w-5xl space-y-6 px-4 sm:px-6">
+              {erro && (
+                <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700">
+                  {erro}
+                </div>
+              )}
+
+              <div className="mx-auto mt-6 max-w-5xl space-y-6 px-6">
                 {cancelada && (
                   <div
                     role="status"
-                    className="rounded-2xl border-2 border-slate-300 bg-slate-100 p-4 text-xs text-slate-800"
+                    className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800"
                   >
-                    <p className="text-sm font-bold text-slate-900">
-                      Venda cancelada (somente leitura)
-                    </p>
-                    <p className="mt-0.5 text-slate-600">
+                    <p className="font-bold">Venda cancelada</p>
+                    <p className="mt-0.5">
                       {venda.cancelled_at ? `Em ${formatarDataHora(venda.cancelled_at)}` : ''}
                       {venda.cancelled_by_name ? ` por ${venda.cancelled_by_name}` : ''}
                       {venda.cancel_reason ? ` · Motivo: ${venda.cancel_reason}` : ''}
@@ -561,24 +553,14 @@ export default function VendaDetalhes({
                   </div>
                 )}
 
-                {erro && (
-                  <p
-                    role="alert"
-                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700"
-                  >
-                    {erro}
-                  </p>
-                )}
-
-                {/* Vínculos com orçamento / OS */}
                 {(venda.quote_id || venda.service_order_number) && (
                   <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-xs shadow-xs">
-                    <span className="font-bold text-slate-600">Vínculos:</span>
+                    <span className="font-semibold text-slate-600">Vínculos:</span>
                     {venda.quote_id && (
                       <button
                         type="button"
                         onClick={() => navigate(`/orcamentos?orcamento=${venda.quote_id}`)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 font-bold text-blue-800 hover:bg-blue-100"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1 font-semibold text-blue-600 hover:bg-blue-50"
                       >
                         Orçamento {venda.quote_number} <ExternalLink size={12} />
                       </button>
@@ -587,7 +569,7 @@ export default function VendaDetalhes({
                       <button
                         type="button"
                         onClick={() => navigate('/ordens-de-servico')}
-                        className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1 font-bold text-indigo-800 hover:bg-indigo-100"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1 font-semibold text-blue-600 hover:bg-blue-50"
                       >
                         OS nº {venda.service_order_number} <ExternalLink size={12} />
                       </button>
@@ -596,56 +578,51 @@ export default function VendaDetalhes({
                 )}
 
                 {/* Itens da venda */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                   <h2 className="text-base font-bold text-slate-800">
-                    Itens da venda ({venda.items.length})
+                    Itens ({venda.items.length})
                   </h2>
 
                   <div className="mt-3 overflow-x-auto">
                     <table className="w-full border-collapse text-left text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 text-[11px] font-bold uppercase text-slate-500">
-                          <th className="py-2 pr-3">Tipo</th>
-                          <th className="px-3 py-2">Código / Item</th>
-                          <th className="px-3 py-2 text-center">Qtd.</th>
-                          <th className="px-3 py-2 text-right">Unitário</th>
-                          <th className="px-3 py-2 text-right">Desconto</th>
-                          <th className="py-2 pl-3 text-right">Total</th>
+                        <tr className="border-b border-slate-100 bg-slate-50/70 font-semibold uppercase tracking-wider text-slate-500">
+                          <th className="px-4 py-3">Tipo</th>
+                          <th className="px-4 py-3">Item</th>
+                          <th className="px-4 py-3 text-center">Qtd.</th>
+                          <th className="px-4 py-3 text-right">Unitário</th>
+                          <th className="px-4 py-3 text-right">Desconto</th>
+                          <th className="px-4 py-3 text-right">Total</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-700">
                         {venda.items.map((item) => (
                           <tr key={item.id}>
-                            <td className="py-2.5 pr-3">
+                            <td className="px-4 py-3">
                               <span
-                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${CORES_TIPO_ITEM[item.kind].selo}`}
+                                className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${CORES_TIPO_ITEM[item.kind].selo}`}
                               >
-                                {item.kind === 'produto' ? (
-                                  <Package size={10} />
-                                ) : (
-                                  <Wrench size={10} />
-                                )}
                                 {CORES_TIPO_ITEM[item.kind].rotulo}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5">
+                            <td className="px-4 py-3">
                               <span className="font-mono text-[11px] text-slate-400">
                                 {item.code}
                               </span>{' '}
                               <strong className="text-slate-900">{item.name}</strong>
                             </td>
-                            <td className="px-3 py-2.5 text-center tabular-nums">
+                            <td className="px-4 py-3 text-center tabular-nums">
                               {item.quantity} {item.unit}
                             </td>
-                            <td className="px-3 py-2.5 text-right tabular-nums">
+                            <td className="px-4 py-3 text-right tabular-nums">
                               {formatarReais(item.unit_price_cents)}
                             </td>
-                            <td className="px-3 py-2.5 text-right tabular-nums text-slate-400">
+                            <td className="px-4 py-3 text-right tabular-nums text-slate-400">
                               {item.discount_cents > 0
                                 ? `- ${formatarReais(item.discount_cents)}`
                                 : '—'}
                             </td>
-                            <td className="py-2.5 pl-3 text-right font-extrabold tabular-nums text-brv-navy">
+                            <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-900">
                               {formatarReais(item.total_cents)}
                             </td>
                           </tr>
@@ -663,34 +640,30 @@ export default function VendaDetalhes({
                         Serviços: <strong>{formatarReais(venda.services_subtotal_cents)}</strong>
                       </span>
                       {venda.general_discount_cents > 0 && (
-                        <span className="text-rose-700">
-                          Desconto geral:{' '}
-                          <strong>- {formatarReais(venda.general_discount_cents)}</strong>
+                        <span className="text-red-700">
+                          Desconto: <strong>- {formatarReais(venda.general_discount_cents)}</strong>
                         </span>
                       )}
                     </div>
-                    <div className="text-sm font-extrabold text-brv-navy">
-                      Total da Venda: {formatarReais(venda.total_cents)}
+                    <div className="text-sm font-bold text-slate-900">
+                      Total: {formatarReais(venda.total_cents)}
                     </div>
                   </div>
                 </section>
 
                 {/* Pagamentos */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-slate-800">
-                      <CreditCard size={18} className="text-blue-600" />
-                      <h2 className="text-base font-bold">
-                        Pagamentos ({venda.payments.length})
-                      </h2>
-                    </div>
+                    <h2 className="text-base font-bold text-slate-800">
+                      Pagamentos ({venda.payments.length})
+                    </h2>
 
                     <div className="flex items-center gap-3 text-xs">
                       <span className="text-emerald-700">
                         Pago: <strong>{formatarReais(venda.paid_cents)}</strong>
                       </span>
                       {saldoAberto > 0 && !cancelada && (
-                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 font-bold text-amber-900">
+                        <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700">
                           A receber: {formatarReais(saldoAberto)}
                         </span>
                       )}
@@ -699,7 +672,7 @@ export default function VendaDetalhes({
 
                   {venda.payments.length === 0 ? (
                     <p className="mt-3 text-xs text-slate-400">
-                      Nenhum pagamento registrado ainda (venda em aberto a receber).
+                      Nenhum pagamento registrado.
                     </p>
                   ) : (
                     <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
@@ -709,7 +682,7 @@ export default function VendaDetalhes({
                           className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs"
                         >
                           <div>
-                            <span className="font-bold text-slate-900">
+                            <span className="font-semibold text-slate-900">
                               {ROTULO_FORMA_PAGAMENTO[pg.method]}
                               {pg.method === 'credito' && pg.installments > 1
                                 ? ` (${pg.installments}x)`
@@ -721,19 +694,19 @@ export default function VendaDetalhes({
                                 ? `${pg.card_machine_name} → ${pg.account_name}`
                                 : pg.account_name}
                             </span>
-                            {pg.estimated_fee_cents != null && (
+                            {ehCompleto && pg.estimated_fee_cents != null && (
                               <span className="text-slate-400">
-                                {' · '}Taxa est.: {pg.estimated_fee_percent}% (
+                                {' · '}Taxa: {pg.estimated_fee_percent}% (
                                 {formatarReais(pg.estimated_fee_cents)})
                               </span>
                             )}
                             <p className="text-[11px] text-slate-400">
-                              Lançado em {formatarDataHora(pg.paid_at)} por {pg.created_by_name}
+                              {formatarDataHora(pg.paid_at)} · {pg.created_by_name}
                             </p>
                           </div>
 
                           <div className="text-right">
-                            <span className="text-sm font-extrabold text-emerald-700">
+                            <span className="text-sm font-bold text-emerald-700">
                               {formatarReais(pg.amount_cents)}
                             </span>
                             {pg.change_cents > 0 && (
@@ -748,8 +721,8 @@ export default function VendaDetalhes({
                   )}
                 </section>
 
-                {/* Notas fiscais (4.4) */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+                {/* Notas fiscais */}
+                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                   <h2 className="mb-3 text-base font-bold text-slate-800">Notas fiscais</h2>
                   <NotasFiscaisVenda
                     venda={venda}
@@ -763,18 +736,17 @@ export default function VendaDetalhes({
                 </section>
 
                 {/* Histórico */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                   <div className="flex items-center gap-2 text-slate-800">
-                    <History size={18} className="text-blue-600" />
-                    <h2 className="text-base font-bold">Histórico da venda</h2>
+                    <History size={16} className="text-blue-600" />
+                    <h2 className="text-base font-bold">Histórico</h2>
                   </div>
 
-                  <ol className="relative mt-4 ml-2 space-y-3 border-l-2 border-slate-200 pl-4">
+                  <ol className="mt-3 space-y-2.5 divide-y divide-slate-100 text-xs">
                     {venda.events.map((ev) => (
-                      <li key={ev.id} className="relative text-xs">
-                        <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-brv-navy" />
+                      <li key={ev.id} className="pt-2.5 first:pt-0">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-bold text-slate-800">{ev.actor_name}</span>
+                          <span className="font-semibold text-slate-800">{ev.actor_name}</span>
                           <span className="text-[11px] text-slate-400">
                             {formatarDataHora(ev.created_at)}
                           </span>
@@ -807,29 +779,26 @@ export default function VendaDetalhes({
                   aberto
                   onFechar={() => setCancelarAberto(false)}
                   titulo={`Cancelar venda · ${venda.number}`}
-                  subtitulo="O cancelamento estornará os pagamentos registrados desta venda."
                   larguraMax="max-w-md"
                 >
                   {temNotaEmitida ? (
                     <div className="space-y-4">
                       <div
                         role="alert"
-                        className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-950"
+                        className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900"
                       >
-                        <AlertTriangle size={17} className="mt-0.5 shrink-0 text-amber-700" />
+                        <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
                         <p>
-                          <strong>Atenção:</strong> venda com nota fiscal emitida só pode ser
-                          cancelada depois de cancelar a nota fiscal na seção "Notas fiscais" desta
-                          tela.
+                          Cancele a nota fiscal na seção "Notas fiscais" antes de cancelar a venda.
                         </p>
                       </div>
                       <div className="flex justify-end">
                         <button
                           type="button"
                           onClick={() => setCancelarAberto(false)}
-                          className="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white"
+                          className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white"
                         >
-                          Entendi
+                          Fechar
                         </button>
                       </div>
                     </div>
@@ -851,8 +820,7 @@ export default function VendaDetalhes({
                           required
                           value={motivoCancelamento}
                           onChange={(e) => setMotivoCancelamento(e.target.value)}
-                          placeholder="Descreva o motivo do cancelamento..."
-                          className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                          className="mt-1.5 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                         />
                       </div>
 
@@ -860,14 +828,14 @@ export default function VendaDetalhes({
                         <button
                           type="button"
                           onClick={() => setCancelarAberto(false)}
-                          className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700"
+                          className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                         >
                           Voltar
                         </button>
                         <button
                           type="submit"
                           disabled={cancelando || !motivoCancelamento.trim()}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                         >
                           {cancelando && <Loader2 size={13} className="animate-spin" />}
                           Confirmar cancelamento
@@ -885,4 +853,3 @@ export default function VendaDetalhes({
     document.body,
   );
 }
-

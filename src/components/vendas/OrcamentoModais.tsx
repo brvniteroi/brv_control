@@ -23,8 +23,8 @@ import {
 } from './fonteDeDados';
 import ModalDialogoVendas from './ModalDialogoVendas';
 
-const CAMPO =
-  'mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+const INPUT =
+  'mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
 // ============================================================================
 // 1. Modal: Gerenciar Textos Padrão de Observação (/orcamentos/textos)
@@ -88,7 +88,7 @@ export function ModalTextosPadraoOrcamento({
     e.preventDefault();
     setErro(null);
     if (!titulo.trim() || !conteudo.trim()) {
-      setErro('Informe o título do botão e o texto da observação.');
+      setErro('Informe o título e o texto.');
       return;
     }
     setSalvando(true);
@@ -122,21 +122,17 @@ export function ModalTextosPadraoOrcamento({
     <ModalDialogoVendas
       aberto={aberto}
       onFechar={onFechar}
-      titulo="Observações padrão de orçamento"
-      subtitulo="Textos prontos para inserir com um clique no campo de observações dos orçamentos."
+      titulo="Textos padrão"
       larguraMax="max-w-2xl"
     >
       <div className="space-y-4">
         <form
           onSubmit={(e) => void handleSalvar(e)}
-          className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5"
+          className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5"
         >
-          <div className="text-xs font-bold text-slate-800">
-            {editandoId ? 'Editar texto padrão' : 'Novo texto padrão'}
-          </div>
           <div>
-            <label htmlFor="txt-pad-titulo" className="block text-xs font-medium text-slate-700">
-              Título curto do chip *
+            <label htmlFor="txt-pad-titulo" className="block text-xs font-semibold text-slate-700">
+              Título *
             </label>
             <input
               id="txt-pad-titulo"
@@ -145,12 +141,12 @@ export function ModalTextosPadraoOrcamento({
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ex.: Elétrica e dreno"
-              className={CAMPO}
+              className={INPUT}
             />
           </div>
           <div>
-            <label htmlFor="txt-pad-conteudo" className="block text-xs font-medium text-slate-700">
-              Texto completo da observação *
+            <label htmlFor="txt-pad-conteudo" className="block text-xs font-semibold text-slate-700">
+              Texto *
             </label>
             <textarea
               id="txt-pad-conteudo"
@@ -159,7 +155,7 @@ export function ModalTextosPadraoOrcamento({
               value={conteudo}
               onChange={(e) => setConteudo(e.target.value)}
               placeholder="Ex.: Elétrica e dreno por conta do cliente."
-              className={CAMPO}
+              className={INPUT}
             />
           </div>
 
@@ -174,24 +170,24 @@ export function ModalTextosPadraoOrcamento({
               <button
                 type="button"
                 onClick={limparForm}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
               >
-                Cancelar edição
+                Cancelar
               </button>
             )}
             <button
               type="submit"
               disabled={salvando}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {salvando ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-              {editandoId ? 'Salvar alteração' : 'Adicionar texto padrão'}
+              {editandoId ? 'Salvar' : 'Adicionar'}
             </button>
           </div>
         </form>
 
         {carregando ? (
-          <p className="py-4 text-center text-xs text-slate-400">Carregando textos...</p>
+          <p className="py-4 text-center text-xs text-slate-400">Carregando...</p>
         ) : textos.length === 0 ? (
           <p className="py-4 text-center text-xs text-slate-400">
             Nenhum texto padrão cadastrado.
@@ -204,23 +200,23 @@ export function ModalTextosPadraoOrcamento({
                 className="flex items-start justify-between gap-3 px-4 py-3 text-xs"
               >
                 <div className="min-w-0">
-                  <p className="font-bold text-slate-800">{t.title}</p>
+                  <p className="font-semibold text-slate-800">{t.title}</p>
                   <p className="mt-0.5 text-slate-600">{t.content}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => iniciarEdicao(t)}
-                    title="Editar texto"
+                    title="Editar"
                     aria-label={`Editar ${t.title}`}
-                    className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                    className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50 hover:text-blue-600"
                   >
                     <Pencil size={13} />
                   </button>
                   <button
                     type="button"
                     onClick={() => void handleExcluir(t.id)}
-                    title="Excluir texto"
+                    title="Excluir"
                     aria-label={`Excluir ${t.title}`}
                     className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                   >
@@ -295,18 +291,17 @@ export function ModalRegistrarRespostaOrcamento({
       aberto={aberto}
       onFechar={onFechar}
       titulo={`Registrar resposta · ${orcamento.number}`}
-      subtitulo="Use quando o cliente aprovou ou recusou por mensagem, ligação ou no balcão."
       larguraMax="max-w-md"
     >
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <fieldset>
-          <legend className="block text-xs font-semibold text-slate-700">Resposta do cliente *</legend>
+          <legend className="block text-xs font-semibold text-slate-700">Resposta *</legend>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             <button
               type="button"
               aria-pressed={decisao === 'aprovado'}
               onClick={() => setDecisao('aprovado')}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                 decisao === 'aprovado'
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
                   : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -319,9 +314,9 @@ export function ModalRegistrarRespostaOrcamento({
               type="button"
               aria-pressed={decisao === 'recusado'}
               onClick={() => setDecisao('recusado')}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                 decisao === 'recusado'
-                  ? 'border-rose-500 bg-rose-50 text-rose-800'
+                  ? 'border-red-500 bg-red-50 text-red-800'
                   : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
               }`}
             >
@@ -333,13 +328,13 @@ export function ModalRegistrarRespostaOrcamento({
 
         <div>
           <label htmlFor="resp-orc-canal" className="block text-xs font-semibold text-slate-700">
-            Canal da resposta *
+            Canal *
           </label>
           <select
             id="resp-orc-canal"
             value={canal}
             onChange={(e) => setCanal(e.target.value as Exclude<QuoteResponseChannel, 'link'>)}
-            className={CAMPO}
+            className={INPUT}
           >
             {canaisManuais.map((c) => (
               <option key={c} value={c}>
@@ -350,16 +345,15 @@ export function ModalRegistrarRespostaOrcamento({
         </div>
 
         <div>
-          <label htmlFor="resp-orc-obs" className="block text-xs font-medium text-slate-700">
-            Observação (opcional)
+          <label htmlFor="resp-orc-obs" className="block text-xs font-semibold text-slate-700">
+            Observação
           </label>
           <textarea
             id="resp-orc-obs"
             rows={2}
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}
-            placeholder="Ex.: Aprovou pelo WhatsApp com instalação agendada para quinta..."
-            className={CAMPO}
+            className={INPUT}
           />
         </div>
 
@@ -369,21 +363,21 @@ export function ModalRegistrarRespostaOrcamento({
           </p>
         )}
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 pt-1">
           <button
             type="button"
             onClick={onFechar}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={salvando}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {salvando && <Loader2 size={14} className="animate-spin" />}
-            Salvar resposta
+            {salvando && <Loader2 size={13} className="animate-spin" />}
+            Salvar
           </button>
         </div>
       </form>
@@ -392,7 +386,7 @@ export function ModalRegistrarRespostaOrcamento({
 }
 
 // ============================================================================
-// 3. Modal: Adicionar Item Avulso (sem cadastro no catálogo)
+// 3. Modal: Adicionar Item Avulso
 // ============================================================================
 
 export interface ItemAvulsoResultado {
@@ -425,7 +419,7 @@ export function ModalItemAvulso({
     e.preventDefault();
     setErro(null);
     if (!nome.trim()) {
-      setErro('Informe a descrição do item avulso.');
+      setErro('Informe a descrição do item.');
       return;
     }
     const qtd = Number(quantidade.replace(',', '.'));
@@ -435,7 +429,7 @@ export function ModalItemAvulso({
     }
     const centavos = converterTextoParaCentavos(valorTexto);
     if (centavos === null || centavos <= 0) {
-      setErro('Informe o valor unitário em reais (ex.: 120,00).');
+      setErro('Informe o valor unitário em reais.');
       return;
     }
     onAdicionar({
@@ -452,18 +446,17 @@ export function ModalItemAvulso({
     <ModalDialogoVendas
       aberto={aberto}
       onFechar={onFechar}
-      titulo="Adicionar item avulso"
-      subtitulo="Item pontual sem cadastro no catálogo (marcado como Avulso)."
+      titulo="Item avulso"
       larguraMax="max-w-md"
     >
-      <form onSubmit={handleSubmit} className="space-y-3.5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset>
           <legend className="block text-xs font-semibold text-slate-700">Tipo *</legend>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             {(['produto', 'servico'] as const).map((op) => (
               <label
                 key={op}
-                className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
+                className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
                   tipo === op
                     ? 'border-blue-600 bg-blue-50 text-blue-900'
                     : 'border-slate-200 bg-white text-slate-600'
@@ -486,7 +479,7 @@ export function ModalItemAvulso({
 
         <div>
           <label htmlFor="avulso-nome" className="block text-xs font-semibold text-slate-700">
-            Descrição do item *
+            Descrição *
           </label>
           <input
             id="avulso-nome"
@@ -494,12 +487,12 @@ export function ModalItemAvulso({
             required
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            placeholder="Ex.: Suporte especial sob medida em cantoneira"
-            className={CAMPO}
+            placeholder="Descrição do produto ou serviço"
+            className={INPUT}
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label htmlFor="avulso-qtd" className="block text-xs font-semibold text-slate-700">
               Qtd. *
@@ -511,7 +504,7 @@ export function ModalItemAvulso({
               required
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
-              className={CAMPO}
+              className={INPUT}
             />
           </div>
 
@@ -523,7 +516,7 @@ export function ModalItemAvulso({
               id="avulso-un"
               value={unidade}
               onChange={(e) => setUnidade(e.target.value)}
-              className={CAMPO}
+              className={INPUT}
             >
               {UNIDADES_CATALOGO.map((u) => (
                 <option key={u} value={u}>
@@ -535,7 +528,7 @@ export function ModalItemAvulso({
 
           <div>
             <label htmlFor="avulso-valor" className="block text-xs font-semibold text-slate-700">
-              Valor unit. (R$) *
+              Unitário (R$) *
             </label>
             <input
               id="avulso-valor"
@@ -544,8 +537,8 @@ export function ModalItemAvulso({
               required
               value={valorTexto}
               onChange={(e) => setValorTexto(e.target.value)}
-              placeholder="150,00"
-              className={CAMPO}
+              placeholder="0,00"
+              className={INPUT}
             />
           </div>
         </div>
@@ -556,23 +549,22 @@ export function ModalItemAvulso({
           </p>
         )}
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 pt-1">
           <button
             type="button"
             onClick={onFechar}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
           >
-            Incluir item avulso
+            Adicionar
           </button>
         </div>
       </form>
     </ModalDialogoVendas>
   );
 }
-

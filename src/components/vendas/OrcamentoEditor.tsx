@@ -15,17 +15,13 @@ import {
   Link2,
   Loader2,
   MessageCircle,
-  MessageSquarePlus,
-  Package,
   Plus,
   Printer,
   RefreshCw,
   RotateCcw,
   Search,
-  Settings2,
   ShoppingBag,
   Trash2,
-  Wrench,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
@@ -52,6 +48,7 @@ import SeletorCliente from '../ordens/SeletorCliente';
 import { CORES_SITUACAO_ORCAMENTO, ROTULO_CANAL_ORCAMENTO } from './cores';
 import { CLIENTES_DEMO_VENDAS } from './dadosDemo';
 import { OrcamentoDocumentoModal } from './FolhaOrcamentoVenda';
+import { useNavegacaoLista } from './useNavegacaoLista';
 import {
   anotarNoHistoricoOrcamento,
   buscarItensParaBusca,
@@ -75,18 +72,16 @@ import {
 } from './OrcamentoModais';
 import {
   abrirLinkNaJanelaWhatsApp,
-  dataIsoHoje,
   diasOrcamentoVencido,
   linkPublicoOrcamento,
   prepararJanelaWhatsApp,
   recalcularTotaisOrcamentoOuVenda,
   situacaoOrcamento,
-  somarDiasIso,
   textoWhatsAppOrcamento,
 } from './regrasVendas';
 
-const CAMPO =
-  'mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500';
+const INPUT =
+  'mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500';
 
 interface LinhaEditor {
   uid: string;
@@ -119,7 +114,6 @@ function parseDescontoEntrada(modo: ModoDescontoLinha, texto: string): number {
 }
 
 interface OrcamentoEditorProps {
-  /** ID do orçamento existente, ou `'novo'` para criar um do zero. */
   orcamentoId: string | 'novo';
   onFechar: () => void;
   onSalvo: () => void;
@@ -141,7 +135,6 @@ export default function OrcamentoEditor({
   const [carregando, setCarregando] = useState(!ehNovo);
   const [erroCarga, setErroCarga] = useState<string | null>(null);
 
-  // Cliente e vendedor
   const [consumidorFinal, setConsumidorFinal] = useState(false);
   const [cliente, setCliente] = useState<{
     id: string;
@@ -157,13 +150,11 @@ export default function OrcamentoEditor({
   const [vendedores, setVendedores] = useState<SellerOption[]>([]);
   const [vendedorId, setVendedorId] = useState('');
 
-  // Itens (Produtos e Serviços)
   const [linhas, setLinhas] = useState<LinhaEditor[]>([]);
   const [buscaItem, setBuscaItem] = useState('');
   const [sugestoesCatalogo, setSugestoesCatalogo] = useState<CatalogItem[]>([]);
   const [buscaAberta, setBuscaAberta] = useState(false);
 
-  // Condições e observações
   const [validadeDias, setValidadeDias] = useState('10');
   const [descontoGeralTexto, setDescontoGeralTexto] = useState('');
   const [freteTexto, setFreteTexto] = useState('');
@@ -174,12 +165,10 @@ export default function OrcamentoEditor({
   const [observacaoInterna, setObservacaoInterna] = useState('');
   const [textosPadrao, setTextosPadrao] = useState<QuoteStandardText[]>([]);
 
-  // Histórico
   const [eventos, setEventos] = useState<QuoteEvent[]>([]);
   const [notaHistorico, setNotaHistorico] = useState('');
   const [salvandoNota, setSalvandoNota] = useState(false);
 
-  // Estados de ação e modais
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -287,7 +276,6 @@ export default function OrcamentoEditor({
     };
   }, [orcamentoId, ehNovo, preencherDoOrcamento]);
 
-  // Carrega endereços quando um cliente é selecionado
   const clienteId = cliente?.id ?? null;
   useEffect(() => {
     if (!clienteId) return;
@@ -327,7 +315,6 @@ export default function OrcamentoEditor({
     };
   }, [clienteId]);
 
-  // Busca rápida de itens no catálogo
   useEffect(() => {
     if (!buscaAberta) return;
     let ativo = true;
@@ -349,13 +336,22 @@ export default function OrcamentoEditor({
     return situacaoOrcamento(orcamento);
   }, [orcamento]);
 
-  // Enviado/aprovado/convertido não edita valores direto (para enviado, usa "Reabrir para editar")
   const somenteLeitura =
     !ehNovo &&
     orcamento !== null &&
     (orcamento.status === 'aprovado' ||
       orcamento.status === 'convertido' ||
       orcamento.status === 'enviado');
+
+  // ↓/↑ na lista de sugestões, Enter adiciona o marcado, Esc fecha
+  const teclasBusca = useNavegacaoLista({
+    itens: sugestoesCatalogo,
+    aberta: buscaAberta && sugestoesCatalogo.length > 0,
+    idPrefixo: 'orc-sugestao',
+    aoEscolher: (item) => adicionarItemCatalogo(item),
+    aoAbrir: () => setBuscaAberta(true),
+    aoFechar: () => setBuscaAberta(false),
+  });
 
   const adicionarItemCatalogo = (item: CatalogItem) => {
     setLinhas((atuais) => {
@@ -375,7 +371,7 @@ export default function OrcamentoEditor({
       return [
         ...atuais,
         {
-          uid: `lin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          uid: `lin-${atuais.length + 1}-${item.id}`,
           catalog_item_id: item.id,
           is_custom: false,
           kind: item.kind,
@@ -399,7 +395,7 @@ export default function OrcamentoEditor({
     setLinhas((atuais) => [
       ...atuais,
       {
-        uid: `avulso-${Date.now()}`,
+        uid: `avulso-${atuais.length + 1}`,
         catalog_item_id: null,
         is_custom: true,
         kind: av.kind,
@@ -504,7 +500,7 @@ export default function OrcamentoEditor({
     setSucesso(null);
 
     if (!consumidorFinal && !cliente) {
-      setErro('Escolha um cliente cadastrado ou marque "Consumidor final (sem cadastro)".');
+      setErro('Escolha um cliente cadastrado ou marque "Consumidor final".');
       return null;
     }
     if (itensCalculados.length === 0) {
@@ -555,7 +551,7 @@ export default function OrcamentoEditor({
       preencherDoOrcamento(salvo);
       const hist = await historicoDoOrcamento(salvo.id);
       setEventos(hist);
-      setSucesso('Orçamento salvo com sucesso.');
+      setSucesso('Salvo com sucesso!');
       setTimeout(() => setSucesso(null), 2500);
       onSalvo();
       if (ehNovo) onTrocarOrcamento(salvo.id);
@@ -573,7 +569,7 @@ export default function OrcamentoEditor({
     let fone = contatoTelefone.trim();
     if (!fone) {
       const digitado = window.prompt(
-        'Informe o número de WhatsApp do cliente com DDD (ex.: 21999990000):',
+        'Informe o WhatsApp do cliente com DDD (ex.: 21999990000):',
         '',
       );
       if (!digitado?.trim()) return;
@@ -581,7 +577,6 @@ export default function OrcamentoEditor({
       setContatoTelefone(fone);
     }
 
-    // Abre a janela já no clique síncrono para o navegador do celular não bloquear o pop-up
     const janela = prepararJanelaWhatsApp();
     try {
       let alvo = orcamento;
@@ -610,7 +605,7 @@ export default function OrcamentoEditor({
       const copia = await duplicarOrcamento(orcamento.id, atorNome);
       onSalvo();
       onTrocarOrcamento(copia.id);
-      setSucesso(`Orçamento duplicado como ${copia.number}.`);
+      setSucesso(`Duplicado como ${copia.number}.`);
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível duplicar o orçamento.');
     }
@@ -631,7 +626,7 @@ export default function OrcamentoEditor({
       preencherDoOrcamento(reaberto);
       setEventos(await historicoDoOrcamento(reaberto.id));
       onSalvo();
-      setSucesso('Orçamento reaberto para edição.');
+      setSucesso('Orçamento reaberto.');
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível reabrir o orçamento.');
     }
@@ -641,7 +636,7 @@ export default function OrcamentoEditor({
     if (!orcamento) return;
     if (
       !window.confirm(
-        'Gerar um novo link público de aprovação? O link anterior deixará de funcionar imediatamente.',
+        'Gerar um novo link público de aprovação? O link anterior deixará de funcionar.',
       )
     ) {
       return;
@@ -650,7 +645,7 @@ export default function OrcamentoEditor({
       const atualizado = await gerarNovoLinkOrcamento(orcamento.id, atorNome);
       preencherDoOrcamento(atualizado);
       setEventos(await historicoDoOrcamento(atualizado.id));
-      setSucesso('Novo link público gerado.');
+      setSucesso('Novo link gerado.');
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível gerar novo link.');
     }
@@ -687,9 +682,7 @@ export default function OrcamentoEditor({
       preencherDoOrcamento(res.quote);
       setEventos(await historicoDoOrcamento(alvo.id));
       onSalvo();
-      setSucesso(
-        `OS nº ${res.service_order_number} gerada com os serviços na solicitação do cliente!`,
-      );
+      setSucesso(`OS nº ${res.service_order_number} gerada!`);
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível gerar a OS.');
     }
@@ -697,7 +690,7 @@ export default function OrcamentoEditor({
 
   const handleExcluir = async () => {
     if (!orcamento || orcamento.status !== 'rascunho') return;
-    if (!window.confirm(`Excluir o rascunho ${orcamento.number}? Não é possível desfazer.`)) {
+    if (!window.confirm(`Excluir o rascunho ${orcamento.number}?`)) {
       return;
     }
     try {
@@ -733,24 +726,17 @@ export default function OrcamentoEditor({
     return (
       <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-            {tipoTabela === 'produto' ? (
-              <Package size={15} className="text-sky-600" />
-            ) : (
-              <Wrench size={15} className="text-indigo-600" />
-            )}
-            <span>
-              {tipoTabela === 'produto' ? 'Produtos' : 'Serviços'} ({lista.length})
-            </span>
-          </div>
-          <span className="text-xs font-extrabold text-brv-navy">
+          <span className="text-xs font-bold text-slate-800">
+            {tipoTabela === 'produto' ? 'Produtos' : 'Serviços'} ({lista.length})
+          </span>
+          <span className="text-xs font-semibold text-slate-900">
             Subtotal: {formatarReais(subtotal)}
           </span>
         </div>
 
         {lista.length === 0 ? (
           <p className="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs text-slate-400">
-            Nenhum {tipoTabela === 'produto' ? 'produto' : 'serviço'} incluído neste orçamento.
+            Nenhum {tipoTabela === 'produto' ? 'produto' : 'serviço'} incluído.
           </p>
         ) : (
           <DragDropContext onDragEnd={(r) => reordenarPorTipo(tipoTabela, r)}>
@@ -779,7 +765,7 @@ export default function OrcamentoEditor({
                           <div
                             ref={dragProvided.innerRef}
                             {...dragProvided.draggableProps}
-                            className="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs"
+                            className="rounded-xl border border-slate-200 bg-white p-3"
                           >
                             <div className="flex flex-wrap items-center gap-2">
                               {!somenteLeitura && (
@@ -797,17 +783,17 @@ export default function OrcamentoEditor({
                               </span>
 
                               {item.is_custom && (
-                                <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                                <span className="rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                                   Avulso
                                 </span>
                               )}
 
-                              <span className="min-w-0 flex-1 text-xs font-bold text-slate-900">
+                              <span className="min-w-0 flex-1 text-xs font-semibold text-slate-900">
                                 {item.name}
                               </span>
 
                               {faltaEstoque && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                                   <AlertTriangle size={10} /> Estoque insuficiente (saldo:{' '}
                                   {item.stockQuantity} {item.unit})
                                 </span>
@@ -827,7 +813,7 @@ export default function OrcamentoEditor({
 
                             <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                               <div>
-                                <label className="block text-[10px] font-semibold text-slate-500">
+                                <label className="block text-[11px] font-medium text-slate-600">
                                   Qtd. ({item.unit})
                                 </label>
                                 <input
@@ -838,12 +824,12 @@ export default function OrcamentoEditor({
                                   onChange={(e) =>
                                     atualizarLinha(item.uid, { quantityTexto: e.target.value })
                                   }
-                                  className="mt-0.5 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
+                                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-semibold text-slate-500">
+                                <label className="block text-[11px] font-medium text-slate-600">
                                   Valor unit. (R$)
                                 </label>
                                 <input
@@ -854,13 +840,13 @@ export default function OrcamentoEditor({
                                   onChange={(e) =>
                                     atualizarLinha(item.uid, { unitPriceTexto: e.target.value })
                                   }
-                                  className="mt-0.5 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
+                                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
                                 />
                               </div>
 
                               <div>
                                 <div className="flex items-center justify-between">
-                                  <label className="text-[10px] font-semibold text-slate-500">
+                                  <label className="text-[11px] font-medium text-slate-600">
                                     Desconto
                                   </label>
                                   {!somenteLeitura && (
@@ -873,7 +859,7 @@ export default function OrcamentoEditor({
                                           discountTexto: '',
                                         })
                                       }
-                                      className="text-[10px] font-bold text-blue-600 hover:underline"
+                                      className="text-[11px] font-semibold text-blue-600 hover:underline"
                                     >
                                       {item.discountMode === 'valor' ? 'Usar %' : 'Usar R$'}
                                     </button>
@@ -888,15 +874,13 @@ export default function OrcamentoEditor({
                                     atualizarLinha(item.uid, { discountTexto: e.target.value })
                                   }
                                   placeholder={item.discountMode === 'valor' ? 'R$ 0,00' : '0%'}
-                                  className="mt-0.5 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
+                                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none disabled:bg-slate-50"
                                 />
                               </div>
 
                               <div className="flex flex-col justify-end text-right">
-                                <span className="text-[10px] font-semibold text-slate-400">
-                                  Total da linha
-                                </span>
-                                <span className="text-sm font-extrabold tabular-nums text-brv-navy">
+                                <span className="text-[11px] text-slate-500">Total</span>
+                                <span className="text-sm font-bold tabular-nums text-slate-900">
                                   {formatarReais(item.total_cents)}
                                 </span>
                               </div>
@@ -938,187 +922,170 @@ export default function OrcamentoEditor({
         </div>
       ) : (
         <>
-          {/* ============================================================= */}
-          {/* TOPO FIXO                                                     */}
-          {/* ============================================================= */}
-          <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-4 py-3.5 shadow-2xs sm:px-6">
-            <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                  <FileText size={18} />
-                </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl">
-                      {ehNovo ? 'Novo orçamento' : orcamento?.number}
-                    </h1>
-                    <span
-                      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-bold ${CORES_SITUACAO_ORCAMENTO[situacaoExibida].selo}`}
-                    >
-                      {CORES_SITUACAO_ORCAMENTO[situacaoExibida].rotulo}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Total: <strong className="text-brv-navy">{formatarReais(totais.totalCentavos)}</strong>
-                    {orcamento?.valid_until && (
-                      <> · Válido até {formatarData(orcamento.valid_until)}</>
-                    )}
-                  </p>
-                </div>
+          {/* Cabeçalho fixo igual a OrdemDetalhes */}
+          <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-6 py-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <FileText size={18} />
               </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                {sucesso && (
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
-                    <Check size={13} /> {sucesso}
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                    {ehNovo ? 'Novo orçamento' : orcamento?.number}
+                  </h1>
+                  <span
+                    className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${CORES_SITUACAO_ORCAMENTO[situacaoExibida].selo}`}
+                  >
+                    {CORES_SITUACAO_ORCAMENTO[situacaoExibida].rotulo}
                   </span>
-                )}
-
-                {!somenteLeitura && (
-                  <button
-                    type="button"
-                    disabled={salvando}
-                    onClick={() => void handleSalvar()}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {salvando && <Loader2 size={14} className="animate-spin" />}
-                    Salvar
-                  </button>
-                )}
-
-                {!ehNovo &&
-                  orcamento &&
-                  (orcamento.status === 'enviado' || orcamento.status === 'recusado') && (
-                    <button
-                      type="button"
-                      onClick={() => void handleReabrir()}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100"
-                    >
-                      <RotateCcw size={14} />
-                      Reabrir para editar
-                    </button>
+                </div>
+                <span className="text-xs text-slate-500">
+                  Total: <strong className="text-slate-900">{formatarReais(totais.totalCentavos)}</strong>
+                  {orcamento?.valid_until && (
+                    <> · Válido até {formatarData(orcamento.valid_until)}</>
                   )}
+                </span>
+              </div>
+            </div>
 
-                {!ehNovo && orcamento && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => void handleDuplicar()}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <Copy size={14} />
-                      Duplicar
-                    </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {sucesso && (
+                <span className="flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-600">
+                  <Check size={14} /> {sucesso}
+                </span>
+              )}
 
-                    <button
-                      type="button"
-                      onClick={() => setModalDocAberto(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <Printer size={14} />
-                      Imprimir / PDF
-                    </button>
-                  </>
-                )}
-
-                {(!orcamento || orcamento.status !== 'convertido') && (
-                  <button
-                    type="button"
-                    onClick={() => void handleEnviarWhatsApp()}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700"
-                  >
-                    <MessageCircle size={14} />
-                    Enviar pelo WhatsApp (link para aprovar)
-                  </button>
-                )}
-
-                {!ehNovo && orcamento && orcamento.status !== 'convertido' && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setModalRespostaAberto(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      <CheckCircle2 size={14} className="text-emerald-600" />
-                      Registrar resposta
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => void handleConverterEmVenda()}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100"
-                    >
-                      <ShoppingBag size={14} />
-                      Converter em venda
-                    </button>
-
-                    {servicosLista.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => void handleGerarOs()}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-800 hover:bg-indigo-100"
-                      >
-                        <ClipboardList size={14} />
-                        Gerar OS
-                      </button>
-                    )}
-                  </>
-                )}
-
-                {!ehNovo && orcamento?.status === 'rascunho' && (
-                  <button
-                    type="button"
-                    onClick={() => void handleExcluir()}
-                    className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100"
-                  >
-                    <Trash2 size={14} />
-                    Excluir
-                  </button>
-                )}
-
+              {!somenteLeitura && (
                 <button
                   type="button"
-                  onClick={onFechar}
-                  aria-label="Fechar"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  disabled={salvando}
+                  onClick={() => void handleSalvar()}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:opacity-50"
                 >
-                  <X size={18} />
+                  {salvando ? 'Salvando...' : 'Salvar'}
                 </button>
-              </div>
+              )}
+
+              {!ehNovo &&
+                orcamento &&
+                (orcamento.status === 'enviado' || orcamento.status === 'recusado') && (
+                  <button
+                    type="button"
+                    onClick={() => void handleReabrir()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                  >
+                    <RotateCcw size={14} />
+                    Reabrir para editar
+                  </button>
+                )}
+
+              {!ehNovo && orcamento && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void handleDuplicar()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <Copy size={14} />
+                    Duplicar
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalDocAberto(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <Printer size={14} />
+                    Imprimir / PDF
+                  </button>
+                </>
+              )}
+
+              {(!orcamento || orcamento.status !== 'convertido') && (
+                <button
+                  type="button"
+                  onClick={() => void handleEnviarWhatsApp()}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+                >
+                  <MessageCircle size={14} />
+                  Enviar pelo WhatsApp
+                </button>
+              )}
+
+              {!ehNovo && orcamento && orcamento.status !== 'convertido' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setModalRespostaAberto(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <CheckCircle2 size={14} className="text-emerald-600" />
+                    Registrar resposta
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void handleConverterEmVenda()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                  >
+                    <ShoppingBag size={14} />
+                    Converter em venda
+                  </button>
+
+                  {servicosLista.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void handleGerarOs()}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                    >
+                      <ClipboardList size={14} />
+                      Gerar OS
+                    </button>
+                  )}
+                </>
+              )}
+
+              {!ehNovo && orcamento?.status === 'rascunho' && (
+                <button
+                  type="button"
+                  onClick={() => void handleExcluir()}
+                  className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+                >
+                  <Trash2 size={14} />
+                  Excluir
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={onFechar}
+                aria-label="Fechar"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
 
-          <div className="mx-auto mt-6 max-w-5xl space-y-6 px-4 sm:px-6">
-            {erro && (
-              <div
-                role="alert"
-                className="flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700"
-              >
-                <span>{erro}</span>
-                <button type="button" onClick={() => setErro(null)} aria-label="Fechar erro">
-                  <X size={15} />
-                </button>
-              </div>
-            )}
+          {erro && (
+            <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700">
+              {erro}
+            </div>
+          )}
 
-            {/* Faixa de vínculos quando convertido */}
+          <div className="mx-auto mt-6 max-w-5xl space-y-6 px-6">
             {orcamento &&
               (orcamento.converted_sale_id || orcamento.converted_service_order_id) && (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-violet-200 bg-violet-50/80 p-4 text-xs text-violet-950">
-                  <div>
-                    <p className="text-sm font-bold">
-                      Orçamento convertido (somente leitura — use "Duplicar" se precisar de outro)
-                    </p>
-                    <p className="mt-0.5 text-violet-800">
-                      Este orçamento já gerou documentos operacionais vinculados:
-                    </p>
-                  </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-xs shadow-xs">
+                  <span className="font-semibold text-slate-700">
+                    Orçamento convertido (somente leitura)
+                  </span>
                   <div className="flex flex-wrap items-center gap-2">
                     {orcamento.converted_sale_id && (
                       <button
                         type="button"
                         onClick={() => navigate(`/vendas?venda=${orcamento.converted_sale_id}`)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-violet-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-violet-800"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
                       >
                         Venda nº {orcamento.converted_sale_number}
                         <ExternalLink size={13} />
@@ -1128,7 +1095,7 @@ export default function OrcamentoEditor({
                       <button
                         type="button"
                         onClick={() => navigate('/ordens-de-servico')}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-violet-300 bg-white px-3.5 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
                       >
                         OS nº {orcamento.converted_service_order_number}
                         <ExternalLink size={13} />
@@ -1138,14 +1105,12 @@ export default function OrcamentoEditor({
                 </div>
               )}
 
-            {/* ============================================================= */}
-            {/* SEÇÃO 1: CLIENTE                                              */}
-            {/* ============================================================= */}
-            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+            {/* Seção 1: Cliente */}
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-base font-bold text-slate-800">Cliente e atendimento</h2>
+                <h2 className="text-base font-bold text-slate-800">Cliente</h2>
                 {!somenteLeitura && (
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                  <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-700">
                     <input
                       type="checkbox"
                       checked={consumidorFinal}
@@ -1160,19 +1125,19 @@ export default function OrcamentoEditor({
                       }}
                       className="h-4 w-4 rounded border-slate-300 text-blue-600"
                     />
-                    Consumidor final (sem cadastro)
+                    Consumidor final
                   </label>
                 )}
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <span className="block text-xs font-semibold text-slate-700">
+                  <span className="block text-xs font-medium text-slate-700">
                     Cliente {!consumidorFinal && '*'}
                   </span>
                   {consumidorFinal ? (
-                    <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600">
-                      Consumidor final (sem cadastro)
+                    <div className="mt-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                      Consumidor final
                     </div>
                   ) : (
                     <SeletorCliente
@@ -1184,7 +1149,7 @@ export default function OrcamentoEditor({
                 </div>
 
                 <div>
-                  <label htmlFor="orc-endereco" className="block text-xs font-semibold text-slate-700">
+                  <label htmlFor="orc-endereco" className="block text-xs font-medium text-slate-700">
                     Endereço
                   </label>
                   {enderecos.length > 1 ? (
@@ -1197,7 +1162,7 @@ export default function OrcamentoEditor({
                         const achado = enderecos.find((x) => x.id === e.target.value);
                         if (achado) setEnderecoTextoLivre(achado.rotulo);
                       }}
-                      className={CAMPO}
+                      className={INPUT}
                     >
                       {enderecos.map((end) => (
                         <option key={end.id} value={end.id}>
@@ -1212,12 +1177,8 @@ export default function OrcamentoEditor({
                       disabled={somenteLeitura || consumidorFinal}
                       value={enderecoTextoLivre}
                       onChange={(e) => setEnderecoTextoLivre(e.target.value)}
-                      placeholder={
-                        consumidorFinal
-                          ? 'Sem endereço para consumidor final'
-                          : 'Endereço do cliente'
-                      }
-                      className={CAMPO}
+                      placeholder="Endereço do atendimento"
+                      className={INPUT}
                     />
                   )}
                 </div>
@@ -1225,8 +1186,8 @@ export default function OrcamentoEditor({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label htmlFor="orc-contato" className="block text-xs font-semibold text-slate-700">
-                    Contato (nome livre)
+                  <label htmlFor="orc-contato" className="block text-xs font-medium text-slate-700">
+                    Contato
                   </label>
                   <input
                     id="orc-contato"
@@ -1234,13 +1195,13 @@ export default function OrcamentoEditor({
                     disabled={somenteLeitura}
                     value={contatoNome}
                     onChange={(e) => setContatoNome(e.target.value)}
-                    placeholder="Ex.: Síndico Marcos, Recepção..."
-                    className={CAMPO}
+                    placeholder="Nome do contato"
+                    className={INPUT}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orc-telefone" className="block text-xs font-semibold text-slate-700">
+                  <label htmlFor="orc-telefone" className="block text-xs font-medium text-slate-700">
                     Telefone / WhatsApp
                   </label>
                   <input
@@ -1250,12 +1211,12 @@ export default function OrcamentoEditor({
                     value={contatoTelefone}
                     onChange={(e) => setContatoTelefone(formatarTelefone(e.target.value))}
                     placeholder="(21) 99999-0000"
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orc-vendedor" className="block text-xs font-semibold text-slate-700">
+                  <label htmlFor="orc-vendedor" className="block text-xs font-medium text-slate-700">
                     Vendedor(a)
                   </label>
                   <select
@@ -1263,7 +1224,7 @@ export default function OrcamentoEditor({
                     disabled={somenteLeitura}
                     value={vendedorId}
                     onChange={(e) => setVendedorId(e.target.value)}
-                    className={CAMPO}
+                    className={INPUT}
                   >
                     {vendedores.map((v) => (
                       <option key={v.id} value={v.id}>
@@ -1275,23 +1236,16 @@ export default function OrcamentoEditor({
               </div>
             </section>
 
-            {/* ============================================================= */}
-            {/* SEÇÃO 2: ITENS (PRODUTOS E SERVIÇOS)                          */}
-            {/* ============================================================= */}
-            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+            {/* Seção 2: Itens */}
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-base font-bold text-slate-800">Itens do orçamento</h2>
-                  <p className="text-xs text-slate-500">
-                    Itens de serviço vão em NFS-e e produtos em NFC-e/NF-e.
-                  </p>
-                </div>
+                <h2 className="text-base font-bold text-slate-800">Itens</h2>
 
                 {!somenteLeitura && (
                   <button
                     type="button"
                     onClick={() => setModalAvulsoAberto(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     <Plus size={14} />
                     Item avulso
@@ -1299,12 +1253,11 @@ export default function OrcamentoEditor({
                 )}
               </div>
 
-              {/* Busca rápida no catálogo */}
               {!somenteLeitura && (
                 <div className="relative">
                   <Search
                     size={16}
-                    className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
+                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
                   />
                   <input
                     type="text"
@@ -1315,24 +1268,33 @@ export default function OrcamentoEditor({
                     }}
                     onFocus={() => setBuscaAberta(true)}
                     onBlur={() => setTimeout(() => setBuscaAberta(false), 180)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && sugestoesCatalogo.length > 0) {
-                        e.preventDefault();
-                        adicionarItemCatalogo(sugestoesCatalogo[0]);
-                      }
-                    }}
-                    placeholder="Buscar produto ou serviço no catálogo por código ou nome (Enter adiciona)..."
-                    className="block w-full rounded-xl border border-blue-200 bg-blue-50/30 py-2.5 pr-4 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    onKeyDown={teclasBusca.aoTeclar}
+                    role="combobox"
+                    aria-expanded={buscaAberta && sugestoesCatalogo.length > 0}
+                    aria-controls="orc-sugestoes"
+                    aria-activedescendant={
+                      buscaAberta && sugestoesCatalogo.length > 0 ? `orc-sugestao-${teclasBusca.ativo}` : undefined
+                    }
+                    placeholder="Buscar produto ou serviço por código ou nome..."
+                    className="block w-full rounded-lg border border-slate-200 py-2 pr-3 pl-9 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
 
                   {buscaAberta && sugestoesCatalogo.length > 0 && (
-                    <ul className="absolute z-30 mt-1 max-h-64 w-full divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
-                      {sugestoesCatalogo.map((item) => (
-                        <li key={item.id}>
+                    <ul
+                      id="orc-sugestoes"
+                      role="listbox"
+                      className="absolute z-30 mt-1 max-h-60 w-full divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-sm"
+                    >
+                      {sugestoesCatalogo.map((item, idx) => (
+                        <li key={item.id} id={`orc-sugestao-${idx}`} role="option" aria-selected={idx === teclasBusca.ativo}>
                           <button
                             type="button"
+                            tabIndex={-1}
                             onMouseDown={() => adicionarItemCatalogo(item)}
-                            className="flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-xs hover:bg-blue-50"
+                            onMouseEnter={() => teclasBusca.setAtivo(idx)}
+                            className={`flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-xs ${
+                              idx === teclasBusca.ativo ? 'bg-blue-50' : 'hover:bg-slate-50'
+                            }`}
                           >
                             <div className="min-w-0">
                               <span className="font-mono text-[11px] font-bold text-slate-400">
@@ -1343,7 +1305,7 @@ export default function OrcamentoEditor({
                                 {item.kind === 'produto' ? 'Produto' : 'Serviço'}
                               </span>
                             </div>
-                            <span className="shrink-0 font-extrabold text-brv-navy">
+                            <span className="shrink-0 font-semibold text-slate-900">
                               {formatarReais(item.sale_price_cents)} / {item.unit}
                             </span>
                           </button>
@@ -1354,37 +1316,14 @@ export default function OrcamentoEditor({
                 </div>
               )}
 
-              {/* Duas tabelas: Produtos e Serviços */}
               <div className="space-y-4">
                 {renderizarTabelaItens('produto', produtosLista)}
                 {renderizarTabelaItens('servico', servicosLista)}
               </div>
 
-              {/* Totalizador do bloco de itens */}
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-900 px-4 py-3 text-white">
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
-                  <span>
-                    Produtos: <strong className="text-white">{formatarReais(totais.produtosSubtotalCentavos)}</strong>
-                  </span>
-                  <span>
-                    Serviços: <strong className="text-white">{formatarReais(totais.servicosSubtotalCentavos)}</strong>
-                  </span>
-                </div>
-                <div className="text-sm font-extrabold">
-                  Total Geral: {formatarReais(totais.totalCentavos)}
-                </div>
-              </div>
-            </section>
-
-            {/* ============================================================= */}
-            {/* SEÇÃO 3: CONDIÇÕES                                            */}
-            {/* ============================================================= */}
-            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-              <h2 className="text-base font-bold text-slate-800">Condições comerciais</h2>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-4">
                 <div>
-                  <label htmlFor="orc-validade" className="block text-xs font-semibold text-slate-700">
+                  <label htmlFor="orc-validade" className="block text-xs font-medium text-slate-700">
                     Validade (dias)
                   </label>
                   <input
@@ -1394,15 +1333,12 @@ export default function OrcamentoEditor({
                     disabled={somenteLeitura}
                     value={validadeDias}
                     onChange={(e) => setValidadeDias(e.target.value.replace(/\D/g, ''))}
-                    className={CAMPO}
+                    className={INPUT}
                   />
-                  <span className="mt-1 block text-[11px] text-slate-400">
-                    Até {formatarData(somarDiasIso(dataIsoHoje(), Number(validadeDias) || 10))}
-                  </span>
                 </div>
 
                 <div>
-                  <label htmlFor="orc-desc-geral" className="block text-xs font-semibold text-slate-700">
+                  <label htmlFor="orc-desc-geral" className="block text-xs font-medium text-slate-700">
                     Desconto geral (R$)
                   </label>
                   <input
@@ -1413,13 +1349,13 @@ export default function OrcamentoEditor({
                     value={descontoGeralTexto}
                     onChange={(e) => setDescontoGeralTexto(e.target.value)}
                     placeholder="0,00"
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orc-frete" className="block text-xs font-semibold text-slate-700">
-                    Frete / outras despesas (R$)
+                  <label htmlFor="orc-frete" className="block text-xs font-medium text-slate-700">
+                    Frete (R$)
                   </label>
                   <input
                     id="orc-frete"
@@ -1429,13 +1365,13 @@ export default function OrcamentoEditor({
                     value={freteTexto}
                     onChange={(e) => setFreteTexto(e.target.value)}
                     placeholder="0,00"
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orc-forma-prev" className="block text-xs font-semibold text-slate-700">
-                    Forma de pagamento prevista
+                  <label htmlFor="orc-forma-prev" className="block text-xs font-medium text-slate-700">
+                    Condição de pagamento
                   </label>
                   <input
                     id="orc-forma-prev"
@@ -1444,75 +1380,81 @@ export default function OrcamentoEditor({
                     value={condicaoPagamento}
                     onChange={(e) => setCondicaoPagamento(e.target.value)}
                     placeholder="Ex.: PIX ou cartão em até 6x"
-                    className={CAMPO}
+                    className={INPUT}
                   />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span>
+                    Produtos: <strong className="text-slate-900">{formatarReais(totais.produtosSubtotalCentavos)}</strong>
+                  </span>
+                  <span>
+                    Serviços: <strong className="text-slate-900">{formatarReais(totais.servicosSubtotalCentavos)}</strong>
+                  </span>
+                </div>
+                <div className="text-sm font-bold text-slate-900">
+                  Total: {formatarReais(totais.totalCentavos)}
                 </div>
               </div>
             </section>
 
-            {/* ============================================================= */}
-            {/* SEÇÃO 4: OBSERVAÇÕES                                          */}
-            {/* ============================================================= */}
-            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+            {/* Seção 3: Observações */}
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-base font-bold text-slate-800">Observações</h2>
                 {!somenteLeitura && (
                   <button
                     type="button"
                     onClick={() => setModalTextosAberto(true)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                    className="text-xs font-semibold text-blue-600 hover:underline"
                   >
-                    <Settings2 size={13} />
-                    Gerenciar textos padrão
+                    Textos padrão
                   </button>
                 )}
               </div>
 
               {!somenteLeitura && textosPadrao.length > 0 && (
-                <div>
-                  <span className="block text-[11px] font-semibold text-slate-500">
-                    Inserir texto padrão:
-                  </span>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {textosPadrao.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() =>
-                          setObservacoes((atual) =>
-                            atual.includes(t.content)
-                              ? atual
-                              : atual.trim()
-                                ? `${atual.trim()}\n${t.content}`
-                                : t.content,
-                          )
-                        }
-                        className="rounded-full border border-blue-200 bg-blue-50/70 px-3 py-1 text-xs font-semibold text-blue-800 transition hover:bg-blue-100"
-                      >
-                        + {t.title}
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {textosPadrao.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() =>
+                        setObservacoes((atual) =>
+                          atual.includes(t.content)
+                            ? atual
+                            : atual.trim()
+                              ? `${atual.trim()}\n${t.content}`
+                              : t.content,
+                        )
+                      }
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                    >
+                      + {t.title}
+                    </button>
+                  ))}
                 </div>
               )}
 
               <div>
-                <label htmlFor="orc-obs" className="block text-xs font-semibold text-slate-700">
-                  Observações do documento (aparecem no PDF e no link do cliente)
+                <label htmlFor="orc-obs" className="block text-xs font-medium text-slate-700">
+                  Observações
                 </label>
                 <textarea
                   id="orc-obs"
-                  rows={4}
+                  rows={3}
                   disabled={somenteLeitura}
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
-                  className={CAMPO}
+                  className={INPUT}
                 />
               </div>
 
               <div>
-                <label htmlFor="orc-obs-int" className="block text-xs font-semibold text-slate-700">
-                  Observação interna (só o escritório vê)
+                <label htmlFor="orc-obs-int" className="block text-xs font-medium text-slate-700">
+                  Observações internas (só o escritório)
                 </label>
                 <textarea
                   id="orc-obs-int"
@@ -1520,23 +1462,20 @@ export default function OrcamentoEditor({
                   disabled={somenteLeitura}
                   value={observacaoInterna}
                   onChange={(e) => setObservacaoInterna(e.target.value)}
-                  placeholder="Não aparece no PDF nem na página pública do cliente..."
-                  className={CAMPO}
+                  className={INPUT}
                 />
               </div>
             </section>
 
-            {/* ============================================================= */}
-            {/* SEÇÃO 5: APROVAÇÃO DO CLIENTE (LINK PÚBLICO)                  */}
-            {/* ============================================================= */}
+            {/* Seção 4: Link público e resposta */}
             {!ehNovo && orcamento && (
-              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center gap-2 text-slate-800">
-                  <Link2 size={18} className="text-blue-600" />
-                  <h2 className="text-base font-bold">Aprovação do cliente</h2>
+                  <Link2 size={16} className="text-blue-600" />
+                  <h2 className="text-base font-bold">Link do cliente</h2>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                   <span className="truncate font-mono text-slate-700">
                     {linkPublicoOrcamento(orcamento.public_token)}
                   </span>
@@ -1557,15 +1496,6 @@ export default function OrcamentoEditor({
                       {copiadoLink ? 'Copiado!' : 'Copiar link'}
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => void handleEnviarWhatsApp()}
-                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 font-semibold text-white hover:bg-emerald-700"
-                    >
-                      <MessageCircle size={12} />
-                      Enviar pelo WhatsApp
-                    </button>
-
                     <a
                       href={`/orcamento/${orcamento.public_token}`}
                       target="_blank"
@@ -1582,7 +1512,7 @@ export default function OrcamentoEditor({
                         className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-100"
                       >
                         <RefreshCw size={12} />
-                        Gerar novo link
+                        Novo link
                       </button>
                     )}
                   </div>
@@ -1590,13 +1520,13 @@ export default function OrcamentoEditor({
 
                 {orcamento.responded_at && (
                   <div
-                    className={`rounded-xl border p-3.5 text-xs ${
+                    className={`rounded-lg border p-3 text-xs ${
                       orcamento.status === 'recusado'
-                        ? 'border-rose-200 bg-rose-50/70 text-rose-900'
-                        : 'border-emerald-200 bg-emerald-50/70 text-emerald-900'
+                        ? 'border-red-200 bg-red-50 text-red-800'
+                        : 'border-emerald-200 bg-emerald-50 text-emerald-800'
                     }`}
                   >
-                    <p className="font-bold">
+                    <p className="font-semibold">
                       {orcamento.status === 'recusado' ? 'Recusado' : 'Aprovado'} em{' '}
                       {formatarDataHora(orcamento.responded_at)}
                       {orcamento.responded_by_name ? ` por ${orcamento.responded_by_name}` : ''}
@@ -1612,13 +1542,11 @@ export default function OrcamentoEditor({
               </section>
             )}
 
-            {/* ============================================================= */}
-            {/* SEÇÃO 6: HISTÓRICO                                            */}
-            {/* ============================================================= */}
+            {/* Seção 5: Histórico */}
             {!ehNovo && orcamento && (
-              <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+              <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center gap-2 text-slate-800">
-                  <History size={18} className="text-blue-600" />
+                  <History size={16} className="text-blue-600" />
                   <h2 className="text-base font-bold">Histórico ({eventos.length})</h2>
                 </div>
 
@@ -1627,32 +1555,27 @@ export default function OrcamentoEditor({
                     type="text"
                     value={notaHistorico}
                     onChange={(e) => setNotaHistorico(e.target.value)}
-                    placeholder="Anotar no histórico deste orçamento..."
-                    className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:outline-none"
+                    placeholder="Adicionar anotação..."
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:outline-none"
                   />
                   <button
                     type="submit"
                     disabled={salvandoNota || !notaHistorico.trim()}
-                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-brv-navy px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
+                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-40"
                   >
-                    {salvandoNota ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : (
-                      <MessageSquarePlus size={13} />
-                    )}
-                    Anotar no histórico
+                    {salvandoNota && <Loader2 size={13} className="animate-spin" />}
+                    Anotar
                   </button>
                 </form>
 
                 {eventos.length === 0 ? (
                   <p className="text-xs text-slate-400">Nenhum evento registrado.</p>
                 ) : (
-                  <ol className="relative ml-2 space-y-3 border-l-2 border-slate-200 pl-4">
+                  <ol className="space-y-2.5 divide-y divide-slate-100 text-xs">
                     {eventos.map((ev) => (
-                      <li key={ev.id} className="relative text-xs">
-                        <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-brv-navy" />
+                      <li key={ev.id} className="pt-2.5 first:pt-0">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-bold text-slate-800">{ev.actor_name}</span>
+                          <span className="font-semibold text-slate-800">{ev.actor_name}</span>
                           <span className="text-[11px] text-slate-400">
                             {formatarDataHora(ev.created_at)}
                           </span>
@@ -1712,4 +1635,3 @@ export default function OrcamentoEditor({
     document.body,
   );
 }
-

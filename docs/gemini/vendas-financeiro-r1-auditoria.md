@@ -28,3 +28,15 @@ textos) servem para a ajuda F1, conferindo cada nome na tela antes.
 - `profiles.financial_access` (`nenhum | caixa | completo`; admin = completo) entra junto, como já previsto em `docs/financeiro.md`.
 - Funções públicas do orçamento no molde de `placa_orcamento_ver`/`placa_orcamento_aprovar` (token próprio, só aprova `enviado` dentro da validade).
 - Ajuda F1 do módulo (regra fixa) antes de ligar o menu.
+
+## Correção visual (2026-11-24, depois da reclamação "cara de IA")
+
+Pedida em `docs/gemini/vendas-visual-correcao.md` e conferida pelo Claude: cabeçalhos iguais ao de Clientes, barra `NavegacaoVendas` reduzida a um `<select>`
+"Ver como" que só aparece com `FONTE_DADOS_DEMO = true`, sem caixas de aviso, cartões de resumo nem pílulas com contador, filtros em barra única,
+sem `shadow-lg`/`backdrop-blur`, animação só no `Loader2`; os textos pequenos que restaram são rótulos e códigos. ~840 linhas a menos. Typecheck, lint e build limpos.
+
+**Teclado na busca do catálogo (Claude, pedido do Braulio):** `components/vendas/useNavegacaoLista.ts`, usado no editor de orçamento e na Nova venda:
+↓/↑ percorrem as sugestões (o item marcado fica azul e rola para ficar visível), Enter adiciona o marcado, Esc fecha (antes só o Enter, sempre no primeiro).
+
+**Para a ligação ao banco:** `OrcamentoEditor.tsx` importa `CLIENTES_DEMO_VENDAS` direto do `dadosDemo.ts` (dado de demonstração dentro do componente,
+contra a regra do briefing): trocar pelo cliente real ao ligar o banco.

@@ -29,9 +29,8 @@ function linkWhatsAppBrv(mensagem: string): string {
 }
 
 /**
- * Página pública (sem login, fora do Layout) para o cliente visualizar, imprimir/salvar em PDF
- * e aprovar o orçamento de produtos e serviços: `/orcamento/:token`.
- * Tokens da demonstração: `demo-orc-1` (enviado, dentro da validade), `demo-orc-2` (já aprovado), `demo-orc-3` (vencido).
+ * Página pública (sem login) do orçamento: `/orcamento/:token`.
+ * Segue o mesmo molde de `src/pages/OrcamentoPlacaPublico.tsx`.
  */
 export default function OrcamentoPublico() {
   const { token = '' } = useParams();
@@ -46,11 +45,14 @@ export default function OrcamentoPublico() {
 
   useEffect(() => {
     let ativo = true;
-    buscarOrcamentoPublico(token)
-      .then((res) => {
-        if (!ativo) return;
+    Promise.resolve()
+      .then(() => {
+        setDados(undefined);
         setErroRede(null);
-        setDados(res);
+        return buscarOrcamentoPublico(token);
+      })
+      .then((res) => {
+        if (ativo) setDados(res);
       })
       .catch((err: unknown) => {
         if (!ativo) return;
@@ -77,7 +79,7 @@ export default function OrcamentoPublico() {
       return;
     }
     if (!concordo) {
-      setErroAprovar('Marque a opção "Li e concordo" para aprovar o orçamento.');
+      setErroAprovar('Marque que leu e concorda com as condições do orçamento.');
       return;
     }
     setAprovando(true);
@@ -89,46 +91,46 @@ export default function OrcamentoPublico() {
       setErroAprovar(
         err instanceof Error
           ? err.message
-          : 'Não foi possível registrar a aprovação. Tente novamente.',
+          : 'Não foi possível registrar a aprovação. Tente de novo.',
       );
     } finally {
       setAprovando(false);
     }
   };
 
-  const urlDuvidasRecusar = linkWhatsAppBrv(
+  const urlWhatsBrv = linkWhatsAppBrv(
     dados
-      ? `Olá, BRV Niterói! Gostaria de falar sobre o orçamento nº ${dados.number} (${formatarReais(dados.total_cents)}).`
-      : 'Olá, BRV Niterói! Gostaria de falar sobre um orçamento.',
+      ? `Olá, BRV Niterói! Tenho uma dúvida sobre o orçamento ${dados.number} (${formatarReais(dados.total_cents)}).`
+      : 'Olá, BRV Niterói! Tenho uma dúvida sobre um orçamento.',
   );
 
-  const botaoDuvidasRecusar = (
+  const botaoWhats = (
     <a
-      href={urlDuvidasRecusar}
+      href={urlWhatsBrv}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
     >
       <MessageCircle size={17} aria-hidden="true" />
-      Tenho dúvidas / Recusar
+      Dúvidas? Falar com a BRV no WhatsApp
     </a>
   );
 
   const aprovado = dados?.status === 'aprovado' || dados?.status === 'convertido';
   const aceite = aprovado
-    ? `Orçamento aprovado em ${formatarDataHora(dados?.responded_at ?? null)}${dados?.responded_by_name ? ` por ${dados.responded_by_name}` : ''}`
+    ? `Aprovado pelo cliente${dados?.response_channel === 'link' ? ' pelo link' : ''} em ${formatarDataHora(dados?.responded_at ?? null)}${dados?.responded_by_name ? ` (${dados.responded_by_name})` : ''}`
     : undefined;
 
   return createPortal(
     <div className="min-h-dvh bg-[#F4F6F8] print:min-h-0 print:bg-white">
       <style>{ESTILO_IMPRESSAO_ORCAMENTO_VENDA_A4}</style>
 
-      {/* Painel de situação e aprovação (oculto na impressão) */}
+      {/* Situação e ações (somem no papel) */}
       <div className="mx-auto w-full max-w-4xl space-y-3 px-4 pt-6 sm:px-6 print:hidden">
         {dados === undefined && !erroRede && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white py-14 text-slate-500">
             <Loader2 size={26} className="animate-spin text-blue-600" aria-hidden="true" />
-            <p className="text-sm font-medium">Carregando orçamento...</p>
+            <p className="text-sm font-medium">Abrindo o orçamento...</p>
           </div>
         )}
 
@@ -140,11 +142,7 @@ export default function OrcamentoPublico() {
             <p className="text-sm font-semibold text-rose-900">{erroRede}</p>
             <button
               type="button"
-              onClick={() => {
-                setDados(undefined);
-                setErroRede(null);
-                setChaveRecarga((c) => c + 1);
-              }}
+              onClick={() => setChaveRecarga((c) => c + 1)}
               className="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-800"
             >
               <RotateCcw size={14} aria-hidden="true" />
@@ -158,12 +156,11 @@ export default function OrcamentoPublico() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
               <Link2Off size={22} aria-hidden="true" />
             </div>
-            <h1 className="text-base font-bold text-slate-900">Link inválido</h1>
+            <h1 className="text-base font-bold text-slate-900">Orçamento não encontrado</h1>
             <p className="text-xs leading-relaxed text-slate-600">
-              Este link de orçamento não existe ou foi substituído por uma versão mais recente.
-              Solicite o link atualizado à equipe da BRV pelo WhatsApp.
+              Confira se o link foi copiado por inteiro ou peça o link atualizado à equipe da BRV.
             </p>
-            {botaoDuvidasRecusar}
+            {botaoWhats}
           </div>
         )}
 
@@ -171,13 +168,13 @@ export default function OrcamentoPublico() {
           <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold text-slate-500">BRV Niterói · Climatização</p>
+                <p className="text-xs font-semibold text-slate-500">BRV Niterói</p>
                 <h1 className="text-lg font-extrabold text-slate-900">
                   Orçamento {dados.number}
                 </h1>
                 <p className="text-sm text-slate-700">
                   Valor total: <strong>{formatarReais(dados.total_cents)}</strong>
-                  {dados.valid_until && (
+                  {dados.valid_until && dados.status === 'enviado' && (
                     <> · válido até {formatarData(dados.valid_until)}</>
                   )}
                 </p>
@@ -205,12 +202,9 @@ export default function OrcamentoPublico() {
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="font-bold">
-                      Orçamento aprovado em {formatarDataHora(dados.responded_at)}
-                    </p>
+                    <p className="font-bold">Orçamento aprovado. Obrigado!</p>
                     <p className="text-xs">
-                      Registrado em nome de <strong>{dados.responded_by_name || dados.customer_name}</strong>.
-                      Nossa equipe dará andamento ao atendimento.
+                      {aceite}. Nossa equipe dará andamento ao atendimento.
                     </p>
                   </div>
                 </div>
@@ -218,8 +212,7 @@ export default function OrcamentoPublico() {
 
               {dados.status === 'recusado' && (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm text-slate-700">
-                  Este orçamento consta como <strong>recusado</strong>. Se desejar retomar ou ajustar
-                  a proposta, fale com a BRV pelo botão abaixo.
+                  Este orçamento foi registrado como <strong>recusado</strong>. Se mudou de ideia, fale com a BRV.
                 </div>
               )}
 
@@ -238,7 +231,7 @@ export default function OrcamentoPublico() {
                   />
                   <p>
                     A validade deste orçamento terminou em {formatarData(dados.valid_until)}. Fale
-                    com a BRV pelo WhatsApp para revalidar os valores.
+                    com a BRV pelo WhatsApp para atualizar a proposta.
                   </p>
                 </div>
               )}
@@ -249,42 +242,40 @@ export default function OrcamentoPublico() {
                   className="space-y-3 rounded-xl border border-blue-200 bg-blue-50/60 p-3.5"
                 >
                   <p className="text-sm font-semibold text-slate-900">
-                    Confira os itens e condições abaixo. Para aprovar o orçamento, preencha seu nome e confirme:
+                    Leia o orçamento abaixo. Se estiver de acordo, aprove aqui.
                   </p>
                   <div>
                     <label
                       htmlFor="orc-pub-nome"
                       className="mb-1 block text-xs font-semibold text-slate-700"
                     >
-                      Seu nome *
+                      Seu nome
                     </label>
                     <input
                       id="orc-pub-nome"
                       name="approver_name"
                       type="text"
-                      required
                       value={nome}
                       onChange={(e) => setNome(e.target.value)}
                       autoComplete="name"
                       maxLength={120}
-                      placeholder="Nome completo de quem está aprovando"
+                      placeholder="Nome de quem está aprovando"
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
                     />
                   </div>
 
-                  <div className="flex items-start gap-2 text-xs text-slate-700">
+                  <label className="flex items-start gap-2 text-xs text-slate-700">
                     <input
                       id="orc-pub-concordo"
                       type="checkbox"
                       checked={concordo}
                       onChange={(e) => setConcordo(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                      className="mt-0.5 h-4 w-4"
                     />
-                    <label htmlFor="orc-pub-concordo" className="cursor-pointer">
-                      <strong>Li e concordo</strong> com os itens, valores ({formatarReais(dados.total_cents)})
-                      e condições descritos neste orçamento.
-                    </label>
-                  </div>
+                    <span>
+                      Li e concordo com o valor ({formatarReais(dados.total_cents)}), as condições de pagamento e as condições gerais deste orçamento.
+                    </span>
+                  </label>
 
                   {erroAprovar && (
                     <p
@@ -310,13 +301,13 @@ export default function OrcamentoPublico() {
                 </form>
               )}
 
-              <div className="mt-3">{botaoDuvidasRecusar}</div>
+              <div className="mt-3">{botaoWhats}</div>
             </div>
           </section>
         )}
       </div>
 
-      {/* Folha A4 (o que é impresso) */}
+      {/* Folha A4 (é o que vai para o PDF) */}
       {dados && (
         <div className="mx-auto my-6 max-w-4xl px-4 sm:px-6 print:m-0 print:max-w-none print:p-0">
           <FolhaOrcamentoVenda dados={dados} aceiteCliente={aceite} />
@@ -326,4 +317,3 @@ export default function OrcamentoPublico() {
     document.body,
   );
 }
-

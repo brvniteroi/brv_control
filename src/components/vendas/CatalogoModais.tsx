@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
-  Sparkles,
 } from 'lucide-react';
 import type {
   CatalogItem,
@@ -26,14 +25,12 @@ import {
 import ModalDialogoVendas from './ModalDialogoVendas';
 import { itemTemDadoFiscalCompleto } from './regrasVendas';
 
-const CAMPO =
-  'mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+const INPUT =
+  'mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
 
 interface CatalogoFormModalProps {
   aberto: boolean;
-  /** Item sendo editado, ou `null` quando for novo. */
   item: CatalogItem | null;
-  /** Quando `true`, pré-preenche a partir de `item` como uma cópia (sem `id`). */
   modoDuplicar?: boolean;
   podeVerCusto: boolean;
   categoriasExistentes: string[];
@@ -80,7 +77,6 @@ export function CatalogoFormModal({
   const [frequente, setFrequente] = useState(item?.is_frequent ?? false);
   const [ativo, setAtivo] = useState(item?.active ?? true);
 
-  // Dados fiscais
   const [ncm, setNcm] = useState(item?.ncm ?? '');
   const [cfop, setCfop] = useState(item?.cfop ?? '5102');
   const [csosn, setCsosn] = useState(item?.csosn ?? '102');
@@ -120,7 +116,7 @@ export function CatalogoFormModal({
     }
     const vendaCentavos = converterTextoParaCentavos(precoVendaTexto);
     if (vendaCentavos === null || vendaCentavos < 0) {
-      setErro('Informe um preço de venda válido (ex.: 49,90).');
+      setErro('Informe um preço de venda válido.');
       return;
     }
 
@@ -142,7 +138,7 @@ export function CatalogoFormModal({
       ? Number(aliquotaIss.trim().replace(',', '.'))
       : null;
     if (tipo === 'servico' && issNum !== null && (!Number.isFinite(issNum) || issNum < 0 || issNum > 10)) {
-      setErro('Informe uma alíquota de ISS válida entre 0% e 10% (ex.: 2,0).');
+      setErro('Informe uma alíquota de ISS válida entre 0% e 10%.');
       return;
     }
 
@@ -177,7 +173,7 @@ export function CatalogoFormModal({
       onSalvo(salvo);
       onFechar();
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não foi possível salvar o item do catálogo.');
+      setErro(err instanceof Error ? err.message : 'Não foi possível salvar o item.');
     } finally {
       setSalvando(false);
     }
@@ -189,28 +185,32 @@ export function CatalogoFormModal({
       onFechar={onFechar}
       titulo={
         modoDuplicar
-          ? 'Duplicar item do catálogo'
+          ? 'Duplicar item'
           : editandoId
             ? `Editar item · ${item?.code ?? ''}`
-            : 'Novo item no catálogo'
+            : 'Novo item'
       }
-      subtitulo="Produtos vão em NFC-e / NF-e e Serviços vão em NFS-e nacional."
       larguraMax="max-w-2xl"
       fecharAoClicarFora={!salvando}
     >
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-        {/* Tipo: Produto ou Serviço */}
+        {erro && (
+          <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {erro}
+          </div>
+        )}
+
         <fieldset>
-          <legend className="block text-xs font-semibold text-slate-700">Tipo do item *</legend>
+          <legend className="block text-xs font-semibold text-slate-700">Tipo *</legend>
           <div className="mt-1.5 grid grid-cols-2 gap-2.5">
             {(['produto', 'servico'] as const).map((op) => {
               const selecionado = tipo === op;
               return (
                 <label
                   key={op}
-                  className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs font-bold transition ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
                     selecionado
-                      ? 'border-blue-600 bg-blue-50/70 text-blue-900'
+                      ? 'border-blue-600 bg-blue-50 text-blue-900'
                       : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -226,12 +226,7 @@ export function CatalogoFormModal({
                     }}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                   />
-                  <div>
-                    <span>{CORES_TIPO_ITEM[op].rotulo}</span>
-                    <span className="block text-[10px] font-normal text-slate-500">
-                      {op === 'produto' ? 'Nota fiscal NFC-e ou NF-e' : 'Mão de obra · NFS-e nacional'}
-                    </span>
-                  </div>
+                  <span>{CORES_TIPO_ITEM[op].rotulo}</span>
                 </label>
               );
             })}
@@ -254,13 +249,13 @@ export function CatalogoFormModal({
               value={codigo}
               onChange={(e) => setCodigo(e.target.value)}
               placeholder="Ex.: 000126"
-              className={CAMPO}
+              className={INPUT}
             />
           </div>
 
           <div>
             <label htmlFor="cat-ean" className="block text-xs font-semibold text-slate-700">
-              Código de barras (opcional)
+              Código de barras
             </label>
             <input
               id="cat-ean"
@@ -272,7 +267,7 @@ export function CatalogoFormModal({
               value={codigoBarras}
               onChange={(e) => setCodigoBarras(e.target.value)}
               placeholder="EAN / GTIN"
-              className={CAMPO}
+              className={INPUT}
             />
           </div>
 
@@ -285,7 +280,7 @@ export function CatalogoFormModal({
               name="unit"
               value={unidade}
               onChange={(e) => setUnidade(e.target.value)}
-              className={CAMPO}
+              className={INPUT}
             >
               {UNIDADES_CATALOGO.map((u) => (
                 <option key={u} value={u}>
@@ -299,7 +294,7 @@ export function CatalogoFormModal({
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <label htmlFor="cat-nome" className="block text-xs font-semibold text-slate-700">
-              Nome do {tipo === 'produto' ? 'produto' : 'serviço'} *
+              Nome *
             </label>
             <input
               id="cat-nome"
@@ -308,12 +303,8 @@ export function CatalogoFormModal({
               required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              placeholder={
-                tipo === 'produto'
-                  ? 'Ex.: Tubo de Cobre Flexível 1/2" (metro)'
-                  : 'Ex.: M.O Instal Ar Cond split 12.000 btus'
-              }
-              className={CAMPO}
+              placeholder="Descrição do item"
+              className={INPUT}
             />
           </div>
 
@@ -329,7 +320,7 @@ export function CatalogoFormModal({
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
               placeholder="Ex.: Elétrica"
-              className={CAMPO}
+              className={INPUT}
             />
             <datalist id="lista-categorias-catalogo">
               {categoriasExistentes.map((c) => (
@@ -339,7 +330,6 @@ export function CatalogoFormModal({
           </div>
         </div>
 
-        {/* Preço de venda e custo (custo só visível para nível `completo`) */}
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           <div>
             <label htmlFor="cat-preco-venda" className="block text-xs font-semibold text-slate-700">
@@ -353,15 +343,15 @@ export function CatalogoFormModal({
               required
               value={precoVendaTexto}
               onChange={(e) => setPrecoVendaTexto(e.target.value)}
-              placeholder="Ex.: 49,90"
-              className={CAMPO}
+              placeholder="0,00"
+              className={INPUT}
             />
           </div>
 
           {podeVerCusto && (
             <div>
               <label htmlFor="cat-preco-custo" className="block text-xs font-semibold text-slate-700">
-                Custo (R$) <span className="font-normal text-slate-400">(só acesso completo)</span>
+                Custo (R$)
               </label>
               <input
                 id="cat-preco-custo"
@@ -370,16 +360,15 @@ export function CatalogoFormModal({
                 inputMode="decimal"
                 value={precoCustoTexto}
                 onChange={(e) => setPrecoCustoTexto(e.target.value)}
-                placeholder="Ex.: 31,80"
-                className={CAMPO}
+                placeholder="0,00"
+                className={INPUT}
               />
             </div>
           )}
         </div>
 
-        {/* Estoque (apenas produtos) */}
         {tipo === 'produto' && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
             <div className="flex items-center gap-2">
               <input
                 id="cat-ctrl-estoque"
@@ -405,7 +394,7 @@ export function CatalogoFormModal({
                     inputMode="decimal"
                     value={estoqueAtual}
                     onChange={(e) => setEstoqueAtual(e.target.value)}
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
                 <div>
@@ -418,7 +407,7 @@ export function CatalogoFormModal({
                     inputMode="decimal"
                     value={estoqueMinimo}
                     onChange={(e) => setEstoqueMinimo(e.target.value)}
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
               </div>
@@ -426,7 +415,6 @@ export function CatalogoFormModal({
           </div>
         )}
 
-        {/* Opções de uso */}
         <div className="flex flex-wrap items-center gap-5">
           <div className="flex items-center gap-2">
             <input
@@ -437,7 +425,7 @@ export function CatalogoFormModal({
               className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
             />
             <label htmlFor="cat-frequente" className="cursor-pointer text-xs font-medium text-slate-700">
-              Mostrar nos itens frequentes da Nova Venda
+              Item frequente
             </label>
           </div>
 
@@ -455,30 +443,24 @@ export function CatalogoFormModal({
           </div>
         </div>
 
-        {/* Seção recolhida: Dados fiscais */}
-        <details className="group rounded-xl border border-slate-200 bg-slate-50/70">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-xs font-bold text-slate-800">
+        <details className="group rounded-xl border border-slate-200 bg-slate-50">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-xs font-semibold text-slate-800">
             <div className="flex items-center gap-2">
               <ChevronRight size={15} className="text-slate-400 transition-transform group-open:rotate-90" />
               <span>Dados fiscais</span>
               {fiscalCompleto ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                   <CheckCircle2 size={11} /> Completo
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-                  <AlertTriangle size={11} /> Fiscal incompleto
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                  <AlertTriangle size={11} /> Incompleto
                 </span>
               )}
             </div>
-            <span className="text-[11px] font-normal text-slate-500">Confirme com o contador</span>
           </summary>
 
-          <div className="space-y-3 border-t border-slate-200/80 px-4 py-3.5">
-            <p className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-[11px] font-medium text-amber-900">
-              Confirme com o contador os códigos fiscais antes de ativar a emissão real de notas. Nenhum campo abaixo é obrigatório para salvar o item.
-            </p>
-
+          <div className="space-y-3 border-t border-slate-200 px-4 py-3.5">
             {tipo === 'produto' ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
@@ -492,14 +474,14 @@ export function CatalogoFormModal({
                     maxLength={8}
                     value={ncm}
                     onChange={(e) => setNcm(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Ex.: 74111010"
-                    className={CAMPO}
+                    placeholder="74111010"
+                    className={INPUT}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="cat-cfop" className="block text-xs font-medium text-slate-700">
-                    CFOP (padrão 5102)
+                    CFOP
                   </label>
                   <input
                     id="cat-cfop"
@@ -509,13 +491,13 @@ export function CatalogoFormModal({
                     value={cfop}
                     onChange={(e) => setCfop(e.target.value.replace(/\D/g, ''))}
                     placeholder="5102"
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="cat-csosn" className="block text-xs font-medium text-slate-700">
-                    CSOSN Simples (padrão 102)
+                    CSOSN
                   </label>
                   <input
                     id="cat-csosn"
@@ -525,19 +507,19 @@ export function CatalogoFormModal({
                     value={csosn}
                     onChange={(e) => setCsosn(e.target.value.replace(/\D/g, ''))}
                     placeholder="102"
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="cat-origem" className="block text-xs font-medium text-slate-700">
-                    Origem da mercadoria (0 a 8)
+                    Origem da mercadoria
                   </label>
                   <select
                     id="cat-origem"
                     value={origem}
                     onChange={(e) => setOrigem(Number(e.target.value) as MerchandiseOrigin)}
-                    className={CAMPO}
+                    className={INPUT}
                   >
                     {ORIGENS_MERCADORIA.map((o) => (
                       <option key={o.valor} value={o.valor}>
@@ -557,7 +539,7 @@ export function CatalogoFormModal({
                     value={unidadeTributavel}
                     onChange={(e) => setUnidadeTributavel(e.target.value)}
                     placeholder={unidade}
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
               </div>
@@ -566,15 +548,15 @@ export function CatalogoFormModal({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label htmlFor="cat-cod-serv" className="block text-xs font-medium text-slate-700">
-                      Código de serviço nacional (NBS / LC 116)
+                      Código de serviço (LC 116 / NBS)
                     </label>
                     <input
                       id="cat-cod-serv"
                       type="text"
                       value={codigoServico}
                       onChange={(e) => setCodigoServico(e.target.value)}
-                      placeholder="Ex.: 14.01"
-                      className={CAMPO}
+                      placeholder="14.01"
+                      className={INPUT}
                     />
                   </div>
                   <div>
@@ -587,8 +569,8 @@ export function CatalogoFormModal({
                       inputMode="decimal"
                       value={aliquotaIss}
                       onChange={(e) => setAliquotaIss(e.target.value)}
-                      placeholder="Ex.: 2,0"
-                      className={CAMPO}
+                      placeholder="2,0"
+                      className={INPUT}
                     />
                   </div>
                 </div>
@@ -602,8 +584,7 @@ export function CatalogoFormModal({
                     rows={2}
                     value={descricaoNota}
                     onChange={(e) => setDescricaoNota(e.target.value)}
-                    placeholder="Texto padrão que sairá na discriminação do serviço na nota..."
-                    className={CAMPO}
+                    className={INPUT}
                   />
                 </div>
               </div>
@@ -611,38 +592,28 @@ export function CatalogoFormModal({
           </div>
         </details>
 
-        {erro && (
-          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-700">
-            {erro}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-3">
+        <div className="flex justify-end gap-2 pt-1">
           <button
             type="button"
             disabled={salvando}
             onClick={onFechar}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={salvando}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {salvando && <Loader2 size={14} className="animate-spin" />}
-            {salvando ? 'Salvando...' : 'Salvar item'}
+            {salvando && <Loader2 size={13} className="animate-spin" />}
+            {salvando ? 'Salvando...' : 'Salvar'}
           </button>
         </div>
       </form>
     </ModalDialogoVendas>
   );
 }
-
-// ============================================================================
-// Modal: Ferramenta "Revisar tipos" (conferência da importação do SicWeb)
-// ============================================================================
 
 interface RevisarTiposCatalogoModalProps {
   aberto: boolean;
@@ -667,7 +638,6 @@ export function RevisarTiposCatalogoModal({
       .then((lista) => {
         if (!ativo) return;
         setSugestoes(lista);
-        // Pré-marcados como Serviço conforme seção 4.1 do briefing
         setSelecionados(lista.map((i) => i.id));
       })
       .finally(() => {
@@ -700,24 +670,16 @@ export function RevisarTiposCatalogoModal({
     <ModalDialogoVendas
       aberto={aberto}
       onFechar={onFechar}
-      titulo="Revisar tipos (Produto vs Serviço)"
-      subtitulo='No SicWeb, itens de mão de obra ("M.O", instalação, manutenção...) estavam cadastrados como produtos comuns.'
+      titulo="Revisar tipos"
       larguraMax="max-w-2xl"
     >
       <div className="space-y-4">
-        <p className="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3.5 py-2.5 text-xs text-indigo-950">
-          Os itens abaixo ainda estão marcados como <strong>Produto</strong>, mas o nome começa com{' '}
-          <strong>"M.O"</strong> ou contém <em>"mão de obra"</em>, <em>"instalação"</em>,{' '}
-          <em>"desinstalação"</em>, <em>"manutenção"</em> ou <em>"visita"</em>. Eles já vêm pré-marcados
-          para serem convertidos em <strong>Serviço</strong> (para saírem em NFS-e nacional).
-        </p>
-
         {carregando ? (
-          <p className="py-8 text-center text-xs text-slate-400">Buscando sugestões...</p>
+          <p className="py-8 text-center text-xs text-slate-400">Carregando...</p>
         ) : sugestoes.length === 0 ? (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center text-xs text-emerald-900">
             <CheckCircle2 size={24} className="mx-auto mb-2 text-emerald-600" />
-            <p className="font-bold">Todos os itens com cara de mão de obra já foram conferidos!</p>
+            <p className="font-semibold">Todos os itens já foram revisados.</p>
           </div>
         ) : (
           <div className="max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200">
@@ -733,17 +695,17 @@ export function RevisarTiposCatalogoModal({
                       type="checkbox"
                       checked={marcado}
                       onChange={() => alternar(item.id)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
                       <span className="font-mono text-[11px] text-slate-400">{item.code}</span>{' '}
                       <strong className="text-slate-800">{item.name}</strong>
-                      <span className="block text-[11px] text-slate-500">
-                        Categoria: {item.category || 'Sem categoria'}
-                      </span>
+                      {item.category && (
+                        <span className="block text-[11px] text-slate-500">{item.category}</span>
+                      )}
                     </div>
                   </div>
-                  <span className="shrink-0 font-bold text-slate-800">
+                  <span className="shrink-0 font-semibold text-slate-800">
                     {formatarReais(item.sale_price_cents)}
                   </span>
                 </label>
@@ -752,7 +714,7 @@ export function RevisarTiposCatalogoModal({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <div className="flex items-center justify-between gap-2 pt-1">
           <span className="text-xs text-slate-500">
             {selecionados.length} de {sugestoes.length} selecionado(s)
           </span>
@@ -760,7 +722,7 @@ export function RevisarTiposCatalogoModal({
             <button
               type="button"
               onClick={onFechar}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
             >
               Fechar
             </button>
@@ -769,10 +731,10 @@ export function RevisarTiposCatalogoModal({
                 type="button"
                 disabled={aplicando || selecionados.length === 0}
                 onClick={() => void handleAplicar()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-indigo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {aplicando ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                Aplicar nos selecionados
+                {aplicando && <Loader2 size={13} className="animate-spin" />}
+                Converter em Serviço
               </button>
             )}
           </div>
@@ -781,4 +743,3 @@ export function RevisarTiposCatalogoModal({
     </ModalDialogoVendas>
   );
 }
-

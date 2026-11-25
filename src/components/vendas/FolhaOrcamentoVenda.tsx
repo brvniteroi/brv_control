@@ -50,8 +50,7 @@ interface FolhaOrcamentoVendaProps {
 }
 
 /**
- * Folha A4 retrato de orçamento de produtos e serviços.
- * Compartilhada entre o modal de impressão do escritório e a página pública `/orcamento/:token`.
+ * Folha A4 do orçamento de produtos e serviços (no molde de FolhaOrcamentoPlaca.tsx).
  */
 export default function FolhaOrcamentoVenda({
   dados,
@@ -87,7 +86,7 @@ export default function FolhaOrcamentoVenda({
             {dados.number}
           </div>
           <p className="mt-1 text-[11px] font-semibold text-slate-600">
-            Data: {formatarData(dados.created_at)}
+            Emissão: {formatarData(dados.created_at)}
           </p>
           <p className="text-[11px] font-semibold text-amber-800">
             Validade: {dados.validity_days} dias (até {formatarData(dados.valid_until)})
@@ -100,14 +99,14 @@ export default function FolhaOrcamentoVenda({
 
       <div className="mt-4 text-center">
         <h3 className="text-base font-extrabold tracking-wide text-[#0B1E3F] uppercase">
-          PROPOSTA COMERCIAL DE PRODUTOS E SERVIÇOS DE CLIMATIZAÇÃO
+          PROPOSTA DE ORÇAMENTO — PRODUTOS E SERVIÇOS
         </h3>
       </div>
 
       {/* 1. Identificação do Cliente */}
       <section className="mt-4">
         <div className="vendas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-          1. Dados do Cliente
+          1. Identificação do Cliente
         </div>
         <table className="w-full border-collapse border border-slate-300 text-xs">
           <tbody>
@@ -141,7 +140,7 @@ export default function FolhaOrcamentoVenda({
       {produtos.length > 0 && (
         <section className="mt-4">
           <div className="vendas-cor-exata flex items-center justify-between bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-            <span>2. Materiais e Produtos</span>
+            <span>2. Produtos</span>
             <span>Subtotal: {formatarReais(dados.products_subtotal_cents)}</span>
           </div>
           <table className="w-full border-collapse border border-slate-300 text-xs">
@@ -187,7 +186,7 @@ export default function FolhaOrcamentoVenda({
       {servicos.length > 0 && (
         <section className="mt-4">
           <div className="vendas-cor-exata flex items-center justify-between bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-            <span>{produtos.length > 0 ? '3. Mão de Obra e Serviços' : '2. Mão de Obra e Serviços'}</span>
+            <span>{produtos.length > 0 ? '3. Serviços' : '2. Serviços'}</span>
             <span>Subtotal: {formatarReais(dados.services_subtotal_cents)}</span>
           </div>
           <table className="w-full border-collapse border border-slate-300 text-xs">
@@ -229,19 +228,19 @@ export default function FolhaOrcamentoVenda({
         </section>
       )}
 
-      {/* Resumo Financeiro e Condições */}
+      {/* Investimento Total e Condições */}
       <section className="mt-4">
         <div className="vendas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-          Resumo e Condições Comerciais
+          Investimento Total e Condições Comerciais
         </div>
         <div className="grid grid-cols-1 gap-4 border border-t-0 border-slate-300 p-3.5 text-xs sm:grid-cols-2">
           <div className="space-y-1">
             <p>
-              <strong>Forma de pagamento prevista:</strong>{' '}
-              {dados.payment_terms_note || 'A combinar com o atendimento'}
+              <strong>Forma de pagamento:</strong>{' '}
+              {dados.payment_terms_note || 'A combinar'}
             </p>
             <p>
-              <strong>Validade da proposta:</strong> {dados.validity_days} dias corridos (até{' '}
+              <strong>Validade:</strong> {dados.validity_days} dias (até{' '}
               {formatarData(dados.valid_until)})
             </p>
           </div>
@@ -258,17 +257,17 @@ export default function FolhaOrcamentoVenda({
               </div>
             )}
             {dados.general_discount_cents > 0 && (
-              <div className="text-rose-700">
+              <div className="text-red-700">
                 Desconto Geral: <strong>- {formatarReais(dados.general_discount_cents)}</strong>
               </div>
             )}
             {dados.freight_cents > 0 && (
               <div className="text-slate-600">
-                Frete / Outras despesas: <strong>+ {formatarReais(dados.freight_cents)}</strong>
+                Frete: <strong>+ {formatarReais(dados.freight_cents)}</strong>
               </div>
             )}
             <div className="border-t border-slate-200 pt-1.5 text-base font-extrabold text-[#0B1E3F]">
-              Total Geral: {formatarReais(dados.total_cents)}
+              Valor Total: {formatarReais(dados.total_cents)}
             </div>
           </div>
         </div>
@@ -278,7 +277,7 @@ export default function FolhaOrcamentoVenda({
       {dados.notes && (
         <section className="mt-4">
           <div className="vendas-cor-exata bg-[#0B1E3F] px-3 py-1.5 text-[11px] font-bold tracking-wider text-white uppercase">
-            Observações e Condições Técnicas
+            Observações
           </div>
           <div className="whitespace-pre-line border border-t-0 border-slate-300 p-3 text-xs leading-relaxed text-slate-800">
             {dados.notes}
@@ -286,12 +285,12 @@ export default function FolhaOrcamentoVenda({
         </section>
       )}
 
-      {/* Linha de aceite */}
+      {/* Assinaturas */}
       <footer className="mt-8 grid grid-cols-2 gap-8 pt-6 text-center text-xs">
         <div className="border-t border-slate-800 pt-1.5">
           <div className="font-bold text-slate-900">{EMPRESA_BRV.nomeCurto}</div>
           <div className="text-[11px] text-slate-500">
-            {dados.seller_name || 'Departamento Comercial'}
+            {dados.seller_name || 'Atendimento Comercial'}
           </div>
         </div>
         <div className="border-t border-slate-800 pt-1.5">
@@ -304,10 +303,6 @@ export default function FolhaOrcamentoVenda({
     </div>
   );
 }
-
-// ============================================================================
-// Modal A4 em Portal no document.body (para o escritório imprimir / enviar WhatsApp)
-// ============================================================================
 
 interface OrcamentoDocumentoModalProps {
   orcamento: Quote;
@@ -326,44 +321,38 @@ export function OrcamentoDocumentoModal({
       : undefined;
 
   return createPortal(
-    <div className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-xs sm:p-6 print:static print:bg-white print:p-0">
+    <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/40 p-4 sm:p-6 print:static print:bg-white print:p-0">
       <style>{ESTILO_IMPRESSAO_ORCAMENTO_VENDA_A4}</style>
 
-      {/* Barra de ações (some na impressão) */}
-      <div className="mx-auto mb-4 flex max-w-4xl flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg print:hidden">
-        <div>
-          <h2 className="text-sm font-extrabold text-slate-900">
-            Documento do Orçamento · {orcamento.number}
-          </h2>
-          <p className="text-xs text-slate-500">
-            Imprima em A4 ou envie o link de aprovação pelo WhatsApp
-          </p>
-        </div>
+      <div className="mx-auto mb-4 flex max-w-4xl flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xs print:hidden">
+        <h2 className="text-sm font-bold text-slate-900">
+          Orçamento {orcamento.number}
+        </h2>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50"
           >
             <Printer size={15} />
-            Imprimir / Salvar PDF
+            Salvar em PDF / Imprimir
           </button>
 
           <button
             type="button"
             onClick={onEnviarWhatsApp}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
           >
             <MessageCircle size={15} />
-            Enviar pelo WhatsApp (link para aprovar)
+            Enviar pelo WhatsApp
           </button>
 
           <button
             type="button"
             onClick={onFechar}
-            aria-label="Fechar documento"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            aria-label="Fechar"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100"
           >
             <X size={17} />
           </button>
@@ -377,4 +366,3 @@ export function OrcamentoDocumentoModal({
     document.body,
   );
 }
-

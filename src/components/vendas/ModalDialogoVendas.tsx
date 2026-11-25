@@ -16,8 +16,7 @@ dialog.vendas-modal-nativo:modal {
   overscroll-behavior: contain;
 }
 dialog.vendas-modal-nativo::backdrop {
-  background: rgb(15 23 42 / 0.55);
-  backdrop-filter: blur(2px);
+  background: rgb(0 0 0 / 0.4);
   overflow: hidden;
   overscroll-behavior: contain;
 }
@@ -27,7 +26,6 @@ export default function ModalDialogoVendas({
   aberto,
   onFechar,
   titulo,
-  subtitulo,
   larguraMax = 'max-w-lg',
   fecharAoClicarFora = true,
   children,
@@ -83,26 +81,23 @@ export default function ModalDialogoVendas({
           }
           pressionouForaRef.current = false;
         }}
-        className={`vendas-modal-nativo m-auto w-[calc(100%-1.5rem)] ${larguraMax} max-h-[90dvh] rounded-2xl border border-slate-200 bg-white p-0 text-slate-800 shadow-2xl open:flex open:flex-col print:hidden`}
+        className={`vendas-modal-nativo m-auto w-[calc(100%-2rem)] ${larguraMax} max-h-[calc(100dvh-2rem)] rounded-2xl border border-slate-200 bg-white p-0 text-slate-800 shadow-sm open:flex open:flex-col print:hidden`}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
-          <div className="min-w-0">
-            <h2 id={tituloId} className="text-base font-bold text-slate-900">
-              {titulo}
-            </h2>
-            {subtitulo && <p className="mt-0.5 text-xs text-slate-500">{subtitulo}</p>}
-          </div>
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <h2 id={tituloId} className="text-base font-bold text-slate-900">
+            {titulo}
+          </h2>
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            aria-label="Fechar janela"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            aria-label="Fechar"
+            className="text-slate-400 hover:text-slate-600"
           >
-            <X size={16} aria-hidden="true" />
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-auto overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-auto overflow-y-auto px-5 pb-5">{children}</div>
       </dialog>
     </>
   );

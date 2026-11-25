@@ -1,4 +1,5 @@
 // Cores e rótulos centralizados para Catálogo, Orçamentos, Vendas e Notas Fiscais.
+// Padrão visual idêntico a STATUS_OS (src/utils/ordens.ts).
 
 import type { FinancialPaymentMethod } from '../../types/financeiro';
 import type {
@@ -20,45 +21,45 @@ export interface EstiloSelo {
 export const CORES_TIPO_ITEM: Record<CatalogItemKind, EstiloSelo> = {
   produto: {
     rotulo: 'Produto',
-    selo: 'border-sky-200 bg-sky-50 text-sky-800',
-    ponto: 'bg-sky-500',
+    selo: 'border-slate-200 bg-slate-100 text-slate-700',
+    ponto: 'bg-slate-500',
   },
   servico: {
     rotulo: 'Serviço',
-    selo: 'border-indigo-200 bg-indigo-50 text-indigo-800',
-    ponto: 'bg-indigo-500',
+    selo: 'border-blue-100 bg-blue-50 text-blue-700',
+    ponto: 'bg-blue-500',
   },
 };
 
 export const CORES_SITUACAO_ORCAMENTO: Record<QuoteDisplayStatus, EstiloSelo> = {
   rascunho: {
     rotulo: 'Rascunho',
-    selo: 'border-slate-200 bg-slate-100 text-slate-700',
+    selo: 'border-slate-200 bg-slate-100 text-slate-600',
     ponto: 'bg-slate-400',
   },
   enviado: {
     rotulo: 'Enviado',
-    selo: 'border-blue-200 bg-blue-50 text-blue-800',
+    selo: 'border-blue-100 bg-blue-50 text-blue-700',
     ponto: 'bg-blue-500',
   },
   aprovado: {
     rotulo: 'Aprovado',
-    selo: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    selo: 'border-emerald-100 bg-emerald-50 text-emerald-700',
     ponto: 'bg-emerald-500',
   },
   recusado: {
     rotulo: 'Recusado',
-    selo: 'border-rose-200 bg-rose-50 text-rose-800',
-    ponto: 'bg-rose-500',
+    selo: 'border-red-100 bg-red-50 text-red-700',
+    ponto: 'bg-red-500',
   },
   convertido: {
     rotulo: 'Convertido',
-    selo: 'border-violet-200 bg-violet-50 text-violet-800',
-    ponto: 'bg-violet-500',
+    selo: 'border-emerald-100 bg-emerald-50 text-emerald-700',
+    ponto: 'bg-emerald-500',
   },
   vencido: {
     rotulo: 'Vencido',
-    selo: 'border-amber-300 bg-amber-50 text-amber-900',
+    selo: 'border-amber-100 bg-amber-50 text-amber-700',
     ponto: 'bg-amber-500',
   },
 };
@@ -66,40 +67,40 @@ export const CORES_SITUACAO_ORCAMENTO: Record<QuoteDisplayStatus, EstiloSelo> = 
 export const CORES_SITUACAO_VENDA: Record<SaleDisplayStatus, EstiloSelo> = {
   paga: {
     rotulo: 'Paga',
-    selo: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    selo: 'border-emerald-100 bg-emerald-50 text-emerald-700',
     ponto: 'bg-emerald-500',
   },
   parcial: {
     rotulo: 'Parcial',
-    selo: 'border-amber-300 bg-amber-50 text-amber-900',
+    selo: 'border-amber-100 bg-amber-50 text-amber-700',
     ponto: 'bg-amber-500',
   },
   aberta: {
     rotulo: 'Aberta',
-    selo: 'border-blue-200 bg-blue-50 text-blue-800',
+    selo: 'border-blue-100 bg-blue-50 text-blue-700',
     ponto: 'bg-blue-500',
   },
   cancelada: {
     rotulo: 'Cancelada',
-    selo: 'border-slate-300 bg-slate-100 text-slate-600',
-    ponto: 'bg-slate-400',
+    selo: 'border-red-100 bg-red-50 text-red-700',
+    ponto: 'bg-red-500',
   },
 };
 
 export const CORES_STATUS_NOTA: Record<SaleDocumentStatus, EstiloSelo> = {
   nao_emitida: {
     rotulo: 'Pendente',
-    selo: 'border-slate-200 bg-slate-100 text-slate-700',
+    selo: 'border-slate-200 bg-slate-100 text-slate-600',
     ponto: 'bg-slate-400',
   },
   emitindo: {
     rotulo: 'Emitindo...',
-    selo: 'border-blue-200 bg-blue-50 text-blue-700',
+    selo: 'border-blue-100 bg-blue-50 text-blue-700',
     ponto: 'bg-blue-500',
   },
   emitida: {
     rotulo: 'Emitida',
-    selo: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    selo: 'border-emerald-100 bg-emerald-50 text-emerald-700',
     ponto: 'bg-emerald-500',
   },
   cancelada: {
@@ -109,8 +110,8 @@ export const CORES_STATUS_NOTA: Record<SaleDocumentStatus, EstiloSelo> = {
   },
   erro: {
     rotulo: 'Erro na emissão',
-    selo: 'border-rose-200 bg-rose-50 text-rose-800',
-    ponto: 'bg-rose-500',
+    selo: 'border-red-100 bg-red-50 text-red-700',
+    ponto: 'bg-red-500',
   },
 };
 
@@ -167,4 +168,3 @@ export const ORIGENS_MERCADORIA: readonly { valor: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 ];
 
 export const UNIDADES_CATALOGO: readonly string[] = ['UN', 'M', 'KG', 'CX', 'PAR', 'KIT', 'ROLO', 'L', 'H', 'SRV'];
-

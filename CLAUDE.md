@@ -57,7 +57,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
   arquivos 0,12 / 1 GB. O banco cresce poucos MB por mês (~200 OS/mês; fotos ficam na HostGator): espaço não é problema por anos.
 - **Medido em 2026-11-24, depois da importação do SicWeb:** as 10 maiores tabelas somam ~167 MB (`attachments` 64 MB, `customers` 19, `tasks` 18,
   `sicweb_venda_itens` 17, `service_orders` 16, `sicweb_vendas` 14, `customer_sicweb_codes` 6,6, `customer_addresses` 6,1, `customer_contacts` 3,5,
-  `sicweb_venda_pagamentos` 3); o histórico do SicWeb ocupa ~41 MB. Banco inteiro estimado em ~200 MB de 500 MB. Vendas e financeiro novos devem crescer
+  `sicweb_venda_pagamentos` 3); o histórico do SicWeb ocupa ~41 MB. **Banco inteiro: 192 MB de 500 MB (38%)** (`pg_database_size`, 2026-11-24). Vendas e financeiro novos devem crescer
   ~5 a 10 MB por ano (~1.100 vendas/ano + itens, orçamentos, caixa e recebimentos). **Regra:** XML/PDF das notas fiscais **não** vão para o banco (ficam na HostGator
   ou no provedor; o banco guarda número, situação e link), como as fotos.
 - Projeto gratuito é pausado após 1 semana sem uso (não ocorre com uso diário).

@@ -196,6 +196,9 @@ como verdade (começa zerado ou por contagem).
 
 ## Data prevista da virada (2026-11-25)
 
+**Onde paramos e o que falta:** ver o lembrete "continuar Vendas e Financeiro" no `CLAUDE.md` (é a lista que vale; a "Retomada" de 2026-11-24,
+abaixo, ficou como registro).
+
 **05/12/2026** (sábado; se a loja não abrir, o primeiro dia é segunda, 07/12), definida pelo usuário: 10 dias à frente.
 **Depende da resposta do contador** (docs/perguntas-contador.md). Enquanto o Control não emitir nota, o SicWeb continua só para isso.
 No dia: roteiro do item "Virada" acima; o saldo da gaveta entra pela primeira abertura do Caixa e o saldo dos bancos pelo

@@ -194,8 +194,32 @@ painel do Supabase (reversível; libera a vaga do gratuito); (3) **apagar** depo
 livre, fazer o **ensaio de restauração do backup** (pendente). Ao apagar o projeto: tirar `EQUIP_SERVICE_ROLE_KEY` do `.env`, atualizar a seção "Supabase: plano e uso"
 (1 projeto) e apagar este lembrete.
 
-**LEMBRETE (2026-11-25, PC DA EMPRESA): continuar Vendas e Financeiro** (lembrar o usuário logo no início da conversa). Parte 1 (catálogo e orçamentos) está no banco e verificada.
-Passo 1 **feito em 2026-11-25** (829 itens: 759 produtos, 70 serviços, 763 custos; `scripts/sicweb/importar-produtos.mjs`, repetível, `--atualizar-precos` na virada; Fabricante e Observações na tela; campo fiscal em branco continua em branco; perguntas para o contador em `docs/perguntas-contador.md`, **aguardando respostas**). Falta, nesta ordem: ~~(1) importar o catálogo do SicWeb~~ (como foi feito: (`TABEST1`, 829 itens): conferir antes as colunas reais pelo `sqlcmd` no SQL Server Express deste PC (`.SQLEXPRESS`, banco `SICNET`), escrever `scripts/sicweb/importar-produtos.mjs` no molde de `importar-vendas.mjs` (simula por padrão, `--gravar`; chave `catalog_items.legacy_code` = `controle`; código, código de barras/GTIN, nome, unidade, preço de venda, custo em `catalog_item_costs`, fabricante, observações, data do último reajuste em `price_updated_at`, ativo; tipo serviço para "M.O ..."; **estoque não vem do SicWeb**, tem muito saldo negativo: começa zerado) e mostrar Fabricante/Observações na tela do catálogo); (2) **parte 2 feita em 2026-11-25** (migration `20261125110000_vendas_financeiro_base.sql` **aplicada e verificada**; falta o teste na prática pelo usuário: venda de balcão em `/vendas` e taxas das maquininhas em `/financeiro/cadastros`. Inclui vendas, contas, maquininhas com taxa zero, categorias, fornecedores, movimentos imutáveis, `unir_clientes` com orçamentos e vendas; verificação `supabase/verificacao/vendas_financeiro_base.sql`, que **já passou** num ensaio com desfazimento no banco real) e **só então fazer commit e push** (o código já chama as funções novas: `USAR_BANCO_VENDAS` e `USAR_BANCO_CADASTROS`). Sem emissão fiscal: a tela só registra o número da nota (`EMISSAO_FISCAL_DISPONIVEL`). A venda guarda o frete do orçamento; desconto geral repartido entre as duas notas. Ajuda F1 das vendas e dos cadastros feita; (3) **parte 3**: telas do Financeiro (caixa, recebimentos, extrato, cadastros) e o nível financeiro na aba Usuários; (4) ajuda F1 de Vendas e Financeiro e só então ligar `MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO`. Contrato das telas: `types/vendas.ts`, `types/financeiro.ts` e os `fonteDeDados.ts`; auditorias em `docs/gemini/vendas-financeiro-r1-auditoria.md` e `-r2-auditoria.md`; mapa SICNET -> Control em `docs/financeiro.md`. Ao concluir, apagar este lembrete.
+**LEMBRETE (atualizado em 2026-11-25, vale nos dois PCs): continuar Vendas e Financeiro** (lembrar o usuário logo no início da conversa).
+**Data prevista da virada: 05/12/2026** (sábado; se a loja não abrir, 07/12), **depende do contador**.
+**Pronto, no banco e no site** (todas as migrations até `20261125170000` aplicadas): catálogo, orçamentos, vendas, vendedores e modelos de orçamento,
+cadastros do financeiro, **Caixa**, **Movimentos**, **Visão geral** e a consulta dos orçamentos antigos do SicWeb. Caixa, Movimentos e Visão geral testados
+pelo usuário. **Menus ainda escondidos** (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO` em `Sidebar.tsx`); as telas abrem pelo endereço (`/orcamentos`, `/vendas`,
+`/catalogo`, `/financeiro`, `/financeiro/caixa`, `/financeiro/movimentos`, `/financeiro/cadastros`).
+**Falta, nesta ordem:**
+1. **Teste do orçamento de ponta a ponta** (em 2026-11-25 não havia nenhum orçamento novo no banco): criar com um modelo, enviar o link ao próprio WhatsApp,
+   aprovar no celular, virar venda e cancelar a venda de teste.
+2. **Mostrar os menus** (perguntado em 2026-11-25, **sem resposta**; recomendado só depois das taxas, porque venda no cartão com taxa zero não é recalculada).
+3. **Taxas** da Rede e da InfinitePay (o usuário vai informar depois) e **prazo real da InfinitePay** (hoje 1 dia útil; se cair na hora ou no fim de semana, ajustar
+   `somar_dias_uteis`/o cadastro).
+4. **Contador** (`docs/perguntas-contador.md`, sem resposta), provedor de emissão de notas (Focus NFe recomendado, não escolhido) e certificado `.pfx`. Enquanto o
+   Control não emite nota, o SicWeb continua só para isso.
+5. **Na virada** (**só no PC da empresa**, com backup novo do SICNET restaurado no SQL Server): rodar, simulando antes, `importar-clientes.mjs`, `importar-vendas.mjs`,
+   `importar-produtos.mjs --atualizar-precos` e `importar-orcamentos.mjs`, todos com `--gravar`; informar o saldo inicial de cada banco (Cadastros do financeiro) e
+   abrir o Caixa com o valor contado (motivo "saldo da virada"); conferir totais.
+**Depois (não trava a virada):** recebimentos dos técnicos ("Recebeu do cliente?" no app de campo + tela `/financeiro/recebimentos`, hoje demonstração e escondida,
+`RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false`); renomear modelo de orçamento na tela (oferecido, sem resposta); baixa de estoque nas vendas (não existe; estoque
+não foi importado); estornar só o pagamento de uma venda (hoje cancela a venda inteira).
+**Como foi feito (seguir igual):** escrever a migration + `supabase/verificacao/<nome>.sql` (bloco que termina em erro "TUDO CERTO") e **ensaiar no banco real com
+desfazimento** antes de pedir para o usuário colar:
+`set -a && . ./.env && set +a && export PGCLIENTENCODING=UTF8 && { sed 's/^COMMIT;\s*$//' <migration>; cat <verificacao>; echo 'ROLLBACK;'; } | <psql> "$BACKUP_DB_URL_CONTROL" -q -v ON_ERROR_STOP=1`
+(psql do PC da empresa: `/c/PostgreSQL17/bin/psql`; sem psql no PC de casa, não há ensaio: avisar o usuário). **Não publicar tela que depende de SQL ainda não
+aplicado**; depois que ele confirmar, conferir no banco, commit, push e checar o deploy. Funções `orcamento_*`/`venda_*` refeitas usam `pode_vender()`.
+Contrato das telas: `types/vendas.ts`, `types/financeiro.ts` e os `fonteDeDados.ts`; mapa SICNET -> Control em `docs/financeiro.md`. Ao concluir, apagar este lembrete.
 
 **OFICINA E IMPRESSORA: implantação concluída em 2026-11-11** (não é mais lembrete; fica como registro e referência do agente da Elgin):
 (1) **FEITO em 2026-11-09**: agente da Elgin instalado no servidor da loja (login `impressora@brvniteroi.com.br`, pasta em

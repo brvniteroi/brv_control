@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Loader2, Search, UserPlus, X } from 'lucide-react';
 import {
   atualizarTextosOrdem,
@@ -15,6 +15,10 @@ import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import type { Customer, CustomerAddress, ServiceType } from '../../types/fsm';
 import type { TecnicoLinha } from '../../services/linhaDoTempo';
 import { deCamposDataHora, rotuloEndereco } from '../../utils/ordens';
+import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
+
+/** Opção da busca: OS sem atividade, cliente que ganha OS nova ou "Cadastrar como novo cliente". */
+type OpcaoBusca = { ordem: OrdemResumo } | { cliente: Customer } | { cadastrar: true };
 
 interface Props {
   dia: string;
@@ -138,6 +142,29 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
     setEnderecos([]);
     setEnderecoId('');
   };
+
+  // Opções da lista de busca, na ordem da tela (setas do teclado): OS achadas, clientes para OS nova e "Cadastrar"
+  const opcoesBusca = useMemo<OpcaoBusca[]>(() => {
+    if (!buscaValida) return [];
+    const lista: OpcaoBusca[] = encontradas.map((o) => ({ ordem: o }));
+    if (!buscando) {
+      lista.push(...clientesAchados.map((c) => ({ cliente: c })), { cadastrar: true as const });
+    }
+    return lista;
+  }, [buscaValida, encontradas, clientesAchados, buscando]);
+
+  const escolherOpcao = (opcao: OpcaoBusca) => {
+    if ('ordem' in opcao) escolherOrdem(opcao.ordem);
+    else if ('cliente' in opcao) escolherSemOs(opcao.cliente.id, opcao.cliente.name);
+    else setCadastrando(true);
+  };
+
+  const teclas = useNavegacaoLista({
+    itens: opcoesBusca,
+    aberta: buscaValida,
+    idPrefixo: 'na-opcao',
+    aoEscolher: escolherOpcao,
+  });
 
   const fecharCadastro = async () => {
     setCadastrando(false);
@@ -275,11 +302,16 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
                 autoFocus
                 value={termo}
                 onChange={(e) => setTermo(e.target.value)}
+                onKeyDown={teclas.aoTeclar}
+                role="combobox"
+                aria-expanded={buscaValida}
+                aria-controls="na-opcoes"
+                aria-activedescendant={buscaValida && opcoesBusca.length > 0 ? `na-opcao-${teclas.ativo}` : undefined}
                 placeholder="Número da OS ou nome do cliente"
                 className={`${CAMPO} pl-9`}
               />
               {buscaValida && (
-                <ul className="mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white text-sm shadow-sm">
+                <ul id="na-opcoes" role="listbox" className="mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white text-sm shadow-sm">
                   {buscando && (
                     <li className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500">
                       <Loader2 size={13} className="animate-spin" /> Buscando...
@@ -288,33 +320,53 @@ export default function NovaAtividadeModal({ dia, tecnicos, aoFechar, aoSalvo }:
                   {!buscando && resultados.length === 0 && clientesAchados.length === 0 && (
                     <li className="px-3 py-2 text-xs text-slate-500">Nenhuma OS sem atividade nem cliente encontrado.</li>
                   )}
-                  {resultados.map((o) => (
-                    <li key={o.id}>
-                      <button type="button" onClick={() => escolherOrdem(o)} className="block w-full px-3 py-2 text-left hover:bg-slate-50">
-                        <b>OS {o.number}</b> · {o.customer?.name}
-                        <span className="ml-1 text-xs text-slate-500">{o.service_type?.name}</span>
-                      </button>
-                    </li>
-                  ))}
-                  {!buscando &&
-                    clientesAchados.map((c) => (
-                      <li key={c.id}>
-                        <button type="button" onClick={() => escolherSemOs(c.id, c.name)} className="block w-full px-3 py-2 text-left hover:bg-slate-50">
-                          <span className="text-xs text-slate-500">Nova OS para</span> <b>{c.name}</b>
+                  {opcoesBusca.map((opcao, idx) => {
+                    const marcada = idx === teclas.ativo;
+                    const props = {
+                      id: `na-opcao-${idx}`,
+                      role: 'option',
+                      'aria-selected': marcada,
+                    } as const;
+                    const botao = {
+                      type: 'button',
+                      tabIndex: -1,
+                      onClick: () => escolherOpcao(opcao),
+                      onMouseEnter: () => teclas.setAtivo(idx),
+                    } as const;
+                    if ('ordem' in opcao) {
+                      const o = opcao.ordem;
+                      return (
+                        <li key={o.id} {...props}>
+                          <button {...botao} className={`block w-full px-3 py-2 text-left ${marcada ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                            <b>OS {o.number}</b> · {o.customer?.name}
+                            <span className="ml-1 text-xs text-slate-500">{o.service_type?.name}</span>
+                          </button>
+                        </li>
+                      );
+                    }
+                    if ('cliente' in opcao) {
+                      const c = opcao.cliente;
+                      return (
+                        <li key={c.id} {...props}>
+                          <button {...botao} className={`block w-full px-3 py-2 text-left ${marcada ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                            <span className="text-xs text-slate-500">Nova OS para</span> <b>{c.name}</b>
+                          </button>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key="cadastrar" {...props}>
+                        <button
+                          {...botao}
+                          className={`flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-left font-semibold text-blue-600 ${
+                            marcada ? 'bg-blue-50' : 'hover:bg-blue-50'
+                          }`}
+                        >
+                          <UserPlus size={14} /> Cadastrar "{termo.trim()}" como novo cliente (cadastro completo)
                         </button>
                       </li>
-                    ))}
-                  {!buscando && (
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => setCadastrando(true)}
-                        className="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-left font-semibold text-blue-600 hover:bg-blue-50"
-                      >
-                        <UserPlus size={14} /> Cadastrar "{termo.trim()}" como novo cliente (cadastro completo)
-                      </button>
-                    </li>
-                  )}
+                    );
+                  })}
                 </ul>
               )}
             </div>

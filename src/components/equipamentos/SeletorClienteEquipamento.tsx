@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Building2, Check, Lock, Search, X } from 'lucide-react';
 import { buscarClientesParaSeletor } from '../../services/equipamentos';
+import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
 
 interface ClienteItem {
   id: string;
@@ -47,6 +48,21 @@ export default function SeletorClienteEquipamento({
     return () => clearTimeout(timer);
   }, [busca, aberto]);
 
+  const escolher = (c: ClienteItem) => {
+    onChange(c);
+    setBusca('');
+    setAberto(false);
+  };
+
+  const teclas = useNavegacaoLista({
+    itens: resultados,
+    aberta: aberto,
+    idPrefixo: 'seletor-cliente-equip',
+    aoEscolher: escolher,
+    aoAbrir: () => setAberto(true),
+    aoFechar: () => setAberto(false),
+  });
+
   if (valor) {
     return (
       <div className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800">
@@ -86,11 +102,20 @@ export default function SeletorClienteEquipamento({
         onChange={(e) => setBusca(e.target.value)}
         onFocus={() => setAberto(true)}
         onBlur={() => setTimeout(() => setAberto(false), 200)}
+        onKeyDown={teclas.aoTeclar}
+        role="combobox"
+        aria-expanded={aberto}
+        aria-controls="seletor-cliente-equip-lista"
+        aria-activedescendant={aberto && resultados.length > 0 ? `seletor-cliente-equip-${teclas.ativo}` : undefined}
         placeholder="Buscar cliente por nome..."
         className="block w-full rounded-xl border border-slate-200 py-2.5 pr-3 pl-9 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
       />
       {aberto && (
-        <ul className="absolute z-30 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+        <ul
+          id="seletor-cliente-equip-lista"
+          role="listbox"
+          className="absolute z-30 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+        >
           {carregando && (
             <li className="px-3 py-2.5 text-xs text-slate-400">Buscando clientes...</li>
           )}
@@ -99,16 +124,16 @@ export default function SeletorClienteEquipamento({
               {busca ? 'Nenhum cliente encontrado.' : 'Digite para buscar um cliente ativo.'}
             </li>
           )}
-          {resultados.map((c) => (
-            <li key={c.id}>
+          {resultados.map((c, idx) => (
+            <li key={c.id} id={`seletor-cliente-equip-${idx}`} role="option" aria-selected={idx === teclas.ativo}>
               <button
                 type="button"
-                onMouseDown={() => {
-                  onChange(c);
-                  setBusca('');
-                  setAberto(false);
-                }}
-                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition hover:bg-blue-50"
+                tabIndex={-1}
+                onMouseDown={() => escolher(c)}
+                onMouseEnter={() => teclas.setAtivo(idx)}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
+                  idx === teclas.ativo ? 'bg-blue-50' : 'hover:bg-blue-50'
+                }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   <Building2 size={15} className="shrink-0 text-slate-400" />

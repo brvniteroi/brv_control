@@ -48,7 +48,7 @@ import SeletorCliente from '../ordens/SeletorCliente';
 import { CORES_SITUACAO_ORCAMENTO, ROTULO_CANAL_ORCAMENTO } from './cores';
 import { CLIENTES_DEMO_VENDAS } from './dadosDemo';
 import { OrcamentoDocumentoModal } from './FolhaOrcamentoVenda';
-import { useNavegacaoLista } from './useNavegacaoLista';
+import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
 import {
   anotarNoHistoricoOrcamento,
   buscarItensParaBusca,

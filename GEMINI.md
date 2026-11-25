@@ -27,6 +27,9 @@ Regras:
    `slate` no resto, verde/âmbar/vermelho só em situação).
 6. **Navegação** do módulo pelo menu lateral; sem barra extra de abas no topo da página. Seletor de demonstração ("Ver como") só como um controle
    pequeno e discreto, e só enquanto `FONTE_DADOS_DEMO` for `true`.
+7. **Setas do teclado** (pedido do Braulio, 2026-11-24): toda lista de escolha ligada a uma busca (cliente, produto, conta, categoria...) usa o hook
+   `src/hooks/useNavegacaoLista.ts` (↓/↑ marcam, Enter escolhe, Esc fecha; modelo em `components/ordens/SeletorCliente.tsx`). Para escolher cliente, use o
+   próprio `SeletorCliente`. Escolha entre poucos valores fixos: `<select>` nativo (já aceita as setas).
 Antes de entregar, abra a tela nova lado a lado com `Clientes.tsx`/`OrdemDetalhes.tsx` e tire o que não existe lá.
 
 ## O que você NÃO altera (peça ao Claude)

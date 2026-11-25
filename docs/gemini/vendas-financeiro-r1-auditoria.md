@@ -35,8 +35,11 @@ Pedida em `docs/gemini/vendas-visual-correcao.md` e conferida pelo Claude: cabe�
 "Ver como" que só aparece com `FONTE_DADOS_DEMO = true`, sem caixas de aviso, cartões de resumo nem pílulas com contador, filtros em barra única,
 sem `shadow-lg`/`backdrop-blur`, animação só no `Loader2`; os textos pequenos que restaram são rótulos e códigos. ~840 linhas a menos. Typecheck, lint e build limpos.
 
-**Teclado na busca do catálogo (Claude, pedido do Braulio):** `components/vendas/useNavegacaoLista.ts`, usado no editor de orçamento e na Nova venda:
+**Teclado na busca do catálogo (Claude, pedido do Braulio):** `src/hooks/useNavegacaoLista.ts`, usado no editor de orçamento e na Nova venda:
 ↓/↑ percorrem as sugestões (o item marcado fica azul e rola para ficar visível), Enter adiciona o marcado, Esc fecha (antes só o Enter, sempre no primeiro).
+No mesmo dia o Braulio pediu as setas "em todas as vezes que pudermos selecionar entre valores distintos": o hook foi para `src/hooks/` e também está no
+`SeletorCliente` (OS, Oficina, PMOC, orçamento, venda), `SeletorClienteEquipamento`, Nova atividade, cliente da Nova placa, etiquetas e busca da Ajuda F1
+(tópico `setas-teclado`). **Toda lista de escolha nova com busca usa esse hook** (rodada 2 inclusive).
 
 **Para a ligação ao banco:** `OrcamentoEditor.tsx` importa `CLIENTES_DEMO_VENDAS` direto do `dadosDemo.ts` (dado de demonstração dentro do componente,
 contra a regra do briefing): trocar pelo cliente real ao ligar o banco.

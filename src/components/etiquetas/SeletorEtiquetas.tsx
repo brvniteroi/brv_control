@@ -5,6 +5,7 @@ import { COR_PADRAO_ETIQUETA, criarEtiqueta, listarEtiquetas } from '../../servi
 import { semAcento } from '../../services/clientes';
 import EtiquetaChip from './EtiquetaChip';
 import SeletorCor from './SeletorCor';
+import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
 
 interface SeletorEtiquetasProps {
   titulo?: string;
@@ -57,6 +58,15 @@ export default function SeletorEtiquetas({ titulo = 'Etiquetas', selecionadas, o
     }
   };
 
+  // Setas percorrem a lista e o Enter marca/desmarca a etiqueta marcada; sem usar as setas, o Enter cria a etiqueta digitada
+  const teclas = useNavegacaoLista({
+    itens: filtradas,
+    aberta: !carregando,
+    idPrefixo: 'etiqueta-opcao',
+    aoEscolher: (t: Tag) => alternar(t.id),
+    marcarPrimeiro: false,
+  });
+
   const confirmar = async () => {
     setSalvando(true);
     setErro(null);
@@ -85,6 +95,7 @@ export default function SeletorEtiquetas({ titulo = 'Etiquetas', selecionadas, o
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
           onKeyDown={(e) => {
+            if (teclas.aoTeclar(e)) return;
             if (e.key === 'Enter' && termo.trim() && !existeIgual) {
               e.preventDefault();
               criar();
@@ -116,14 +127,18 @@ export default function SeletorEtiquetas({ titulo = 'Etiquetas', selecionadas, o
               {catalogo.length === 0 ? 'Nenhuma etiqueta criada ainda. Digite um nome acima.' : 'Nenhuma etiqueta com esse nome.'}
             </p>
           ) : (
-            filtradas.map((t) => {
+            filtradas.map((t, idx) => {
               const marcada = marcadas.has(t.id);
               return (
                 <button
                   key={t.id}
+                  id={`etiqueta-opcao-${idx}`}
                   type="button"
                   onClick={() => alternar(t.id)}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-slate-50"
+                  onMouseEnter={() => teclas.setAtivo(idx)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${
+                    idx === teclas.ativo ? 'bg-blue-50' : 'hover:bg-slate-50'
+                  }`}
                 >
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${

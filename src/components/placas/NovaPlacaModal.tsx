@@ -30,6 +30,7 @@ import {
   salvarClientePlaca,
 } from './fonteDeDados';
 import ModalDialogoPlacas from './ModalDialogoPlacas';
+import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
 import {
   SUGESTOES_TIPO_EQUIPAMENTO_PLACA,
   calcularValidadeGarantia,
@@ -209,6 +210,15 @@ export default function NovaPlacaModal({
     setPlacasEntreguesCliente([]);
     setErroFormulario(null);
   };
+
+  // Setas na lista de clientes (fica sempre visível): com busca digitada, o primeiro já vem marcado e o Enter o escolhe
+  const teclasCliente = useNavegacaoLista({
+    itens: clientesFiltrados,
+    aberta: true,
+    idPrefixo: `${idBase}-cli`,
+    aoEscolher: selecionarClienteBalcao,
+    marcarPrimeiro: buscaCliente.trim() !== '',
+  });
 
   const handleSalvarClienteRapido = async () => {
     setErroNovoCli(null);
@@ -601,6 +611,7 @@ export default function NovaPlacaModal({
                 spellCheck={false}
                 value={buscaCliente}
                 onChange={(e) => setBuscaCliente(e.target.value)}
+                onKeyDown={teclasCliente.aoTeclar}
                 placeholder="Buscar parceiro ou cliente por nome, telefone ou cidade..."
                 className="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3 pl-9 text-sm focus:border-blue-600 focus:outline-none"
               />
@@ -618,16 +629,23 @@ export default function NovaPlacaModal({
                     Nenhum cliente encontrado. Clique em &ldquo;Novo cliente&rdquo; acima para cadastrar.
                   </p>
                 ) : (
-                  clientesFiltrados.map((cli) => {
+                  clientesFiltrados.map((cli, idx) => {
                     const ativo = cli.id === clienteSelecionadoId;
+                    const marcado = idx === teclasCliente.ativo;
                     const estiloTipo = CORES_TIPO_CLIENTE_PLACA[cli.kind];
                     return (
                       <button
                         key={cli.id}
+                        id={`${idBase}-cli-${idx}`}
                         type="button"
                         onClick={() => selecionarClienteBalcao(cli)}
+                        onMouseEnter={() => teclasCliente.setAtivo(idx)}
                         className={`flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left text-xs transition ${
-                          ativo ? 'bg-blue-50 font-semibold text-blue-950' : 'hover:bg-slate-50'
+                          ativo
+                            ? 'bg-blue-50 font-semibold text-blue-950'
+                            : marcado
+                              ? 'bg-slate-100'
+                              : 'hover:bg-slate-50'
                         }`}
                       >
                         <div className="min-w-0">

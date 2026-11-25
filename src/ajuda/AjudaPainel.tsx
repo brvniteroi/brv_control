@@ -24,6 +24,7 @@ import {
 import { NOME_TELA, SECOES, TOPICOS, topicoPorId, type TelaAjuda, type Topico } from './topicos';
 import { buscarTopicos, topicosDaTela } from './buscaAjuda';
 import TextoAjuda from './TextoAjuda';
+import { useNavegacaoLista } from '../hooks/useNavegacaoLista';
 
 interface AjudaPainelProps {
   tela: TelaAjuda;
@@ -120,6 +121,14 @@ export default function AjudaPainel({ tela, onFechar }: AjudaPainelProps) {
     setAberto(t);
   };
 
+  // Setas nos resultados da busca; Enter abre o tópico marcado (o primeiro, se ninguém mexeu)
+  const teclasBusca = useNavegacaoLista({
+    itens: achados,
+    aberta: buscando && achados.length > 0,
+    idPrefixo: 'ajuda-achado',
+    aoEscolher: abrirTopico,
+  });
+
   const alternarSecao = (secao: string) => {
     setSecoesAbertas((atual) => ({ ...atual, [secao]: !atual[secao] }));
   };
@@ -141,15 +150,20 @@ export default function AjudaPainel({ tela, onFechar }: AjudaPainelProps) {
     </li>
   );
 
-  const itemPadrao = (t: Topico, mostrarSecao = false) => {
+  /** `indiceBusca`: posição nos resultados da busca (setas do teclado). */
+  const itemPadrao = (t: Topico, mostrarSecao = false, indiceBusca?: number) => {
     const Icone = ICONE_SECAO[t.secao] ?? CircleHelp;
     const ehDaTela = idsDaTela.has(t.id);
+    const marcado = indiceBusca !== undefined && indiceBusca === teclasBusca.ativo;
     return (
-      <li key={t.id}>
+      <li key={t.id} id={indiceBusca !== undefined ? `ajuda-achado-${indiceBusca}` : undefined}>
         <button
           type="button"
           onClick={() => abrirTopico(t)}
-          className="group flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50/70 hover:text-blue-700 sm:min-h-9 sm:py-2"
+          onMouseEnter={indiceBusca !== undefined ? () => teclasBusca.setAtivo(indiceBusca) : undefined}
+          className={`group flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-blue-50/70 hover:text-blue-700 sm:min-h-9 sm:py-2 ${
+            marcado ? 'bg-blue-50/70 text-blue-700' : 'text-slate-700'
+          }`}
         >
           {mostrarSecao && (
             <span
@@ -286,6 +300,7 @@ export default function AjudaPainel({ tela, onFechar }: AjudaPainelProps) {
                   aria-label="Buscar na ajuda"
                   value={termo}
                   onChange={(e) => setTermo(e.target.value)}
+                  onKeyDown={teclasBusca.aoTeclar}
                   placeholder="O que você quer fazer? Ex.: cancelar OS"
                   className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-10 text-sm text-slate-800 shadow-2xs placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none sm:py-2"
                 />
@@ -313,7 +328,7 @@ export default function AjudaPainel({ tela, onFechar }: AjudaPainelProps) {
                       {achados.length} {achados.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
                     </p>
                     <ul role="list" className="space-y-1">
-                      {achados.map((t) => itemPadrao(t, true))}
+                      {achados.map((t, idx) => itemPadrao(t, true, idx))}
                     </ul>
                   </div>
                 ) : (

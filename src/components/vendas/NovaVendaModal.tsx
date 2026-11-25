@@ -50,7 +50,7 @@ import {
   listarVendedores,
 } from './fonteDeDados';
 import NotasFiscaisVenda, { ReciboVendaModal } from './NotasFiscaisVenda';
-import { useNavegacaoLista } from './useNavegacaoLista';
+import { useNavegacaoLista } from '../../hooks/useNavegacaoLista';
 import {
   ModalItemAvulso,
   type ItemAvulsoResultado,

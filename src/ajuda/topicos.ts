@@ -131,6 +131,21 @@ Em qualquer campo de texto grande (diagnóstico de bancada, relato, observaçõe
 `,
   },
   {
+    id: 'setas-teclado',
+    titulo: 'Escolher na lista com as setas do teclado',
+    secao: 'Primeiros passos',
+    telas: ['geral'],
+    palavras: 'teclado setas seta enter esc atalho selecionar escolher lista busca cliente produto material',
+    texto: `
+Nas buscas que abrem uma lista para escolher (cliente da OS, da oficina, do PMOC, do orçamento e da venda; produtos e materiais do catálogo; OS ou cliente da nova atividade; cliente da nova placa; etiquetas; busca desta ajuda), dá para escolher sem o mouse:
+- **↓** e **↑** andam pela lista; o item marcado fica azul.
+- **Enter** escolhe o item marcado. Assim que você digita, o primeiro da lista já vem marcado.
+- **Esc** fecha a lista sem escolher.
+- Nas **etiquetas**, o Enter marca ou desmarca a etiqueta escolhida pelas setas; sem usar as setas, o Enter cria a etiqueta com o nome digitado.
+- Nas caixas de seleção comuns (Técnico, Tipo de serviço, Situação...), as setas também funcionam: clique na caixa ou chegue nela com **Tab** e use ↓ e ↑.
+`,
+  },
+  {
     id: 'menu',
     titulo: 'O menu e as telas do sistema',
     secao: 'Primeiros passos',

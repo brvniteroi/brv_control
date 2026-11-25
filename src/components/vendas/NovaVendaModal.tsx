@@ -605,10 +605,10 @@ export default function NovaVendaModal({
 
           <form
             onSubmit={(e) => void handleConcluirVenda(e)}
-            className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-6 lg:grid-cols-12"
+            className="mx-auto mt-6 flex max-w-6xl flex-col gap-6 px-6"
           >
-            {/* Coluna esquerda: Busca, frequentes e itens */}
-            <div className="space-y-6 lg:col-span-7">
+            {/* Em cima, em largura total (a descrição do item precisa aparecer inteira): busca, itens e frequentes */}
+            <div className="space-y-6">
               <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-bold text-slate-800">Itens</h2>
@@ -654,8 +654,8 @@ export default function NovaVendaModal({
               </section>
             </div>
 
-            {/* Coluna direita: Cliente e Pagamento */}
-            <div className="space-y-6 lg:col-span-5">
+            {/* Embaixo, lado a lado: Cliente e Pagamento */}
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
               <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-bold text-slate-800">Cliente</h2>

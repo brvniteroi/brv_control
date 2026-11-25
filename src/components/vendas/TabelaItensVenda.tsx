@@ -249,7 +249,7 @@ export default function TabelaItensVenda({
           </td>
           <td className="px-1 py-1 text-xs text-slate-500">{item.unit}</td>
           {colunaCodigo && <td className="truncate px-1 py-1 font-mono text-[11px] text-slate-500">{item.code}</td>}
-          <td className="truncate px-1 py-1 text-xs text-slate-900" title={item.name}>
+          <td className="px-1 py-1 text-xs leading-snug break-words text-slate-900">
             {!colunaCodigo && <span className="mr-1.5 font-mono text-[11px] text-slate-400">{item.code}</span>}
             {item.name}
           </td>

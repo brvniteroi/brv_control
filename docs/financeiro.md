@@ -145,7 +145,7 @@ integração precisa, por tabela:
 | `TABEST7` (formas) | `FinancialPaymentMethod` | mapa: dinheiro, PIX, débito, crédito, cobrança bancária = `boleto`, cheque; "a prazo" = venda sem pagamento (a receber) |
 | `TABCX1` (caixa) | só o **saldo de abertura** de cada conta no dia da virada (um movimento por conta) | na virada |
 | `TABCR1/2`, `TABCP*`, `TABCHQ*`, `TABRECIB` | não entram (ficam no backup) | decidido |
-| `TABCAR1` (NSU/TID/paymentid do cartão) | não importa; **avaliar** um campo opcional de NSU/autorização no pagamento em cartão para conferir com o extrato da maquininha | a decidir |
+| `TABCAR1` (NSU/TID/paymentid do cartão) | não importa; **sem campo de NSU/autorização** no pagamento em cartão (decisão do usuário, 2026-11-24) | decidido |
 | `TABNFCE` | não entra; as notas novas nascem no provedor | decidido |
 
 **Catálogo (`TABEST1`) precisa de campos que a rodada 1 não tem** (a tela de pesquisa do SicWeb mostra e busca por eles): **fabricante**, **código interno**

@@ -54,7 +54,7 @@ import {
   sugerirModeloNotaProdutos,
 } from './regrasVendas';
 
-export const FONTE_DADOS_DEMO = true;
+export const FONTE_DADOS_DEMO = false;
 
 /**
  * Catálogo, orçamentos, textos padrão, página pública e vendedores no banco (parte 1, 2026-11-25:
@@ -62,6 +62,10 @@ export const FONTE_DADOS_DEMO = true;
  * até a parte 2 (`FONTE_DADOS_DEMO` segue `true` por causa delas e do seletor "Ver como").
  */
 export const USAR_BANCO_ORCAMENTOS = true;
+/** Parte 2 (2026-11-25): vendas no banco (migration 20261125110000_vendas_financeiro_base.sql). */
+export const USAR_BANCO_VENDAS = true;
+/** Ainda não há provedor de emissão: a tela só registra o número da nota emitida fora (portal ou SicWeb). */
+export const EMISSAO_FISCAL_DISPONIVEL = !USAR_BANCO_VENDAS;
 
 function clonar<T>(valor: T): T {
   return JSON.parse(JSON.stringify(valor)) as T;
@@ -972,6 +976,7 @@ export async function gerarOsDoOrcamento(
 // ============================================================================
 
 export async function listarVendas(filtro: SaleListFilter = {}): Promise<SaleListResult> {
+  if (USAR_BANCO_VENDAS) return real.listarVendas(filtro);
   await atraso(90);
   const termo = semAcento(filtro.busca ?? '');
   const chip = filtro.chip ?? 'todas';
@@ -1058,6 +1063,7 @@ export async function listarVendas(filtro: SaleListFilter = {}): Promise<SaleLis
 }
 
 export async function buscarVenda(id: string): Promise<Sale | null> {
+  if (USAR_BANCO_VENDAS) return real.buscarVenda(id);
   await atraso(60);
   const achada = vendasMemoria.find((v) => v.id === id) ?? null;
   return achada ? clonar(achada) : null;
@@ -1067,6 +1073,7 @@ export async function concluirVenda(
   dados: CreateSaleInput,
   atorNome = 'Equipe BRV',
 ): Promise<Sale> {
+  if (USAR_BANCO_VENDAS) return real.concluirVenda(dados);
   await atraso(160);
   if (dados.items.length === 0) {
     throw new Error('Adicione ao menos um item ao carrinho antes de concluir a venda.');
@@ -1288,6 +1295,7 @@ export async function receberSaldoVenda(
   }>,
   atorNome = 'Equipe BRV',
 ): Promise<Sale> {
+  if (USAR_BANCO_VENDAS) return real.receberSaldoVenda(id, pagamentos);
   await atraso(130);
   const idx = vendasMemoria.findIndex((v) => v.id === id);
   if (idx === -1) throw new Error('Venda não encontrada.');
@@ -1374,6 +1382,7 @@ export async function cancelarVenda(
   motivo: string,
   atorNome = 'Adriana Lobo',
 ): Promise<Sale> {
+  if (USAR_BANCO_VENDAS) return real.cancelarVenda(id, motivo);
   await atraso(130);
   const motivoLimpo = motivo.trim();
   if (!motivoLimpo) throw new Error('Informe o motivo do cancelamento da venda.');
@@ -1421,6 +1430,7 @@ export async function cancelarVenda(
  * TODO(Claude): provedor ainda não escolhido (docs/financeiro.md, "Notas fiscais").
  */
 export async function listarNotasDaVenda(vendaId: string): Promise<SaleDocument[]> {
+  if (USAR_BANCO_VENDAS) return (await real.buscarVenda(vendaId))?.documents ?? [];
   await atraso(50);
   const venda = vendasMemoria.find((v) => v.id === vendaId);
   return venda ? clonar(venda.documents) : [];
@@ -1436,6 +1446,7 @@ export async function emitirNotaVenda(
   tipo?: SaleDocumentModel,
   atorNome = 'Equipe BRV',
 ): Promise<Sale> {
+  if (USAR_BANCO_VENDAS) throw new Error('A emissão pelo sistema ainda não está disponível: o provedor não foi escolhido.');
   await atraso(1000);
   const idx = vendasMemoria.findIndex((v) => v.id === vendaId);
   if (idx === -1) throw new Error('Venda não encontrada.');
@@ -1507,6 +1518,7 @@ export async function cancelarNotaVenda(
   motivo: string,
   atorNome = 'Adriana Lobo',
 ): Promise<Sale> {
+  if (USAR_BANCO_VENDAS) return real.cancelarNotaVenda(notaId, motivo);
   await atraso(800);
   const motivoLimpo = motivo.trim();
   if (!motivoLimpo) throw new Error('Informe o motivo do cancelamento da nota fiscal.');
@@ -1557,6 +1569,7 @@ export async function registrarNotaManual(
   numero: string,
   atorNome = 'Equipe BRV',
 ): Promise<Sale> {
+  if (USAR_BANCO_VENDAS) return real.registrarNotaManual(vendaId, modelo, numero);
   await atraso(100);
   const numLimpo = numero.trim();
   if (!numLimpo) throw new Error('Informe o número da nota fiscal emitida no portal.');
@@ -1627,6 +1640,7 @@ export async function listarVendedores(): Promise<SellerOption[]> {
  * sem criar busca paralela no banco.
  */
 export async function buscarClientesParaVenda(texto: string): Promise<Customer[]> {
+  if (USAR_BANCO_VENDAS) return (await listarClientes(texto, 'ativos', 0)).itens.slice(0, 15);
   try {
     const r = await listarClientes(texto, 'ativos', 0);
     if (r.itens.length > 0) return r.itens.slice(0, 15);

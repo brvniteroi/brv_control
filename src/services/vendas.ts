@@ -1,10 +1,11 @@
-// Catálogo e orçamentos no Supabase (parte 1 da ligação das telas de vendas, 2026-11-25).
+// Catálogo, orçamentos e vendas no Supabase (ligação das telas de vendas, 2026-11-25).
 // As telas chamam `components/vendas/fonteDeDados.ts`, que repassa para cá com `USAR_BANCO_ORCAMENTOS = true`.
 // Regras e permissões ficam no banco (migration 20261125100000_catalogo_orcamentos.sql): o orçamento só se grava pelas
 // funções `orcamento_*`, que recalculam itens e totais; o custo do produto só aparece para o nível financeiro completo.
 
 import { supabase } from './supabase';
 import { semAcento } from './clientes';
+import type { LinhaRecebimentoInput } from '../types/financeiro';
 import type {
   CatalogItem,
   CatalogListFilter,
@@ -17,6 +18,11 @@ import type {
   QuoteResponseChannel,
   QuoteStandardText,
   SaveCatalogItemInput,
+  CreateSaleInput,
+  Sale,
+  SaleDocumentModel,
+  SaleListFilter,
+  SaleListResult,
   SaveQuoteInput,
   SellerOption,
 } from '../types/vendas';
@@ -476,4 +482,88 @@ export async function listarVendedores(): Promise<SellerOption[]> {
   const vendedores = (lista.data ?? []) as SellerOption[];
   const meuId = typeof eu.data === 'string' ? eu.data : null;
   return meuId ? [...vendedores.filter((v) => v.id === meuId), ...vendedores.filter((v) => v.id !== meuId)] : vendedores;
+}
+
+// ============================================================================
+// Vendas (migration 20261125110000_vendas_financeiro_base.sql). A venda só se grava pelas funções venda_*:
+// o banco recalcula itens, desconto, totais, troco, taxa do cartão e lança os movimentos financeiros.
+// ============================================================================
+
+
+/** Quantidade, desconto e percentual da taxa vêm como número no JSON; garante o tipo. */
+function paraVenda(json: unknown): Sale {
+  const v = json as Sale;
+  return {
+    ...v,
+    items: (v.items ?? []).map((i) => ({ ...i, quantity: Number(i.quantity), discount_input: Number(i.discount_input) })),
+    payments: (v.payments ?? []).map((p) => ({
+      ...p,
+      estimated_fee_percent: p.estimated_fee_percent == null ? null : Number(p.estimated_fee_percent),
+    })),
+    documents: v.documents ?? [],
+    events: v.events ?? [],
+  };
+}
+
+export async function listarVendas(filtro: SaleListFilter = {}): Promise<SaleListResult> {
+  const { data, error } = await supabase.rpc('vendas_listar', {
+    p: {
+      busca: filtro.busca ?? '',
+      chip: filtro.chip ?? 'todas',
+      situacao: filtro.situacao ?? 'todas',
+      forma: filtro.formaPagamento ?? 'todas',
+      origem: filtro.origem ?? 'todas',
+      status_nota: filtro.statusNota ?? 'todas',
+      data_inicio: filtro.dataInicio ?? '',
+      data_fim: filtro.dataFim ?? '',
+      pagina: filtro.pagina ?? 0,
+      por_pagina: ITENS_VENDAS_POR_PAGINA,
+    },
+  });
+  falhou(error);
+  const res = data as SaleListResult;
+  return { ...res, itens: (res.itens ?? []).map(paraVenda) };
+}
+
+export async function buscarVenda(id: string): Promise<Sale | null> {
+  const { data, error } = await supabase.rpc('venda_buscar', { p_id: id });
+  falhou(error);
+  return data ? paraVenda(data) : null;
+}
+
+async function vendaOuFalhar(id: string): Promise<Sale> {
+  const venda = await buscarVenda(id);
+  if (!venda) throw new Error('Venda não encontrada.');
+  return venda;
+}
+
+export async function concluirVenda(dados: CreateSaleInput): Promise<Sale> {
+  const { data, error } = await supabase.rpc('venda_concluir', { p: dados });
+  falhou(error);
+  return vendaOuFalhar(data as string);
+}
+
+/** `data` (AAAA-MM-DD) só quando o recebimento é de um dia anterior; sem ela, vale agora. */
+export async function receberSaldoVenda(id: string, pagamentos: LinhaRecebimentoInput[], data?: string | null): Promise<Sale> {
+  const { error } = await supabase.rpc('venda_receber', { p_id: id, p_pagamentos: pagamentos, p_data: data || null });
+  falhou(error);
+  return vendaOuFalhar(id);
+}
+
+export async function cancelarVenda(id: string, motivo: string): Promise<Sale> {
+  const { error } = await supabase.rpc('venda_cancelar', { p_id: id, p_motivo: motivo.trim() });
+  falhou(error);
+  return vendaOuFalhar(id);
+}
+
+export async function registrarNotaManual(id: string, modelo: SaleDocumentModel, numero: string): Promise<Sale> {
+  const { error } = await supabase.rpc('venda_registrar_nota', { p_id: id, p_modelo: modelo, p_numero: numero.trim() });
+  falhou(error);
+  return vendaOuFalhar(id);
+}
+
+export async function cancelarNotaVenda(notaId: string, motivo: string): Promise<Sale> {
+  const { data, error } = await supabase.rpc('venda_cancelar_nota', { p_nota: notaId, p_motivo: motivo.trim() });
+  falhou(error);
+  return vendaOuFalhar(data as string);
 }

@@ -66,6 +66,8 @@ const ROTAS: [prefixo: string, tela: TelaAjuda][] = [
   ['/pmoc', 'pmoc'],
   ['/catalogo', 'catalogo'],
   ['/orcamentos', 'orcamentos'],
+  ['/vendas', 'vendas'],
+  ['/financeiro/cadastros', 'financeiro-cadastros'],
 ];
 
 export function telaDaRota(pathname: string): TelaAjuda {

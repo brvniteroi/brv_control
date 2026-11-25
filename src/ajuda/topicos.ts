@@ -39,7 +39,10 @@ export type TelaAjuda =
   | 'pmoc-modelo'
   | 'catalogo'
   | 'orcamentos'
-  | 'orcamento';
+  | 'orcamento'
+  | 'vendas'
+  | 'venda'
+  | 'financeiro-cadastros';
 
 export interface Topico {
   id: string;
@@ -63,6 +66,7 @@ export const SECOES = [
   'Agenda dos técnicos',
   'Avaliação do cliente',
   'Vendas',
+  'Financeiro',
   'Oficina',
   'Placas',
   'PMOC',
@@ -102,6 +106,9 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   catalogo: 'Catálogo',
   orcamentos: 'Orçamentos',
   orcamento: 'Orçamento',
+  vendas: 'Vendas',
+  venda: 'Venda',
+  'financeiro-cadastros': 'Cadastros do financeiro',
 };
 
 export const TOPICOS: Topico[] = [
@@ -1375,6 +1382,84 @@ Ficam em **Dados fiscais**, no cadastro do item.
 - Convertido, o orçamento fica só para consulta.
 `,
     veja: ['criar-os'],
+  },
+  {
+    id: 'venda-nova',
+    titulo: 'Fazer uma venda',
+    secao: 'Vendas',
+    telas: ['vendas', 'venda'],
+    palavras: 'nova venda balcao pdv carrinho pagamento pix cartao dinheiro troco parcelas maquininha a receber consumidor final cpf na nota frete desconto',
+    texto: `
+1. **Nova venda**.
+2. Inclua os itens (código, código de barras ou nome). **Item avulso** para o que não está no catálogo.
+3. **Cliente**: vazio é **Consumidor final**; para pôr o CPF ou CNPJ na nota, use **CPF/CNPJ na nota**.
+4. **Pagamento**: use os atalhos de forma de pagamento ou **Adicionar forma** para dividir. No cartão escolha a **Maquininha** e as **Parcelas**; no PIX, boleto, transferência ou cheque, a **Conta de destino**; no dinheiro, informe o **Recebido (R$)** e veja o troco.
+5. **Concluir venda**.
+- Venda sem pagamento (**A receber**) ou paga em parte exige cliente cadastrado.
+- Registrar pagamento exige acesso financeiro (caixa ou completo). Desconto acima de **10%** exige acesso completo.
+- Venda que vem de orçamento traz os itens, o desconto e o frete, e o orçamento fica **Convertido**.
+- A venda ainda não baixa o estoque.
+`,
+    veja: ['venda-receber-cancelar', 'venda-notas', 'setas-teclado'],
+  },
+  {
+    id: 'venda-lista',
+    titulo: 'Lista de vendas',
+    secao: 'Vendas',
+    telas: ['vendas'],
+    palavras: 'lista vendas filtro periodo a receber canceladas situacao forma origem nota',
+    texto: `
+- Abas **Todas**, **A receber** e **Canceladas**; filtros por situação, forma de pagamento, origem, notas e **Período**.
+- A busca acha por número, cliente, vendedor, item, orçamento, OS ou número da nota.
+- A numeração vai de **VND-30001** em diante.
+- As vendas feitas no SicWeb não entram nesta lista: ficam na aba **Vendas** do cadastro do cliente.
+`,
+    veja: ['venda-nova', 'vendas-cliente'],
+  },
+  {
+    id: 'venda-receber-cancelar',
+    titulo: 'Receber o saldo ou cancelar uma venda',
+    secao: 'Vendas',
+    telas: ['venda'],
+    palavras: 'receber saldo parcial cancelar venda estorno motivo recibo imprimir',
+    texto: `
+- **Receber saldo**: informe uma ou mais formas de pagamento. Pode usar a data de um dia anterior; data futura não é aceita.
+- **Cancelar venda** (só acesso financeiro completo): pede o motivo e estorna os lançamentos. Os pagamentos continuam no histórico.
+- Venda com nota registrada só cancela depois de a nota ser cancelada.
+- O orçamento de uma venda cancelada continua **Convertido**: para vender de novo, **Duplicar** o orçamento ou fazer **Nova venda**.
+- **Recibo** abre a folha para imprimir.
+! Pagamento no cartão entra na conta no dia útil seguinte (feriado não é considerado), com a taxa da maquininha lançada como tarifa.
+`,
+    veja: ['venda-nova', 'financeiro-cadastros'],
+  },
+  {
+    id: 'venda-notas',
+    titulo: 'Notas fiscais da venda',
+    secao: 'Vendas',
+    telas: ['venda'],
+    palavras: 'nota fiscal nfce nfe nfse registrar numero portal preparar cancelar nota produtos servicos',
+    texto: `
+Uma venda com produtos e serviços tem **duas notas**. O sistema **ainda não emite nota**: emita no emissor atual e registre o número.
+- **Serviços (NFS-e)**: **Preparar para o portal** mostra tomador, descrição e valor, com botão **Copiar** em cada um. Depois de emitir no portal, informe o número e clique em **Registrar NFS-e**.
+- **Produtos**: escolha NFC-e ou NF-e e clique em **Registrar número da nota**.
+- O desconto geral é repartido entre as duas notas e o frete vai na de produtos: somadas, dão o total da venda.
+- **Cancelar nota** (acesso completo) só marca a nota como cancelada. O cancelamento fiscal é feito onde ela foi emitida.
+`,
+    veja: ['venda-receber-cancelar'],
+  },
+  {
+    id: 'financeiro-cadastros',
+    titulo: 'Contas, maquininhas, categorias e fornecedores',
+    secao: 'Financeiro',
+    telas: ['financeiro-cadastros', 'venda'],
+    palavras: 'conta banco caixa saldo inicial maquininha taxa debito credito parcelado prazo categoria fornecedor',
+    texto: `
+Ficam nos cadastros do Financeiro, só para o acesso completo. Nada se exclui: desative o que não usar.
+- **Contas**: dinheiro vai para a conta do tipo caixa; PIX, boleto, transferência e cheque, para um banco.
+- **Maquininhas**: **Conta de liquidação**, **Prazo (dias úteis)** e as taxas de débito, crédito à vista e de cada número de parcelas.
+! As maquininhas começam com **taxa zero**. Cadastre as taxas reais antes de registrar vendas no cartão: a venda já lançada não é recalculada.
+`,
+    veja: ['venda-nova'],
   },
   // ───────────── PMOC ─────────────
   {

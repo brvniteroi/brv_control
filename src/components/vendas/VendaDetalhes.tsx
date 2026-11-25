@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   X,
 } from 'lucide-react';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import { useAuth } from '../../contexts/useAuth';
 import type { Sale } from '../../types/vendas';
 import { formatarReais } from '../../utils/dinheiro';
@@ -43,6 +44,7 @@ export default function VendaDetalhes({
   onAlterado,
 }: VendaDetalhesProps) {
   const navigate = useNavigate();
+  useTelaAjuda('venda');
   const { profile } = useAuth();
   const atorNome = profile?.full_name || 'Equipe BRV';
   const { nivel } = useNivelFinanceiro(profile);
@@ -299,6 +301,11 @@ export default function VendaDetalhes({
                       <span>
                         Serviços: <strong>{formatarReais(venda.services_subtotal_cents)}</strong>
                       </span>
+                      {(venda.freight_cents ?? 0) > 0 && (
+                        <span>
+                          Frete: <strong>{formatarReais(venda.freight_cents ?? 0)}</strong>
+                        </span>
+                      )}
                       {venda.general_discount_cents > 0 && (
                         <span className="text-red-700">
                           Desconto: <strong>- {formatarReais(venda.general_discount_cents)}</strong>

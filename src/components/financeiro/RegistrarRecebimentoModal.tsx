@@ -19,8 +19,6 @@ import { formatarData } from '../../utils/ordens';
 import { ROTULO_FORMA_PAGAMENTO } from '../vendas/cores';
 import ModalDialogoVendas from '../vendas/ModalDialogoVendas';
 import {
-  CONTAS_FINANCEIRAS_DEMO,
-  MAQUININHAS_DEMO,
   listarCategorias,
   listarContas,
   listarMaquininhas,
@@ -69,12 +67,8 @@ export default function RegistrarRecebimentoModal({
   const atorNome = profile?.full_name || 'Equipe BRV';
   const seqUidRef = useRef(2);
 
-  const [contas, setContas] = useState<FinancialAccount[]>(() =>
-    CONTAS_FINANCEIRAS_DEMO.filter((c) => c.active),
-  );
-  const [maquininhas, setMaquininhas] = useState<CardMachine[]>(() =>
-    MAQUININHAS_DEMO.filter((m) => m.active),
-  );
+  const [contas, setContas] = useState<FinancialAccount[]>([]);
+  const [maquininhas, setMaquininhas] = useState<CardMachine[]>([]);
   const [categoriasReceita, setCategoriasReceita] = useState<FinancialCategory[]>([]);
 
   const [clienteNome, setClienteNome] = useState(origem.clienteNome || 'Consumidor final');
@@ -88,8 +82,8 @@ export default function RegistrarRecebimentoModal({
     {
       uid: 'pg-1',
       method: 'pix',
-      accountId: 'conta-itau',
-      machineId: 'maq-rede',
+      accountId: '',
+      machineId: '',
       installments: 1,
       amountTexto: origem.valorSugerido > 0 ? centavosParaTextoInput(origem.valorSugerido) : '',
       tenderedTexto: '',
@@ -107,17 +101,25 @@ export default function RegistrarRecebimentoModal({
         const ativas = listaContas.filter((c) => c.active);
         const maqsAtivas = listaMaq.filter((m) => m.active);
         const recAtivas = listaCats.filter((c) => c.active && c.kind === 'receita');
-        if (ativas.length > 0) setContas(ativas);
-        if (maqsAtivas.length > 0) setMaquininhas(maqsAtivas);
+        setContas(ativas);
+        setMaquininhas(maqsAtivas);
         setCategoriasReceita(recAtivas);
       })
-      .catch(() => {
-        // Mantém os cadastros iniciais de demonstração se falhar
+      .catch((e: unknown) => {
+        if (ativo) setErro(e instanceof Error ? e.message : 'Não foi possível carregar as contas.');
       });
     return () => {
       ativo = false;
     };
   }, []);
+
+  // Linha sem escolha ('') usa o padrão: dinheiro no caixa; o resto no primeiro banco
+  const contaDaLinha = (l: { method: FinancialPaymentMethod; accountId: string }): string => {
+    const doTipo = contas.filter((c) => (l.method === 'dinheiro' ? c.kind === 'caixa' : c.kind === 'banco'));
+    return doTipo.find((c) => c.id === l.accountId)?.id ?? doTipo[0]?.id ?? '';
+  };
+  const maquininhaDaLinha = (l: { machineId: string }): string =>
+    maquininhas.find((m) => m.id === l.machineId)?.id ?? maquininhas[0]?.id ?? '';
 
   const atualizarLinha = (uid: string, parcial: Partial<LinhaPagamentoEstado>) => {
     setLinhas((atuais) => atuais.map((l) => (l.uid === uid ? { ...l, ...parcial } : l)));
@@ -147,8 +149,8 @@ export default function RegistrarRecebimentoModal({
       {
         uid,
         method: 'credito',
-        accountId: contas[1]?.id ?? contas[0]?.id ?? 'conta-itau',
-        machineId: maquininhas[0]?.id ?? 'maq-rede',
+        accountId: '',
+        machineId: '',
         installments: 1,
         amountTexto: faltaSugerido > 0 ? centavosParaTextoInput(faltaSugerido) : '',
         tenderedTexto: '',
@@ -173,8 +175,8 @@ export default function RegistrarRecebimentoModal({
           method: l.method,
           amount_cents: valor,
           tendered_cents: l.method === 'dinheiro' ? entregue : null,
-          account_id: ehCartao ? null : l.accountId,
-          card_machine_id: ehCartao ? l.machineId : null,
+          account_id: ehCartao ? null : contaDaLinha(l),
+          card_machine_id: ehCartao ? maquininhaDaLinha(l) : null,
           installments: l.method === 'credito' ? l.installments : 1,
         };
       })
@@ -308,7 +310,7 @@ export default function RegistrarRecebimentoModal({
                   lin.method === 'dinheiro' && entregueCents > valorCents
                     ? subtrairCentavos(entregueCents, valorCents)
                     : 0;
-                const maq = maquininhas.find((m) => m.id === lin.machineId) ?? maquininhas[0];
+                const maq = maquininhas.find((m) => m.id === maquininhaDaLinha(lin));
                 const liq =
                   ehCartao && maq && valorCents > 0
                     ? calcularLiquidacaoCartao(
@@ -330,7 +332,7 @@ export default function RegistrarRecebimentoModal({
                           const m = e.target.value as FinancialPaymentMethod;
                           atualizarLinha(lin.uid, {
                             method: m,
-                            accountId: m === 'dinheiro' ? 'conta-caixa-brv' : 'conta-itau',
+                            accountId: '',
                             installments: m === 'credito' ? lin.installments : 1,
                           });
                         }}
@@ -347,7 +349,7 @@ export default function RegistrarRecebimentoModal({
                     <td className="px-3 py-2">
                       {ehCartao ? (
                         <select
-                          value={lin.machineId}
+                          value={maquininhaDaLinha(lin)}
                           aria-label="Maquininha de cartão"
                           onChange={(e) =>
                             atualizarLinha(lin.uid, { machineId: e.target.value })
@@ -362,14 +364,16 @@ export default function RegistrarRecebimentoModal({
                         </select>
                       ) : (
                         <select
-                          value={lin.accountId}
+                          value={contaDaLinha(lin)}
                           aria-label="Conta de destino"
                           onChange={(e) =>
                             atualizarLinha(lin.uid, { accountId: e.target.value })
                           }
                           className={CAMPO_CELULA}
                         >
-                          {contas.map((c) => (
+                          {contas
+                            .filter((c) => c.kind === (lin.method === 'dinheiro' ? 'caixa' : 'banco'))
+                            .map((c) => (
                             <option key={c.id} value={c.id}>
                               {c.name}
                             </option>

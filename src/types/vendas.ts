@@ -475,6 +475,8 @@ export interface Sale {
   products_subtotal_cents: number;
   services_subtotal_cents: number;
   general_discount_cents: number;
+  /** Frete que veio do orçamento. */
+  freight_cents?: number;
   total_cents: number;
   paid_cents: number;
   change_cents: number;
@@ -504,6 +506,7 @@ export interface CreateSaleInput {
   address_text?: string | null;
   seller_id?: string | null;
   general_discount_cents: number;
+  freight_cents?: number;
   notes?: string | null;
   /** Escolha opcional do modelo de nota para os produtos ('nfce' | 'nfe'). */
   preferred_product_invoice_model?: 'nfce' | 'nfe';

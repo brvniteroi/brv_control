@@ -37,6 +37,8 @@ import type {
 import type { Profile } from '../../types/fsm';
 import { somarCentavos, subtrairCentavos } from '../../utils/dinheiro';
 import { listarVendas, receberSaldoVenda } from '../vendas/fonteDeDados';
+import * as real from '../../services/financeiro';
+import { receberSaldoVenda as receberSaldoVendaNoBanco } from '../../services/vendas';
 import { ROTULO_FORMA_PAGAMENTO_CURTO } from '../vendas/cores';
 import { semAcento, situacaoVenda } from '../vendas/regrasVendas';
 import {
@@ -62,6 +64,9 @@ import {
 } from './regrasFinanceiro';
 
 export const FONTE_DADOS_FINANCEIRO_DEMO = true;
+/** Parte 2: cadastros (contas, maquininhas, categorias, fornecedores) e recebimento de venda já usam o banco.
+ *  Caixa, recebimentos dos técnicos, extrato e visão geral seguem na demonstração até a parte 3. */
+export const USAR_BANCO_CADASTROS = true;
 
 function clonar<T>(valor: T): T {
   return JSON.parse(JSON.stringify(valor)) as T;
@@ -169,12 +174,14 @@ recalcularSaldosContas();
 // ============================================================================
 
 export async function listarContas(): Promise<FinancialAccount[]> {
+  if (USAR_BANCO_CADASTROS) return real.listarContas();
   await atraso(40);
   recalcularSaldosContas();
   return clonar(contasMemoria);
 }
 
 export async function salvarConta(dados: SaveFinancialAccountInput): Promise<FinancialAccount> {
+  if (USAR_BANCO_CADASTROS) return real.salvarConta(dados);
   await atraso(90);
   const nome = dados.name.trim();
   if (!nome) throw new Error('Informe o nome da conta.');
@@ -212,11 +219,13 @@ export async function salvarConta(dados: SaveFinancialAccountInput): Promise<Fin
 }
 
 export async function listarMaquininhas(): Promise<CardMachine[]> {
+  if (USAR_BANCO_CADASTROS) return real.listarMaquininhas();
   await atraso(40);
   return clonar(maquininhasMemoria);
 }
 
 export async function salvarMaquininha(dados: SaveCardMachineInput): Promise<CardMachine> {
+  if (USAR_BANCO_CADASTROS) return real.salvarMaquininha(dados);
   await atraso(90);
   const nome = dados.name.trim();
   if (!nome) throw new Error('Informe o nome da maquininha.');
@@ -261,6 +270,7 @@ export async function salvarMaquininha(dados: SaveCardMachineInput): Promise<Car
 }
 
 export async function listarCategorias(): Promise<FinancialCategory[]> {
+  if (USAR_BANCO_CADASTROS) return real.listarCategorias();
   await atraso(40);
   return clonar(categoriasMemoria);
 }
@@ -268,6 +278,7 @@ export async function listarCategorias(): Promise<FinancialCategory[]> {
 export async function salvarCategoria(
   dados: SaveFinancialCategoryInput,
 ): Promise<FinancialCategory> {
+  if (USAR_BANCO_CADASTROS) return real.salvarCategoria(dados);
   await atraso(80);
   const nome = dados.name.trim();
   if (!nome) throw new Error('Informe o nome da categoria.');
@@ -301,11 +312,13 @@ export async function salvarCategoria(
 }
 
 export async function listarFornecedores(): Promise<Supplier[]> {
+  if (USAR_BANCO_CADASTROS) return real.listarFornecedores();
   await atraso(40);
   return clonar(fornecedoresMemoria);
 }
 
 export async function salvarFornecedor(dados: SaveSupplierInput): Promise<Supplier> {
+  if (USAR_BANCO_CADASTROS) return real.salvarFornecedor(dados);
   await atraso(80);
   const nome = dados.name.trim();
   if (!nome) throw new Error('Informe o nome do fornecedor.');
@@ -702,6 +715,15 @@ export async function registrarRecebimento(
   dados: RegistrarRecebimentoInput,
   atorNome = 'Jéssica Atendimento',
 ): Promise<{ movimentos: FinancialMovement[] }> {
+  // Recebimento de venda: uma função só no banco (pagamento, movimento, tarifa e saldo na mesma transação)
+  if (USAR_BANCO_CADASTROS && dados.origem.tipo === 'venda' && dados.origem.id) {
+    const hoje = diaLocalFinanceiro();
+    const pagamentos = dados.pagamentos
+      .filter((p) => p.amount_cents > 0)
+      .map((p) => ({ ...p, notes: dados.notes ?? null }));
+    await receberSaldoVendaNoBanco(dados.origem.id, pagamentos, dados.occurred_date === hoje ? null : dados.occurred_date);
+    return { movimentos: [] };
+  }
   await atraso(110);
   const validos = dados.pagamentos.filter((p) => p.amount_cents > 0);
   if (validos.length === 0) {

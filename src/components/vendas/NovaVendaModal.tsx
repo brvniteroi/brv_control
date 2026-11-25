@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, Loader2, Plus, Printer, RotateCcw, ShoppingBag, X } from 'lucide-react';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import { useAuth } from '../../contexts/useAuth';
-import type { FinancialPaymentMethod } from '../../types/financeiro';
+import type { CardMachine, FinancialAccount, FinancialPaymentMethod } from '../../types/financeiro';
 import type { Customer, PersonType } from '../../types/fsm';
 import type {
   CatalogItem,
@@ -20,8 +21,8 @@ import {
 } from '../../utils/dinheiro';
 import { documentoValido, formatarDocumento } from '../../utils/documento';
 import {
-  CONTAS_FINANCEIRAS_DEMO,
-  MAQUININHAS_DEMO,
+  listarContas,
+  listarMaquininhas,
   useNivelFinanceiro,
 } from '../financeiro/fonteDeDados';
 import SeletorCliente from '../ordens/SeletorCliente';
@@ -89,6 +90,7 @@ export default function NovaVendaModal({
   onVendaConcluida,
   onAbrirDetalheVenda,
 }: NovaVendaModalProps) {
+  useTelaAjuda('venda');
   const { profile } = useAuth();
   const atorNome = profile?.full_name || 'Equipe BRV';
   const { nivel } = useNivelFinanceiro(profile);
@@ -115,6 +117,17 @@ export default function NovaVendaModal({
   const [docNaNota, setDocNaNota] = useState('');
 
   const [pagamentos, setPagamentos] = useState<LinhaPagamentoPdv[]>([]);
+  // Contas e maquininhas ativas (o banco só as entrega a quem tem acesso financeiro "caixa" ou "completo")
+  const [contas, setContas] = useState<FinancialAccount[]>([]);
+  const [maquininhas, setMaquininhas] = useState<CardMachine[]>([]);
+  const [freteCentavos, setFreteCentavos] = useState(0);
+  // Linha sem escolha ('') usa o padrão: dinheiro no caixa; o resto no primeiro banco
+  const contaDaLinha = (pg: { method: FinancialPaymentMethod; accountId: string }): string => {
+    const doTipo = contas.filter((c) => (pg.method === 'dinheiro' ? c.kind === 'caixa' : c.kind === 'banco'));
+    return doTipo.find((c) => c.id === pg.accountId)?.id ?? doTipo[0]?.id ?? '';
+  };
+  const maquininhaDaLinha = (pg: { machineId: string }): string =>
+    maquininhas.find((m) => m.id === pg.machineId)?.id ?? maquininhas[0]?.id ?? '';
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -133,11 +146,22 @@ export default function NovaVendaModal({
       })
       .catch(() => {});
 
+    Promise.all([listarContas(), listarMaquininhas()])
+      .then(([listaContas, listaMaquininhas]) => {
+        if (!ativo) return;
+        setContas(listaContas.filter((c) => c.active));
+        setMaquininhas(listaMaquininhas.filter((m) => m.active));
+      })
+      .catch((e: unknown) => {
+        if (ativo) setErro(e instanceof Error ? e.message : 'Não foi possível carregar as contas.');
+      });
+
     if (orcamentoOrigemId) {
       buscarOrcamento(orcamentoOrigemId)
         .then((orc) => {
           if (!ativo || !orc) return;
           setOrcamentoNumero(orc.number);
+          setFreteCentavos(orc.freight_cents ?? 0);
           if (orc.customer_id) {
             setCliente({
               id: orc.customer_id,
@@ -176,8 +200,8 @@ export default function NovaVendaModal({
               method: 'pix',
               amountTexto: centavosParaTextoInput(orc.total_cents),
               tenderedTexto: '',
-              accountId: 'conta-itau',
-              machineId: 'maq-rede',
+              accountId: '',
+              machineId: '',
               installments: 1,
             },
           ]);
@@ -281,9 +305,9 @@ export default function NovaVendaModal({
         discount_input: i.discount_input,
       })),
       descGeral,
-      0,
+      freteCentavos,
     );
-  }, [itensCalculados, descontoGeralTexto]);
+  }, [itensCalculados, descontoGeralTexto, freteCentavos]);
 
   const descontoTotalCentavos = somarCentavos(
     totais.descontoLinhasCentavos,
@@ -314,8 +338,8 @@ export default function NovaVendaModal({
         method: metodo,
         amountTexto: centavosParaTextoInput(totais.totalCentavos),
         tenderedTexto: '',
-        accountId: metodo === 'dinheiro' ? 'conta-caixa-brv' : 'conta-itau',
-        machineId: 'maq-rede',
+        accountId: '',
+        machineId: '',
         installments: 1,
       },
     ]);
@@ -329,8 +353,8 @@ export default function NovaVendaModal({
         method: metodo,
         amountTexto: restanteReceber > 0 ? centavosParaTextoInput(restanteReceber) : '',
         tenderedTexto: '',
-        accountId: metodo === 'dinheiro' ? 'conta-caixa-brv' : 'conta-itau',
-        machineId: 'maq-rede',
+        accountId: '',
+        machineId: '',
         installments: 1,
       },
     ]);
@@ -369,9 +393,9 @@ export default function NovaVendaModal({
         amount_cents: converterTextoParaCentavos(p.amountTexto) ?? 0,
         tendered_cents:
           p.method === 'dinheiro' ? converterTextoParaCentavos(p.tenderedTexto) : null,
-        account_id: p.accountId,
+        account_id: p.method === 'debito' || p.method === 'credito' ? null : contaDaLinha(p),
         card_machine_id:
-          p.method === 'debito' || p.method === 'credito' ? p.machineId : null,
+          p.method === 'debito' || p.method === 'credito' ? maquininhaDaLinha(p) : null,
         installments: p.method === 'credito' ? p.installments : 1,
       }))
       .filter((p) => p.amount_cents > 0);
@@ -406,6 +430,7 @@ export default function NovaVendaModal({
             : docNaNota.trim() || null,
           seller_id: vendedorId || null,
           general_discount_cents: converterTextoParaCentavos(descontoGeralTexto) ?? 0,
+          freight_cents: freteCentavos,
           items: itensCalculados.map((i) => ({
             catalog_item_id: i.catalog_item_id,
             is_custom: i.is_custom,
@@ -768,6 +793,13 @@ export default function NovaVendaModal({
                     </p>
                   )}
 
+                  {freteCentavos > 0 && (
+                    <div className="flex justify-between text-slate-600">
+                      <span>Frete (do orçamento)</span>
+                      <strong>{formatarReais(freteCentavos)}</strong>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-sm font-bold text-slate-900">
                     <span>Total a pagar</span>
                     <span>{formatarReais(totais.totalCentavos)}</span>
@@ -811,7 +843,7 @@ export default function NovaVendaModal({
                         pg.method === 'dinheiro' && entregueCents > valorCents
                           ? entregueCents - valorCents
                           : 0;
-                      const maq = MAQUININHAS_DEMO.find((m) => m.id === pg.machineId);
+                      const maq = maquininhas.find((m) => m.id === maquininhaDaLinha(pg));
                       const taxa =
                         ehCompleto && (pg.method === 'debito' || pg.method === 'credito') && maq
                           ? calcularTaxaMaquininha(maq, pg.method, pg.installments, valorCents)
@@ -831,11 +863,7 @@ export default function NovaVendaModal({
                                 value={pg.method}
                                 onChange={(e) => {
                                   const m = e.target.value as FinancialPaymentMethod;
-                                  atualizarPagamento(pg.uid, {
-                                    method: m,
-                                    accountId:
-                                      m === 'dinheiro' ? 'conta-caixa-brv' : 'conta-itau',
-                                  });
+                                  atualizarPagamento(pg.uid, { method: m, accountId: '' });
                                 }}
                                 className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800"
                               >
@@ -913,7 +941,7 @@ export default function NovaVendaModal({
                                   Maquininha
                                 </label>
                                 <select
-                                  value={pg.machineId}
+                                  value={maquininhaDaLinha(pg)}
                                   onChange={(e) =>
                                     atualizarPagamento(pg.uid, {
                                       machineId: e.target.value,
@@ -921,7 +949,7 @@ export default function NovaVendaModal({
                                   }
                                   className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
                                 >
-                                  {MAQUININHAS_DEMO.map((m) => (
+                                  {maquininhas.map((m) => (
                                     <option key={m.id} value={m.id}>
                                       {m.name}
                                     </option>
@@ -964,7 +992,7 @@ export default function NovaVendaModal({
                                 Conta de destino
                               </label>
                               <select
-                                value={pg.accountId}
+                                value={contaDaLinha(pg)}
                                 onChange={(e) =>
                                   atualizarPagamento(pg.uid, {
                                     accountId: e.target.value,
@@ -972,7 +1000,7 @@ export default function NovaVendaModal({
                                 }
                                 className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
                               >
-                                {CONTAS_FINANCEIRAS_DEMO.map((c) => (
+                                {contas.filter((c) => c.kind === 'banco').map((c) => (
                                   <option key={c.id} value={c.id}>
                                     {c.name}
                                   </option>

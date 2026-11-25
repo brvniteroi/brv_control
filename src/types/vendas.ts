@@ -528,7 +528,8 @@ export interface CreateSaleInput {
 export interface SaleListFilter {
   pagina?: number;
   busca?: string;
-  chip?: 'todas' | 'hoje' | 'a_receber' | 'canceladas';
+  /** Atalho de situação. Data é só pelo período (`dataInicio`/`dataFim`): o antigo atalho "Hoje" brigava com ele (2026-11-24). */
+  chip?: 'todas' | 'a_receber' | 'canceladas';
   situacao?: 'todas' | SaleDisplayStatus;
   formaPagamento?: 'todas' | FinancialPaymentMethod;
   origem?: 'todas' | SaleOriginType;
@@ -546,7 +547,6 @@ export interface SaleListResult {
   soma_a_receber_cents: number;
   contagens: {
     todas: number;
-    hoje: number;
     a_receber: number;
     canceladas: number;
   };

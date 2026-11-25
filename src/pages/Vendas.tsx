@@ -30,11 +30,11 @@ import type { Sale, SaleDisplayStatus, SaleOriginType } from '../types/vendas';
 import { formatarReais } from '../utils/dinheiro';
 import { formatarDataHora } from '../utils/ordens';
 
-type ChipVenda = 'todas' | 'hoje' | 'a_receber' | 'canceladas';
+type ChipVenda = 'todas' | 'a_receber' | 'canceladas';
 
+// Sem "Hoje": a data fica só no filtro de período (o atalho "Hoje" anulava o período escolhido)
 const ABAS_VENDA: readonly { id: ChipVenda; rotulo: string }[] = [
   { id: 'todas', rotulo: 'Todas' },
-  { id: 'hoje', rotulo: 'Hoje' },
   { id: 'a_receber', rotulo: 'A receber' },
   { id: 'canceladas', rotulo: 'Canceladas' },
 ];

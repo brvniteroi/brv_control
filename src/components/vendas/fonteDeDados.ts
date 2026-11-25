@@ -940,7 +940,6 @@ export async function gerarOsDoOrcamento(
 
 export async function listarVendas(filtro: SaleListFilter = {}): Promise<SaleListResult> {
   await atraso(90);
-  const hoje = dataIsoHoje();
   const termo = semAcento(filtro.busca ?? '');
   const chip = filtro.chip ?? 'todas';
   const sitFiltro = filtro.situacao ?? 'todas';
@@ -953,7 +952,6 @@ export async function listarVendas(filtro: SaleListFilter = {}): Promise<SaleLis
 
   const contagens = {
     todas: vendasMemoria.length,
-    hoje: vendasMemoria.filter((v) => v.created_at.slice(0, 10) === hoje && v.status !== 'cancelada').length,
     a_receber: vendasMemoria.filter((v) => {
       const s = situacaoVenda(v);
       return s === 'aberta' || s === 'parcial';
@@ -965,7 +963,6 @@ export async function listarVendas(filtro: SaleListFilter = {}): Promise<SaleLis
     const sit = situacaoVenda(venda);
     const dia = venda.created_at.slice(0, 10);
 
-    if (chip === 'hoje' && (dia !== hoje || venda.status === 'cancelada')) return false;
     if (chip === 'a_receber' && sit !== 'aberta' && sit !== 'parcial') return false;
     if (chip === 'canceladas' && sit !== 'cancelada') return false;
 

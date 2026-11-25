@@ -8,7 +8,8 @@
 // Cliente: 1º pelo código do SicWeb (customer_sicweb_codes). A maioria dos orçamentos não tem cliente no SicWeb, só o
 // nome digitado: aí liga pelo NOME, apenas quando há um único cliente com exatamente o mesmo nome (sem acento e sem
 // diferença de maiúsculas) e o nome tem pelo menos duas palavras. Fica marcado em ligado_por = 'nome'.
-// O "Cliente Balcão" (004707) não conta como cliente aqui.
+// Sem cliente por nenhum dos dois, é orçamento de balcão: vai para o "Cliente Balcão" (004707), como as vendas
+// (decisão do usuário, 2026-11-25). O nome digitado fica em cliente_nome e ligado_por fica vazio.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -100,7 +101,7 @@ function acharCliente(codigo, nome) {
   const chave = normalizar(nome);
   const peloNome = chave.split(' ').length >= 2 ? porNome.get(chave) : null;
   if (peloNome && peloNome !== balcao) return { customer_id: peloNome, ligado_por: 'nome' };
-  return { customer_id: null, ligado_por: null };
+  return { customer_id: balcao, ligado_por: null };
 }
 
 // ---------- montar linhas ----------
@@ -135,6 +136,7 @@ const resumo = {
   itens: itens.length,
   ligadosPeloCodigo: orcamentos.filter((o) => o.ligado_por === 'codigo').length,
   ligadosPeloNome: orcamentos.filter((o) => o.ligado_por === 'nome').length,
+  clienteBalcao: orcamentos.filter((o) => balcao && o.customer_id === balcao).length,
   semCliente: orcamentos.filter((o) => !o.customer_id).length,
   somaOrcamentos: soma(orcamentos),
   somaItens: soma(itens),

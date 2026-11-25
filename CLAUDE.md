@@ -476,7 +476,8 @@ futuro aparece em "a liquidar". Nível caixa só recebe o recebido hoje e as ven
 **Recebimentos dos técnicos:** `RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false` esconde os cartões e o item do menu (a tela `/financeiro/recebimentos` ainda é demonstração).
 **Orçamentos antigos do SicWeb (2026-11-25):** migration `20261125160000_orcamentos_sicweb.sql` (+ verificação `supabase/verificacao/orcamentos_sicweb.sql`; ensaio com
 ROLLBACK passou; também acrescenta `sicweb_orcamentos` ao `unir_clientes`) e `scripts/sicweb/importar-orcamentos.mjs` (a partir de 2025-11-24; simula por padrão).
-Simulação: 616 orçamentos, 4.917 itens, R$ 931.977,78; 165 ligados pelo código, **146 pelo nome** (único cliente com o mesmo nome, marcados na tela) e 305 sem cliente.
+Simulação: 616 orçamentos, 4.917 itens, R$ 931.977,78; 165 ligados pelo código, **146 pelo nome** (único cliente com o mesmo nome, marcados na tela) e 305 de **balcão**: vão para o "Cliente Balcão" como as
+vendas, com o nome digitado preservado (decisão do usuário, 2026-11-25; no SicWeb 8 usavam o 004707 e 297 não tinham cadastro).
 Aba **Orçamentos** do cliente e `/orcamentos/sicweb` (botão "Antigos (SicWeb)"). Ajuda F1: `orcamentos-sicweb`. **Importação gravada em 2026-11-25** (616 e 4.917, totais
 conferidos). **Quem lê: vendedores e admin** (pedido do usuário, 2026-11-25; `20261125170000_orcamentos_sicweb_vendedores.sql` + verificação de mesmo nome);
 o histórico de vendas do SicWeb (tem lucro) continua só admin.

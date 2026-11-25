@@ -1540,7 +1540,7 @@ Os orçamentos feitos no SicWeb de **24/11/2025 a 24/11/2026**, só para consult
 - **Todos**: em **Orçamentos**, clique em **Antigos (SicWeb)** e procure pelo número, nome ou contato.
 - Clique no orçamento para ver os **itens**, os preços da época e as observações.
 - **ligado pelo nome**: no SicWeb o orçamento não tinha cliente; foi ligado porque há um único cliente com o mesmo nome. Confira antes de usar.
-! Muitos orçamentos antigos não estão ligados a cliente nenhum. Se não aparecer no cadastro, procure pelo nome na busca geral.
+! **Orçamento de balcão** (sem cliente no SicWeb) fica no cadastro **Cliente Balcão**, com o nome que foi digitado. Se não aparecer no cadastro do cliente, procure pelo nome na busca geral.
 - São os preços da época. Para um orçamento novo, use os **Modelos** ou o catálogo.
 `,
     veja: ['vendas-cliente'],

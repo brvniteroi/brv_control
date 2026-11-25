@@ -91,13 +91,13 @@ export function assinarNivelFinanceiroDemo(ouvinte: () => void): () => void {
 }
 
 /**
- * Retorna o nível de acesso financeiro do usuário logado (`completo`, `caixa` ou `nenhum`).
- * TODO(Claude): quando a coluna `profiles.financial_access` existir no banco, mover para
- * `src/utils/acessoFinanceiro.ts` lendo o campo real do `profile` (garantindo que `admin`
- * seja sempre `completo` e `tecnico`/`cliente`/`oficina` sejam sempre `nenhum`).
+ * Nível de acesso financeiro do usuário logado (`completo`, `caixa` ou `nenhum`), a mesma regra de
+ * `public.nivel_financeiro()` no banco: admin é sempre `completo`; escritório usa `profiles.financial_access`
+ * (migration 20261125100000); os demais papéis, `nenhum`. O "Ver como" da demonstração só muda a tela;
+ * o banco continua aplicando o nível real.
  */
 export function nivelFinanceiro(
-  profile: Pick<Profile, 'role'> | null | undefined,
+  profile: Pick<Profile, 'role' | 'financial_access'> | null | undefined,
 ): FinancialAccessLevel {
   if (!profile) return 'nenhum';
   if (profile.role !== 'admin' && profile.role !== 'escritorio') {
@@ -107,11 +107,10 @@ export function nivelFinanceiro(
     return nivelDemoSobrescrito;
   }
   if (profile.role === 'admin') return 'completo';
-  if (profile.role === 'escritorio') return 'caixa';
-  return 'nenhum';
+  return profile.financial_access ?? 'nenhum';
 }
 
-export function useNivelFinanceiro(profile: Pick<Profile, 'role'> | null | undefined): {
+export function useNivelFinanceiro(profile: Pick<Profile, 'role' | 'financial_access'> | null | undefined): {
   nivel: FinancialAccessLevel;
   sobrescrito: FinancialAccessLevel | null;
   definirSobrescrito: (n: FinancialAccessLevel | null) => void;

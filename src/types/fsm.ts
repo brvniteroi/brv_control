@@ -12,6 +12,11 @@ export interface Profile {
   active: boolean;
   /** Acesso ao financeiro das placas (hoje só o Braulio). Vem da migration 20261109120000; ausente antes dela. */
   board_finance_access?: boolean;
+  /**
+   * Nível no financeiro e nas vendas (custo do produto): só vale para o escritório; admin é sempre "completo".
+   * Vem da migration 20261125100000; ausente antes dela.
+   */
+  financial_access?: 'nenhum' | 'caixa' | 'completo';
   created_at: string;
   updated_at: string;
 }

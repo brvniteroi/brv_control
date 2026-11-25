@@ -36,7 +36,10 @@ export type TelaAjuda =
   | 'placas-manuais'
   | 'pmoc'
   | 'pmoc-plano'
-  | 'pmoc-modelo';
+  | 'pmoc-modelo'
+  | 'catalogo'
+  | 'orcamentos'
+  | 'orcamento';
 
 export interface Topico {
   id: string;
@@ -59,6 +62,7 @@ export const SECOES = [
   'Ordens de serviço',
   'Agenda dos técnicos',
   'Avaliação do cliente',
+  'Vendas',
   'Oficina',
   'Placas',
   'PMOC',
@@ -95,6 +99,9 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   pmoc: 'PMOC',
   'pmoc-plano': 'Plano PMOC',
   'pmoc-modelo': 'Modelo de tarefas PMOC',
+  catalogo: 'Catálogo',
+  orcamentos: 'Orçamentos',
+  orcamento: 'Orçamento',
 };
 
 export const TOPICOS: Topico[] = [
@@ -1244,6 +1251,131 @@ O app de campo funciona sem sinal: iniciar, concluir e as fotos ficam guardados 
 `,
   },
 
+  // ───────────── Vendas (catálogo e orçamentos ligados ao banco em 2026-11-25) ─────────────
+  {
+    id: 'catalogo-como-funciona',
+    titulo: 'Catálogo de produtos e serviços',
+    secao: 'Vendas',
+    telas: ['catalogo'],
+    palavras: 'catalogo produto servico preco codigo barras estoque inativar reativar duplicar frequente fabricante custo',
+    texto: `
+Cada item do catálogo é **Produto** (sai na nota de produto, NFC-e ou NF-e) ou **Serviço** (sai na NFS-e). O orçamento e a venda separam os dois sozinhos.
+- **Novo item**: código, nome, tipo, unidade, categoria e **Preço de venda (R$)**. O campo **Custo (R$)** só aparece para quem tem acesso financeiro completo.
+- Abas **Todos**, **Produtos**, **Serviços** e **Inativos**, e o filtro de categoria. A busca acha por código, código de barras, nome, categoria, fabricante ou observação, sem acento.
+- Na linha do item: o lápis edita, **Duplicar** copia e **Inativar** tira o item das buscas do orçamento e da venda. Item nunca se exclui (pode já estar em orçamentos); **Reativar** traz de volta.
+- **Item frequente** vira atalho na Nova venda.
+- O código não pode repetir (maiúsculas e minúsculas contam como iguais).
+- Quando o preço de venda muda, o sistema guarda a data do reajuste.
+`,
+    veja: ['catalogo-revisar-tipos', 'catalogo-dados-fiscais'],
+  },
+  {
+    id: 'catalogo-revisar-tipos',
+    titulo: 'Revisar tipos: produto que na verdade é serviço',
+    secao: 'Vendas',
+    telas: ['catalogo'],
+    palavras: 'revisar tipos mao de obra m.o instalacao converter servico',
+    texto: `
+O botão **Revisar tipos (N)** aparece quando há produtos com nome de mão de obra ("M.O ...", instalação, manutenção, visita).
+1. Clique em **Revisar tipos**: a lista já vem toda marcada.
+2. Desmarque o que for produto de verdade.
+3. Clique em **Converter em Serviço**.
+- A unidade "UN" vira "SRV". Se estiverem vazios, o código de serviço vira 14.01 e o ISS, 2%: confira em **Dados fiscais** do item.
+`,
+    veja: ['catalogo-dados-fiscais'],
+  },
+  {
+    id: 'catalogo-dados-fiscais',
+    titulo: 'Dados fiscais do item',
+    secao: 'Vendas',
+    telas: ['catalogo'],
+    palavras: 'ncm cfop csosn origem iss codigo de servico nfse nfce nfe fiscal nota',
+    texto: `
+Ficam em **Dados fiscais**, no cadastro do item.
+- **Produto**: NCM (8 dígitos), **CFOP** (padrão 5102), **CSOSN** (padrão 102, Simples Nacional), **Origem da mercadoria** e **Unidade tributável**.
+- **Serviço**: código de serviço, alíquota de ISS e **Descrição para a NFS-e**.
+- O triângulo amarelo na lista avisa que falta dado fiscal.
+! A emissão das notas ainda não está ligada (o provedor não foi escolhido). Preencher agora deixa o catálogo pronto para quando estiver.
+`,
+  },
+  {
+    id: 'orcamentos-lista',
+    titulo: 'Lista de orçamentos e situações',
+    secao: 'Vendas',
+    telas: ['orcamentos'],
+    palavras: 'orcamento lista situacao rascunho enviado aprovado recusado convertido vencido filtro periodo vendedor',
+    texto: `
+- Situações: **Rascunho** (ainda não foi ao cliente), **Enviado**, **Aprovado**, **Recusado**, **Convertido** (virou venda ou OS) e **Vencido** (enviado com a validade passada).
+- Filtros: situação, vendedor, **Produtos e serviços** / **Com serviço** / **Com produto** e o **Período** (data em que o orçamento foi feito).
+- A busca acha por número, cliente, contato, vendedor ou nome de item.
+- A numeração vai de **ORC-30001** em diante (o SicWeb parou no 28.092: os números nunca se cruzam).
+- O total no rodapé soma os orçamentos do filtro.
+`,
+    veja: ['orcamento-criar'],
+  },
+  {
+    id: 'orcamento-criar',
+    titulo: 'Fazer um orçamento',
+    secao: 'Vendas',
+    telas: ['orcamentos', 'orcamento'],
+    palavras: 'novo orcamento item avulso desconto frete validade condicao pagamento textos padrao observacoes vendedor',
+    texto: `
+1. **Novo orçamento**.
+2. **Cliente**: busque pelo nome, CPF/CNPJ ou telefone (setas ↓/↑ e Enter) ou marque **Consumidor final**. O endereço vem do cadastro.
+3. **Contato**, **Telefone / WhatsApp** e **Vendedor(a)** (já vem você).
+4. **Itens**: na linha de inclusão, digite código ou nome e escolha com ↓/↑ e Enter; o cursor vai para a quantidade. Enter volta para a inclusão. **Item avulso** para o que não está no catálogo.
+5. **Validade (dias)** (padrão 10), **Desconto geral (R$)**, **Frete (R$)** e **Condição de pagamento**.
+6. **Observações**: **Textos padrão** insere as observações prontas. **Observações internas (só o escritório)** nunca vão para o cliente.
+7. **Salvar**.
+- O sistema refaz as contas de cada item e do total ao salvar.
+- As observações prontas se cadastram em **Textos padrão**, na lista de orçamentos.
+`,
+    veja: ['orcamento-enviar-aprovar', 'setas-teclado'],
+  },
+  {
+    id: 'orcamento-enviar-aprovar',
+    titulo: 'Enviar pelo WhatsApp e aprovação do cliente',
+    secao: 'Vendas',
+    telas: ['orcamento'],
+    palavras: 'whatsapp link aprovar aprovacao cliente registrar resposta recusado pdf imprimir novo link',
+    texto: `
+- **Enviar pelo WhatsApp** abre a conversa com o link do orçamento. Ele passa a **Enviado** e a validade conta a partir de hoje.
+- O cliente abre o link sem senha, vê o orçamento, pode **Salvar em PDF / Imprimir** e aprova em **Aprovar orçamento**, digitando o nome. O orçamento fica **Aprovado** e o histórico registra quem aprovou.
+- Orçamento vencido não se aprova pelo link: o cliente vê o aviso para falar com a BRV.
+- Resposta por telefone, WhatsApp ou pessoalmente: **Registrar resposta** (Aprovado ou Recusado, canal e observação).
+- **Novo link** troca o link; o anterior para de abrir.
+- **Imprimir / PDF** gera a folha A4.
+`,
+    veja: ['orcamento-alterar', 'orcamento-converter'],
+  },
+  {
+    id: 'orcamento-alterar',
+    titulo: 'Alterar, duplicar ou excluir um orçamento',
+    secao: 'Vendas',
+    telas: ['orcamento'],
+    palavras: 'reabrir editar duplicar excluir anotar historico',
+    texto: `
+- Orçamento enviado ou aprovado não se altera: **Reabrir para editar** volta para rascunho e troca o link (o que o cliente recebeu para de abrir).
+- Orçamento convertido não reabre: use **Duplicar**, que cria outro número em rascunho com os mesmos itens.
+- **Excluir** só existe no rascunho.
+- **Anotar** grava uma nota no **Histórico** (quem e quando). O histórico também registra criação, envio, respostas e conversões.
+`,
+  },
+  {
+    id: 'orcamento-converter',
+    titulo: 'Converter em venda ou gerar OS',
+    secao: 'Vendas',
+    telas: ['orcamento'],
+    palavras: 'gerar os ordem de servico converter venda convertido agendar',
+    texto: `
+- **Gerar OS** cria uma OS agendada, ainda sem atividade, com os serviços na **Solicitação do cliente**. Depois agende o técnico pela **Linha do tempo** (Nova atividade).
+- O tipo de serviço da OS é escolhido pelo nome dos serviços (instalação, manutenção). Confira na OS e troque se precisar.
+- Precisa de cliente cadastrado (Consumidor final não tem OS) e de pelo menos um item de serviço.
+- **Converter em venda** abre a Nova venda já com os itens do orçamento.
+- Convertido, o orçamento fica só para consulta.
+`,
+    veja: ['criar-os'],
+  },
   // ───────────── PMOC ─────────────
   {
     id: 'pmoc-o-que-e',

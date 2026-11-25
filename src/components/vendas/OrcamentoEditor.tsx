@@ -41,10 +41,10 @@ import { formatarData, formatarDataHora, rotuloEndereco } from '../../utils/orde
 import { formatarTelefone } from '../../utils/telefone';
 import SeletorCliente from '../ordens/SeletorCliente';
 import { CORES_SITUACAO_ORCAMENTO, ROTULO_CANAL_ORCAMENTO } from './cores';
-import { CLIENTES_DEMO_VENDAS } from './dadosDemo';
 import { OrcamentoDocumentoModal } from './FolhaOrcamentoVenda';
 import TabelaItensVenda, { type LinhaItemVenda } from './TabelaItensVenda';
 import { useNivelFinanceiro } from '../financeiro/fonteDeDados';
+import { useTelaAjuda } from '../../ajuda/contextoAjuda';
 import {
   anotarNoHistoricoOrcamento,
   buscarOrcamento,
@@ -107,6 +107,7 @@ export default function OrcamentoEditor({
   onSalvo,
   onTrocarOrcamento,
 }: OrcamentoEditorProps) {
+  useTelaAjuda('orcamento');
   const navigate = useNavigate();
   const { profile } = useAuth();
   const atorNome = profile?.full_name || 'Equipe BRV';
@@ -260,23 +261,6 @@ export default function OrcamentoEditor({
   useEffect(() => {
     if (!clienteId) return;
     let ativo = true;
-    const demoCli = CLIENTES_DEMO_VENDAS.find((c) => c.id === clienteId);
-    if (demoCli) {
-      const opcoes = demoCli.addresses.map((a) => ({
-        id: a.id,
-        rotulo: `${a.label}: ${a.text}`,
-      }));
-      Promise.resolve().then(() => {
-        if (!ativo) return;
-        setEnderecos(opcoes);
-        setEnderecoId((atual) => atual || (opcoes[0]?.id ?? ''));
-        setEnderecoTextoLivre((atual) => atual || (demoCli.addresses[0]?.text ?? ''));
-      });
-      return () => {
-        ativo = false;
-      };
-    }
-
     listarEnderecosDoCliente(clienteId)
       .then((lista: CustomerAddress[]) => {
         if (!ativo) return;

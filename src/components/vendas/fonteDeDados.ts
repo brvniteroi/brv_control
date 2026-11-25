@@ -4,6 +4,7 @@
 // e ligar os corpos destas funções ao Supabase sem alterar as telas.
 
 import { listarClientes } from '../../services/clientes';
+import * as real from '../../services/vendas';
 import type { Customer } from '../../types/fsm';
 import type { FinancialPaymentMethod } from '../../types/financeiro';
 import type {
@@ -55,6 +56,13 @@ import {
 
 export const FONTE_DADOS_DEMO = true;
 
+/**
+ * Catálogo, orçamentos, textos padrão, página pública e vendedores no banco (parte 1, 2026-11-25:
+ * migration 20261125100000_catalogo_orcamentos.sql, `src/services/vendas.ts`). Vendas e notas continuam na demonstração
+ * até a parte 2 (`FONTE_DADOS_DEMO` segue `true` por causa delas e do seletor "Ver como").
+ */
+export const USAR_BANCO_ORCAMENTOS = true;
+
 function clonar<T>(valor: T): T {
   return JSON.parse(JSON.stringify(valor)) as T;
 }
@@ -77,6 +85,7 @@ const atraso = (ms = 120) => new Promise<void>((resolve) => setTimeout(resolve, 
 // ============================================================================
 
 export async function listarCatalogo(filtro: CatalogListFilter = {}): Promise<CatalogListResult> {
+  if (USAR_BANCO_ORCAMENTOS) return real.listarCatalogo(filtro);
   await atraso(80);
   const aba = filtro.aba ?? 'todos';
   const termo = semAcento(filtro.busca ?? '');
@@ -130,6 +139,7 @@ export async function listarCatalogo(filtro: CatalogListFilter = {}): Promise<Ca
 }
 
 export async function buscarItemCatalogo(id: string): Promise<CatalogItem | null> {
+  if (USAR_BANCO_ORCAMENTOS) return real.buscarItemCatalogo(id);
   await atraso(50);
   const achado = catalogoMemoria.find((i) => i.id === id) ?? null;
   return achado ? clonar(achado) : null;
@@ -137,6 +147,7 @@ export async function buscarItemCatalogo(id: string): Promise<CatalogItem | null
 
 /** Busca rápida sem acento por código, nome ou código de barras para o editor de orçamento e o PDV de venda. */
 export async function buscarItensParaBusca(texto: string): Promise<CatalogItem[]> {
+  if (USAR_BANCO_ORCAMENTOS) return real.buscarItensParaBusca(texto);
   await atraso(40);
   const termo = semAcento(texto);
   const ativos = catalogoMemoria.filter((i) => i.active);
@@ -159,11 +170,13 @@ export async function buscarItensParaBusca(texto: string): Promise<CatalogItem[]
 }
 
 export async function listarItensFrequentes(): Promise<CatalogItem[]> {
+  if (USAR_BANCO_ORCAMENTOS) return real.listarItensFrequentes();
   await atraso(50);
   return clonar(catalogoMemoria.filter((i) => i.active && i.is_frequent));
 }
 
 export async function salvarItemCatalogo(dados: SaveCatalogItemInput): Promise<CatalogItem> {
+  if (USAR_BANCO_ORCAMENTOS) return real.salvarItemCatalogo(dados);
   await atraso(120);
   const codigoLimpo = dados.code.trim();
   const nomeLimpo = dados.name.trim();
@@ -254,6 +267,7 @@ export async function salvarItemCatalogo(dados: SaveCatalogItemInput): Promise<C
 
 /** Alterna ativo/inativo. Nunca exclui item que já foi vendido ou usado em orçamento. */
 export async function inativarItemCatalogo(id: string): Promise<CatalogItem> {
+  if (USAR_BANCO_ORCAMENTOS) return real.inativarItemCatalogo(id);
   await atraso(90);
   const idx = catalogoMemoria.findIndex((i) => i.id === id);
   if (idx === -1) throw new Error('Item não encontrado.');
@@ -268,6 +282,7 @@ export async function inativarItemCatalogo(id: string): Promise<CatalogItem> {
 }
 
 export async function listarSugestoesDeServico(): Promise<CatalogItem[]> {
+  if (USAR_BANCO_ORCAMENTOS) return real.listarSugestoesDeServico();
   await atraso(70);
   return clonar(
     catalogoMemoria.filter(
@@ -277,6 +292,7 @@ export async function listarSugestoesDeServico(): Promise<CatalogItem[]> {
 }
 
 export async function marcarComoServico(ids: string[]): Promise<number> {
+  if (USAR_BANCO_ORCAMENTOS) return real.marcarComoServico(ids);
   await atraso(120);
   const conjunto = new Set(ids);
   let alterados = 0;
@@ -322,6 +338,7 @@ function registrarEventoOrc(
 }
 
 export async function listarOrcamentos(filtro: QuoteListFilter = {}): Promise<QuoteListResult> {
+  if (USAR_BANCO_ORCAMENTOS) return real.listarOrcamentos(filtro);
   await atraso(90);
   const hoje = dataIsoHoje();
   const termo = semAcento(filtro.busca ?? '');
@@ -394,12 +411,14 @@ export async function listarOrcamentos(filtro: QuoteListFilter = {}): Promise<Qu
 }
 
 export async function buscarOrcamento(id: string): Promise<Quote | null> {
+  if (USAR_BANCO_ORCAMENTOS) return real.buscarOrcamento(id);
   await atraso(60);
   const achado = orcamentosMemoria.find((o) => o.id === id) ?? null;
   return achado ? clonar(achado) : null;
 }
 
 export async function salvarOrcamento(dados: SaveQuoteInput, atorNome = 'Equipe BRV'): Promise<Quote> {
+  if (USAR_BANCO_ORCAMENTOS) return real.salvarOrcamento(dados);
   await atraso(130);
   if (dados.items.length === 0) {
     throw new Error('Adicione ao menos um produto ou serviço ao orçamento.');
@@ -568,6 +587,7 @@ export async function salvarOrcamento(dados: SaveQuoteInput, atorNome = 'Equipe 
 }
 
 export async function duplicarOrcamento(id: string, atorNome = 'Equipe BRV'): Promise<Quote> {
+  if (USAR_BANCO_ORCAMENTOS) return real.duplicarOrcamento(id);
   await atraso(110);
   const original = orcamentosMemoria.find((o) => o.id === id);
   if (!original) throw new Error('Orçamento original não encontrado.');
@@ -614,6 +634,7 @@ export async function duplicarOrcamento(id: string, atorNome = 'Equipe BRV'): Pr
 }
 
 export async function excluirOrcamento(id: string): Promise<void> {
+  if (USAR_BANCO_ORCAMENTOS) return real.excluirOrcamento(id);
   await atraso(90);
   const orc = orcamentosMemoria.find((o) => o.id === id);
   if (!orc) throw new Error('Orçamento não encontrado.');
@@ -626,6 +647,7 @@ export async function excluirOrcamento(id: string): Promise<void> {
 
 /** Volta um orçamento enviado/recusado para rascunho, revogando o link público anterior. */
 export async function reabrirOrcamento(id: string, atorNome = 'Equipe BRV'): Promise<Quote> {
+  if (USAR_BANCO_ORCAMENTOS) return real.reabrirOrcamento(id);
   await atraso(100);
   const idx = orcamentosMemoria.findIndex((o) => o.id === id);
   if (idx === -1) throw new Error('Orçamento não encontrado.');
@@ -655,6 +677,7 @@ export async function reabrirOrcamento(id: string, atorNome = 'Equipe BRV'): Pro
 }
 
 export async function registrarEnvioOrcamento(id: string, atorNome = 'Equipe BRV'): Promise<Quote> {
+  if (USAR_BANCO_ORCAMENTOS) return real.registrarEnvioOrcamento(id);
   await atraso(90);
   const idx = orcamentosMemoria.findIndex((o) => o.id === id);
   if (idx === -1) throw new Error('Orçamento não encontrado.');
@@ -688,6 +711,7 @@ export async function registrarRespostaOrcamento(
     atorNome?: string;
   },
 ): Promise<Quote> {
+  if (USAR_BANCO_ORCAMENTOS) return real.registrarRespostaOrcamento(id, dados);
   await atraso(100);
   const idx = orcamentosMemoria.findIndex((o) => o.id === id);
   if (idx === -1) throw new Error('Orçamento não encontrado.');
@@ -718,6 +742,7 @@ export async function registrarRespostaOrcamento(
 }
 
 export async function gerarNovoLinkOrcamento(id: string, atorNome = 'Equipe BRV'): Promise<Quote> {
+  if (USAR_BANCO_ORCAMENTOS) return real.gerarNovoLinkOrcamento(id);
   await atraso(90);
   const idx = orcamentosMemoria.findIndex((o) => o.id === id);
   if (idx === -1) throw new Error('Orçamento não encontrado.');
@@ -739,6 +764,7 @@ export async function gerarNovoLinkOrcamento(id: string, atorNome = 'Equipe BRV'
 }
 
 export async function historicoDoOrcamento(id: string): Promise<QuoteEvent[]> {
+  if (USAR_BANCO_ORCAMENTOS) return real.historicoDoOrcamento(id);
   await atraso(50);
   return clonar(
     eventosOrcamentoMemoria
@@ -752,12 +778,14 @@ export async function anotarNoHistoricoOrcamento(
   nota: string,
   atorNome = 'Equipe BRV',
 ): Promise<QuoteEvent> {
+  if (USAR_BANCO_ORCAMENTOS) return real.anotarNoHistoricoOrcamento(id, nota);
   await atraso(80);
   if (!nota.trim()) throw new Error('Digite uma anotação.');
   return clonar(registrarEventoOrc(id, 'nota', nota.trim(), atorNome));
 }
 
 export async function listarTextosPadraoOrcamento(): Promise<QuoteStandardText[]> {
+  if (USAR_BANCO_ORCAMENTOS) return real.listarTextosPadraoOrcamento();
   await atraso(40);
   return clonar(
     textosPadraoMemoria
@@ -771,6 +799,7 @@ export async function salvarTextoPadraoOrcamento(dados: {
   title: string;
   content: string;
 }): Promise<QuoteStandardText> {
+  if (USAR_BANCO_ORCAMENTOS) return real.salvarTextoPadraoOrcamento(dados);
   await atraso(80);
   const titulo = dados.title.trim();
   const texto = dados.content.trim();
@@ -801,6 +830,7 @@ export async function salvarTextoPadraoOrcamento(dados: {
 }
 
 export async function excluirTextoPadraoOrcamento(id: string): Promise<void> {
+  if (USAR_BANCO_ORCAMENTOS) return real.excluirTextoPadraoOrcamento(id);
   await atraso(70);
   textosPadraoMemoria = textosPadraoMemoria.filter((t) => t.id !== id);
 }
@@ -839,6 +869,7 @@ function projetarOrcamentoPublico(orc: Quote): PublicQuoteView {
 }
 
 export async function buscarOrcamentoPublico(token: string): Promise<PublicQuoteView | null> {
+  if (USAR_BANCO_ORCAMENTOS) return real.buscarOrcamentoPublico(token);
   await atraso(100);
   const limpo = token.trim();
   if (!limpo) return null;
@@ -851,6 +882,7 @@ export async function aprovarOrcamentoPublico(
   token: string,
   nome: string,
 ): Promise<PublicQuoteView> {
+  if (USAR_BANCO_ORCAMENTOS) return real.aprovarOrcamentoPublico(token, nome);
   await atraso(140);
   const limpo = token.trim();
   const nomeLimpo = nome.trim();
@@ -889,13 +921,14 @@ export async function aprovarOrcamentoPublico(
 }
 
 /**
- * TODO(Claude): ligar à criação real de OS (`salvarOrdem`) levando os itens de serviço
- * para a descrição/"solicitação do cliente". Na demonstração, devolve um número fictício de OS.
+ * No banco (`orcamento_gerar_os`): cria a OS agendada, sem atividade, com os serviços na "Solicitação do cliente".
+ * Na demonstração, devolve um número fictício de OS.
  */
 export async function gerarOsDoOrcamento(
   id: string,
   atorNome = 'Equipe BRV',
 ): Promise<{ quote: Quote; service_order_id: string; service_order_number: number; descricaoServicos: string }> {
+  if (USAR_BANCO_ORCAMENTOS) return real.gerarOsDoOrcamento(id);
   await atraso(150);
   const idx = orcamentosMemoria.findIndex((o) => o.id === id);
   if (idx === -1) throw new Error('Orçamento não encontrado.');
@@ -1584,6 +1617,7 @@ export async function registrarNotaManual(
 // ============================================================================
 
 export async function listarVendedores(): Promise<SellerOption[]> {
+  if (USAR_BANCO_ORCAMENTOS) return real.listarVendedores();
   await atraso(30);
   return clonar([...VENDEDORES_DEMO]);
 }

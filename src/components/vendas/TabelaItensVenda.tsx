@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd';
 import { AlertTriangle, GripVertical, Plus, Trash2 } from 'lucide-react';
 import type { CatalogItem, CatalogItemKind } from '../../types/vendas';
@@ -8,8 +8,10 @@ import { buscarItensParaBusca } from './fonteDeDados';
 
 /**
  * Itens do orçamento e da venda numa tabela compacta, um item por linha (pedido do Braulio, 2026-11-24, no molde da tela de
- * orçamento do SicWeb). A última linha é a inclusão: digita código, código de barras ou nome, escolhe com ↓/↑ e Enter, o cursor
- * vai para a quantidade do item; Enter na linha volta para a inclusão. ↓/↑ nos campos da linha andam para o item de baixo/cima.
+ * orçamento do SicWeb). A última linha é a inclusão, e a QUANTIDADE vem primeiro (pedido do Braulio, 2026-11-25): digita a
+ * quantidade (vazio = 1), Enter, digita código, código de barras ou nome, escolhe com ↓/↑ e Enter; o cursor volta para a
+ * quantidade. O leitor de código de barras pode ler direto no campo da quantidade (6 dígitos ou mais seguidos de Enter são
+ * código, não quantidade). Enter numa linha volta para a inclusão; ↓/↑ nos campos da linha andam para o item de baixo/cima.
  */
 
 /** Linha em edição (textos como o usuário digitou). */
@@ -47,13 +49,8 @@ interface TabelaItensVendaProps {
   /** Coluna própria para o código (sem ela, o código aparece antes do nome). */
   colunaCodigo?: boolean;
   focarBuscaAoAbrir?: boolean;
-  /**
-   * Para onde vai o cursor depois de incluir: `quantidade` do item (orçamento) ou de volta à `busca` (balcão: o leitor de código de
-   * barras lê um item atrás do outro).
-   */
-  focoAposIncluir?: 'quantidade' | 'busca';
   placeholderBusca?: string;
-  onAdicionar: (item: CatalogItem) => void;
+  onAdicionar: (item: CatalogItem, quantidade: number) => void;
   onAtualizar: (uid: string, parcial: Partial<LinhaItemVenda>) => void;
   onRemover: (uid: string) => void;
   onItemAvulso: () => void;
@@ -87,7 +84,6 @@ export default function TabelaItensVenda({
   podeVerCusto,
   colunaCodigo = true,
   focarBuscaAoAbrir = false,
-  focoAposIncluir = 'quantidade',
   placeholderBusca = 'Incluir item: código, código de barras ou nome...',
   onAdicionar,
   onAtualizar,
@@ -96,12 +92,13 @@ export default function TabelaItensVenda({
   onReordenar,
 }: TabelaItensVendaProps) {
   const idBusca = `${idPrefixo}-busca-item`;
+  const idQtdNova = `${idPrefixo}-inclusao-qtd`;
+  const [qtdNova, setQtdNova] = useState('');
   const [busca, setBusca] = useState('');
   const [aberta, setAberta] = useState(false);
   // A lista guarda para qual texto foi buscada: Enter antes de a busca voltar (leitor de código de barras) busca na hora
   const [resultado, setResultado] = useState<{ termo: string; lista: CatalogItem[] }>({ termo: '', lista: [] });
   const sugestoes = resultado.lista;
-  const focarQtdDoItem = useRef<string | null>(null);
 
   useEffect(() => {
     if (!aberta) return;
@@ -121,25 +118,56 @@ export default function TabelaItensVenda({
   }, [busca, aberta]);
 
   useEffect(() => {
-    if (focarBuscaAoAbrir) document.getElementById(idBusca)?.focus();
-  }, [focarBuscaAoAbrir, idBusca]);
+    if (focarBuscaAoAbrir) document.getElementById(idQtdNova)?.focus();
+  }, [focarBuscaAoAbrir, idQtdNova]);
 
-  // Item recém-incluído: o cursor vai para a quantidade dele
-  useEffect(() => {
-    const catalogoId = focarQtdDoItem.current;
-    if (!catalogoId) return;
-    focarQtdDoItem.current = null;
-    const linha = itens.find((l) => !l.is_custom && l.catalog_item_id === catalogoId);
-    const campo = linha && (document.getElementById(`${idPrefixo}-qtd-${linha.uid}`) as HTMLInputElement | null);
-    campo?.focus();
-    campo?.select();
-  }, [itens, idPrefixo]);
+  const focarInclusao = () => document.getElementById(idQtdNova)?.focus();
 
-  const incluir = (item: CatalogItem) => {
-    if (focoAposIncluir === 'quantidade') focarQtdDoItem.current = item.id;
-    onAdicionar(item);
+  const incluir = (item: CatalogItem, quantidadeFixa?: number) => {
+    const digitada = Number(qtdNova.trim().replace(',', '.'));
+    onAdicionar(item, quantidadeFixa ?? (digitada > 0 ? digitada : 1));
+    setQtdNova('');
     setBusca('');
     setAberta(false);
+    focarInclusao();
+  };
+
+  /** Inclui direto se o texto for o código exato de um item; senão, mostra a lista na busca. */
+  const procurarEIncluir = (texto: string, quantidadeFixa?: number) => {
+    void buscarItensParaBusca(texto).then((lista) => {
+      if (lista[0] && ehCodigoExato(lista[0], texto.trim())) incluir(lista[0], quantidadeFixa);
+      else {
+        setBusca(texto);
+        setResultado({ termo: texto, lista });
+        setAberta(true);
+        document.getElementById(idBusca)?.focus();
+      }
+    });
+  };
+
+  const mudarQtdNova = (valor: string) => {
+    // Letra no campo da quantidade = começou a digitar o nome: passa para a busca
+    if (/[^\d.,\s]/.test(valor)) {
+      setQtdNova('');
+      setBusca(valor.trim());
+      setAberta(true);
+      document.getElementById(idBusca)?.focus();
+      return;
+    }
+    setQtdNova(valor);
+  };
+
+  const teclarNaQtdNova = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault(); // Enter aqui nunca envia o formulário
+    const texto = qtdNova.trim();
+    if (/^\d{6,}$/.test(texto)) {
+      // Leitor de código de barras: o que está no campo é o código, não a quantidade
+      setQtdNova('');
+      procurarEIncluir(texto, 1);
+      return;
+    }
+    document.getElementById(idBusca)?.focus();
   };
 
   const listaVisivel = aberta && sugestoes.length > 0;
@@ -147,7 +175,7 @@ export default function TabelaItensVenda({
     itens: sugestoes,
     aberta: listaVisivel,
     idPrefixo: `${idPrefixo}-sugestao`,
-    aoEscolher: incluir,
+    aoEscolher: (item: CatalogItem) => incluir(item),
     aoAbrir: () => setAberta(true),
     aoFechar: () => setAberta(false),
   });
@@ -157,13 +185,7 @@ export default function TabelaItensVenda({
     if (e.key === 'Enter' && termo && resultado.termo !== busca) {
       // A lista ainda é de outro texto: busca agora e inclui direto se o código bater
       e.preventDefault();
-      void buscarItensParaBusca(busca).then((lista) => {
-        if (lista[0] && ehCodigoExato(lista[0], termo)) incluir(lista[0]);
-        else {
-          setResultado({ termo: busca, lista });
-          setAberta(true);
-        }
-      });
+      procurarEIncluir(busca);
       return;
     }
     if (!teclas.aoTeclar(e) && e.key === 'Enter') e.preventDefault(); // Enter aqui nunca envia o formulário
@@ -175,7 +197,7 @@ export default function TabelaItensVenda({
   const teclarNaCelula = (e: KeyboardEvent<HTMLInputElement>, uid: string, coluna: Coluna) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      document.getElementById(idBusca)?.focus();
+      focarInclusao();
       return;
     }
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -187,7 +209,7 @@ export default function TabelaItensVenda({
       campo?.focus();
       campo?.select();
     } else if (e.key === 'ArrowDown') {
-      document.getElementById(idBusca)?.focus();
+      focarInclusao();
     }
   };
 
@@ -372,6 +394,19 @@ export default function TabelaItensVenda({
         <div className="relative flex items-center gap-2 border-t border-dashed border-slate-200 px-2 py-1.5">
           <Plus size={14} className="shrink-0 text-slate-400" />
           <input
+            id={idQtdNova}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            value={qtdNova}
+            onChange={(e) => mudarQtdNova(e.target.value)}
+            onKeyDown={teclarNaQtdNova}
+            onFocus={(e) => e.target.select()}
+            placeholder="Qtd. 1"
+            aria-label="Quantidade do item a incluir (vazio = 1)"
+            className="w-20 shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-right text-sm text-slate-800 tabular-nums placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          />
+          <input
             id={idBusca}
             type="text"
             autoCorrect="off"
@@ -419,7 +454,10 @@ export default function TabelaItensVenda({
                     <button
                       type="button"
                       tabIndex={-1}
-                      onMouseDown={() => incluir(item)}
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // o clique não pode tirar o cursor do campo da quantidade
+                        incluir(item);
+                      }}
                       onMouseEnter={() => teclas.setAtivo(idx)}
                       className={`grid w-full items-center gap-2 px-3 py-1.5 text-left text-xs ${
                         podeVerCusto ? 'grid-cols-[7rem_1fr_4.5rem_5rem_5.5rem_2.5rem]' : 'grid-cols-[7rem_1fr_4.5rem_5.5rem_2.5rem]'

@@ -1330,7 +1330,7 @@ Ficam em **Dados fiscais**, no cadastro do item.
 1. **Novo orçamento**.
 2. **Cliente**: busque pelo nome, CPF/CNPJ ou telefone (setas ↓/↑ e Enter) ou marque **Consumidor final**. O endereço vem do cadastro.
 3. **Contato**, **Telefone / WhatsApp** e **Vendedor(a)** (já vem você).
-4. **Itens**: na linha de inclusão, digite código ou nome e escolha com ↓/↑ e Enter; o cursor vai para a quantidade. Enter volta para a inclusão. **Item avulso** para o que não está no catálogo.
+4. **Itens**: na linha de inclusão, digite primeiro a **quantidade** (vazio = 1) e tecle Enter; depois digite código ou nome, escolha com ↓/↑ e Enter. O cursor volta para a quantidade. **Item avulso** para o que não está no catálogo.
 5. **Validade (dias)** (padrão 10), **Desconto geral (R$)**, **Frete (R$)** e **Condição de pagamento**.
 6. **Observações**: **Textos padrão** insere as observações prontas. **Observações internas (só o escritório)** nunca vão para o cliente.
 7. **Salvar**.
@@ -1391,7 +1391,7 @@ Ficam em **Dados fiscais**, no cadastro do item.
     palavras: 'nova venda balcao pdv carrinho pagamento pix cartao dinheiro troco parcelas maquininha a receber consumidor final cpf na nota frete desconto',
     texto: `
 1. **Nova venda**.
-2. Inclua os itens (código, código de barras ou nome). **Item avulso** para o que não está no catálogo.
+2. Inclua os itens: digite a **quantidade** (vazio = 1), Enter, e depois o código ou o nome. Com o leitor, é só ler o código de barras no próprio campo da quantidade (entra 1 unidade; para várias, leia de novo ou mude a quantidade na linha). **Item avulso** para o que não está no catálogo.
 3. **Cliente**: vazio é **Consumidor final**; para pôr o CPF ou CNPJ na nota, use **CPF/CNPJ na nota**.
 4. **Pagamento**: use os atalhos de forma de pagamento ou **Adicionar forma** para dividir. No cartão escolha a **Maquininha** e as **Parcelas**; no PIX, boleto, transferência ou cheque, a **Conta de destino**; no dinheiro, informe o **Recebido (R$)** e veja o troco.
 5. **Concluir venda**.

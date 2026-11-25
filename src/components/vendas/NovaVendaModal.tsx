@@ -216,13 +216,13 @@ export default function NovaVendaModal({
     };
   }, [orcamentoOrigemId]);
 
-  const adicionarAoCarrinho = (item: CatalogItem) => {
+  const adicionarAoCarrinho = (item: CatalogItem, quantidade = 1) => {
     setCarrinho((atual) => {
       const idx = atual.findIndex((l) => !l.is_custom && l.catalog_item_id === item.id);
       if (idx >= 0) {
         const copia = atual.slice();
         const lin = copia[idx];
-        const novaQtd = parseQtd(lin.quantityTexto) + 1;
+        const novaQtd = Math.round((parseQtd(lin.quantityTexto) + quantidade) * 1000) / 1000;
         copia[idx] = { ...lin, quantityTexto: String(novaQtd).replace('.', ',') };
         return copia;
       }
@@ -236,7 +236,7 @@ export default function NovaVendaModal({
           code: item.code,
           name: item.name,
           unit: item.unit,
-          quantityTexto: '1',
+          quantityTexto: String(quantidade).replace('.', ','),
           unitPriceTexto: centavosParaTextoInput(item.sale_price_cents),
           discountMode: 'valor',
           discountTexto: '',
@@ -629,7 +629,6 @@ export default function NovaVendaModal({
                   podeVerCusto={ehCompleto}
                   colunaCodigo={false}
                   focarBuscaAoAbrir={!orcamentoOrigemId}
-                  focoAposIncluir="busca"
                   onAdicionar={adicionarAoCarrinho}
                   onAtualizar={atualizarItemCarrinho}
                   onRemover={(uid) => setCarrinho((at) => at.filter((x) => x.uid !== uid))}

@@ -291,7 +291,7 @@ export default function OrcamentoEditor({
       orcamento.status === 'convertido' ||
       orcamento.status === 'enviado');
 
-  const adicionarItemCatalogo = (item: CatalogItem) => {
+  const adicionarItemCatalogo = (item: CatalogItem, quantidade = 1) => {
     setLinhas((atuais) => {
       const existenteIdx = atuais.findIndex(
         (l) => !l.is_custom && l.catalog_item_id === item.id,
@@ -299,7 +299,7 @@ export default function OrcamentoEditor({
       if (existenteIdx >= 0) {
         const copia = atuais.slice();
         const atual = copia[existenteIdx];
-        const novaQtd = parseQuantidade(atual.quantityTexto) + 1;
+        const novaQtd = Math.round((parseQuantidade(atual.quantityTexto) + quantidade) * 1000) / 1000;
         copia[existenteIdx] = {
           ...atual,
           quantityTexto: String(novaQtd).replace('.', ','),
@@ -316,7 +316,7 @@ export default function OrcamentoEditor({
           code: item.code,
           name: item.name,
           unit: item.unit,
-          quantityTexto: '1',
+          quantityTexto: String(quantidade).replace('.', ','),
           unitPriceTexto: centavosParaTextoInput(item.sale_price_cents),
           discountMode: 'valor',
           discountTexto: '',

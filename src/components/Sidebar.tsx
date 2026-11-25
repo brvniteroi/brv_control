@@ -30,12 +30,14 @@ import {
   Tag,
   UserCog,
   Users,
+  Wallet,
   Wrench,
   X,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { podeVerFinanceiroPlacas } from '../utils/acessoPlacas';
+import { useNivelFinanceiro } from './financeiro/fonteDeDados';
 
 interface ItemMenu {
   rota: string;
@@ -48,6 +50,8 @@ interface ItemMenu {
   soBancada?: boolean;
   /** Visível apenas para quem tem `podeVerFinanceiroPlacas(profile)` */
   financeiroPlacas?: boolean;
+  /** Visível apenas para quem tem nível financeiro `completo` (Adriana/Braulio) */
+  financeiroCompleto?: boolean;
 }
 
 interface GrupoMenu {
@@ -76,6 +80,15 @@ const MOSTRAR_MENU_PLACAS = true;
  */
 const MOSTRAR_MENU_VENDAS = false;
 
+/**
+ * O módulo Financeiro (Visão geral, Caixa, Recebimentos, Movimentos e Cadastros) ainda usa dados
+ * de demonstração (`components/financeiro/fonteDeDados.ts`, `FONTE_DADOS_FINANCEIRO_DEMO = true`).
+ * Enquanto `MOSTRAR_MENU_FINANCEIRO` for `false`, o grupo "Financeiro" fica oculto na barra lateral,
+ * mas as rotas `/financeiro...` continuam abrindo normalmente por URL para testar.
+ * O Claude liga para `true` quando as tabelas e os serviços do banco estiverem prontos.
+ */
+const MOSTRAR_MENU_FINANCEIRO = false;
+
 const MENU: EntradaMenu[] = [
   { rota: '/', rotulo: 'Dashboard', icone: LayoutDashboard },
   {
@@ -97,6 +110,18 @@ const MENU: EntradaMenu[] = [
       { rota: '/orcamentos', rotulo: 'Orçamentos', icone: FileText, apenasEscritorio: true },
       { rota: '/vendas', rotulo: 'Vendas', icone: ShoppingBag, apenasEscritorio: true },
       { rota: '/catalogo', rotulo: 'Catálogo', icone: Package, apenasEscritorio: true },
+    ],
+  },
+  // Logo abaixo de Vendas: o caminho do dinheiro fica junto (decisão do Braulio, 2026-11-24)
+  {
+    rotulo: 'Financeiro',
+    icone: DollarSign,
+    itens: [
+      { rota: '/financeiro', rotulo: 'Visão geral', icone: DollarSign, apenasEscritorio: true },
+      { rota: '/financeiro/caixa', rotulo: 'Caixa', icone: Wallet, apenasEscritorio: true },
+      { rota: '/financeiro/recebimentos', rotulo: 'Recebimentos', icone: ClipboardCheck, apenasEscritorio: true },
+      { rota: '/financeiro/movimentos', rotulo: 'Movimentos', icone: FileBarChart, apenasEscritorio: true, financeiroCompleto: true },
+      { rota: '/financeiro/cadastros', rotulo: 'Cadastros', icone: FolderOpen, apenasEscritorio: true, financeiroCompleto: true },
     ],
   },
   {
@@ -130,7 +155,7 @@ const MENU: EntradaMenu[] = [
     itens: [
       { rota: '/placas', rotulo: 'Reparos (Kanban)', icone: Cpu, apenasEscritorio: true },
       { rota: '/placas/clientes', rotulo: 'Clientes de placas', icone: Users, apenasEscritorio: true },
-      { rota: '/placas/financeiro', rotulo: 'Financeiro', icone: DollarSign, financeiroPlacas: true },
+      { rota: '/placas/financeiro', rotulo: 'Financeiro das placas', icone: DollarSign, financeiroPlacas: true },
       { rota: '/placas/fichas', rotulo: 'Fichas técnicas', icone: BookOpen, apenasEscritorio: true },
       { rota: '/placas/erros', rotulo: 'Códigos de erro', icone: AlertTriangle, apenasEscritorio: true },
       { rota: '/placas/manuais', rotulo: 'Manuais', icone: FolderOpen, apenasEscritorio: true },
@@ -157,8 +182,11 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
   const podeGerenciarFormularios = profile?.role === 'admin' || profile?.role === 'escritorio';
   const ehBancada = profile?.role === 'oficina';
   const temFinanceiroPlacas = podeVerFinanceiroPlacas(profile);
+  const { nivel: nivelFin } = useNivelFinanceiro(profile);
   const visivel = (item: ItemMenu) => {
     if (item.financeiroPlacas) return temFinanceiroPlacas;
+    if (item.financeiroCompleto) return nivelFin === 'completo';
+    if (item.rota.startsWith('/financeiro')) return nivelFin !== 'nenhum';
     if (item.soBancada) return ehBancada;
     return ehBancada ? !!item.oficina : !item.apenasEscritorio || podeGerenciarFormularios;
   };
@@ -191,7 +219,8 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
           {MENU.filter(
             (e) =>
               (MOSTRAR_MENU_PLACAS || !(ehGrupo(e) && e.rotulo === 'Placas')) &&
-              (MOSTRAR_MENU_VENDAS || !(ehGrupo(e) && e.rotulo === 'Vendas')),
+              (MOSTRAR_MENU_VENDAS || !(ehGrupo(e) && e.rotulo === 'Vendas')) &&
+              (MOSTRAR_MENU_FINANCEIRO || !(ehGrupo(e) && e.rotulo === 'Financeiro')),
           ).map((entrada) => {
             if (!ehGrupo(entrada)) {
               if (!visivel(entrada)) return null;
@@ -225,7 +254,13 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
                 {aberto && (
                   <div className="mt-1 ml-5 space-y-1 border-l border-white/10 pl-2">
                     {filhos.map(({ rota, rotulo, icone: Icone }) => (
-                      <NavLink key={rota} to={rota} end={rota === '/placas'} onClick={onFechar} className={classeLink}>
+                      <NavLink
+                        key={rota}
+                        to={rota}
+                        end={rota === '/placas' || rota === '/financeiro'}
+                        onClick={onFechar}
+                        className={classeLink}
+                      >
                         <Icone size={16} />
                         {rotulo}
                       </NavLink>

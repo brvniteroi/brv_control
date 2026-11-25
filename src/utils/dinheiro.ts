@@ -11,6 +11,16 @@ export function somarCentavos(...valores: (number | null | undefined)[]): number
   return soma;
 }
 
+/** Subtrai dois valores inteiros em centavos (`a - b`) com arredondamento inteiro seguro. */
+export function subtrairCentavos(
+  a: number | null | undefined,
+  b: number | null | undefined,
+): number {
+  const va = a == null || Number.isNaN(a) ? 0 : Math.round(a);
+  const vb = b == null || Number.isNaN(b) ? 0 : Math.round(b);
+  return va - vb;
+}
+
 /** Converte um número em reais (ex.: 15.9) para centavos inteiros (1590). */
 export function reaisParaCentavos(reais: number): number {
   if (!Number.isFinite(reais)) return 0;

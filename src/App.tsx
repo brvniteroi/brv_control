@@ -37,6 +37,11 @@ import OrcamentoPublico from './pages/OrcamentoPublico';
 import Catalogo from './pages/Catalogo';
 import Orcamentos from './pages/Orcamentos';
 import Vendas from './pages/Vendas';
+import FinanceiroVisaoGeral from './pages/FinanceiroVisaoGeral';
+import FinanceiroCaixa from './pages/FinanceiroCaixa';
+import FinanceiroRecebimentos from './pages/FinanceiroRecebimentos';
+import FinanceiroMovimentos from './pages/FinanceiroMovimentos';
+import FinanceiroCadastros from './pages/FinanceiroCadastros';
 import RelatorioPmocPublico from './pages/RelatorioPmocPublico';
 import EquipamentoPublico from './pages/EquipamentoPublico';
 import PortalRoute from './components/portal/PortalRoute';
@@ -97,6 +102,11 @@ export default function App() {
             <Route path="orcamentos/textos" element={<Orcamentos />} />
             <Route path="vendas" element={<Vendas />} />
             <Route path="catalogo" element={<Catalogo />} />
+            <Route path="financeiro" element={<FinanceiroVisaoGeral />} />
+            <Route path="financeiro/caixa" element={<FinanceiroCaixa />} />
+            <Route path="financeiro/recebimentos" element={<FinanceiroRecebimentos />} />
+            <Route path="financeiro/movimentos" element={<FinanceiroMovimentos />} />
+            <Route path="financeiro/cadastros" element={<FinanceiroCadastros />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="oficina" element={<Oficina />} />
             {/* Consulta de códigos de erro para o técnico da oficina (Gustavo): sem o resto do módulo Placas */}

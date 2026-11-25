@@ -7,27 +7,16 @@ import {
   ExternalLink,
   History,
   Loader2,
-  Plus,
   Printer,
   ShoppingBag,
-  Trash2,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
-import type { FinancialPaymentMethod } from '../../types/financeiro';
 import type { Sale } from '../../types/vendas';
-import {
-  centavosParaTextoInput,
-  converterTextoParaCentavos,
-  formatarReais,
-  somarCentavos,
-} from '../../utils/dinheiro';
+import { formatarReais } from '../../utils/dinheiro';
 import { formatarDataHora } from '../../utils/ordens';
-import {
-  CONTAS_FINANCEIRAS_DEMO,
-  MAQUININHAS_DEMO,
-  useNivelFinanceiro,
-} from '../financeiro/fonteDeDados';
+import { useNivelFinanceiro } from '../financeiro/fonteDeDados';
+import RegistrarRecebimentoModal from '../financeiro/RegistrarRecebimentoModal';
 import {
   CORES_SITUACAO_VENDA,
   CORES_TIPO_ITEM,
@@ -37,339 +26,10 @@ import {
 import {
   buscarVenda,
   cancelarVenda,
-  receberSaldoVenda,
 } from './fonteDeDados';
 import ModalDialogoVendas from './ModalDialogoVendas';
 import NotasFiscaisVenda, { ReciboVendaModal } from './NotasFiscaisVenda';
-import { calcularTaxaMaquininha, situacaoVenda } from './regrasVendas';
-
-interface LinhaRecebimentoForm {
-  uid: string;
-  method: FinancialPaymentMethod;
-  amountTexto: string;
-  tenderedTexto: string;
-  accountId: string;
-  machineId: string;
-  installments: number;
-  notes: string;
-}
-
-interface ReceberSaldoModalProps {
-  venda: Sale;
-  atorNome: string;
-  onFechar: () => void;
-  onRecebido: (atualizada: Sale) => void;
-}
-
-function ReceberSaldoVendaModal({
-  venda,
-  atorNome,
-  onFechar,
-  onRecebido,
-}: ReceberSaldoModalProps) {
-  const saldoAberto = Math.max(0, venda.total_cents - venda.paid_cents);
-
-  const [linhas, setLinhas] = useState<LinhaRecebimentoForm[]>([
-    {
-      uid: 'rec-1',
-      method: 'pix',
-      amountTexto: centavosParaTextoInput(saldoAberto),
-      tenderedTexto: '',
-      accountId: 'conta-itau',
-      machineId: 'maq-rede',
-      installments: 1,
-      notes: '',
-    },
-  ]);
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-
-  const atualizarLinha = (uid: string, parcial: Partial<LinhaRecebimentoForm>) => {
-    setLinhas((atuais) => atuais.map((l) => (l.uid === uid ? { ...l, ...parcial } : l)));
-  };
-
-  const somaInformada = linhas.reduce(
-    (acc, l) => somarCentavos(acc, converterTextoParaCentavos(l.amountTexto) ?? 0),
-    0,
-  );
-  const restante = Math.max(0, saldoAberto - somaInformada);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setErro(null);
-    const pagamentos = linhas
-      .map((l) => {
-        const valor = converterTextoParaCentavos(l.amountTexto) ?? 0;
-        const entregue = converterTextoParaCentavos(l.tenderedTexto);
-        return {
-          method: l.method,
-          amount_cents: valor,
-          tendered_cents: l.method === 'dinheiro' ? entregue : null,
-          account_id: l.accountId,
-          card_machine_id:
-            l.method === 'debito' || l.method === 'credito' ? l.machineId : null,
-          installments: l.method === 'credito' ? l.installments : 1,
-          notes: l.notes,
-        };
-      })
-      .filter((p) => p.amount_cents > 0);
-
-    if (pagamentos.length === 0) {
-      setErro('Informe o valor a receber.');
-      return;
-    }
-
-    setSalvando(true);
-    try {
-      const atualizada = await receberSaldoVenda(venda.id, pagamentos, atorNome);
-      onRecebido(atualizada);
-      onFechar();
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não foi possível registrar o recebimento.');
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  return (
-    <ModalDialogoVendas
-      aberto
-      onFechar={onFechar}
-      titulo={`Receber saldo · ${venda.number}`}
-      larguraMax="max-w-lg"
-    >
-      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-        <div className="space-y-3">
-          {linhas.map((lin) => {
-            const valorCents = converterTextoParaCentavos(lin.amountTexto) ?? 0;
-            const entregueCents = converterTextoParaCentavos(lin.tenderedTexto) ?? 0;
-            const troco =
-              lin.method === 'dinheiro' && entregueCents > valorCents
-                ? entregueCents - valorCents
-                : 0;
-            const maq = MAQUININHAS_DEMO.find((m) => m.id === lin.machineId);
-            const taxa =
-              (lin.method === 'debito' || lin.method === 'credito') && maq
-                ? calcularTaxaMaquininha(maq, lin.method, lin.installments, valorCents)
-                : null;
-
-            return (
-              <div
-                key={lin.uid}
-                className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5"
-              >
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Forma de pagamento
-                    </label>
-                    <select
-                      value={lin.method}
-                      onChange={(e) => {
-                        const m = e.target.value as FinancialPaymentMethod;
-                        atualizarLinha(lin.uid, {
-                          method: m,
-                          accountId: m === 'dinheiro' ? 'conta-caixa-brv' : 'conta-itau',
-                        });
-                      }}
-                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-800"
-                    >
-                      {(Object.keys(ROTULO_FORMA_PAGAMENTO) as FinancialPaymentMethod[]).map(
-                        (m) => (
-                          <option key={m} value={m}>
-                            {ROTULO_FORMA_PAGAMENTO[m]}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Valor (R$)
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={lin.amountTexto}
-                      onChange={(e) =>
-                        atualizarLinha(lin.uid, { amountTexto: e.target.value })
-                      }
-                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-800"
-                    />
-                  </div>
-                </div>
-
-                {lin.method === 'dinheiro' ? (
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700">
-                        Recebido em espécie (R$)
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={lin.tenderedTexto}
-                        onChange={(e) =>
-                          atualizarLinha(lin.uid, { tenderedTexto: e.target.value })
-                        }
-                        placeholder={lin.amountTexto}
-                        className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
-                      />
-                    </div>
-                    <div className="flex flex-col justify-end">
-                      <span className="text-xs text-slate-500">Troco:</span>
-                      <span className="text-sm font-bold text-emerald-700">
-                        {formatarReais(troco)}
-                      </span>
-                    </div>
-                  </div>
-                ) : lin.method === 'debito' || lin.method === 'credito' ? (
-                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700">
-                        Maquininha
-                      </label>
-                      <select
-                        value={lin.machineId}
-                        onChange={(e) =>
-                          atualizarLinha(lin.uid, { machineId: e.target.value })
-                        }
-                        className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
-                      >
-                        {MAQUININHAS_DEMO.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {lin.method === 'credito' && (
-                      <div>
-                        <label className="block text-xs font-medium text-slate-700">
-                          Parcelas
-                        </label>
-                        <select
-                          value={lin.installments}
-                          onChange={(e) =>
-                            atualizarLinha(lin.uid, {
-                              installments: Number(e.target.value),
-                            })
-                          }
-                          className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
-                        >
-                          {[1, 2, 3, 4, 5, 6, 10, 12].map((n) => (
-                            <option key={n} value={n}>
-                              {n}x
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    {taxa && (
-                      <p className="text-xs text-slate-500 sm:col-span-2">
-                        Taxa: <strong>{taxa.percentual.toFixed(2)}%</strong> ({formatarReais(taxa.taxaCentavos)}) ·
-                        Líquido: <strong>{formatarReais(taxa.liquidoCentavos)}</strong>
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700">
-                      Conta de destino
-                    </label>
-                    <select
-                      value={lin.accountId}
-                      onChange={(e) =>
-                        atualizarLinha(lin.uid, { accountId: e.target.value })
-                      }
-                      className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
-                    >
-                      {CONTAS_FINANCEIRAS_DEMO.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {linhas.length > 1 && (
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLinhas((at) => at.filter((x) => x.uid !== lin.uid))
-                      }
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline"
-                    >
-                      <Trash2 size={12} /> Remover
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() =>
-              setLinhas((at) => [
-                ...at,
-                {
-                  uid: `rec-${at.length + 1}`,
-                  method: 'credito',
-                  amountTexto: restante > 0 ? centavosParaTextoInput(restante) : '',
-                  tenderedTexto: '',
-                  accountId: 'conta-itau',
-                  machineId: 'maq-rede',
-                  installments: 1,
-                  notes: '',
-                },
-              ])
-            }
-            className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
-          >
-            <Plus size={14} /> Adicionar forma
-          </button>
-
-          <span>
-            Restante:{' '}
-            <strong className={restante > 0 ? 'text-amber-700' : 'text-emerald-700'}>
-              {formatarReais(restante)}
-            </strong>
-          </span>
-        </div>
-
-        {erro && (
-          <p role="alert" className="text-xs font-medium text-red-600">
-            {erro}
-          </p>
-        )}
-
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onFechar}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={salvando}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {salvando && <Loader2 size={13} className="animate-spin" />}
-            Confirmar recebimento ({formatarReais(somaInformada)})
-          </button>
-        </div>
-      </form>
-    </ModalDialogoVendas>
-  );
-}
+import { situacaoVenda } from './regrasVendas';
 
 interface VendaDetalhesProps {
   vendaId: string;
@@ -759,13 +419,20 @@ export default function VendaDetalhes({
               </div>
 
               {receberAberto && (
-                <ReceberSaldoVendaModal
-                  venda={venda}
-                  atorNome={atorNome}
-                  onFechar={() => setReceberAberto(false)}
-                  onRecebido={(at) => {
-                    setVenda(at);
-                    onAlterado();
+                <RegistrarRecebimentoModal
+                  origem={{
+                    tipo: 'venda',
+                    id: venda.id,
+                    numero: venda.number,
+                    clienteNome: venda.customer_name,
+                    valorSugerido: saldoAberto,
+                  }}
+                  onClose={() => setReceberAberto(false)}
+                  onRegistrado={() => {
+                    void buscarVenda(venda.id).then((at) => {
+                      if (at) setVenda(at);
+                      onAlterado();
+                    });
                   }}
                 />
               )}

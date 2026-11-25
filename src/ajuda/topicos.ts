@@ -1032,8 +1032,8 @@ Cadastro **à parte** dos clientes do sistema, para os instaladores parceiros e 
     telas: ['placas-financeiro', 'placa'],
     palavras: 'financeiro faturamento ticket reembolso bancada encalhadas ano mes valor cobrado',
     texto: `
-Só quem tem acesso ao financeiro das placas vê esta parte (hoje, só o Braulio). Para os demais, o item **Financeiro** não aparece e o valor cobrado e o reembolso ficam escondidos.
-## Na tela Financeiro
+Só quem tem acesso ao financeiro das placas vê esta parte (hoje, só o Braulio). Para os demais, o item **Financeiro das placas** (no menu Placas) não aparece e o valor cobrado e o reembolso ficam escondidos.
+## Na tela Financeiro das placas
 - Escolha o **Ano de competência**.
 - Cartões: **Faturamento do mês**, **Ticket médio do mês**, **Valor na bancada (em aberto)**, **Placas encalhadas** e **Total do ano**.
 - O gráfico mostra o faturamento mês a mês; clique num mês e **Ver placas** para ver as placas entregues e os reembolsos daquele mês.

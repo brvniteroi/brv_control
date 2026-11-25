@@ -306,8 +306,10 @@ export default function Catalogo() {
                             </span>
                           )}
                         </div>
-                        {item.category && (
-                          <div className="text-[11px] text-slate-400">{item.category}</div>
+                        {(item.category || item.manufacturer) && (
+                          <div className="text-[11px] text-slate-400">
+                            {[item.category, item.manufacturer].filter(Boolean).join(' · ')}
+                          </div>
                         )}
                       </td>
 

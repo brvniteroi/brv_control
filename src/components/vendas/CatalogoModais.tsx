@@ -61,6 +61,8 @@ export function CatalogoFormModal({
   const [tipo, setTipo] = useState<CatalogItemKind>(item?.kind ?? 'produto');
   const [unidade, setUnidade] = useState(item?.unit ?? 'UN');
   const [categoria, setCategoria] = useState(item?.category ?? '');
+  const [fabricante, setFabricante] = useState(item?.manufacturer ?? '');
+  const [observacoes, setObservacoes] = useState(item?.notes ?? '');
   const [precoVendaTexto, setPrecoVendaTexto] = useState(
     item ? centavosParaTextoInput(item.sale_price_cents) : '',
   );
@@ -78,15 +80,16 @@ export function CatalogoFormModal({
   const [ativo, setAtivo] = useState(item?.active ?? true);
 
   const [ncm, setNcm] = useState(item?.ncm ?? '');
-  const [cfop, setCfop] = useState(item?.cfop ?? '5102');
-  const [csosn, setCsosn] = useState(item?.csosn ?? '102');
+  // Valores sugeridos só no item novo; no item que já existe aparece o que está gravado, mesmo em branco
+  const [cfop, setCfop] = useState(item ? (item.cfop ?? '') : '5102');
+  const [csosn, setCsosn] = useState(item ? (item.csosn ?? '') : '102');
   const [origem, setOrigem] = useState<MerchandiseOrigin>(item?.origin ?? 0);
   const [unidadeTributavel, setUnidadeTributavel] = useState(
     item?.taxable_unit ?? item?.unit ?? 'UN',
   );
-  const [codigoServico, setCodigoServico] = useState(item?.service_code ?? '14.01');
+  const [codigoServico, setCodigoServico] = useState(item?.service_code ?? '');
   const [aliquotaIss, setAliquotaIss] = useState(
-    item?.iss_rate != null ? String(item.iss_rate).replace('.', ',') : '2,0',
+    item?.iss_rate != null ? String(item.iss_rate).replace('.', ',') : '',
   );
   const [descricaoNota, setDescricaoNota] = useState(item?.invoice_description ?? '');
 
@@ -150,6 +153,8 @@ export function CatalogoFormModal({
       kind: tipo,
       unit: unidade.trim() || (tipo === 'servico' ? 'SRV' : 'UN'),
       category: categoria.trim() || null,
+      manufacturer: fabricante.trim() || null,
+      notes: observacoes.trim() || null,
       sale_price_cents: vendaCentavos,
       cost_price_cents: custoCentavos,
       controls_stock: tipo === 'produto' ? controlaEstoque : false,
@@ -158,8 +163,8 @@ export function CatalogoFormModal({
       active: ativo,
       is_frequent: frequente,
       ncm: tipo === 'produto' ? ncm.replace(/\D/g, '') || null : null,
-      cfop: tipo === 'produto' ? cfop.replace(/\D/g, '') || '5102' : null,
-      csosn: tipo === 'produto' ? csosn.replace(/\D/g, '') || '102' : null,
+      cfop: tipo === 'produto' ? cfop.replace(/\D/g, '') || null : null,
+      csosn: tipo === 'produto' ? csosn.replace(/\D/g, '') || null : null,
       origin: origem,
       taxable_unit: unidadeTributavel.trim() || unidade.trim() || 'UN',
       service_code: tipo === 'servico' ? codigoServico.trim() || null : null,
@@ -414,6 +419,36 @@ export function CatalogoFormModal({
             )}
           </div>
         )}
+
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+          <div>
+            <label htmlFor="cat-fabricante" className="block text-xs font-semibold text-slate-700">
+              Fabricante
+            </label>
+            <input
+              id="cat-fabricante"
+              name="manufacturer"
+              type="text"
+              value={fabricante}
+              onChange={(e) => setFabricante(e.target.value)}
+              className={INPUT}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label htmlFor="cat-observacoes" className="block text-xs font-semibold text-slate-700">
+              Observações (uso interno)
+            </label>
+            <textarea
+              id="cat-observacoes"
+              name="notes"
+              rows={2}
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              className={INPUT}
+            />
+          </div>
+        </div>
 
         <div className="flex flex-wrap items-center gap-5">
           <div className="flex items-center gap-2">

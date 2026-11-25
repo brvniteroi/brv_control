@@ -197,6 +197,8 @@ export async function salvarItemCatalogo(dados: SaveCatalogItemInput): Promise<C
     kind: dados.kind,
     unit: unidade,
     category: dados.category?.trim() || null,
+    ...(dados.manufacturer !== undefined ? { manufacturer: dados.manufacturer?.trim() || null } : {}),
+    ...(dados.notes !== undefined ? { notes: dados.notes?.trim() || null } : {}),
     sale_price_cents: Math.round(dados.sale_price_cents),
     controls_stock: produto ? Boolean(dados.controls_stock) : false,
     ...(dados.stock_quantity !== undefined ? { stock_quantity: produto ? Number(dados.stock_quantity) : 0 } : {}),
@@ -205,8 +207,9 @@ export async function salvarItemCatalogo(dados: SaveCatalogItemInput): Promise<C
     ...(dados.is_frequent !== undefined ? { is_frequent: dados.is_frequent } : {}),
     type_reviewed: true,
     ncm: produto ? dados.ncm?.replace(/\D/g, '') || null : null,
-    cfop: produto ? dados.cfop?.replace(/\D/g, '') || '5102' : null,
-    csosn: produto ? dados.csosn?.replace(/\D/g, '') || '102' : null,
+    // Campo fiscal em branco fica em branco (nada de preencher o que o contador não confirmou)
+    cfop: produto ? dados.cfop?.replace(/\D/g, '') || null : null,
+    csosn: produto ? dados.csosn?.replace(/\D/g, '') || null : null,
     origin: dados.origin ?? 0,
     taxable_unit: dados.taxable_unit?.trim() || unidade,
     service_code: produto ? null : dados.service_code?.trim() || null,
@@ -260,13 +263,9 @@ export async function listarSugestoesDeServico(): Promise<CatalogItem[]> {
 
 export async function marcarComoServico(ids: string[]): Promise<number> {
   if (ids.length === 0) return 0;
-  // Unidade "UN" vira "SRV"; código de serviço e ISS só onde estiverem vazios
-  const passos = await Promise.all([
-    supabase.from('catalog_items').update({ unit: 'SRV' }).in('id', ids).eq('unit', 'UN'),
-    supabase.from('catalog_items').update({ service_code: '14.01' }).in('id', ids).is('service_code', null),
-    supabase.from('catalog_items').update({ iss_rate: 2 }).in('id', ids).is('iss_rate', null),
-  ]);
-  for (const p of passos) falhou(p.error);
+  // Unidade "UN" vira "SRV". Código de serviço e ISS ficam em branco até o contador confirmar.
+  const unidade = await supabase.from('catalog_items').update({ unit: 'SRV' }).in('id', ids).eq('unit', 'UN');
+  falhou(unidade.error);
   const { data, error } = await supabase
     .from('catalog_items')
     .update({ kind: 'servico', controls_stock: false, stock_quantity: 0, type_reviewed: true, ncm: null, cfop: null, csosn: null })

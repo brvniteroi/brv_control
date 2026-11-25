@@ -141,7 +141,7 @@ integração precisa, por tabela:
 |---|---|---|
 | `TABCLI` | `customers` + `customer_sicweb_codes` | importado (2026-11-24) |
 | `TABEST3A/3B/3R` (vendas, itens, pagamentos) | `sicweb_vendas*` (histórico, só leitura) | importado; repetir na virada (idempotente) |
-| `TABEST1` (829 produtos) | `catalog_items` | **falta**; ver abaixo |
+| `TABEST1` (829 produtos) | `catalog_items` + `catalog_item_costs` | importado (2026-11-25, `importar-produtos.mjs`; na virada, `--gravar --atualizar-precos`) |
 | `TABEST7` (formas) | `FinancialPaymentMethod` | mapa: dinheiro, PIX, débito, crédito, cobrança bancária = `boleto`, cheque; "a prazo" = venda sem pagamento (a receber) |
 | `TABCX1` (caixa) | só o **saldo de abertura** de cada conta no dia da virada (um movimento por conta) | na virada |
 | `TABCR1/2`, `TABCP*`, `TABCHQ*`, `TABRECIB` | não entram (ficam no backup) | decidido |

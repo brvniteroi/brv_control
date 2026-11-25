@@ -31,6 +31,10 @@ export interface CatalogItem {
   unit: string;
   /** Categoria de agrupamento no catálogo (ex.: Instalação, Tubulação, Elétrica, Gás e Solda, Peças). */
   category: string | null;
+  /** Fabricante (campo "Fabricante" do SicWeb). */
+  manufacturer?: string | null;
+  /** Observações do produto (uso interno; não vai no orçamento). */
+  notes?: string | null;
   /** Preço de venda sugerido em centavos. */
   sale_price_cents: number;
   /** Preço de custo em centavos (só visível para nível financeiro `completo`). */
@@ -83,6 +87,8 @@ export interface SaveCatalogItemInput {
   kind: CatalogItemKind;
   unit: string;
   category?: string | null;
+  manufacturer?: string | null;
+  notes?: string | null;
   sale_price_cents: number;
   cost_price_cents?: number | null;
   controls_stock: boolean;

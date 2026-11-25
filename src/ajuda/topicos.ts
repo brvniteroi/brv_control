@@ -1260,7 +1260,7 @@ O app de campo funciona sem sinal: iniciar, concluir e as fotos ficam guardados 
     palavras: 'catalogo produto servico preco codigo barras estoque inativar reativar duplicar frequente fabricante custo',
     texto: `
 Cada item do catálogo é **Produto** (sai na nota de produto, NFC-e ou NF-e) ou **Serviço** (sai na NFS-e). O orçamento e a venda separam os dois sozinhos.
-- **Novo item**: código, nome, tipo, unidade, categoria e **Preço de venda (R$)**. O campo **Custo (R$)** só aparece para quem tem acesso financeiro completo.
+- **Novo item**: código, nome, tipo, unidade, categoria, **Preço de venda (R$)**, **Fabricante** e **Observações (uso interno)**. O campo **Custo (R$)** só aparece para quem tem acesso financeiro completo.
 - Abas **Todos**, **Produtos**, **Serviços** e **Inativos**, e o filtro de categoria. A busca acha por código, código de barras, nome, categoria, fabricante ou observação, sem acento.
 - Na linha do item: o lápis edita, **Duplicar** copia e **Inativar** tira o item das buscas do orçamento e da venda. Item nunca se exclui (pode já estar em orçamentos); **Reativar** traz de volta.
 - **Item frequente** vira atalho na Nova venda.
@@ -1280,7 +1280,7 @@ O botão **Revisar tipos (N)** aparece quando há produtos com nome de mão de o
 1. Clique em **Revisar tipos**: a lista já vem toda marcada.
 2. Desmarque o que for produto de verdade.
 3. Clique em **Converter em Serviço**.
-- A unidade "UN" vira "SRV". Se estiverem vazios, o código de serviço vira 14.01 e o ISS, 2%: confira em **Dados fiscais** do item.
+- A unidade "UN" vira "SRV". O código de serviço e o ISS ficam em branco até serem preenchidos em **Dados fiscais** do item.
 `,
     veja: ['catalogo-dados-fiscais'],
   },
@@ -1292,7 +1292,7 @@ O botão **Revisar tipos (N)** aparece quando há produtos com nome de mão de o
     palavras: 'ncm cfop csosn origem iss codigo de servico nfse nfce nfe fiscal nota',
     texto: `
 Ficam em **Dados fiscais**, no cadastro do item.
-- **Produto**: NCM (8 dígitos), **CFOP** (padrão 5102), **CSOSN** (padrão 102, Simples Nacional), **Origem da mercadoria** e **Unidade tributável**.
+- **Produto**: NCM (8 dígitos), **CFOP**, **CSOSN** (no item novo vêm sugeridos 5102 e 102, Simples Nacional), **Origem da mercadoria** e **Unidade tributável**. No item que já existe, campo em branco continua em branco.
 - **Serviço**: código de serviço, alíquota de ISS e **Descrição para a NFS-e**.
 - O triângulo amarelo na lista avisa que falta dado fiscal.
 ! A emissão das notas ainda não está ligada (o provedor não foi escolhido). Preencher agora deixa o catálogo pronto para quando estiver.

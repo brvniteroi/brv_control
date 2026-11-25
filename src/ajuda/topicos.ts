@@ -39,6 +39,7 @@ export type TelaAjuda =
   | 'pmoc-modelo'
   | 'catalogo'
   | 'orcamentos'
+  | 'orcamentos-sicweb'
   | 'orcamento'
   | 'vendas'
   | 'venda'
@@ -109,6 +110,7 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   'pmoc-modelo': 'Modelo de tarefas PMOC',
   catalogo: 'Catálogo',
   orcamentos: 'Orçamentos',
+  'orcamentos-sicweb': 'Orçamentos antigos',
   orcamento: 'Orçamento',
   vendas: 'Vendas',
   venda: 'Venda',
@@ -1525,6 +1527,23 @@ Ficam nos cadastros do Financeiro, só para o acesso completo. Nada se exclui: d
 ! As maquininhas começam com **taxa zero**. Cadastre as taxas reais antes de registrar vendas no cartão: a venda já lançada não é recalculada.
 `,
     veja: ['venda-nova'],
+  },
+  {
+    id: 'orcamentos-sicweb',
+    titulo: 'Consultar orçamentos antigos (SicWeb)',
+    secao: 'Vendas',
+    telas: ['orcamentos-sicweb', 'orcamentos', 'cliente'],
+    palavras: 'orcamento antigo sicweb consulta historico numero itens preco anterior',
+    texto: `
+Os orçamentos feitos no SicWeb de **24/11/2025 a 24/11/2026**, só para consulta. Quem vê: **vendedores** e administradores.
+- **De um cliente**: abra o cadastro e clique na aba **Orçamentos**.
+- **Todos**: em **Orçamentos**, clique em **Antigos (SicWeb)** e procure pelo número, nome ou contato.
+- Clique no orçamento para ver os **itens**, os preços da época e as observações.
+- **ligado pelo nome**: no SicWeb o orçamento não tinha cliente; foi ligado porque há um único cliente com o mesmo nome. Confira antes de usar.
+! Muitos orçamentos antigos não estão ligados a cliente nenhum. Se não aparecer no cadastro, procure pelo nome na busca geral.
+- São os preços da época. Para um orçamento novo, use os **Modelos** ou o catálogo.
+`,
+    veja: ['vendas-cliente'],
   },
   {
     id: 'vendedores',

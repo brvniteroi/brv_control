@@ -65,6 +65,7 @@ const ROTAS: [prefixo: string, tela: TelaAjuda][] = [
   ['/pmoc/', 'pmoc-plano'],
   ['/pmoc', 'pmoc'],
   ['/catalogo', 'catalogo'],
+  ['/orcamentos/sicweb', 'orcamentos-sicweb'],
   ['/orcamentos', 'orcamentos'],
   ['/vendas/vendedores', 'vendedores'],
   ['/vendas', 'vendas'],

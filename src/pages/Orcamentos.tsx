@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FileText,
   Lock,
@@ -167,6 +167,13 @@ export default function Orcamentos() {
 
         <div className="flex flex-wrap items-center gap-2">
           <NavegacaoVendas />
+
+          <Link
+            to="/orcamentos/sicweb"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Antigos (SicWeb)
+          </Link>
 
           <button
             type="button"

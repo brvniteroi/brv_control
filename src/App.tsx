@@ -37,6 +37,7 @@ import OrcamentoPlacaPublico from './pages/OrcamentoPlacaPublico';
 import OrcamentoPublico from './pages/OrcamentoPublico';
 import Catalogo from './pages/Catalogo';
 import Vendedores from './pages/Vendedores';
+import OrcamentosAntigos from './pages/OrcamentosAntigos';
 import Orcamentos from './pages/Orcamentos';
 import Vendas from './pages/Vendas';
 import FinanceiroVisaoGeral from './pages/FinanceiroVisaoGeral';
@@ -103,6 +104,7 @@ export default function App() {
             <Route element={<RotaRestrita exige="vendas" />}>
               <Route path="orcamentos" element={<Orcamentos />} />
               <Route path="orcamentos/textos" element={<Orcamentos />} />
+              <Route path="orcamentos/sicweb" element={<OrcamentosAntigos />} />
               <Route path="vendas" element={<Vendas />} />
               <Route path="catalogo" element={<Catalogo />} />
             </Route>

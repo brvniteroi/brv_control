@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261125150000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261125170000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -474,6 +474,12 @@ saída maior que o saldo. Depósito do caixa no banco = **Transferir** (não ret
 ROLLBACK passou; **aplicada em 2026-11-25**). **"Recebido" = o que os clientes pagaram no dia** (`sale_payments` de vendas ativas + receita avulsa não estornada), não a data do extrato; cartão
 futuro aparece em "a liquidar". Nível caixa só recebe o recebido hoje e as vendas a receber. O botão "Receber avulso" virou "Ir para Vendas". Ajuda F1: `financeiro-visao-geral`. **Movimentos e Visão geral testados pelo usuário no site em 2026-11-25: tudo certo.** Menus ainda escondidos.
 **Recebimentos dos técnicos:** `RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false` esconde os cartões e o item do menu (a tela `/financeiro/recebimentos` ainda é demonstração).
+**Orçamentos antigos do SicWeb (2026-11-25):** migration `20261125160000_orcamentos_sicweb.sql` (+ verificação `supabase/verificacao/orcamentos_sicweb.sql`; ensaio com
+ROLLBACK passou; também acrescenta `sicweb_orcamentos` ao `unir_clientes`) e `scripts/sicweb/importar-orcamentos.mjs` (a partir de 2025-11-24; simula por padrão).
+Simulação: 616 orçamentos, 4.917 itens, R$ 931.977,78; 165 ligados pelo código, **146 pelo nome** (único cliente com o mesmo nome, marcados na tela) e 305 sem cliente.
+Aba **Orçamentos** do cliente e `/orcamentos/sicweb` (botão "Antigos (SicWeb)"). Ajuda F1: `orcamentos-sicweb`. **Importação gravada em 2026-11-25** (616 e 4.917, totais
+conferidos). **Quem lê: vendedores e admin** (pedido do usuário, 2026-11-25; `20261125170000_orcamentos_sicweb_vendedores.sql` + verificação de mesmo nome);
+o histórico de vendas do SicWeb (tem lucro) continua só admin.
 **Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
 **Falta:** o usuário testar, ligar os menus (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO`) e os recebimentos dos técnicos (com a pergunta no app de campo).
 

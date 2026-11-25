@@ -26,6 +26,8 @@ import EnderecosOriginaisField from './EnderecosOriginaisField';
 import AcessoPortal from './AcessoPortal';
 import AtendimentosCliente from './AtendimentosCliente';
 import VendasCliente from './VendasCliente';
+import OrcamentosSicweb from './OrcamentosSicweb';
+import { podeVender } from '../../utils/acessoVendas';
 import { useAuth } from '../../contexts/useAuth';
 import OrdemDetalhes from '../ordens/OrdemDetalhes';
 import AvaliacoesCliente from '../avaliacoes/AvaliacoesCliente';
@@ -44,7 +46,7 @@ interface ClienteDetalhesProps {
   nomeInicial?: string;
 }
 
-type AbaAtiva = 'geral' | 'atendimento' | 'vendas' | 'modelos';
+type AbaAtiva = 'geral' | 'atendimento' | 'vendas' | 'orcamentos' | 'modelos';
 
 interface AbaItem {
   id: AbaAtiva;
@@ -59,6 +61,8 @@ const ABAS: AbaItem[] = [
 
 /** O histórico de vendas do SicWeb só o admin lê (RLS das tabelas sicweb_*): a aba só aparece para ele, entre Atendimento e Modelos. */
 const ABA_VENDAS: AbaItem = { id: 'vendas', rotulo: 'Vendas' };
+/** Orçamentos antigos do SicWeb: quem vende (vendedores e admin). */
+const ABA_ORCAMENTOS: AbaItem = { id: 'orcamentos', rotulo: 'Orçamentos' };
 
 /** Rótulos oferecidos no cadastro de contato (os mesmos das opções do formulário). */
 const ROTULOS_CONTATO = ['Celular', 'WhatsApp', 'Casa', 'Comercial', 'Financeiro', 'Síndico(a)'];
@@ -66,7 +70,17 @@ const ROTULOS_CONTATO = ['Celular', 'WhatsApp', 'Casa', 'Comercial', 'Financeiro
 export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInicial }: ClienteDetalhesProps) {
   useTelaAjuda('cliente');
   const { profile } = useAuth();
-  const abas = profile?.role === 'admin' && clienteId !== 'novo' ? [ABAS[0], ABAS[1], ABA_VENDAS, ABAS[2]] : ABAS;
+  const veOrcamentos = podeVender(profile);
+  const abas =
+    clienteId === 'novo'
+      ? ABAS
+      : [
+          ABAS[0],
+          ABAS[1],
+          ...(profile?.role === 'admin' ? [ABA_VENDAS] : []),
+          ...(veOrcamentos ? [ABA_ORCAMENTOS] : []),
+          ABAS[2],
+        ];
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('geral');
   const [ordemAberta, setOrdemAberta] = useState<string | null>(null);
   const [versaoAtendimentos, setVersaoAtendimentos] = useState(0);
@@ -956,6 +970,12 @@ export default function ClienteDetalhes({ clienteId, onFechar, onSalvo, nomeInic
       )}
 
       {abaAtiva === 'vendas' && profile?.role === 'admin' && <VendasCliente clienteId={clienteId} />}
+
+      {abaAtiva === 'orcamentos' && veOrcamentos && clienteId !== 'novo' && (
+        <div className="mx-6 mt-6">
+          <OrcamentosSicweb clienteId={clienteId} />
+        </div>
+      )}
 
       {/* OS aberta pela aba Atendimento: por cima do cadastro; fechar volta para o cliente */}
       {ordemAberta && (

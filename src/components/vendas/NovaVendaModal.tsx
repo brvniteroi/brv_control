@@ -473,7 +473,7 @@ export default function NovaVendaModal({
       {/* Cabeçalho fixo igual a OrdemDetalhes */}
       <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-300 bg-white px-6 py-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-800">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
             <ShoppingBag size={18} />
           </div>
           <div>
@@ -496,7 +496,7 @@ export default function NovaVendaModal({
               type="button"
               onClick={() => void handleConcluirVenda()}
               disabled={salvando || itensCalculados.length === 0}
-              className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-800 disabled:opacity-50"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:opacity-50"
             >
               {salvando ? 'Salvando...' : 'Concluir venda'}
             </button>
@@ -566,7 +566,7 @@ export default function NovaVendaModal({
                 <button
                   type="button"
                   onClick={iniciarNovaVendaEmBranco}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-800"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700"
                 >
                   <RotateCcw size={14} />
                   Nova venda
@@ -662,7 +662,7 @@ export default function NovaVendaModal({
                     <button
                       type="button"
                       onClick={() => setMostrarCampoCpfNota((v) => !v)}
-                      className="text-xs font-semibold text-blue-800 hover:underline"
+                      className="text-xs font-semibold text-blue-600 hover:underline"
                     >
                       {mostrarCampoCpfNota ? 'Ocultar CPF/CNPJ na nota' : 'CPF/CNPJ na nota'}
                     </button>
@@ -705,7 +705,7 @@ export default function NovaVendaModal({
                             }}
                             className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
                               tipoDocNota === t
-                                ? 'bg-blue-700 text-white'
+                                ? 'bg-blue-600 text-white'
                                 : 'text-slate-700'
                             }`}
                           >
@@ -754,7 +754,7 @@ export default function NovaVendaModal({
                   <button
                     type="button"
                     onClick={() => adicionarLinhaPagamento('pix')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-800 hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
                   >
                     <Plus size={13} /> Adicionar forma
                   </button>
@@ -1027,7 +1027,7 @@ export default function NovaVendaModal({
                 <button
                   type="submit"
                   disabled={salvando || itensCalculados.length === 0}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-800 disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:opacity-50"
                 >
                   {salvando && <Loader2 size={16} className="animate-spin" />}
                   Concluir venda ({formatarReais(totais.totalCentavos)})

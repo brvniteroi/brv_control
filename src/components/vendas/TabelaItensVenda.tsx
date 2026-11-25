@@ -298,7 +298,7 @@ export default function TabelaItensVenda({
                     })
                   }
                   title={item.discountMode === 'valor' ? 'Desconto em R$ (clique para usar %)' : 'Desconto em % (clique para usar R$)'}
-                  className="absolute inset-y-0 left-0 px-1.5 text-[10px] font-semibold text-blue-800 hover:underline"
+                  className="absolute inset-y-0 left-0 px-1.5 text-[10px] font-semibold text-blue-600 hover:underline"
                 >
                   {item.discountMode === 'valor' ? 'R$' : '%'}
                 </button>

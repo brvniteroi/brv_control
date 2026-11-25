@@ -3,11 +3,16 @@
 // Cadastrar e alterar: só o nível completo (RLS). Cadastro não se exclui, só se desativa.
 // Caixa da loja: funções caixa_* (migration 20261125130000_caixa_loja.sql), níveis "caixa" e "completo".
 // Extrato, avulso, transferência e estorno (só completo): migration 20261125140000_movimentos.sql.
-// Recebimentos dos técnicos e visão geral ainda estão na demonstração.
+// Visão geral: financeiro_resumo (migration 20261125150000_visao_geral.sql).
+// Recebimentos dos técnicos ainda estão na demonstração.
 
 import { supabase } from './supabase';
+import { ROTULO_FORMA_PAGAMENTO_CURTO } from '../components/vendas/cores';
 import type {
   CardMachine,
+  FinancialOverviewSummary,
+  FinancialPaymentMethod,
+  OpenSaleReceivableSummary,
   CreateManualMovementInput,
   CreateTransferInput,
   FinancialMovement,
@@ -158,6 +163,33 @@ export const transferir = (dados: CreateTransferInput) =>
 
 export const estornarMovimento = (id: string, motivo: string) =>
   chamar<FinancialMovement>('financeiro_estornar', { p_id: id, p_motivo: motivo.trim() });
+
+type VendaAbertaDoBanco = Omit<OpenSaleReceivableSummary, 'paid_methods_label'> & {
+  payments: { method: FinancialPaymentMethod; installments: number }[];
+};
+
+export async function resumoFinanceiro(periodo?: { dataInicio?: string; dataFim?: string }): Promise<FinancialOverviewSummary> {
+  const bruto = await chamar<Omit<FinancialOverviewSummary, 'open_sales_oldest'> & { open_sales_oldest: VendaAbertaDoBanco[] }>(
+    'financeiro_resumo',
+    { p_inicio: periodo?.dataInicio || null, p_fim: periodo?.dataFim || null },
+  );
+  return {
+    ...bruto,
+    open_sales_oldest: bruto.open_sales_oldest.map(({ payments, ...venda }) => ({
+      ...venda,
+      // "PIX + Crédito 3x"
+      paid_methods_label: [
+        ...new Set(
+          payments.map((p) =>
+            p.method === 'credito' && p.installments > 1
+              ? `${ROTULO_FORMA_PAGAMENTO_CURTO[p.method]} ${p.installments}x`
+              : ROTULO_FORMA_PAGAMENTO_CURTO[p.method],
+          ),
+        ),
+      ].join(' + '),
+    })),
+  };
+}
 
 const COLUNAS_FORNECEDOR = 'id, name, person_type, document, phone, email, active';
 

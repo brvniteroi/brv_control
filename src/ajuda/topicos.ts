@@ -42,6 +42,7 @@ export type TelaAjuda =
   | 'orcamento'
   | 'vendas'
   | 'venda'
+  | 'financeiro'
   | 'financeiro-caixa'
   | 'financeiro-movimentos'
   | 'financeiro-cadastros'
@@ -111,6 +112,7 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   orcamento: 'Orçamento',
   vendas: 'Vendas',
   venda: 'Venda',
+  financeiro: 'Visão geral do Financeiro',
   'financeiro-caixa': 'Caixa da loja',
   'financeiro-movimentos': 'Movimentos',
   'financeiro-cadastros': 'Cadastros do financeiro',
@@ -1452,6 +1454,22 @@ Uma venda com produtos e serviços tem **duas notas**. O sistema **ainda não em
 - **Cancelar nota** (acesso completo) só marca a nota como cancelada. O cancelamento fiscal é feito onde ela foi emitida.
 `,
     veja: ['venda-receber-cancelar'],
+  },
+  {
+    id: 'financeiro-visao-geral',
+    titulo: 'Visão geral do Financeiro',
+    secao: 'Financeiro',
+    telas: ['financeiro'],
+    palavras: 'visao geral resumo saldo contas recebido hoje mes periodo grafico maquininha cartao a cair a receber fiado',
+    texto: `
+- **Saldos das contas** (acesso completo): o que há em cada conta até hoje. Clique numa conta para ver o extrato.
+- **Recebido hoje** e **no período**: o que os clientes pagaram, por forma. Venda no cartão conta no dia da compra, mesmo que o dinheiro caia depois. Venda cancelada não conta; transferência, reforço e retirada também não.
+- **Maquininhas (a liquidar)**: cartão que ainda vai cair no banco, já sem a taxa, com a próxima data. Ainda não está no saldo.
+- **Vendas a receber**: as mais antigas com saldo em aberto. **Receber** registra o pagamento.
+- Quem tem acesso **caixa** vê o recebido hoje, as vendas a receber e o atalho do Caixa.
+- Recebimento sem venda não se lança aqui: faça a **venda de balcão**.
+`,
+    veja: ['financeiro-caixa', 'financeiro-movimentos'],
   },
   {
     id: 'financeiro-caixa',

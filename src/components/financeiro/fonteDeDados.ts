@@ -75,6 +75,15 @@ export const USAR_BANCO_CAIXA = true;
 /** Extrato, avulso, transferência e estorno no Supabase (migration 20261125140000_movimentos.sql). */
 export const USAR_BANCO_MOVIMENTOS = true;
 
+/** Visão geral no Supabase (migration 20261125150000_visao_geral.sql). */
+export const USAR_BANCO_RESUMO = true;
+
+/**
+ * Recebimentos dos técnicos ("Recebeu do cliente?" no app de campo) ainda não existem no banco: com `false`, a Visão geral
+ * não mostra os cartões deles e o item "Recebimentos" fica fora do menu.
+ */
+export const RECEBIMENTOS_DE_CAMPO_DISPONIVEIS: boolean = false;
+
 function clonar<T>(valor: T): T {
   return JSON.parse(JSON.stringify(valor)) as T;
 }
@@ -1312,6 +1321,7 @@ export async function resumoFinanceiro(periodo?: {
   dataInicio?: string;
   dataFim?: string;
 }): Promise<FinancialOverviewSummary> {
+  if (USAR_BANCO_RESUMO) return real.resumoFinanceiro(periodo);
   await atraso(80);
   recalcularSaldosContas();
 

@@ -124,7 +124,7 @@ const MENU: EntradaMenu[] = [
     itens: [
       { rota: '/financeiro', rotulo: 'Visão geral', icone: DollarSign, apenasEscritorio: true },
       { rota: '/financeiro/caixa', rotulo: 'Caixa', icone: Wallet, apenasEscritorio: true },
-      { rota: '/financeiro/recebimentos', rotulo: 'Recebimentos', icone: ClipboardCheck, apenasEscritorio: true },
+      // "Recebimentos" dos técnicos volta ao menu quando existir no banco (RECEBIMENTOS_DE_CAMPO_DISPONIVEIS)
       { rota: '/financeiro/movimentos', rotulo: 'Movimentos', icone: FileBarChart, apenasEscritorio: true, financeiroCompleto: true },
       { rota: '/financeiro/cadastros', rotulo: 'Cadastros', icone: FolderOpen, apenasEscritorio: true, financeiroCompleto: true },
     ],

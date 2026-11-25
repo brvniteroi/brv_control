@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261125140000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261125150000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -469,9 +469,13 @@ saldo inicial). **Na visão geral e no extrato, origem `caixa` não é receita n
 Movimentos). Tela `/financeiro/caixa` ligada (`USAR_BANCO_CAIXA`). Ajuda F1: `financeiro-caixa`. **Testada pelo usuário no site em 2026-11-25: funcionou.** Há uma venda de teste cancelada (VND-30001).
 **Financeiro, parte 3b: movimentos (2026-11-25):** migration `20261125140000_movimentos.sql` (+ verificação `supabase/verificacao/movimentos.sql`; **aplicada em 2026-11-25**). `movimentos_listar`, `financeiro_lancar_avulso`, `financeiro_transferir`, `financeiro_estornar` (só completo). **Estorno pelo extrato só
 de avulso e transferência** (venda se desfaz cancelando a venda; caixa, com reforço/retirada). Sem data futura; conta de caixa só com data de hoje, forma dinheiro e sem
-saída maior que o saldo. Depósito do caixa no banco = **Transferir** (não retirada). Tela ligada (`USAR_BANCO_MOVIMENTOS`), ajuda F1 `financeiro-movimentos`.
+saída maior que o saldo. Depósito do caixa no banco = **Transferir** (não retirada). Quem faz o depósito são o Braulio e a Adriana (admins), então o Caixa **não** precisa de botão "Depositar no banco" (decisão do usuário, 2026-11-25). **InfinitePay funciona como banco** (2026-11-25): conta própria "InfinitePay" criada no banco de dados e a maquininha InfinitePay liquida nela (Rede segue no Itaú). **PIX dos clientes entra no Itaú e no Nubank.** O usuário vai informar mais tarde as taxas das duas maquininhas; falta também confirmar o prazo real da InfinitePay. Tela ligada (`USAR_BANCO_MOVIMENTOS`), ajuda F1 `financeiro-movimentos`.
+**Financeiro, parte 3c: visão geral (2026-11-25):** migration `20261125150000_visao_geral.sql` (+ verificação `supabase/verificacao/visao_geral.sql`; ensaio com
+ROLLBACK passou; **aplicada em 2026-11-25**). **"Recebido" = o que os clientes pagaram no dia** (`sale_payments` de vendas ativas + receita avulsa não estornada), não a data do extrato; cartão
+futuro aparece em "a liquidar". Nível caixa só recebe o recebido hoje e as vendas a receber. O botão "Receber avulso" virou "Ir para Vendas". Ajuda F1: `financeiro-visao-geral`.
+**Recebimentos dos técnicos:** `RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false` esconde os cartões e o item do menu (a tela `/financeiro/recebimentos` ainda é demonstração).
 **Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
-**Falta da parte 3:** recebimentos dos técnicos e visão geral (ainda demonstração), ajuda F1 deles e ligar os menus.
+**Falta:** o usuário testar, ligar os menus (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO`) e os recebimentos dos técnicos (com a pergunta no app de campo).
 
 Ditado por voz (2026-11-19, pedido do usuário): `components/comum/DitadoVoz.tsx`, montado em `Layout.tsx` e `CampoLayout.tsx`, põe um microfone no canto de qualquer `<textarea>` em foco (Web Speech API, pt-BR; texto entra no cursor; `data-sem-voz` desliga num campo; some se o navegador não suporta, ex. WebView do APK). Páginas públicas não têm. Ajuda F1: tópico `ditado-voz`.
 

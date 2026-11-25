@@ -92,7 +92,8 @@ Tabelas previstas: `financial_accounts`, `card_machines` (maquininhas), `financi
 catálogo e vendas com itens, NF-e/NFS-e, estoque. Fora do escopo das etapas A e B: importação do SicWeb e dados financeiros reais.
 
 ## Pendências para retomar
-- Confirmar onde cai o dinheiro da **InfinitePay** (Itaú ou conta InfinitePay).
+- ~~Confirmar onde cai o dinheiro da **InfinitePay**~~ **Resolvido em 2026-11-25:** a InfinitePay tem plataforma própria e funciona como conta bancária; criada a conta
+  **InfinitePay** (banco) e a maquininha InfinitePay liquida nela. A Rede continua no Itaú.
 - Taxas atuais de cada maquininha (débito, crédito à vista, crédito parcelado).
 - Quantas maquininhas existem e com quem ficam (uma por técnico? uma na loja?).
 - Criar os logins da Jéssica e do Pedro (Equipe > Usuários, papel Escritório) antes de usar o nível caixa.

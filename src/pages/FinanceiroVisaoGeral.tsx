@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import FiltroPeriodo from '../components/comum/FiltroPeriodo';
 import {
+  RECEBIMENTOS_DE_CAMPO_DISPONIVEIS,
   resumoFinanceiro,
   useNivelFinanceiro,
 } from '../components/financeiro/fonteDeDados';
@@ -36,6 +37,7 @@ const FORMAS_RESUMO: FinancialPaymentMethod[] = [
   'debito',
   'boleto',
   'transferencia',
+  'cheque',
 ];
 
 export default function FinanceiroVisaoGeral() {
@@ -109,8 +111,8 @@ export default function FinanceiroVisaoGeral() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Financeiro</h1>
           <p className="mt-1 text-xs text-slate-500">
             {ehCompleto
-              ? 'Saldos das contas, recebimentos e valores a conferir.'
-              : 'Recebimentos do dia, dinheiro com técnicos e vendas a receber.'}
+              ? 'Saldos das contas, recebimentos e vendas a receber.'
+              : 'Recebimentos do dia e vendas a receber.'}
           </p>
         </div>
 
@@ -130,20 +132,13 @@ export default function FinanceiroVisaoGeral() {
             />
           )}
 
-          <button
-            type="button"
-            onClick={() =>
-              setModalReceberOrigem({
-                tipo: 'avulso',
-                clienteNome: 'Consumidor final',
-                valorSugerido: 0,
-              })
-            }
+          <Link
+            to="/vendas"
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
             <Plus size={16} />
-            Receber avulso
-          </button>
+            Ir para Vendas
+          </Link>
         </div>
       </div>
 
@@ -216,7 +211,13 @@ export default function FinanceiroVisaoGeral() {
           {/* Cartões de resumo operacional (`CardsResumo.tsx` modelo) */}
           <div
             className={`grid grid-cols-1 gap-4 ${
-              ehCompleto ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'
+              ehCompleto
+                ? RECEBIMENTOS_DE_CAMPO_DISPONIVEIS
+                  ? 'sm:grid-cols-2 lg:grid-cols-4'
+                  : 'sm:grid-cols-3'
+                : RECEBIMENTOS_DE_CAMPO_DISPONIVEIS
+                  ? 'sm:grid-cols-3'
+                  : 'sm:grid-cols-2'
             }`}
           >
             {/* Recebido hoje (visível para `completo` e `caixa`) */}
@@ -289,6 +290,9 @@ export default function FinanceiroVisaoGeral() {
                   )}
                 </p>
                 <div className="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2 text-[11px] text-slate-600">
+                  {resumo.pending_machines.length === 0 && (
+                    <p className="text-slate-400">Nenhum cartão a cair</p>
+                  )}
                   {resumo.pending_machines.map((m) => (
                     <div key={m.machine_id} className="flex items-center justify-between">
                       <span>
@@ -304,6 +308,7 @@ export default function FinanceiroVisaoGeral() {
             )}
 
             {/* Dinheiro com técnicos e recebimentos a conferir (`completo` e `caixa`) */}
+            {RECEBIMENTOS_DE_CAMPO_DISPONIVEIS && (
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-500">Dinheiro com técnicos</span>
@@ -326,6 +331,8 @@ export default function FinanceiroVisaoGeral() {
                 </Link>
               </div>
             </div>
+
+            )}
 
             {/* No perfil caixa, mostra também um cartão direto para o Caixa da loja */}
             {!ehCompleto && (
@@ -357,10 +364,10 @@ export default function FinanceiroVisaoGeral() {
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-bold text-slate-800">
-                    Entradas dos últimos 30 dias
+                    Recebido nos últimos 30 dias
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Recebimentos diários confirmados (exceto transferências entre contas).
+                    O que os clientes pagaram em cada dia (vendas e receitas avulsas).
                   </p>
                 </div>
               </div>
@@ -412,8 +419,9 @@ export default function FinanceiroVisaoGeral() {
           )}
 
           {/* Tabelas operacionais: Dinheiro com técnicos e Vendas a receber */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className={`grid grid-cols-1 gap-6 ${RECEBIMENTOS_DE_CAMPO_DISPONIVEIS ? 'lg:grid-cols-2' : ''}`}>
             {/* Dinheiro com técnicos */}
+            {RECEBIMENTOS_DE_CAMPO_DISPONIVEIS && (
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
                 <h2 className="text-sm font-bold text-slate-800">
@@ -464,6 +472,8 @@ export default function FinanceiroVisaoGeral() {
                 </div>
               )}
             </section>
+
+            )}
 
             {/* Vendas a receber (mostrando o que foi pago e "Falta R$ X" nas parciais — seção 6.0 item 6) */}
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">

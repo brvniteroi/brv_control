@@ -1488,7 +1488,7 @@ Só **vendedores** e administradores entram em **Orçamentos**, **Vendas** e **C
     palavras: 'modelo modelos botao pronto instalacao split 9000 12000 18000 kit preencher automatico itens salvar como modelo excluir quantidade em branco',
     texto: `
 Os botões em **Modelos**, acima dos itens, incluem de uma vez a lista pronta de um serviço, com o **preço atual do catálogo**.
-1. Clique no modelo (ex.: **Instalação split 9.000**). As quantidades ficam **em branco** (campo amarelo); a mão de obra já vem preenchida.
+1. Clique no modelo (ex.: **Inst 9.000**). As quantidades ficam **em branco** (campo amarelo); a mão de obra já vem preenchida.
 2. Digite a quantidade e tecle **Enter**: o cursor pula para a próxima em branco.
 3. Ao salvar o orçamento ou concluir a venda, os itens que continuaram em branco **ficam de fora** (o sistema mostra quais e pede confirmação).
 - Item que já estava na tela não é repetido.

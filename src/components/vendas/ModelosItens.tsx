@@ -69,7 +69,7 @@ export default function ModelosItens({ linhas, onAplicar }: ModelosItensProps) {
       setAviso('Inclua itens do catálogo antes de salvar um modelo (item avulso não entra).');
       return;
     }
-    const nome = window.prompt('Nome do botão (ex.: Instalação split 12.000):', '')?.trim();
+    const nome = window.prompt('Nome curto do botão (ex.: Inst 12.000):', '')?.trim();
     if (!nome) return;
     const jaExiste = modelos.find((m) => m.name.trim().toLowerCase() === nome.toLowerCase());
     if (jaExiste && !window.confirm(`Já existe o modelo "${jaExiste.name}". Substituir os itens dele pelos desta tela?`)) return;

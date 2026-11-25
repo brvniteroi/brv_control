@@ -458,7 +458,7 @@ reconhecido pelo nome em `ehTecnicoBancadaPlacas`; não criar outro com "Braulio
 `RotaRestrita.tsx`. **Modelos** (`quote_templates`/`quote_template_items`, `modelo_salvar`, `services/modelosOrcamento.ts`, `ModelosItens.tsx`,
 `linhasModelo.ts`): botões no orçamento e na venda; preço atual do catálogo, quantidade em branco (só a mão de obra preenchida), Enter pula para a próxima em
 branco, em branco fica de fora com confirmação; "Salvar como modelo" e "Excluir modelo". Semeado só o "Instalação split 9.000" (orçamento 31974 do SicWeb).
-**Pendente:** 12.000 (nº 31976) e 18.000 (nº 31981) são posteriores ao backup de 24/11: o usuário manda print ou salva o modelo pela tela. Ajuda F1: `vendedores` e `orcamento-modelos`.
+O usuário criou pela tela os de 12.000, 18.000 e 22-24.000 (2026-11-25); botões com nome curto (`Inst 9.000`, renomeados no banco). Ainda não há como renomear pela tela. Ajuda F1: `vendedores` e `orcamento-modelos`.
 Telas da Nova venda no mesmo dia: itens em largura total (Cliente e Pagamento abaixo), quantidade é o primeiro campo da inclusão, cinzas com mais contraste.
 
 Ditado por voz (2026-11-19, pedido do usuário): `components/comum/DitadoVoz.tsx`, montado em `Layout.tsx` e `CampoLayout.tsx`, põe um microfone no canto de qualquer `<textarea>` em foco (Web Speech API, pt-BR; texto entra no cursor; `data-sem-voz` desliga num campo; some se o navegador não suporta, ex. WebView do APK). Páginas públicas não têm. Ajuda F1: tópico `ditado-voz`.

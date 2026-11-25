@@ -147,6 +147,8 @@ export interface FinancialMovement {
   reversal_reason: string | null;
   /** ID compartilhado entre os dois movimentos de uma transferência entre contas. */
   transfer_pair_id: string | null;
+  /** O banco diz se este movimento pode ser estornado pelo extrato (só avulso e transferência). */
+  reversible?: boolean;
   /** Saldo acumulado na conta após o movimento (preenchido quando filtrado por uma conta). */
   running_balance_cents?: number | null;
 }
@@ -157,7 +159,7 @@ export interface FinancialMovementFilter {
   contaId?: string;
   formaPagamento?: 'todas' | FinancialPaymentMethod;
   categoriaId?: string;
-  origem?: 'todas' | 'venda' | 'os' | 'avulso' | 'transferencia';
+  origem?: 'todas' | FinancialOriginType;
   direcao?: 'todas' | 'entrada' | 'saida' | 'estornos';
   dataInicio?: string;
   dataFim?: string;

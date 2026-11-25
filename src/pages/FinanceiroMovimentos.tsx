@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   ArrowLeftRight,
@@ -15,7 +15,6 @@ import {
 import FiltroPeriodo from '../components/comum/FiltroPeriodo';
 import { ROTULO_ORIGEM_MOVIMENTO } from '../components/financeiro/cores';
 import {
-  CONTAS_FINANCEIRAS_DEMO,
   estornarMovimento,
   exportarMovimentosCsv,
   lancarMovimentoAvulso,
@@ -75,7 +74,7 @@ export default function FinanceiroMovimentos() {
   const { nivel } = useNivelFinanceiro(profile);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [contas, setContas] = useState<FinancialAccount[]>(() => [...CONTAS_FINANCEIRAS_DEMO]);
+  const [contas, setContas] = useState<FinancialAccount[]>([]);
   const [categorias, setCategorias] = useState<FinancialCategory[]>([]);
   const [fornecedores, setFornecedores] = useState<Supplier[]>([]);
 
@@ -107,7 +106,7 @@ export default function FinanceiroMovimentos() {
   const [modalAvulso, setModalAvulso] = useState(false);
   const [avulsoDirecao, setAvulsoDirecao] = useState<FinancialMovementDirection>('saida');
   const [avulsoData, setAvulsoData] = useState(() => diaLocalFinanceiro());
-  const [avulsoContaId, setAvulsoContaId] = useState('conta-itau');
+  const [avulsoContaId, setAvulsoContaId] = useState('');
   const [avulsoCategoriaId, setAvulsoCategoriaId] = useState('');
   const [avulsoForma, setAvulsoForma] = useState<FinancialPaymentMethod>('pix');
   const [avulsoValorTexto, setAvulsoValorTexto] = useState('');
@@ -119,8 +118,8 @@ export default function FinanceiroMovimentos() {
   // Modal: Transferência entre contas
   const [modalTransferencia, setModalTransferencia] = useState(false);
   const [transfData, setTransfData] = useState(() => diaLocalFinanceiro());
-  const [transfOrigemId, setTransfOrigemId] = useState('conta-caixa-brv');
-  const [transfDestinoId, setTransfDestinoId] = useState('conta-itau');
+  const [transfOrigemId, setTransfOrigemId] = useState('');
+  const [transfDestinoId, setTransfDestinoId] = useState('');
   const [transfValorTexto, setTransfValorTexto] = useState('');
   const [transfDescricao, setTransfDescricao] = useState('');
 
@@ -141,15 +140,19 @@ export default function FinanceiroMovimentos() {
         setCategorias(cat);
         setFornecedores(forn);
       })
-      .catch(() => {
-        // Mantém os dados iniciais
+      .catch((e: unknown) => {
+        if (ativo) setErro(e instanceof Error ? e.message : 'Não foi possível carregar os cadastros.');
       });
     return () => {
       ativo = false;
     };
   }, [nivel]);
 
+  /** Só a resposta do pedido mais recente vale (cada letra da busca faz um pedido). */
+  const pedidoAtual = useRef(0);
+
   const carregarMovimentos = useCallback(async () => {
+    const pedido = ++pedidoAtual.current;
     setCarregando(true);
     setErro(null);
     try {
@@ -167,14 +170,16 @@ export default function FinanceiroMovimentos() {
         }),
         listarContas(),
       ]);
+      if (pedido !== pedidoAtual.current) return;
       setResultado(res);
       setContas(contasAtualizadas);
     } catch (e) {
+      if (pedido !== pedidoAtual.current) return;
       setErro(
         e instanceof Error ? e.message : 'Não foi possível carregar o extrato de movimentos.',
       );
     } finally {
-      setCarregando(false);
+      if (pedido === pedidoAtual.current) setCarregando(false);
     }
   }, [
     pagina,
@@ -246,6 +251,17 @@ export default function FinanceiroMovimentos() {
     );
   }
 
+  const hoje = diaLocalFinanceiro();
+  const contasAtivas = contas.filter((c) => c.active);
+  const contaBanco = contasAtivas.find((c) => c.kind === 'banco');
+  const contaCaixa = contasAtivas.find((c) => c.kind === 'caixa');
+  // Dinheiro só na conta de caixa (e só com a data de hoje); nos bancos, as outras formas
+  const avulsoNoCaixa = contasAtivas.find((c) => c.id === avulsoContaId)?.kind === 'caixa';
+  const formasDoModal = FORMAS_PAGAMENTO.filter((m) => (m === 'dinheiro') === avulsoNoCaixa);
+  const transfComCaixa = contasAtivas.some(
+    (c) => c.kind === 'caixa' && (c.id === transfOrigemId || c.id === transfDestinoId),
+  );
+
   const handleExportarCsv = async () => {
     setExportando(true);
     try {
@@ -268,6 +284,8 @@ export default function FinanceiroMovimentos() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não foi possível exportar.');
     } finally {
       setExportando(false);
     }
@@ -277,10 +295,11 @@ export default function FinanceiroMovimentos() {
     setErroModal(null);
     setAvulsoDirecao('saida');
     setAvulsoData(diaLocalFinanceiro());
-    setAvulsoContaId(contaId || 'conta-itau');
+    const inicial = contasAtivas.find((c) => c.id === contaId) ?? contaBanco;
+    setAvulsoContaId(inicial?.id ?? '');
     const primeiraDespesa = categorias.find((c) => c.active && c.kind === 'despesa');
     setAvulsoCategoriaId(primeiraDespesa?.id ?? '');
-    setAvulsoForma('pix');
+    setAvulsoForma(inicial?.kind === 'caixa' ? 'dinheiro' : 'pix');
     setAvulsoValorTexto('');
     setAvulsoDescricao('');
     setAvulsoFornecedor(null);
@@ -310,7 +329,7 @@ export default function FinanceiroMovimentos() {
       await lancarMovimentoAvulso(
         {
           direction: avulsoDirecao,
-          occurred_date: avulsoData,
+          occurred_date: avulsoNoCaixa ? hoje : avulsoData,
           account_id: avulsoContaId,
           category_id: avulsoCategoriaId,
           method: avulsoForma,
@@ -345,7 +364,7 @@ export default function FinanceiroMovimentos() {
     try {
       await transferir(
         {
-          occurred_date: transfData,
+          occurred_date: transfComCaixa ? hoje : transfData,
           from_account_id: transfOrigemId,
           to_account_id: transfDestinoId,
           amount_cents: centavos,
@@ -421,8 +440,8 @@ export default function FinanceiroMovimentos() {
             onClick={() => {
               setErroModal(null);
               setTransfData(diaLocalFinanceiro());
-              setTransfOrigemId('conta-caixa-brv');
-              setTransfDestinoId('conta-itau');
+              setTransfOrigemId(contaCaixa?.id ?? '');
+              setTransfDestinoId(contaBanco?.id ?? '');
               setTransfValorTexto('');
               setTransfDescricao('');
               setModalTransferencia(true);
@@ -559,6 +578,8 @@ export default function FinanceiroMovimentos() {
           <option value="os">Ordem de Serviço</option>
           <option value="avulso">Avulso</option>
           <option value="transferencia">Transferência</option>
+          <option value="caixa">Caixa (reforço, retirada, ajuste)</option>
+          <option value="tarifa_cartao">Tarifa de cartão</option>
         </select>
 
         <FiltroPeriodo
@@ -631,6 +652,11 @@ export default function FinanceiroMovimentos() {
                       >
                         <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-700">
                           {formatarData(mov.occurred_date)}
+                          {mov.occurred_date > hoje && (
+                            <span className="ml-1.5 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                              Previsto
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-4 py-3">
@@ -672,7 +698,7 @@ export default function FinanceiroMovimentos() {
                         </td>
 
                         <td className="px-4 py-3 text-slate-600">
-                          {mov.category_name || 'Transferência'}
+                          {mov.category_name || (mov.origin_type === 'transferencia' ? 'Transferência' : '—')}
                         </td>
 
                         <td className="px-4 py-3 text-slate-600">
@@ -705,7 +731,7 @@ export default function FinanceiroMovimentos() {
                         )}
 
                         <td className="whitespace-nowrap px-4 py-3 text-right">
-                          {!ehEstorno && !jaEstornado ? (
+                          {(mov.reversible ?? (!ehEstorno && !jaEstornado)) ? (
                             <button
                               type="button"
                               onClick={() => {
@@ -720,7 +746,13 @@ export default function FinanceiroMovimentos() {
                             </button>
                           ) : (
                             <span className="text-[11px] text-slate-400">
-                              {ehEstorno ? 'Estorno' : 'Estornado'}
+                              {ehEstorno
+                                ? 'Estorno'
+                                : jaEstornado
+                                  ? 'Estornado'
+                                  : mov.origin_type === 'caixa'
+                                    ? 'No Caixa'
+                                    : 'Pela venda'}
                             </span>
                           )}
                         </td>
@@ -850,7 +882,9 @@ export default function FinanceiroMovimentos() {
                   id="av-data"
                   type="date"
                   required
-                  value={avulsoData}
+                  max={hoje}
+                  disabled={avulsoNoCaixa}
+                  value={avulsoNoCaixa ? hoje : avulsoData}
                   onChange={(e) => setAvulsoData(e.target.value)}
                   className={INPUT}
                 />
@@ -881,7 +915,12 @@ export default function FinanceiroMovimentos() {
                 <select
                   id="av-conta"
                   value={avulsoContaId}
-                  onChange={(e) => setAvulsoContaId(e.target.value)}
+                  onChange={(e) => {
+                    const escolhida = contasAtivas.find((c) => c.id === e.target.value);
+                    setAvulsoContaId(e.target.value);
+                    if (escolhida?.kind === 'caixa') setAvulsoForma('dinheiro');
+                    else if (avulsoForma === 'dinheiro') setAvulsoForma('pix');
+                  }}
                   className={INPUT}
                 >
                   {contas
@@ -922,7 +961,7 @@ export default function FinanceiroMovimentos() {
                   onChange={(e) => setAvulsoForma(e.target.value as FinancialPaymentMethod)}
                   className={INPUT}
                 >
-                  {FORMAS_PAGAMENTO.map((m) => (
+                  {formasDoModal.map((m) => (
                     <option key={m} value={m}>
                       {ROTULO_FORMA_PAGAMENTO[m]}
                     </option>
@@ -930,6 +969,12 @@ export default function FinanceiroMovimentos() {
                 </select>
               </div>
             </div>
+
+            {avulsoNoCaixa && (
+              <p className="text-[11px] text-slate-500">
+                Dinheiro entra ou sai da gaveta hoje; com o caixa aberto, aparece nele.
+              </p>
+            )}
 
             <div>
               <label htmlFor="av-desc" className="block text-xs font-semibold text-slate-700">
@@ -1078,7 +1123,9 @@ export default function FinanceiroMovimentos() {
                   id="tr-data"
                   type="date"
                   required
-                  value={transfData}
+                  max={hoje}
+                  disabled={transfComCaixa}
+                  value={transfComCaixa ? hoje : transfData}
                   onChange={(e) => setTransfData(e.target.value)}
                   className={INPUT}
                 />
@@ -1210,6 +1257,12 @@ export default function FinanceiroMovimentos() {
                 </strong>
               </p>
             </div>
+
+            {movimentoEstornar.origin_type === 'transferencia' && (
+              <p className="text-xs text-amber-700">
+                A transferência volta inteira: as duas contas são estornadas.
+              </p>
+            )}
 
             <div>
               <label htmlFor="est-motivo" className="block text-xs font-semibold text-slate-700">

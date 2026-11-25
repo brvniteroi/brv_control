@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261125130000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261125140000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -467,8 +467,11 @@ movimento da conta de dinheiro (`financial_movements.cash_session_id`; data ante
 (nível caixa ou completo). Diferença na abertura ou no fechamento exige motivo e grava **movimento de ajuste** (origem `caixa`, sem categoria; a primeira abertura é o
 saldo inicial). **Na visão geral e no extrato, origem `caixa` não é receita nem despesa.** Retirada para depósito não credita o banco (transferência fica na tela de
 Movimentos). Tela `/financeiro/caixa` ligada (`USAR_BANCO_CAIXA`). Ajuda F1: `financeiro-caixa`. **Testada pelo usuário no site em 2026-11-25: funcionou.** Há uma venda de teste cancelada (VND-30001).
+**Financeiro, parte 3b: movimentos (2026-11-25):** migration `20261125140000_movimentos.sql` (+ verificação `supabase/verificacao/movimentos.sql`; **aplicada em 2026-11-25**). `movimentos_listar`, `financeiro_lancar_avulso`, `financeiro_transferir`, `financeiro_estornar` (só completo). **Estorno pelo extrato só
+de avulso e transferência** (venda se desfaz cancelando a venda; caixa, com reforço/retirada). Sem data futura; conta de caixa só com data de hoje, forma dinheiro e sem
+saída maior que o saldo. Depósito do caixa no banco = **Transferir** (não retirada). Tela ligada (`USAR_BANCO_MOVIMENTOS`), ajuda F1 `financeiro-movimentos`.
 **Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
-**Falta da parte 3:** recebimentos dos técnicos, movimentos (extrato) e visão geral (ainda demonstração), ajuda F1 deles e ligar os menus.
+**Falta da parte 3:** recebimentos dos técnicos e visão geral (ainda demonstração), ajuda F1 deles e ligar os menus.
 
 Ditado por voz (2026-11-19, pedido do usuário): `components/comum/DitadoVoz.tsx`, montado em `Layout.tsx` e `CampoLayout.tsx`, põe um microfone no canto de qualquer `<textarea>` em foco (Web Speech API, pt-BR; texto entra no cursor; `data-sem-voz` desliga num campo; some se o navegador não suporta, ex. WebView do APK). Páginas públicas não têm. Ajuda F1: tópico `ditado-voz`.
 

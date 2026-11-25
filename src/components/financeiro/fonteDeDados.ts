@@ -72,6 +72,9 @@ export const USAR_BANCO_CADASTROS = true;
 /** Caixa da loja no Supabase (migration 20261125130000_caixa_loja.sql). */
 export const USAR_BANCO_CAIXA = true;
 
+/** Extrato, avulso, transferência e estorno no Supabase (migration 20261125140000_movimentos.sql). */
+export const USAR_BANCO_MOVIMENTOS = true;
+
 function clonar<T>(valor: T): T {
   return JSON.parse(JSON.stringify(valor)) as T;
 }
@@ -363,6 +366,7 @@ export async function salvarFornecedor(dados: SaveSupplierInput): Promise<Suppli
 export async function listarMovimentos(
   filtro: FinancialMovementFilter = {},
 ): Promise<FinancialMovementListResult> {
+  if (USAR_BANCO_MOVIMENTOS) return real.listarMovimentos(filtro);
   await atraso(70);
   recalcularSaldosContas();
 
@@ -464,6 +468,7 @@ export async function lancarMovimentoAvulso(
   dados: CreateManualMovementInput,
   atorNome = 'Adriana Lobo',
 ): Promise<FinancialMovement> {
+  if (USAR_BANCO_MOVIMENTOS) return real.lancarMovimentoAvulso(dados);
   await atraso(100);
   if (dados.amount_cents <= 0) throw new Error('Informe um valor maior que zero.');
   if (!dados.description.trim()) throw new Error('Informe a descrição do lançamento.');
@@ -516,6 +521,7 @@ export async function transferir(
   dados: CreateTransferInput,
   atorNome = 'Adriana Lobo',
 ): Promise<{ saida: FinancialMovement; entrada: FinancialMovement }> {
+  if (USAR_BANCO_MOVIMENTOS) return real.transferir(dados);
   await atraso(100);
   if (dados.amount_cents <= 0) throw new Error('Informe um valor maior que zero para transferir.');
   if (dados.from_account_id === dados.to_account_id) {
@@ -597,6 +603,7 @@ export async function estornarMovimento(
   motivo: string,
   atorNome = 'Adriana Lobo',
 ): Promise<FinancialMovement> {
+  if (USAR_BANCO_MOVIMENTOS) return real.estornarMovimento(id, motivo);
   await atraso(100);
   const motivoLimpo = motivo.trim();
   if (!motivoLimpo) throw new Error('Informe o motivo do estorno.');

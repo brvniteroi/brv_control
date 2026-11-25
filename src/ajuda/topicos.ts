@@ -43,6 +43,7 @@ export type TelaAjuda =
   | 'vendas'
   | 'venda'
   | 'financeiro-caixa'
+  | 'financeiro-movimentos'
   | 'financeiro-cadastros'
   | 'vendedores';
 
@@ -111,6 +112,7 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   vendas: 'Vendas',
   venda: 'Venda',
   'financeiro-caixa': 'Caixa da loja',
+  'financeiro-movimentos': 'Movimentos',
   'financeiro-cadastros': 'Cadastros do financeiro',
   vendedores: 'Vendedores',
 };
@@ -1466,10 +1468,31 @@ Uma venda com produtos e serviços tem **duas notas**. O sistema **ainda não em
 - PIX, cartão e cheque não passam pelo caixa.
 - Diferença na abertura ou no fechamento gera um **ajuste**, para o saldo do Caixa BRV ficar igual à gaveta.
 - Recebimento lançado com data anterior não entra no caixa aberto.
-- Reforço, retirada e ajuste não contam como receita nem despesa. A retirada **não** aumenta o saldo do banco sozinha.
+- Reforço, retirada e ajuste não contam como receita nem despesa.
+- **Depósito no banco** não é retirada: quem tem acesso completo usa **Movimentos > Transferir**, que tira do caixa e põe no banco. Fazer os dois tira o dinheiro duas vezes.
 ! Lançamento não se edita nem se apaga. Errou um reforço? Faça uma retirada do mesmo valor, com o motivo.
 `,
     veja: ['venda-nova', 'financeiro-cadastros'],
+  },
+  {
+    id: 'financeiro-movimentos',
+    titulo: 'Movimentos: extrato, lançamentos, transferência e estorno',
+    secao: 'Financeiro',
+    telas: ['financeiro-movimentos'],
+    palavras: 'extrato movimentos saldo conta lancamento avulso despesa receita pagar conta de luz transferir transferencia deposito estorno estornar exportar csv previsto cartao',
+    texto: `
+Todo o dinheiro que entra e sai das contas, só para o acesso **completo**. Escolha uma conta no filtro para ver o **saldo linha a linha**.
+- **Lançamento avulso**: despesa ou receita que não é venda (ex.: energia da loja). Informe data, valor, conta, categoria, forma e descrição; o fornecedor é opcional.
+- **Transferir**: dinheiro entre contas da empresa, como o **depósito do caixa no banco**. Não é receita nem despesa. Não faça também a retirada no Caixa.
+- Na conta **Caixa BRV** a forma é sempre dinheiro e a data é a de hoje; a saída não pode passar do saldo. Nos bancos, a data não pode ser futura.
+- **Previsto**: venda no cartão que ainda vai cair no banco. Só entra no saldo atual no dia.
+- **Exportar CSV** baixa o que está filtrado.
+**Estorno.** Nada se edita nem se apaga: o **Estornar** cria o lançamento contrário, com o motivo, uma única vez. Na transferência, as duas contas voltam.
+- **Pela venda**: para desfazer, cancele a venda.
+- **No Caixa** (reforço, retirada, ajuste): corrija com um reforço ou uma retirada.
+! Despesa paga com dinheiro da gaveta: registre **uma vez só**. Pelo lançamento avulso ela fica com categoria; pela retirada do Caixa, não.
+`,
+    veja: ['financeiro-caixa', 'financeiro-cadastros'],
   },
   {
     id: 'financeiro-cadastros',

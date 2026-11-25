@@ -2,11 +2,17 @@
 // Ler contas, maquininhas e categorias: nível "caixa" ou "completo" (saldo só no completo), pelas funções financeiro_*.
 // Cadastrar e alterar: só o nível completo (RLS). Cadastro não se exclui, só se desativa.
 // Caixa da loja: funções caixa_* (migration 20261125130000_caixa_loja.sql), níveis "caixa" e "completo".
-// Recebimentos dos técnicos, extrato e visão geral ainda estão na demonstração.
+// Extrato, avulso, transferência e estorno (só completo): migration 20261125140000_movimentos.sql.
+// Recebimentos dos técnicos e visão geral ainda estão na demonstração.
 
 import { supabase } from './supabase';
 import type {
   CardMachine,
+  CreateManualMovementInput,
+  CreateTransferInput,
+  FinancialMovement,
+  FinancialMovementFilter,
+  FinancialMovementListResult,
   CashSession,
   CashStatus,
   CloseCashSessionInput,
@@ -102,32 +108,56 @@ export async function salvarCategoria(dados: SaveFinancialCategoryInput): Promis
   return { id, name: nome, kind: dados.kind, active: dados.active };
 }
 
-async function chamarCaixa<T>(funcao: string, parametros?: Record<string, unknown>): Promise<T> {
+async function chamar<T>(funcao: string, parametros?: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.rpc(funcao, parametros);
   if (error) throw new Error(error.message);
   return data as T;
 }
 
-export const situacaoCaixa = () => chamarCaixa<CashStatus>('caixa_situacao');
+export const situacaoCaixa = () => chamar<CashStatus>('caixa_situacao');
 
 export const abrirCaixa = (contadoCentavos: number, motivo?: string) =>
-  chamarCaixa<CashSession>('caixa_abrir', { p_contado: Math.round(contadoCentavos), p_motivo: motivo?.trim() || null });
+  chamar<CashSession>('caixa_abrir', { p_contado: Math.round(contadoCentavos), p_motivo: motivo?.trim() || null });
 
 export const registrarMovimentoCaixa = (dados: CreateCashEntryInput) =>
-  chamarCaixa<CashSession>('caixa_lancar', {
+  chamar<CashSession>('caixa_lancar', {
     p_tipo: dados.kind,
     p_valor: Math.round(dados.amount_cents),
     p_motivo: dados.description.trim(),
   });
 
 export const fecharCaixa = (dados: CloseCashSessionInput) =>
-  chamarCaixa<CashSession>('caixa_fechar', {
+  chamar<CashSession>('caixa_fechar', {
     p_sessao: dados.session_id,
     p_contado: Math.round(dados.counted_balance_cents),
     p_motivo: dados.difference_reason?.trim() || null,
   });
 
-export const listarFechamentos = () => chamarCaixa<CashSession[]>('caixa_fechamentos');
+export const listarFechamentos = () => chamar<CashSession[]>('caixa_fechamentos');
+
+export const listarMovimentos = (filtro: FinancialMovementFilter) =>
+  chamar<FinancialMovementListResult>('movimentos_listar', {
+    p: {
+      pagina: filtro.pagina ?? 0,
+      busca: filtro.busca ?? '',
+      conta_id: filtro.contaId ?? '',
+      forma: filtro.formaPagamento ?? 'todas',
+      categoria_id: filtro.categoriaId ?? '',
+      origem: filtro.origem ?? 'todas',
+      direcao: filtro.direcao ?? 'todas',
+      data_inicio: filtro.dataInicio ?? '',
+      data_fim: filtro.dataFim ?? '',
+    },
+  });
+
+export const lancarMovimentoAvulso = (dados: CreateManualMovementInput) =>
+  chamar<FinancialMovement>('financeiro_lancar_avulso', { p: dados });
+
+export const transferir = (dados: CreateTransferInput) =>
+  chamar<{ saida: FinancialMovement; entrada: FinancialMovement }>('financeiro_transferir', { p: dados });
+
+export const estornarMovimento = (id: string, motivo: string) =>
+  chamar<FinancialMovement>('financeiro_estornar', { p_id: id, p_motivo: motivo.trim() });
 
 const COLUNAS_FORNECEDOR = 'id, name, person_type, document, phone, email, active';
 

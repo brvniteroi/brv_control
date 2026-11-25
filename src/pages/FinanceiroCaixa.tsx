@@ -646,11 +646,18 @@ export default function FinanceiroCaixa() {
                 placeholder={
                   lancamentoTipo === 'reforco'
                     ? 'Ex.: Troco trazido do banco'
-                    : 'Ex.: Depósito bancário ou despesa de loja'
+                    : 'Ex.: Compra pequena para a loja'
                 }
                 className={INPUT}
               />
             </div>
+
+            {lancamentoTipo === 'sangria' && (
+              <p className="text-[11px] text-amber-700">
+                Depósito no banco não é retirada: use <strong>Transferir</strong>, em Movimentos. Fazer os dois tira o
+                dinheiro duas vezes.
+              </p>
+            )}
 
             {erroModal && (
               <p role="alert" className="text-xs font-medium text-red-600">

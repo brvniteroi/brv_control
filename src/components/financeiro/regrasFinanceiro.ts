@@ -179,7 +179,7 @@ export function gerarCsvMovimentos(movimentos: FinancialMovement[]): string {
       formatarData(m.occurred_date),
       m.direction === 'entrada' ? 'Entrada' : 'Saída',
       m.account_name,
-      m.category_name || 'Transferência',
+      m.category_name || (m.origin_type === 'transferencia' ? 'Transferência' : ''),
       m.method.toUpperCase(),
       m.origin_label || m.origin_type,
       pessoa,

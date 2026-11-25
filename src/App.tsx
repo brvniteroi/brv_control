@@ -33,6 +33,10 @@ import PlacasManuais from './pages/PlacasManuais';
 import AcompanhamentoPlaca from './pages/AcompanhamentoPlaca';
 import AcompanhamentoOficina from './pages/AcompanhamentoOficina';
 import OrcamentoPlacaPublico from './pages/OrcamentoPlacaPublico';
+import OrcamentoPublico from './pages/OrcamentoPublico';
+import Catalogo from './pages/Catalogo';
+import Orcamentos from './pages/Orcamentos';
+import Vendas from './pages/Vendas';
 import RelatorioPmocPublico from './pages/RelatorioPmocPublico';
 import EquipamentoPublico from './pages/EquipamentoPublico';
 import PortalRoute from './components/portal/PortalRoute';
@@ -57,6 +61,8 @@ export default function App() {
         <Route path="/placa/:token" element={<AcompanhamentoPlaca />} />
         {/* Orçamento de placa: público, o cliente vê, salva em PDF e aprova (link da mensagem do orçamento) */}
         <Route path="/orcamento-placa/:token" element={<OrcamentoPlacaPublico />} />
+        {/* Orçamento comercial (serviços, peças e aparelhos): público, o cliente vê, salva em PDF e aprova pelo link */}
+        <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
         {/* Relatório mensal PMOC: público, o cliente abre pelo link do WhatsApp ou QR Code e salva em PDF */}
         <Route path="/relatorio-pmoc/:token" element={<RelatorioPmocPublico />} />
         {/* Ficha pública do equipamento PMOC: aberta pela etiqueta QR Code (100 × 50 mm) colada no aparelho */}
@@ -87,6 +93,10 @@ export default function App() {
             <Route path="pmoc/modelo" element={<PmocModelo />} />
             <Route path="pmoc/novo" element={<PmocEditorPage />} />
             <Route path="pmoc/:id" element={<PmocEditorPage />} />
+            <Route path="orcamentos" element={<Orcamentos />} />
+            <Route path="orcamentos/textos" element={<Orcamentos />} />
+            <Route path="vendas" element={<Vendas />} />
+            <Route path="catalogo" element={<Catalogo />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="oficina" element={<Oficina />} />
             {/* Consulta de códigos de erro para o técnico da oficina (Gustavo): sem o resto do módulo Placas */}

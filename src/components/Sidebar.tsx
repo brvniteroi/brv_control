@@ -25,6 +25,7 @@ import {
   Map as MapaIcone,
   Package,
   ShieldCheck,
+  ShoppingBag,
   Snowflake,
   Tag,
   UserCog,
@@ -66,6 +67,15 @@ const ehGrupo = (e: EntradaMenu): e is GrupoMenu => 'itens' in e;
  */
 const MOSTRAR_MENU_PLACAS = true;
 
+/**
+ * Os módulos de Vendas (Orçamentos, Vendas, Catálogo) ainda usam dados de demonstração
+ * (`components/vendas/fonteDeDados.ts`, `FONTE_DADOS_DEMO = true`).
+ * Enquanto `MOSTRAR_MENU_VENDAS` for `false`, o grupo "Vendas" fica oculto na barra lateral,
+ * mas as rotas `/orcamentos`, `/vendas` e `/catalogo` continuam abrindo normalmente por URL para testar.
+ * O Claude liga para `true` quando as tabelas e os serviços do banco estiverem prontos.
+ */
+const MOSTRAR_MENU_VENDAS = false;
+
 const MENU: EntradaMenu[] = [
   { rota: '/', rotulo: 'Dashboard', icone: LayoutDashboard },
   {
@@ -78,6 +88,15 @@ const MENU: EntradaMenu[] = [
       { rota: '/ordens-de-servico', rotulo: 'Ordens de Serviço', icone: ClipboardList },
       // PMOC ligado ao banco na fase 1 (docs/pmoc.md, 2026-11-16)
       { rota: '/pmoc', rotulo: 'PMOC', icone: FileCheck2, apenasEscritorio: true },
+    ],
+  },
+  {
+    rotulo: 'Vendas',
+    icone: ShoppingBag,
+    itens: [
+      { rota: '/orcamentos', rotulo: 'Orçamentos', icone: FileText, apenasEscritorio: true },
+      { rota: '/vendas', rotulo: 'Vendas', icone: ShoppingBag, apenasEscritorio: true },
+      { rota: '/catalogo', rotulo: 'Catálogo', icone: Package, apenasEscritorio: true },
     ],
   },
   {
@@ -169,7 +188,11 @@ export default function Sidebar({ aberta, onFechar }: SidebarProps) {
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-2">
-          {MENU.filter((e) => MOSTRAR_MENU_PLACAS || !(ehGrupo(e) && e.rotulo === 'Placas')).map((entrada) => {
+          {MENU.filter(
+            (e) =>
+              (MOSTRAR_MENU_PLACAS || !(ehGrupo(e) && e.rotulo === 'Placas')) &&
+              (MOSTRAR_MENU_VENDAS || !(ehGrupo(e) && e.rotulo === 'Vendas')),
+          ).map((entrada) => {
             if (!ehGrupo(entrada)) {
               if (!visivel(entrada)) return null;
               const { rota, rotulo, icone: Icone } = entrada;

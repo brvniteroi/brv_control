@@ -410,7 +410,15 @@ export default function Vendas() {
                         )}
                       </td>
                       <td className="px-5 py-4 text-slate-600">
-                        {formas || <span className="text-amber-700">A receber</span>}
+                        {formas}
+                        {/* Parcial: o que já entrou + o que falta, para a venda não parecer paga (pedido do Braulio, 2026-11-24) */}
+                        {sit === 'parcial' ? (
+                          <span className="block text-[11px] text-amber-700">
+                            Falta {formatarReais(venda.total_cents - venda.paid_cents)}
+                          </span>
+                        ) : (
+                          !formas && <span className="text-amber-700">A receber</span>
+                        )}
                       </td>
                       <td className="px-5 py-4">
                         <span

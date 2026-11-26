@@ -201,9 +201,9 @@ cadastros do financeiro, **Caixa**, **Movimentos**, **Visão geral** e a consult
 pelo usuário. **Menus ainda escondidos** (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO` em `Sidebar.tsx`); as telas abrem pelo endereço (`/orcamentos`, `/vendas`,
 `/catalogo`, `/financeiro`, `/financeiro/caixa`, `/financeiro/movimentos`, `/financeiro/cadastros`).
 **Falta, nesta ordem:**
-1. **Teste do orçamento de ponta a ponta**: feito em 2026-11-25 até a OS (ORC-30004 com modelo, link no WhatsApp, aprovado no celular, OS 17565 executada pelo app).
-   **Falta:** abrir o ORC-30004 > **Converter em venda** (fica ligada à OS 17565), receber e cancelar a venda de teste; e testar o **aviso de orçamento aprovado**
-   (sistema aberto no PC, aprovar outro orçamento pelo celular: aviso no canto com bipe; cartão "Orçamentos aprovados" no Dashboard).
+1. ~~Teste do orçamento de ponta a ponta~~ **concluído e aprovado pelo usuário (2026-11-25 e 26):** ORC-30004 com modelo, link no WhatsApp, aprovado no celular,
+   OS 17565 executada pelo app, convertido na VND-30003 (PIX no Nubank), venda cancelada em 26/11 com estorno conferido no banco (o orçamento fica liberado para nova venda);
+   **aviso de orçamento aprovado** testado com o ORC-30005 (ficou `aprovado`, sem OS nem venda: é de teste).
 2. **Mostrar os menus** (perguntado em 2026-11-25, **sem resposta**; recomendado só depois das taxas, porque venda no cartão com taxa zero não é recalculada).
 3. **Taxas** da Rede e da InfinitePay (o usuário vai informar depois) e **prazo real da InfinitePay** (hoje 1 dia útil; se cair na hora ou no fim de semana, ajustar
    `somar_dias_uteis`/o cadastro).

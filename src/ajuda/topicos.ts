@@ -1383,13 +1383,16 @@ Ficam em **Dados fiscais**, no cadastro do item.
     titulo: 'Converter em venda ou gerar OS',
     secao: 'Vendas',
     telas: ['orcamento'],
-    palavras: 'gerar os ordem de servico converter venda convertido agendar',
+    palavras: 'gerar os ordem de servico converter venda convertido agendar cobrar receber pagar depois do servico',
     texto: `
 - **Gerar OS** cria uma OS agendada, ainda sem atividade, com os serviços na **Solicitação do cliente**. Depois agende o técnico pela **Linha do tempo** (Nova atividade).
 - O tipo de serviço da OS sai do nome dos serviços: instalação, manutenção ou desinstalação, de split ou de janela conforme o item, e entre os parecidos o mais usado (ex.: "M.O Instal Ar Cond split" vira **Instalação de Split**). Confira na OS e troque se precisar.
 - Precisa de cliente cadastrado (Consumidor final não tem OS) e de pelo menos um item de serviço.
-- **Converter em venda** abre a Nova venda já com os itens do orçamento.
-- Convertido, o orçamento fica só para consulta.
+- **Converter em venda** abre a Nova venda já com os itens do orçamento, para receber do cliente.
+- **Convertido** quer dizer que o orçamento já virou OS ou venda: os itens e valores ficam só para consulta, mas os dois caminhos continuam:
+  - **Orçamento → OS → o técnico faz o serviço → o cliente paga**: abra o orçamento e clique em **Converter em venda**. A venda fica ligada à OS.
+  - **Cliente paga antes do serviço**: faça a venda e depois **Gerar OS**; a venda passa a apontar para a OS.
+- Cada orçamento vira uma venda e uma OS, no máximo. Se a venda for cancelada, o orçamento pode virar venda de novo.
 `,
     veja: ['criar-os'],
   },

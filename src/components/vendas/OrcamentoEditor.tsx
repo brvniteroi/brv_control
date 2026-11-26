@@ -608,7 +608,8 @@ export default function OrcamentoEditor({
       alvo = await handleSalvar();
     }
     if (!alvo) return;
-    if (!confirmarSeVencido(alvo)) return;
+    // Já virou OS: o preço foi combinado e o serviço feito; vencimento do orçamento não importa mais
+    if (!alvo.converted_service_order_id && !confirmarSeVencido(alvo)) return;
     navigate(`/vendas?orcamento=${alvo.id}`);
   };
 
@@ -773,16 +774,21 @@ export default function OrcamentoEditor({
               )}
 
               {!ehNovo && orcamento && orcamento.status !== 'convertido' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setModalRespostaAberto(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <CheckCircle2 size={14} className="text-emerald-600" />
-                    Registrar resposta
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => setModalRespostaAberto(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <CheckCircle2 size={14} className="text-emerald-600" />
+                  Registrar resposta
+                </button>
+              )}
 
+              {/* Orçamento -> OS -> técnico executa -> cliente paga: quem virou OS ainda pode virar venda (e vice-versa) */}
+              {!ehNovo &&
+                orcamento &&
+                !orcamento.converted_sale_id &&
+                (orcamento.status !== 'convertido' || !!orcamento.converted_service_order_id) && (
                   <button
                     type="button"
                     onClick={() => void handleConverterEmVenda()}
@@ -791,19 +797,22 @@ export default function OrcamentoEditor({
                     <ShoppingBag size={14} />
                     Converter em venda
                   </button>
+                )}
 
-                  {servicosLista.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => void handleGerarOs()}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-                    >
-                      <ClipboardList size={14} />
-                      Gerar OS
-                    </button>
-                  )}
-                </>
-              )}
+              {!ehNovo &&
+                orcamento &&
+                servicosLista.length > 0 &&
+                !orcamento.converted_service_order_id &&
+                (orcamento.status !== 'convertido' || !!orcamento.converted_sale_id) && (
+                  <button
+                    type="button"
+                    onClick={() => void handleGerarOs()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                  >
+                    <ClipboardList size={14} />
+                    Gerar OS
+                  </button>
+                )}
 
               {!ehNovo && orcamento?.status === 'rascunho' && (
                 <button

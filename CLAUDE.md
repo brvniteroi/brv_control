@@ -212,6 +212,11 @@ caixa reais no Control** (a venda continua no SicWeb; teste no Control deve ser 
 5. **Na virada** (**só no PC da empresa**, com backup novo do SICNET restaurado no SQL Server): rodar, simulando antes, `importar-clientes.mjs`, `importar-vendas.mjs`,
    `importar-produtos.mjs --atualizar-precos` e `importar-orcamentos.mjs`, todos com `--gravar`; informar o saldo inicial de cada banco (Cadastros do financeiro) e
    abrir o Caixa com o valor contado (motivo "saldo da virada"); conferir totais.
+   **Roteiro confirmado com o usuário (2026-11-26):** o backup do SICNET pode ser tirado horas antes. Ordem: parar de lançar no SicWeb > gerar o `.bak` > botão
+   "Fazer backup agora" (Control) > restaurar o `.bak` por cima do banco `SICNET` (`WITH REPLACE`) > simular e gravar na ordem acima > conferir totais > saldos e caixa.
+   `importar-clientes.mjs` ajustado em 2026-11-26 para rodar de novo: quem já tem código é reconhecido por ele (simulação com o backup de 24/11: 9.284 reconhecidos,
+   0 novos) e telefone que já tinha vindo não volta. Nome, endereço e dados já preenchidos **não** são atualizados pelo SicWeb. Em vendas, item ou venda **apagados**
+   no SicWeb continuam no Control (cancelamento é atualizado). `--atualizar-precos` sobrescreve preço mudado no Control.
 **Depois (não trava a virada):** recebimentos dos técnicos ("Recebeu do cliente?" no app de campo + tela `/financeiro/recebimentos`, hoje demonstração e escondida,
 `RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false`); renomear modelo de orçamento na tela (oferecido, sem resposta); baixa de estoque nas vendas (não existe; estoque
 não foi importado); estornar só o pagamento de uma venda (hoje cancela a venda inteira).

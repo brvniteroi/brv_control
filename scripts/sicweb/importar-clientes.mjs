@@ -15,6 +15,8 @@
 //    = o cliente já existe: só guarda o código e preenche o que estava vazio (documento, e-mail, inscrição,
 //    telefones novos como contato, endereço se não tinha nenhum);
 //  - cadastros duplicados dentro do SicWeb (mesmo documento ou mesmo nome + telefone) viram um cliente só;
+//  - pode rodar de novo (virada): grupo com algum código já gravado é do cliente que tem o código (sem comparar nome);
+//    telefone que já veio do SicWeb numa importação anterior não volta, mesmo que tenha sido apagado no Control;
 //  - dúvida (mesmo nome com telefone diferente, vários candidatos): entra como cliente novo (cadastrar como está
 //    no SICNET e acertar depois) e fica listada em saida/revisar.csv com os candidatos do Control;
 //  - fonte: o banco SICNET restaurado no SQL Server local (completo). `--csv` usa o clientes.csv, que perde ~12 cadastros;
@@ -350,16 +352,23 @@ const clientesControl = await lerTudo('customers', 'id, name, person_type, docum
 const contatosControl = await lerTudo('customer_contacts', 'customer_id, phone, email');
 const enderecosControl = await lerTudo('customer_addresses', 'customer_id, active');
 let codigosJaGravados = new Set();
+const donoDoCodigo = new Map(); // código -> customer_id no Control (acompanha as uniões de cadastro)
+const telsJaVindos = new Map(); // customer_id -> telefones que o SicWeb já tinha na importação anterior
 {
   // O Supabase devolve no máximo 1000 linhas por consulta: lê em páginas (sem isso, códigos já gravados parecem novos)
   for (let de = 0; ; de += 1000) {
-    const { data, error } = await sb.from('customer_sicweb_codes').select('codigo').order('codigo').range(de, de + 999);
+    const { data, error } = await sb.from('customer_sicweb_codes').select('codigo, customer_id, dados').order('codigo').range(de, de + 999);
     if (error) {
       if (GRAVAR) falhou('customer_sicweb_codes (aplique a migration 20261124100000 antes)', error);
       console.log('(aviso: tabela customer_sicweb_codes ainda não existe; simulação segue sem ela)');
       break;
     }
-    for (const d of data) codigosJaGravados.add(d.codigo);
+    for (const d of data) {
+      codigosJaGravados.add(d.codigo);
+      donoDoCodigo.set(d.codigo, d.customer_id);
+      if (!telsJaVindos.has(d.customer_id)) telsJaVindos.set(d.customer_id, new Set());
+      for (const t of telefones(d.dados?.telefone, d.dados?.celular)) telsJaVindos.get(d.customer_id).add(chaveTel(t));
+    }
     if (data.length < 1000) break;
   }
 }
@@ -400,7 +409,11 @@ for (const g of grupos) {
   let motivo = '';
   let duvida = null;
 
-  if (g.documento && ctlPorDoc.has(g.documento)) {
+  const dono = [p, ...g.itens].map((i) => ctlPorId.get(donoDoCodigo.get(i.codigo))).find(Boolean);
+
+  if (dono) {
+    [achado, motivo] = [dono, 'código já importado'];
+  } else if (g.documento && ctlPorDoc.has(g.documento)) {
     achado = ctlPorDoc.get(g.documento);
     motivo = 'documento';
   } else {
@@ -519,7 +532,7 @@ const tipoTel = (d) => (d.length === 11 ? { role: 'Celular', is_whatsapp: true }
     }
     const conhecidos = telsDoCliente.get(cliente.id) ?? new Set();
     for (const t of g.tels) {
-      if (conhecidos.has(chaveTel(t))) continue;
+      if (conhecidos.has(chaveTel(t)) || telsJaVindos.get(cliente.id)?.has(chaveTel(t))) continue;
       conhecidos.add(chaveTel(t));
       contatos.push({ customer_id: cliente.id, name: g.principal.nomeContato ?? cliente.name, phone: formatarTel(t), email: null, is_primary: false, ...tipoTel(t) });
       contatosNovos++;

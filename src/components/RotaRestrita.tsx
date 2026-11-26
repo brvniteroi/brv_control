@@ -3,7 +3,7 @@ import { Lock } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { podeVender } from '../utils/acessoVendas';
 
-/** Rotas de Vendas, Orçamentos e Catálogo (`vendas`) e o cadastro de vendedores (`admin`). */
+/** Rotas de Vendas, Orçamentos e Catálogo (`vendas`) e as só de administrador (`admin`). */
 export default function RotaRestrita({ exige }: { exige: 'vendas' | 'admin' }) {
   const { profile } = useAuth();
   if (!profile) return <Navigate to="/" replace />;
@@ -17,7 +17,7 @@ export default function RotaRestrita({ exige }: { exige: 'vendas' | 'admin' }) {
       <h1 className="mt-3 text-base font-bold text-slate-800">Acesso restrito</h1>
       <p className="mt-1 max-w-sm text-xs text-slate-500">
         {exige === 'admin'
-          ? 'Só o administrador cadastra vendedores.'
+          ? 'Esta tela é só para administradores.'
           : 'Vendas, Orçamentos e Catálogo são só para vendedores. Peça ao administrador para liberar o seu acesso.'}
       </p>
     </div>

@@ -40,6 +40,8 @@ import Vendedores from './pages/Vendedores';
 import OrcamentosAntigos from './pages/OrcamentosAntigos';
 import Orcamentos from './pages/Orcamentos';
 import Vendas from './pages/Vendas';
+import RelatorioVendas from './pages/RelatorioVendas';
+import VendasSicweb from './pages/VendasSicweb';
 import FinanceiroVisaoGeral from './pages/FinanceiroVisaoGeral';
 import FinanceiroCaixa from './pages/FinanceiroCaixa';
 import FinanceiroRecebimentos from './pages/FinanceiroRecebimentos';
@@ -110,6 +112,8 @@ export default function App() {
             </Route>
             <Route element={<RotaRestrita exige="admin" />}>
               <Route path="vendas/vendedores" element={<Vendedores />} />
+              <Route path="vendas/sicweb" element={<VendasSicweb />} />
+              <Route path="relatorios/vendas" element={<RelatorioVendas />} />
             </Route>
             <Route path="financeiro" element={<FinanceiroVisaoGeral />} />
             <Route path="financeiro/caixa" element={<FinanceiroCaixa />} />

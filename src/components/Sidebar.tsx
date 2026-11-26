@@ -134,6 +134,7 @@ const MENU: EntradaMenu[] = [
     rotulo: 'Relatórios',
     icone: FileBarChart,
     itens: [
+      { rota: '/relatorios/vendas', rotulo: 'Vendas', icone: DollarSign, apenasAdmin: true },
       { rota: '/relatorios/atividades', rotulo: 'Atividades', icone: ClipboardCheck, apenasEscritorio: true },
       { rota: '/relatorios/graficos', rotulo: 'Gráficos', icone: ChartColumn, apenasEscritorio: true },
       { rota: '/relatorios/tipos-de-servico', rotulo: 'Tipos de Serviços', icone: Layers, apenasEscritorio: true },

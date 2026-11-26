@@ -24,6 +24,8 @@ export type TelaAjuda =
   | 'equipamentos'
   | 'cadastros'
   | 'relatorios'
+  | 'relatorio-vendas'
+  | 'vendas-sicweb'
   | 'equipe'
   | 'oficina'
   | 'item-oficina'
@@ -95,6 +97,8 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   equipamentos: 'Equipamentos',
   cadastros: 'Cadastros',
   relatorios: 'Relatórios',
+  'relatorio-vendas': 'Relatório de vendas',
+  'vendas-sicweb': 'Vendas antigas',
   equipe: 'Equipe',
   oficina: 'Oficina',
   'item-oficina': 'Item na oficina',
@@ -1124,6 +1128,7 @@ Lista dos manuais usados nas consultas de erro e no cadastro de fichas. Busque p
     palavras: 'relatorio produtividade grafico mes tecnico garantia',
     texto: `
 No menu **Relatórios**:
+- **Vendas** (só administrador): histórico de vendas ano a ano. Veja o tópico próprio.
 - **Atividades**: por técnico no mês, com atividades realizadas, dias trabalhados, média por dia e média das avaliações.
 - **Gráficos**: atividades dos últimos 12 meses, com tabela.
 - **Tipos de Serviços**: quantas de cada tipo no mês e a porcentagem do total.
@@ -1131,6 +1136,43 @@ No menu **Relatórios**:
 - Conta como realizada a atividade **concluída**, no dia em que terminou. Dia trabalhado é o dia com pelo menos uma concluída.
 - A avaliação conta no mês em que o cliente respondeu.
 `,
+  },
+
+  {
+    id: 'relatorio-vendas',
+    titulo: 'Relatório de vendas ano a ano',
+    secao: 'Relatórios',
+    telas: ['relatorio-vendas', 'relatorios'],
+    palavras: 'vendas faturamento ano mes projecao comparacao historico valor medio produtos servicos clientes planilha csv excel',
+    texto: `
+Em **Relatórios > Vendas** (só administrador). Soma as vendas do **SicWeb antes da virada** com as do **BRV Control a partir dela**, sem as canceladas.
+- Os cartões do alto comparam o ano atual com o **mesmo período** do ano anterior, até o dia da última venda registrada.
+- Escolha **Faturamento**, **Número de vendas** ou **Valor médio por venda**. A escolha vale para o gráfico e para o quadro mês a mês.
+- **Até dia/mês em cada ano** corta todos os anos no mesmo dia, para comparar o ano em andamento com os outros.
+- No quadro **mês a mês**, quanto mais escuro, maior o valor. Serve para ver os meses fortes e fracos.
+- **De onde vem a receita**: produtos e serviços, os 20 itens de cada que mais faturam e os 20 clientes que mais compram. Vendas de balcão aparecem à parte.
+- **Baixar planilha (CSV)** gera o mês a mês para abrir no Excel.
+! **2008 e 2009 não têm valores** no SicWeb e **2010 está incompleto**. Não use esses anos em projeções.
+! Em **Produtos e serviços**, **Sem classificação** são itens de produtos apagados do cadastro do SicWeb.
+- O relatório mostra o que foi **vendido**, não o dinheiro recebido nem o lucro.
+`,
+    veja: ['vendas-sicweb'],
+  },
+  {
+    id: 'vendas-sicweb',
+    titulo: 'Consultar vendas antigas (SicWeb)',
+    secao: 'Vendas',
+    telas: ['vendas-sicweb', 'vendas'],
+    palavras: 'venda antiga sicweb historico consulta cliente produto numero itens pagamento',
+    texto: `
+Em **Vendas**, clique em **Antigas (SicWeb)** (só administrador). É o histórico de vendas desde 2008, só para consulta.
+- Busque por **cliente**, **produto ou serviço** ou **número da venda**. Com várias palavras, todas precisam aparecer.
+- Use o **Período** para limitar as datas.
+- No alto aparecem a quantidade e o valor de todas as vendas encontradas. Ao buscar um produto, o valor é o das vendas inteiras que têm esse produto.
+- Clique na venda para ver os **itens** e o **pagamento**. Vendas antigas podem não ter pagamento registrado.
+- As vendas de um cliente também ficam na aba **Vendas** do cadastro dele.
+`,
+    veja: ['relatorio-vendas'],
   },
 
   // ───────────── Equipe ─────────────

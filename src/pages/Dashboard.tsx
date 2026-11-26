@@ -7,6 +7,8 @@ import AtividadesHoje from '../components/dashboard/AtividadesHoje';
 import PrecisamAtencao from '../components/dashboard/PrecisamAtencao';
 import CartaoBackup from '../components/dashboard/CartaoBackup';
 import CartaoPmocMes from '../components/dashboard/CartaoPmocMes';
+import CartaoOrcamentosAprovados from '../components/dashboard/CartaoOrcamentosAprovados';
+import { podeVender } from '../utils/acessoVendas';
 
 function formatarDataHojeExtenso(): string {
   try {
@@ -151,6 +153,9 @@ export default function Dashboard() {
         <>
           {/* Cartões Numéricos e Resumo de OS */}
           <CardsResumo resumo={dados.resumo} />
+
+          {/* Orçamentos aprovados que ainda não viraram OS nem venda: vendedor e admin */}
+          {podeVender(profile) && <CartaoOrcamentosAprovados />}
 
           {/* PMOC do mês: só admin e escritório, e só quando há planos vigentes */}
           {(profile?.role === 'admin' || profile?.role === 'escritorio') && <CartaoPmocMes />}

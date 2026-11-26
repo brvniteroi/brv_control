@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/useAuth';
 import AjudaPainel from '../ajuda/AjudaPainel';
 import DitadoVoz from './comum/DitadoVoz';
 import { telaDaRota, useTelaSobreposta } from '../ajuda/contextoAjuda';
+import AvisoOrcamentoAprovado from './vendas/AvisoOrcamentoAprovado';
+import { podeVender } from '../utils/acessoVendas';
 
 export default function Layout() {
   const [menuAberto, setMenuAberto] = useState(false);
@@ -40,6 +42,8 @@ export default function Layout() {
         </main>
       </div>
       <DitadoVoz />
+      {/* Cliente aprovou um orçamento pelo link: aviso em qualquer tela para vendedor e admin */}
+      {podeVender(profile) && <AvisoOrcamentoAprovado />}
       {ajudaAberta && <AjudaPainel tela={sobreposta ?? telaDaRota(pathname)} onFechar={fecharAjuda} />}
     </div>
   );

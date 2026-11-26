@@ -571,3 +571,34 @@ export async function cancelarNotaVenda(notaId: string, motivo: string): Promise
   falhou(error);
   return vendaOuFalhar(data as string);
 }
+
+// ============================================================================
+// Aviso de orçamento aprovado (2026-11-25)
+// ============================================================================
+
+/** Orçamento aprovado que ainda não virou OS nem venda (cartão do Dashboard e aviso na tela). */
+export interface OrcamentoAprovadoAguardando {
+  id: string;
+  number: string;
+  customer_name: string;
+  total_cents: number;
+  responded_at: string | null;
+  responded_by_name: string | null;
+  response_channel: QuoteResponseChannel | null;
+}
+
+export const COLUNAS_ORCAMENTO_APROVADO =
+  'id, number, customer_name, total_cents, responded_at, responded_by_name, response_channel';
+
+export async function listarOrcamentosAprovadosAguardando(): Promise<OrcamentoAprovadoAguardando[]> {
+  const { data, error } = await supabase
+    .from('quotes')
+    .select(COLUNAS_ORCAMENTO_APROVADO)
+    .eq('status', 'aprovado')
+    .is('converted_sale_id', null)
+    .is('converted_service_order_id', null)
+    .order('responded_at', { ascending: false, nullsFirst: false })
+    .limit(20);
+  falhou(error);
+  return ((data ?? []) as OrcamentoAprovadoAguardando[]).map((q) => ({ ...q, total_cents: Number(q.total_cents) }));
+}

@@ -1362,8 +1362,25 @@ Ficam em **Dados fiscais**, no cadastro do item.
 - Resposta por telefone, WhatsApp ou pessoalmente: **Registrar resposta** (Aprovado ou Recusado, canal e observação).
 - **Novo link** troca o link; o anterior para de abrir.
 - **Imprimir / PDF** gera a folha A4.
+- Quando o cliente aprova pelo link, quem está com o sistema aberto recebe um aviso na tela (veja "Aviso de orçamento aprovado").
 `,
-    veja: ['orcamento-alterar', 'orcamento-converter'],
+    veja: ['orcamento-aviso-aprovado', 'orcamento-alterar', 'orcamento-converter'],
+  },
+  {
+    id: 'orcamento-aviso-aprovado',
+    titulo: 'Aviso de orçamento aprovado',
+    secao: 'Vendas',
+    telas: ['dashboard', 'orcamentos', 'orcamento'],
+    palavras: 'aviso notificacao alerta aprovado aprovou cliente link bipe som dashboard',
+    texto: `
+Quando o cliente aprova o orçamento pelo link, todo vendedor (e o administrador) que estiver com o BRV Control aberto recebe um aviso no canto de baixo da tela, em qualquer página:
+- O aviso mostra o número, o cliente, o valor e a hora, toca um bipe e fica na tela até você fechar. Com a aba do navegador em segundo plano, o título da aba também avisa.
+- **Abrir orçamento** leva direto a ele, para gerar a OS ou a venda.
+- Quem estava com o sistema fechado vê no **Dashboard**, no cartão **Orçamentos aprovados**: os aprovados que ainda não viraram OS nem venda. Clique numa linha para abrir.
+- Aprovação registrada pelo escritório (**Registrar resposta**) não gera aviso, porque quem registrou já sabe; ela aparece no cartão do Dashboard.
+- O navegador só toca o bipe depois que você clicou em alguma coisa na página.
+`,
+    veja: ['orcamento-enviar-aprovar', 'orcamento-converter'],
   },
   {
     id: 'orcamento-alterar',

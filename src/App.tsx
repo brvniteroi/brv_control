@@ -41,6 +41,7 @@ import OrcamentosAntigos from './pages/OrcamentosAntigos';
 import Orcamentos from './pages/Orcamentos';
 import Vendas from './pages/Vendas';
 import RelatorioVendas from './pages/RelatorioVendas';
+import RelatorioProdutos from './pages/RelatorioProdutos';
 import VendasSicweb from './pages/VendasSicweb';
 import FinanceiroVisaoGeral from './pages/FinanceiroVisaoGeral';
 import FinanceiroCaixa from './pages/FinanceiroCaixa';
@@ -114,6 +115,7 @@ export default function App() {
               <Route path="vendas/vendedores" element={<Vendedores />} />
               <Route path="vendas/sicweb" element={<VendasSicweb />} />
               <Route path="relatorios/vendas" element={<RelatorioVendas />} />
+              <Route path="relatorios/produtos" element={<RelatorioProdutos />} />
             </Route>
             <Route path="financeiro" element={<FinanceiroVisaoGeral />} />
             <Route path="financeiro/caixa" element={<FinanceiroCaixa />} />

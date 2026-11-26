@@ -1,4 +1,4 @@
-import type { MesVendas } from '../services/relatorioVendas';
+import type { MesVendas, ProdutoVendido } from '../services/relatorioVendas';
 
 /** Anos em que o SicWeb não guarda o valor completo (sem itens). Não entram em variações. */
 export const AVISO_DO_ANO: Record<number, string> = { 2008: 'sem valores', 2009: 'sem valores', 2010: 'incompleto' };
@@ -75,4 +75,38 @@ export function csvMensal(meses: MesVendas[]): string {
     .sort((a, b) => a.ano - b.ano || a.mes - b.mes)
     .map((m) => [m.ano, m.mes, m.vendas, m.vendas_com_valor, dec(m.total), AVISO_DO_ANO[m.ano] ?? ''].join(';'));
   return ['Ano;Mês;Vendas;Vendas com valor;Faturamento;Observação', ...linhas].join('\r\n');
+}
+
+const isoDia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** Os últimos N meses que terminam no dia informado (ex.: 12 meses até 24/11/2026 começam em 25/11/2025). */
+function ultimosMeses(ate: string, n: number): [string, string] {
+  const [a, m, d] = ate.split('-').map(Number);
+  return [isoDia(new Date(a, m - 1 - n, d + 1)), ate];
+}
+
+export type PeriodoProdutos = '3m' | '6m' | '12m' | 'ano' | 'ano_passado';
+
+/** Períodos prontos do relatório de produtos, contados a partir da última venda registrada. */
+export const PERIODOS_PRODUTOS: Record<PeriodoProdutos, { rotulo: string; intervalo: (ultimoDia: string) => [string, string] }> = {
+  '3m': { rotulo: 'Últimos 3 meses', intervalo: (u) => ultimosMeses(u, 3) },
+  '6m': { rotulo: 'Últimos 6 meses', intervalo: (u) => ultimosMeses(u, 6) },
+  '12m': { rotulo: 'Últimos 12 meses', intervalo: (u) => ultimosMeses(u, 12) },
+  ano: { rotulo: 'Este ano', intervalo: (u) => [`${u.slice(0, 4)}-01-01`, u] },
+  ano_passado: { rotulo: 'Ano passado', intervalo: (u) => [`${Number(u.slice(0, 4)) - 1}-01-01`, `${Number(u.slice(0, 4)) - 1}-12-31`] },
+};
+
+/** Duração do período em meses (mínimo 1, para um período curto não inflar a média). */
+export function mesesDoPeriodo(inicio: string, fim: string): number {
+  const dias = (Date.parse(fim) - Date.parse(inicio)) / 86_400_000 + 1;
+  return Math.max(1, Math.round((dias / (365.25 / 12)) * 10) / 10);
+}
+
+export function csvProdutos(produtos: ProdutoVendido[], meses: number): string {
+  const num = (v: number) => String(Math.round(v * 100) / 100).replace('.', ',');
+  const txt = (v: string | null) => `"${(v ?? '').replace(/"/g, '""')}"`;
+  const linhas = produtos.map((p) =>
+    [txt(p.nome), txt(p.codigo), txt(p.categoria), txt(p.fabricante), p.unidade ?? '', num(p.quantidade), num(p.quantidade / meses), num(p.quantidade_anterior), p.total.toFixed(2).replace('.', ','), p.vendas, diaBr(p.ultima_venda)].join(';'),
+  );
+  return ['Produto;Código;Categoria;Fabricante;Unidade;Quantidade;Média por mês;Quantidade no ano anterior;Valor;Nº de vendas;Última venda', ...linhas].join('\r\n');
 }

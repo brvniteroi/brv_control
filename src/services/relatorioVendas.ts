@@ -79,3 +79,37 @@ export async function buscarVendasSicweb(filtro: { busca: string; inicio: string
   if (error) throw error;
   return data as BuscaVendas;
 }
+
+export interface ProdutoVendido {
+  nome: string;
+  unidade: string | null;
+  categoria: string | null;
+  fabricante: string | null;
+  codigo: string | null;
+  quantidade: number;
+  total: number;
+  /** Em quantas vendas apareceu no período. */
+  vendas: number;
+  /** Quantidade no mesmo período um ano antes. */
+  quantidade_anterior: number;
+  /** Última venda entre o período e o do ano anterior. */
+  ultima_venda: string;
+}
+
+export interface RelatorioProdutos {
+  ultimo_dia: string;
+  anterior_inicio: string;
+  anterior_fim: string;
+  sem_classificacao: { quantidade: number; total: number };
+  produtos: ProdutoVendido[];
+}
+
+export async function produtosVendidos(inicio: string, fim: string): Promise<RelatorioProdutos> {
+  const { data, error } = await supabase.rpc('relatorio_produtos_vendidos', { p_inicio: inicio, p_fim: fim });
+  if (error) throw error;
+  return data as RelatorioProdutos;
+}
+
+export async function ultimoDiaComVenda(): Promise<string> {
+  return (await relatorioMensal()).ultimo_dia;
+}

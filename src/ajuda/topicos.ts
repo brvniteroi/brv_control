@@ -25,6 +25,7 @@ export type TelaAjuda =
   | 'cadastros'
   | 'relatorios'
   | 'relatorio-vendas'
+  | 'relatorio-produtos'
   | 'vendas-sicweb'
   | 'equipe'
   | 'oficina'
@@ -98,6 +99,7 @@ export const NOME_TELA: Record<TelaAjuda, string> = {
   cadastros: 'Cadastros',
   relatorios: 'Relatórios',
   'relatorio-vendas': 'Relatório de vendas',
+  'relatorio-produtos': 'Produtos vendidos',
   'vendas-sicweb': 'Vendas antigas',
   equipe: 'Equipe',
   oficina: 'Oficina',
@@ -1129,6 +1131,7 @@ Lista dos manuais usados nas consultas de erro e no cadastro de fichas. Busque p
     texto: `
 No menu **Relatórios**:
 - **Vendas** (só administrador): histórico de vendas ano a ano. Veja o tópico próprio.
+- **Produtos vendidos** (só administrador): quantidade e valor por produto, para as compras. Veja o tópico próprio.
 - **Atividades**: por técnico no mês, com atividades realizadas, dias trabalhados, média por dia e média das avaliações.
 - **Gráficos**: atividades dos últimos 12 meses, com tabela.
 - **Tipos de Serviços**: quantas de cada tipo no mês e a porcentagem do total.
@@ -1157,6 +1160,27 @@ Em **Relatórios > Vendas** (só administrador). Soma as vendas do **SicWeb ante
 - O relatório mostra o que foi **vendido**, não o dinheiro recebido nem o lucro.
 `,
     veja: ['vendas-sicweb'],
+  },
+  {
+    id: 'relatorio-produtos',
+    titulo: 'Produtos vendidos (apoio às compras)',
+    secao: 'Relatórios',
+    telas: ['relatorio-produtos', 'relatorios'],
+    palavras: 'produto mais vendido compra compras reposicao quantidade valor media mensal estoque fornecedor categoria fabricante planilha',
+    texto: `
+Em **Relatórios > Produtos vendidos** (só administrador).
+- Escolha o **período**. Os períodos prontos contam a partir da **última venda registrada**.
+- Clique em **Quantidade**, **Valor** ou **Nº de vendas** para mudar a ordem.
+- **Média por mês**: quantidade dividida pelos meses do período. Serve de ponto de partida para a compra.
+- **Ano anterior**: quantidade no mesmo período um ano antes. Ajuda a ver a época do ano.
+- Produto com quantidade **zero** vendeu no ano anterior e não vendeu agora (cartão **Sem venda no período**; eles ficam no fim da lista).
+- Filtre por **categoria** ou busque por produto, fabricante ou código. **Baixar planilha (CSV)** leva a lista filtrada.
+- **Nº de vendas** mostra a frequência: muita quantidade em poucas vendas pode ter sido um serviço grande e não se repetir.
+! **O estoque não é considerado**: confira o que há na loja antes de comprar.
+! Se um **serviço** aparecer na lista, ele está marcado como produto. Corrija o tipo em **Vendas > Catálogo**.
+- Itens de produtos apagados do SicWeb não têm nome e ficam fora (o valor aparece abaixo da lista).
+`,
+    veja: ['relatorio-vendas'],
   },
   {
     id: 'vendas-sicweb',

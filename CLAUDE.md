@@ -26,7 +26,7 @@ O usuário fala português; código, comentários e mensagens de commit também 
 - Schema completo em `supabase/migrations/20261029000000_schema_inicial.sql` (já aplicado no
   projeto `kxznmsadntuihzlizlyp`). Mudanças novas = nova migration, nunca editar a inicial.
 - O usuário aplica as migrations colando o SQL no SQL Editor do Supabase (não usa a CLI). Todas as que estão em
-  `supabase/migrations/` até `20261125190000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
+  `supabase/migrations/` até `20261125200000` (2026-11-25) já foram aplicadas; ao criar uma nova, avisar que precisa ser colada lá.
 - Perfis em `public.profiles.role`: `admin` (tudo, inclusive excluir), `escritorio`
   (cadastros, OS, linha do tempo), `tecnico` (só as próprias atividades). Usuário novo
   nasce com `active = FALSE`.
@@ -201,8 +201,9 @@ cadastros do financeiro, **Caixa**, **Movimentos**, **Visão geral** e a consult
 pelo usuário. **Menus ainda escondidos** (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO` em `Sidebar.tsx`); as telas abrem pelo endereço (`/orcamentos`, `/vendas`,
 `/catalogo`, `/financeiro`, `/financeiro/caixa`, `/financeiro/movimentos`, `/financeiro/cadastros`).
 **Falta, nesta ordem:**
-1. **Teste do orçamento de ponta a ponta** (em 2026-11-25 não havia nenhum orçamento novo no banco): criar com um modelo, enviar o link ao próprio WhatsApp,
-   aprovar no celular, virar venda e cancelar a venda de teste.
+1. **Teste do orçamento de ponta a ponta**: feito em 2026-11-25 até a OS (ORC-30004 com modelo, link no WhatsApp, aprovado no celular, OS 17565 executada pelo app).
+   **Falta:** abrir o ORC-30004 > **Converter em venda** (fica ligada à OS 17565), receber e cancelar a venda de teste; e testar o **aviso de orçamento aprovado**
+   (sistema aberto no PC, aprovar outro orçamento pelo celular: aviso no canto com bipe; cartão "Orçamentos aprovados" no Dashboard).
 2. **Mostrar os menus** (perguntado em 2026-11-25, **sem resposta**; recomendado só depois das taxas, porque venda no cartão com taxa zero não é recalculada).
 3. **Taxas** da Rede e da InfinitePay (o usuário vai informar depois) e **prazo real da InfinitePay** (hoje 1 dia útil; se cair na hora ou no fim de semana, ajustar
    `somar_dias_uteis`/o cadastro).
@@ -507,7 +508,7 @@ conferidos). **Quem lê: vendedores e admin** (pedido do usuário, 2026-11-25; `
 o histórico de vendas do SicWeb (tem lucro) continua só admin.
 **Tipo da OS gerada pelo orçamento (2026-11-25, de casa):** a regra antiga escolhia o tipo com "instalação" de nome mais curto e o ORC-30004 (split 18.000) gerou a OS 17565 como "Instalação Placa". Migration `20261125180000_os_do_orcamento_tipo.sql` (**aplicada e verificada em 2026-11-25; OS 17565 conferida no banco**): prefere o tipo do mesmo aparelho (split/janela), depois o mais usado em 12 meses; nunca "Orçamento de ..."/"Finalizar ..."; corrige a OS 17565 para "Instalação de Split". Ajuda F1 `orcamento-converter` atualizada.
 **Orçamento que virou OS também vira venda (2026-11-25, de casa; pedido do usuário):** fluxo orçamento -> Gerar OS -> técnico executa -> cliente paga. Migration `20261125190000_venda_de_orcamento_com_os.sql` (**aplicada e verificada em 2026-11-25**): `venda_concluir` aceita orçamento que só gerou OS e liga a venda à OS; `orcamento_gerar_os` aceita orçamento já vendido e liga a venda à OS nova (inclui o tipo certo da 180000); `venda_cancelar` libera o orçamento para vender de novo. Tela (`OrcamentoEditor.tsx`: "Converter em venda" sem venda ainda, "Gerar OS" sem OS ainda; sem aviso de vencido quando já há OS) e ajuda `orcamento-converter` publicadas depois da confirmação.
-**Aviso de orçamento aprovado (2026-11-25, de casa; pedido do usuário, sem e-mail porque a equipe quase não usa):** `components/vendas/AvisoOrcamentoAprovado.tsx`, montado no `Layout` para quem `podeVender`: Realtime em `quotes` (UPDATE com status aprovado, canal `link`, aprovado há até 15 min) mostra aviso no canto com bipe (`tocarAlerta`), título da aba com contador e "Abrir orçamento"; fica até fechar. Dashboard: `CartaoOrcamentosAprovados.tsx` (aprovados sem OS nem venda, `listarOrcamentosAprovadosAguardando` em `services/vendas.ts`). Migration `20261125200000_orcamentos_realtime.sql` (só põe `quotes` no Realtime; **FALTA colar**; sem ela o aviso não aparece, o cartão funciona). Ajuda F1 `orcamento-aviso-aprovado`. Recusa pelo link não avisa (não existe recusa pelo link).
+**Aviso de orçamento aprovado (2026-11-25, de casa; pedido do usuário, sem e-mail porque a equipe quase não usa):** `components/vendas/AvisoOrcamentoAprovado.tsx`, montado no `Layout` para quem `podeVender`: Realtime em `quotes` (UPDATE com status aprovado, canal `link`, aprovado há até 15 min) mostra aviso no canto com bipe (`tocarAlerta`), título da aba com contador e "Abrir orçamento"; fica até fechar. Dashboard: `CartaoOrcamentosAprovados.tsx` (aprovados sem OS nem venda, `listarOrcamentosAprovadosAguardando` em `services/vendas.ts`). Migration `20261125200000_orcamentos_realtime.sql` (só põe `quotes` no Realtime; **aplicada em 2026-11-25**). Ajuda F1 `orcamento-aviso-aprovado`. Recusa pelo link não avisa (não existe recusa pelo link).
 **Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
 **Falta:** o usuário testar, ligar os menus (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO`) e os recebimentos dos técnicos (com a pergunta no app de campo).
 

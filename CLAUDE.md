@@ -198,16 +198,16 @@ livre, fazer o **ensaio de restauração do backup** (pendente). Ao apagar o pro
 **Data prevista da virada: 05/12/2026** (sábado; se a loja não abrir, 07/12), **depende do contador**.
 **Pronto, no banco e no site** (todas as migrations até `20261125170000` aplicadas): catálogo, orçamentos, vendas, vendedores e modelos de orçamento,
 cadastros do financeiro, **Caixa**, **Movimentos**, **Visão geral** e a consulta dos orçamentos antigos do SicWeb. Caixa, Movimentos e Visão geral testados
-pelo usuário. **Menus ainda escondidos** (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO` em `Sidebar.tsx`); as telas abrem pelo endereço (`/orcamentos`, `/vendas`,
-`/catalogo`, `/financeiro`, `/financeiro/caixa`, `/financeiro/movimentos`, `/financeiro/cadastros`).
+pelo usuário. **Menus de Vendas e Financeiro liberados em 2026-11-26** (pedido do usuário, ainda sem as taxas). **Até a virada, não lançar venda nem
+caixa reais no Control** (a venda continua no SicWeb; teste no Control deve ser cancelado, senão duplica com a importação final).
 **Falta, nesta ordem:**
 1. ~~Teste do orçamento de ponta a ponta~~ **concluído e aprovado pelo usuário (2026-11-25 e 26):** ORC-30004 com modelo, link no WhatsApp, aprovado no celular,
    OS 17565 executada pelo app, convertido na VND-30003 (PIX no Nubank), venda cancelada em 26/11 com estorno conferido no banco (o orçamento fica liberado para nova venda);
    **aviso de orçamento aprovado** testado com o ORC-30005 (ficou `aprovado`, sem OS nem venda: é de teste).
-2. **Mostrar os menus** (perguntado em 2026-11-25, **sem resposta**; recomendado só depois das taxas, porque venda no cartão com taxa zero não é recalculada).
+2. ~~Mostrar os menus~~ feito em 2026-11-26.
 3. **Taxas** da Rede e da InfinitePay (o usuário vai informar depois) e **prazo real da InfinitePay** (hoje 1 dia útil; se cair na hora ou no fim de semana, ajustar
    `somar_dias_uteis`/o cadastro).
-4. **Contador** (`docs/perguntas-contador.md`, sem resposta), provedor de emissão de notas (Focus NFe recomendado, não escolhido) e certificado `.pfx`. Enquanto o
+4. **Contador** (`docs/perguntas-contador.md`, resposta esperada na tarde de 2026-11-26), provedor de emissão de notas (Focus NFe recomendado, não escolhido) e certificado `.pfx`. Enquanto o
    Control não emite nota, o SicWeb continua só para isso.
 5. **Na virada** (**só no PC da empresa**, com backup novo do SICNET restaurado no SQL Server): rodar, simulando antes, `importar-clientes.mjs`, `importar-vendas.mjs`,
    `importar-produtos.mjs --atualizar-precos` e `importar-orcamentos.mjs`, todos com `--gravar`; informar o saldo inicial de cada banco (Cadastros do financeiro) e

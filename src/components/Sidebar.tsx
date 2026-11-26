@@ -75,23 +75,11 @@ const ehGrupo = (e: EntradaMenu): e is GrupoMenu => 'itens' in e;
  */
 const MOSTRAR_MENU_PLACAS = true;
 
-/**
- * Os módulos de Vendas (Orçamentos, Vendas, Catálogo) ainda usam dados de demonstração
- * (`components/vendas/fonteDeDados.ts`, `FONTE_DADOS_DEMO = true`).
- * Enquanto `MOSTRAR_MENU_VENDAS` for `false`, o grupo "Vendas" fica oculto na barra lateral,
- * mas as rotas `/orcamentos`, `/vendas` e `/catalogo` continuam abrindo normalmente por URL para testar.
- * O Claude liga para `true` quando as tabelas e os serviços do banco estiverem prontos.
- */
-const MOSTRAR_MENU_VENDAS = false;
+/** Grupo "Vendas" (liberado em 2026-11-26). Quem não é vendedor nem admin não vê os itens. */
+const MOSTRAR_MENU_VENDAS = true;
 
-/**
- * O módulo Financeiro (Visão geral, Caixa, Recebimentos, Movimentos e Cadastros) ainda usa dados
- * de demonstração (`components/financeiro/fonteDeDados.ts`, `FONTE_DADOS_FINANCEIRO_DEMO = true`).
- * Enquanto `MOSTRAR_MENU_FINANCEIRO` for `false`, o grupo "Financeiro" fica oculto na barra lateral,
- * mas as rotas `/financeiro...` continuam abrindo normalmente por URL para testar.
- * O Claude liga para `true` quando as tabelas e os serviços do banco estiverem prontos.
- */
-const MOSTRAR_MENU_FINANCEIRO = false;
+/** Grupo "Financeiro" (liberado em 2026-11-26). Os itens seguem o nível financeiro da pessoa. */
+const MOSTRAR_MENU_FINANCEIRO = true;
 
 const MENU: EntradaMenu[] = [
   { rota: '/', rotulo: 'Dashboard', icone: LayoutDashboard },

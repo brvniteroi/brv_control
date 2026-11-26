@@ -1386,7 +1386,7 @@ Ficam em **Dados fiscais**, no cadastro do item.
     palavras: 'gerar os ordem de servico converter venda convertido agendar',
     texto: `
 - **Gerar OS** cria uma OS agendada, ainda sem atividade, com os serviços na **Solicitação do cliente**. Depois agende o técnico pela **Linha do tempo** (Nova atividade).
-- O tipo de serviço da OS é escolhido pelo nome dos serviços (instalação, manutenção). Confira na OS e troque se precisar.
+- O tipo de serviço da OS sai do nome dos serviços: instalação, manutenção ou desinstalação, de split ou de janela conforme o item, e entre os parecidos o mais usado (ex.: "M.O Instal Ar Cond split" vira **Instalação de Split**). Confira na OS e troque se precisar.
 - Precisa de cliente cadastrado (Consumidor final não tem OS) e de pelo menos um item de serviço.
 - **Converter em venda** abre a Nova venda já com os itens do orçamento.
 - Convertido, o orçamento fica só para consulta.

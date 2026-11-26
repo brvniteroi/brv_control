@@ -505,6 +505,7 @@ vendas, com o nome digitado preservado (decisão do usuário, 2026-11-25; no Sic
 Aba **Orçamentos** do cliente e `/orcamentos/sicweb` (botão "Antigos (SicWeb)"). Ajuda F1: `orcamentos-sicweb`. **Importação gravada em 2026-11-25** (616 e 4.917, totais
 conferidos). **Quem lê: vendedores e admin** (pedido do usuário, 2026-11-25; `20261125170000_orcamentos_sicweb_vendedores.sql` + verificação de mesmo nome);
 o histórico de vendas do SicWeb (tem lucro) continua só admin.
+**Tipo da OS gerada pelo orçamento (2026-11-25, de casa):** a regra antiga escolhia o tipo com "instalação" de nome mais curto e o ORC-30004 (split 18.000) gerou a OS 17565 como "Instalação Placa". Migration `20261125180000_os_do_orcamento_tipo.sql` (**FALTA colar e rodar a verificação `supabase/verificacao/os_do_orcamento_tipo.sql`; sem ensaio, feita no PC de casa sem psql**): prefere o tipo do mesmo aparelho (split/janela), depois o mais usado em 12 meses; nunca "Orçamento de ..."/"Finalizar ..."; corrige a OS 17565 para "Instalação de Split". Ajuda F1 `orcamento-converter` atualizada.
 **Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
 **Falta:** o usuário testar, ligar os menus (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO`) e os recebimentos dos técnicos (com a pergunta no app de campo).
 

@@ -44,9 +44,9 @@ export const OBSERVACOES_PADRAO_ORCAMENTO_INICIAIS: readonly { titulo: string; t
       'A empresa não realiza fechamento de paredes ou tetos (gesso ou forro PVC), nem retirada ou colocação de janelas, grades, telas ou vidros, ficando estes serviços por conta do cliente.',
   },
   {
-    titulo: 'Metragem de fio e mão de obra elétrica',
+    titulo: 'Metragem de fio e serviço elétrico',
     texto:
-      'O fio para a elétrica e a mão de obra serão acrescentados no orçamento depois do serviço, pois não sabemos a metragem.',
+      'O fio e o serviço elétrico serão acrescentados no orçamento depois da execução, pois não sabemos a metragem.',
   },
 ];
 

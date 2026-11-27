@@ -56,3 +56,28 @@ Uma venda nossa costuma ter produtos e mão de obra juntos.
 29. Podemos fazer a **virada** em qualquer dia ou é melhor no início de um mês?
 
 > **Mais urgentes** (travam o sistema): 1, 2, 6, 11, 19 e 23.
+
+## Respostas recebidas (27/11/2026)
+
+**1 (parte) e 23 (parte, só NFS-e).** Ver os dois PDFs "Parametrizacao NFS-e IBS-CBS" nesta pasta.
+| Serviço | Tributação nacional | NBS | Indicador da operação |
+|---|---|---|---|
+| Instalação, desinstalação, reinstalação | 14.06.01 | 1.0106.32.00 (central/industrial: 1.2003.29.00) | 020201 (fixado no imóvel); 050101/050102 sem fixação |
+| Manutenção, limpeza, preventiva, corretiva, recarga de gás | 14.01.01 | 1.0106.32.00 (não doméstico: 1.2001.60.00) | 050101 oficina; 050102 endereço de quem paga; 050103 do destinatário; 050104 outro; 020201 sistema central |
+- **Visita técnica** para identificar o defeito, com ou sem conserto depois: 14.01.
+- IBS/CBS na NFS-e: exigidos a partir de **01/01/2027** (até 31/12/2026 a nota vai sem); CST 000, cClassTrib 000001. Alíquotas CBS 0,9% / IBS 0,1% **não aplicar até confirmação**.
+
+**2.** O emissor pede a **alíquota efetiva** do Simples; com RBT12 acima de R$ 180.000,00 é calculada no início de cada mês. **Notas de 12/2026: 7,97%.** Alíquota de ISS só importaria com retenção, que não ocorre na BRV.
+
+**11 (e 12, em parte).** Está correto separar: peça/material em **nota de venda**, serviço em **nota de serviço** (imposto bem menor que tudo na nota de serviço). Continuar assim. **Evitar o termo "mão de obra"** (não permitido para empresa do Simples). Peças da manutenção (gás, capacitor, placa) não entram na NFS-e.
+
+### O que ainda falta
+- **1:** elétrica ou tubulação cobradas sozinhas; aluguel de andaime; conserto de placa eletrônica, inclusive avulsa de parceiro (é 14.01?); troca de suporte sem instalar o aparelho (14.01 ou 14.06?). PMOC: só perguntar se for cobrar à parte a elaboração do plano / responsabilidade técnica.
+- **3:** confirmar (pela regra geral da LC 116, em 14.01 e 14.06 o ISS é de Niterói; se usarem 7.02, é do local da obra).
+- **4:** retenção de outro tributo em venda para empresa (a de ISS não ocorre).
+- **6** (urgente) e **7 a 10**.
+- **11/12:** o PDF diz que peça vai em NF-e: no balcão ou para pessoa física pode ser NFC-e? Preço fechado (ex.: carga de gás): como dividir entre as duas notas?
+- **13 a 18**, **19** (urgente), **20 a 22**, **24 a 29**.
+- **23** (urgente): IBS/CBS na NFC-e e NF-e; alíquotas das notas de 2027 (os PDFs citam as do ano-teste, que pela lei é 2026) e o que muda no Simples; decisão sobre o regime com prazo.
+- Quem calcula a alíquota efetiva todo mês e até que dia envia?
+- Há problema em, depois da virada, redigitar no SicWeb as vendas que precisam de NFC-e, só para emitir a nota?

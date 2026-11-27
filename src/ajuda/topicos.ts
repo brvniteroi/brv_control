@@ -1348,6 +1348,8 @@ Cada item do catálogo é **Produto** (sai na nota de produto, NFC-e ou NF-e) ou
 - Na linha do item: o lápis edita, **Duplicar** copia e **Inativar** tira o item das buscas do orçamento e da venda. Item nunca se exclui (pode já estar em orçamentos); **Reativar** traz de volta.
 - **Item frequente** vira atalho na Nova venda.
 - O código não pode repetir (maiúsculas e minúsculas contam como iguais).
+! **Não use "mão de obra" nem "M.O"** no nome do item nem na descrição de notas: a contabilidade orientou, por causa do Simples Nacional. Escreva o serviço ("Instalação de ...", "Serviço de ...").
+- Para serviço sem item próprio, use **Serviço de manutenção e conserto de ar-condicionado** ou **Serviço de instalação de ar-condicionado**. São separados porque o código da nota de serviço é diferente.
 - Quando o preço de venda muda, o sistema guarda a data do reajuste.
 `,
     veja: ['catalogo-revisar-tipos', 'catalogo-dados-fiscais'],
@@ -1359,7 +1361,7 @@ Cada item do catálogo é **Produto** (sai na nota de produto, NFC-e ou NF-e) ou
     telas: ['catalogo'],
     palavras: 'revisar tipos mao de obra m.o instalacao converter servico',
     texto: `
-O botão **Revisar tipos (N)** aparece quando há produtos com nome de mão de obra ("M.O ...", instalação, manutenção, visita).
+O botão **Revisar tipos (N)** aparece quando há produtos com nome de serviço (instalação, manutenção, visita ou os antigos "M.O ...").
 1. Clique em **Revisar tipos**: a lista já vem toda marcada.
 2. Desmarque o que for produto de verdade.
 3. Clique em **Converter em Serviço**.
@@ -1469,7 +1471,7 @@ Quando o cliente aprova o orçamento pelo link, todo vendedor (e o administrador
     palavras: 'gerar os ordem de servico converter venda convertido agendar cobrar receber pagar depois do servico',
     texto: `
 - **Gerar OS** cria uma OS agendada, ainda sem atividade, com os serviços na **Solicitação do cliente**. Depois agende o técnico pela **Linha do tempo** (Nova atividade).
-- O tipo de serviço da OS sai do nome dos serviços: instalação, manutenção ou desinstalação, de split ou de janela conforme o item, e entre os parecidos o mais usado (ex.: "M.O Instal Ar Cond split" vira **Instalação de Split**). Confira na OS e troque se precisar.
+- O tipo de serviço da OS sai do nome dos serviços: instalação, manutenção ou desinstalação, de split ou de janela conforme o item, e entre os parecidos o mais usado (ex.: "Instalação de ar-condicionado split" vira **Instalação de Split**). Confira na OS e troque se precisar.
 - Precisa de cliente cadastrado (Consumidor final não tem OS) e de pelo menos um item de serviço.
 - **Converter em venda** abre a Nova venda já com os itens do orçamento, para receber do cliente.
 - **Convertido** quer dizer que o orçamento já virou OS ou venda: os itens e valores ficam só para consulta, mas os dois caminhos continuam:
@@ -1656,7 +1658,7 @@ Só **vendedores** e administradores entram em **Orçamentos**, **Vendas** e **C
     palavras: 'modelo modelos botao pronto instalacao split 9000 12000 18000 kit preencher automatico itens salvar como modelo excluir quantidade em branco',
     texto: `
 Os botões em **Modelos**, acima dos itens, incluem de uma vez a lista pronta de um serviço, com o **preço atual do catálogo**.
-1. Clique no modelo (ex.: **Inst 9.000**). As quantidades ficam **em branco** (campo amarelo); a mão de obra já vem preenchida.
+1. Clique no modelo (ex.: **Inst 9.000**). As quantidades ficam **em branco** (campo amarelo); o serviço de instalação já vem preenchido.
 2. Digite a quantidade e tecle **Enter**: o cursor pula para a próxima em branco.
 3. Ao salvar o orçamento ou concluir a venda, os itens que continuaram em branco **ficam de fora** (o sistema mostra quais e pede confirmação).
 - Item que já estava na tela não é repetido.

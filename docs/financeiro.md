@@ -199,7 +199,20 @@ como verdade (começa zerado ou por contagem).
 **Onde paramos e o que falta:** ver o lembrete "continuar Vendas e Financeiro" no `CLAUDE.md` (é a lista que vale; a "Retomada" de 2026-11-24,
 abaixo, ficou como registro).
 
-**05/12/2026** (sábado; se a loja não abrir, o primeiro dia é segunda, 07/12), definida pelo usuário: 10 dias à frente.
+**10/01/2027** (domingo; se a loja não abrir, o primeiro dia é segunda, 11/01), definida pelo usuário em 2026-11-27 (a data anterior era 05/12/2026).
+Fica depois de 01/01/2027: a obrigatoriedade de IBS/CBS nas notas começa com o SicWeb ainda em uso.
+
+### Calendário até a virada (combinado em 2026-11-27)
+
+Durante os testes, **vendas e caixa reais continuam só no SicWeb**. Cada problema encontrado: anotar com o número do orçamento ou da venda.
+
+| Quando | O que fazer |
+|---|---|
+| Até 15/12 | **Contador:** concluir as perguntas (substituição tributária, IBS/CBS nas notas de produto, NFC-e para empresa). Perguntar já se a BRV optou pelo regime regular de IBS/CBS: se optou, o prazo para cancelar vai até **20/12**. **SicWeb:** quando e como habilitar IBS/CBS. **BRV:** taxas da Rede e da InfinitePay, prazo da InfinitePay, validade do certificado, desativar o item de cortina de ar repetido. **Equipe:** testar orçamento, aprovação, OS, venda com cada forma de pagamento, cancelamento, caixa e movimentos. |
+| 15 a 20/12 | **Ensaio da virada** (PC da empresa): backup novo do SicWeb, simular, importar e conferir totais. |
+| 21 a 31/12 | Corrigir o que os testes mostrarem e treinar a equipe. |
+| 01 a 09/01 | Conferir se as notas saem certas no SicWeb e no Emissor Nacional com as regras de 2027. Limpar os dados de teste (o Claude lista tudo antes; **apagar só com a aprovação do usuário**: mesmo canceladas, vendas e lançamentos de teste ficam no histórico e no extrato). |
+| 10/01 | **Virada:** backup final, importação, saldos dos bancos e abertura do caixa. |
 **Depende da resposta do contador** (docs/perguntas-contador.md). Enquanto o Control não emitir nota, o SicWeb continua só para isso.
 No dia: roteiro do item "Virada" acima; o saldo da gaveta entra pela primeira abertura do Caixa e o saldo dos bancos pelo
 saldo inicial de cada conta (Cadastros do financeiro). Antes, cancelar as vendas de teste.

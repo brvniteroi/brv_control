@@ -195,7 +195,10 @@ livre, fazer o **ensaio de restauração do backup** (pendente). Ao apagar o pro
 (1 projeto) e apagar este lembrete.
 
 **LEMBRETE (atualizado em 2026-11-25, vale nos dois PCs): continuar Vendas e Financeiro** (lembrar o usuário logo no início da conversa).
-**Data prevista da virada: 05/12/2026** (sábado; se a loja não abrir, 07/12), **depende do contador**.
+**Data da virada: 10/01/2027** (definida pelo usuário em 2026-11-27; antes era 05/12/2026). É um domingo: se a loja não abrir, o primeiro dia de uso é 11/01. **Depende do contador.**
+Como a virada fica **depois de 01/01/2027** (início da obrigatoriedade de IBS/CBS nas notas, segundo o contador), o SicWeb e o Emissor Nacional precisam atender a isso nos primeiros dias do ano:
+confirmar com o suporte do SicWeb.
+**Calendário de dezembro (dúvidas, testes, ensaio da importação e limpeza dos testes):** seção "Calendário até a virada" do `docs/financeiro.md`. No início da conversa, dizer em que etapa estamos.
 **Pronto, no banco e no site** (todas as migrations até `20261125170000` aplicadas): catálogo, orçamentos, vendas, vendedores e modelos de orçamento,
 cadastros do financeiro, **Caixa**, **Movimentos**, **Visão geral** e a consulta dos orçamentos antigos do SicWeb. Caixa, Movimentos e Visão geral testados
 pelo usuário. **Menus de Vendas e Financeiro liberados em 2026-11-26** (pedido do usuário, ainda sem as taxas). **Até a virada, não lançar venda nem
@@ -218,8 +221,9 @@ caixa reais no Control** (a venda continua no SicWeb; teste no Control deve ser 
    0 novos) e telefone que já tinha vindo não volta. Nome, endereço e dados já preenchidos **não** são atualizados pelo SicWeb. Em vendas, item ou venda **apagados**
    no SicWeb continuam no Control (cancelamento é atualizado). `--atualizar-precos` sobrescreve preço mudado no Control.
 **Contador, 1ª leva de respostas (2026-11-27):** registradas no fim de `docs/perguntas-contador.md` (com o que falta) e nos dois PDFs `docs/Parametrizacao NFS-e IBS-CBS ...`: instalação 14.06.01, manutenção/visita 14.01.01; alíquota efetiva do Simples informada na nota e recalculada todo mês (12/2026: 7,97%; no Control terá de ser um valor por mês, bloqueando a NFS-e sem ele); peça em nota de venda e serviço em nota de serviço; **não usar "mão de obra"**. No mesmo dia, 16 serviços do catálogo e o texto "Fio e serviço elétrico" foram renomeados no banco e criado o item "Serviço de instalação de ar-condicionado" (registro em `supabase/verificacao/renomeia_servicos_mao_de_obra.sql`).
-**Se a data da virada mudar:** refazer a função `virada_sicweb()` (migration `20261126100000_relatorio_vendas.sql`, hoje 2026-12-05) e avisar o usuário para colar;
-senão o Relatório de vendas ignora as vendas do SicWeb a partir de 05/12 e as do Control anteriores à data.
+**Se a data da virada mudar:** refazer a função `virada_sicweb()` em migration nova e avisar o usuário para colar; senão o Relatório de vendas ignora as vendas do
+SicWeb a partir da data antiga e as do Control anteriores a ela. Data atual: 2027-01-10 (migration `20261127100000_virada_10_01_2027.sql` + verificação
+`supabase/verificacao/virada_10_01_2027.sql`; ensaio com ROLLBACK passou em 2026-11-27; **falta o usuário colar**).
 **Depois (não trava a virada):** recebimentos dos técnicos ("Recebeu do cliente?" no app de campo + tela `/financeiro/recebimentos`, hoje demonstração e escondida,
 `RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false`); renomear modelo de orçamento na tela (oferecido, sem resposta); baixa de estoque nas vendas (não existe; estoque
 não foi importado); estornar só o pagamento de uma venda (hoje cancela a venda inteira).
@@ -526,7 +530,7 @@ o histórico de vendas do SicWeb (tem lucro) continua só admin.
 **Tipo da OS gerada pelo orçamento (2026-11-25, de casa):** a regra antiga escolhia o tipo com "instalação" de nome mais curto e o ORC-30004 (split 18.000) gerou a OS 17565 como "Instalação Placa". Migration `20261125180000_os_do_orcamento_tipo.sql` (**aplicada e verificada em 2026-11-25; OS 17565 conferida no banco**): prefere o tipo do mesmo aparelho (split/janela), depois o mais usado em 12 meses; nunca "Orçamento de ..."/"Finalizar ..."; corrige a OS 17565 para "Instalação de Split". Ajuda F1 `orcamento-converter` atualizada.
 **Orçamento que virou OS também vira venda (2026-11-25, de casa; pedido do usuário):** fluxo orçamento -> Gerar OS -> técnico executa -> cliente paga. Migration `20261125190000_venda_de_orcamento_com_os.sql` (**aplicada e verificada em 2026-11-25**): `venda_concluir` aceita orçamento que só gerou OS e liga a venda à OS; `orcamento_gerar_os` aceita orçamento já vendido e liga a venda à OS nova (inclui o tipo certo da 180000); `venda_cancelar` libera o orçamento para vender de novo. Tela (`OrcamentoEditor.tsx`: "Converter em venda" sem venda ainda, "Gerar OS" sem OS ainda; sem aviso de vencido quando já há OS) e ajuda `orcamento-converter` publicadas depois da confirmação.
 **Aviso de orçamento aprovado (2026-11-25, de casa; pedido do usuário, sem e-mail porque a equipe quase não usa):** `components/vendas/AvisoOrcamentoAprovado.tsx`, montado no `Layout` para quem `podeVender`: Realtime em `quotes` (UPDATE com status aprovado, canal `link`, aprovado há até 15 min) mostra aviso no canto com bipe (`tocarAlerta`), título da aba com contador e "Abrir orçamento"; fica até fechar. Dashboard: `CartaoOrcamentosAprovados.tsx` (aprovados sem OS nem venda, `listarOrcamentosAprovadosAguardando` em `services/vendas.ts`). Migration `20261125200000_orcamentos_realtime.sql` (só põe `quotes` no Realtime; **aplicada em 2026-11-25**). Ajuda F1 `orcamento-aviso-aprovado`. Recusa pelo link não avisa (não existe recusa pelo link).
-**Data prevista da virada do SicWeb: 05/12/2026** (sábado; senão 07/12), sujeita à resposta do contador (ver `docs/financeiro.md`).
+**Data da virada do SicWeb: 10/01/2027** (mudada em 2026-11-27), sujeita à resposta do contador (ver `docs/financeiro.md`).
 **Falta:** o usuário testar, ligar os menus (`MOSTRAR_MENU_VENDAS`/`MOSTRAR_MENU_FINANCEIRO`) e os recebimentos dos técnicos (com a pergunta no app de campo).
 
 Ditado por voz (2026-11-19, pedido do usuário): `components/comum/DitadoVoz.tsx`, montado em `Layout.tsx` e `CampoLayout.tsx`, põe um microfone no canto de qualquer `<textarea>` em foco (Web Speech API, pt-BR; texto entra no cursor; `data-sem-voz` desliga num campo; some se o navegador não suporta, ex. WebView do APK). Páginas públicas não têm. Ajuda F1: tópico `ditado-voz`.

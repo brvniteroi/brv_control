@@ -71,6 +71,12 @@ Uma venda nossa costuma ter produtos e mão de obra juntos.
 
 **11 (e 12, em parte).** Está correto separar: peça/material em **nota de venda**, serviço em **nota de serviço** (imposto bem menor que tudo na nota de serviço). Continuar assim. **Evitar o termo "mão de obra"** (não permitido para empresa do Simples). Peças da manutenção (gás, capacitor, placa) não entram na NFS-e.
 
+**23 (parte).** Sobre a opção dos novos tributos desligada no SicWeb: a BRV deve **verificar com o SicWeb**. Muitos sistemas estão deixando a opção desabilitada para empresas do Simples, porque a obrigatoriedade passa a valer em **01/01/2027**.
+
+**9 (prática atual, informada pela BRV em 27/11/2026).** A BRV usa **NFC-e no balcão para PF e PJ**; só algumas empresas pedem NF-e.
+- Conferido no Confaz em 27/11/2026: a proibição de NFC-e para CNPJ (Ajuste SINIEF 11/25) foi **revogada** pelo Ajuste 12/26 (DOU 09/04/2026).
+- O **Ajuste SINIEF 23/26** (efeitos desde 05/10/2026) obriga **NF-e no lugar da NFC-e** nas vendas de varejo **que permitam ao comprador aproveitar crédito de ICMS**; a lei estadual pode impor condições (RJ não conferido). Confirmar com o contador se alcança as vendas da BRV (CSOSN 102 não dá crédito).
+
 ### O que ainda falta
 - **1:** elétrica ou tubulação cobradas sozinhas; aluguel de andaime; conserto de placa eletrônica, inclusive avulsa de parceiro (é 14.01?); troca de suporte sem instalar o aparelho (14.01 ou 14.06?). PMOC: só perguntar se for cobrar à parte a elaboração do plano / responsabilidade técnica.
 - **3:** confirmar (pela regra geral da LC 116, em 14.01 e 14.06 o ISS é de Niterói; se usarem 7.02, é do local da obra).
@@ -78,6 +84,9 @@ Uma venda nossa costuma ter produtos e mão de obra juntos.
 - **6** (urgente) e **7 a 10**.
 - **11/12:** o PDF diz que peça vai em NF-e: no balcão ou para pessoa física pode ser NFC-e? Preço fechado (ex.: carga de gás): como dividir entre as duas notas?
 - **13 a 18**, **19** (urgente), **20 a 22**, **24 a 29**.
-- **23** (urgente): IBS/CBS na NFC-e e NF-e; alíquotas das notas de 2027 (os PDFs citam as do ano-teste, que pela lei é 2026) e o que muda no Simples; decisão sobre o regime com prazo.
+- **Falar com o suporte do SicWeb:** se vai habilitar IBS/CBS na NFC-e e NF-e para o Simples a tempo de 01/01/2027 e o que configurar.
+- **23** (urgente): códigos de IBS/CBS na NFC-e e NF-e; alíquotas das notas de 2027 (os PDFs citam as do ano-teste, que pela lei é 2026) e o que muda no Simples.
+  - Decisão sobre o regime (conferido em 27/11/2026 na Receita/CGIBS): a opção pelo **regime regular** de IBS/CBS (fora do DAS) para jan-jun/2027 foi de 01/09 a **30/10/2026** (encerrada); quem optou pode cancelar de 03/11 a **20/12/2026**. Perguntar: a BRV optou? Se sim, mantém ou cancela? Se não, IBS/CBS ficam dentro do DAS?
 - Quem calcula a alíquota efetiva todo mês e até que dia envia?
+- **29:** a virada passou para **10/01/2027** (decisão da BRV em 27/11/2026). Há problema em trocar no meio do mês? Entre 01/01 e a virada as notas ainda saem pelo SicWeb e pelo Emissor Nacional.
 - Há problema em, depois da virada, redigitar no SicWeb as vendas que precisam de NFC-e, só para emitir a nota?

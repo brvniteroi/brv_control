@@ -86,7 +86,8 @@ Uma venda nossa costuma ter produtos e mão de obra juntos.
 - **13 a 18**, **19** (urgente), **20 a 22**, **24 a 29**.
 - **Falar com o suporte do SicWeb:** se vai habilitar IBS/CBS na NFC-e e NF-e para o Simples a tempo de 01/01/2027 e o que configurar.
 - **23** (urgente): códigos de IBS/CBS na NFC-e e NF-e; alíquotas das notas de 2027 (os PDFs citam as do ano-teste, que pela lei é 2026) e o que muda no Simples.
-  - Decisão sobre o regime (conferido em 27/11/2026 na Receita/CGIBS): a opção pelo **regime regular** de IBS/CBS (fora do DAS) para jan-jun/2027 foi de 01/09 a **30/10/2026** (encerrada); quem optou pode cancelar de 03/11 a **20/12/2026**. Perguntar: a BRV optou? Se sim, mantém ou cancela? Se não, IBS/CBS ficam dentro do DAS?
+  - Decisão sobre o regime (conferido em 27/11/2026 na Receita/CGIBS): a opção pelo **regime regular** de IBS/CBS (fora do DAS) para jan-jun/2027 foi de 01/09 a **30/10/2026** (encerrada); quem optou pode cancelar de 03/11 a **20/12/2026**.
+  - **A BRV não optou pelo regime regular** (informado pela BRV em 27/11/2026): não há nada a cancelar até 20/12. Confirmar com o contador: IBS/CBS ficam dentro do DAS em 2027, e o que precisa ir nas notas nesse caso?
 - Quem calcula a alíquota efetiva todo mês e até que dia envia?
 - **29:** a virada passou para **10/01/2027** (decisão da BRV em 27/11/2026). Há problema em trocar no meio do mês? Entre 01/01 e a virada as notas ainda saem pelo SicWeb e pelo Emissor Nacional.
 - Há problema em, depois da virada, redigitar no SicWeb as vendas que precisam de NFC-e, só para emitir a nota?

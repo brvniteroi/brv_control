@@ -208,7 +208,7 @@ Durante os testes, **vendas e caixa reais continuam só no SicWeb**. Cada proble
 
 | Quando | O que fazer |
 |---|---|
-| Até 15/12 | **Contador:** concluir as perguntas (substituição tributária, IBS/CBS nas notas de produto, NFC-e para empresa). Perguntar já se a BRV optou pelo regime regular de IBS/CBS: se optou, o prazo para cancelar vai até **20/12**. **SicWeb:** quando e como habilitar IBS/CBS. **BRV:** taxas da Rede e da InfinitePay, prazo da InfinitePay, validade do certificado, desativar o item de cortina de ar repetido. **Equipe:** testar orçamento, aprovação, OS, venda com cada forma de pagamento, cancelamento, caixa e movimentos. |
+| Até 15/12 | **Contador:** concluir as perguntas (substituição tributária, IBS/CBS nas notas de produto, NFC-e para empresa). (A BRV **não** optou pelo regime regular de IBS/CBS, informado em 27/11: sem prazo de cancelamento em 20/12.) **SicWeb:** quando e como habilitar IBS/CBS. **BRV:** taxas da Rede e da InfinitePay, prazo da InfinitePay, validade do certificado, desativar o item de cortina de ar repetido. **Equipe:** testar orçamento, aprovação, OS, venda com cada forma de pagamento, cancelamento, caixa e movimentos. |
 | 15 a 20/12 | **Ensaio da virada** (PC da empresa): backup novo do SicWeb, simular, importar e conferir totais. |
 | 21 a 31/12 | Corrigir o que os testes mostrarem e treinar a equipe. |
 | 01 a 09/01 | Conferir se as notas saem certas no SicWeb e no Emissor Nacional com as regras de 2027. Limpar os dados de teste (o Claude lista tudo antes; **apagar só com a aprovação do usuário**: mesmo canceladas, vendas e lançamentos de teste ficam no histórico e no extrato). |

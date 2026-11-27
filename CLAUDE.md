@@ -223,7 +223,7 @@ caixa reais no Control** (a venda continua no SicWeb; teste no Control deve ser 
 **Contador, 1ª leva de respostas (2026-11-27):** registradas no fim de `docs/perguntas-contador.md` (com o que falta) e nos dois PDFs `docs/Parametrizacao NFS-e IBS-CBS ...`: instalação 14.06.01, manutenção/visita 14.01.01; alíquota efetiva do Simples informada na nota e recalculada todo mês (12/2026: 7,97%; no Control terá de ser um valor por mês, bloqueando a NFS-e sem ele); peça em nota de venda e serviço em nota de serviço; **não usar "mão de obra"**. No mesmo dia, 16 serviços do catálogo e o texto "Fio e serviço elétrico" foram renomeados no banco e criado o item "Serviço de instalação de ar-condicionado" (registro em `supabase/verificacao/renomeia_servicos_mao_de_obra.sql`).
 **Se a data da virada mudar:** refazer a função `virada_sicweb()` em migration nova e avisar o usuário para colar; senão o Relatório de vendas ignora as vendas do
 SicWeb a partir da data antiga e as do Control anteriores a ela. Data atual: 2027-01-10 (migration `20261127100000_virada_10_01_2027.sql` + verificação
-`supabase/verificacao/virada_10_01_2027.sql`; ensaio com ROLLBACK passou em 2026-11-27; **falta o usuário colar**).
+`supabase/verificacao/virada_10_01_2027.sql`; **aplicada e verificada em 2026-11-27**).
 **Depois (não trava a virada):** recebimentos dos técnicos ("Recebeu do cliente?" no app de campo + tela `/financeiro/recebimentos`, hoje demonstração e escondida,
 `RECEBIMENTOS_DE_CAMPO_DISPONIVEIS = false`); renomear modelo de orçamento na tela (oferecido, sem resposta); baixa de estoque nas vendas (não existe; estoque
 não foi importado); estornar só o pagamento de uma venda (hoje cancela a venda inteira).
